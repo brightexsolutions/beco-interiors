@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Beco Interiors</title>
+<meta name="description" content="Beco Interiors — Kenya's specialist supplier of premium interior finishing materials. Serving architects, designers, contractors and developers from our Nairobi showroom.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="beco-pages.css">
+</head>
+<body>
+
+<!-- MOBILE NAV -->
+<div class="mob-overlay" id="mobOverlay"></div>
+<nav class="mob-nav" id="mobNav">
+  <div class="mob-nav-head">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-mark"><span>B</span></div>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <button class="mob-close" id="mobClose"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <ul class="mob-links">
+    <li><a href="index.html">Home <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-shop.html">Shop All Products <i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul>
+  <div class="mob-sub-head">Product Categories</div>
+  <ul class="mob-sub-links">
+    <li><a href="beco-shop.html?cat=lighting">Lighting Solutions <span>88</span></a></li>
+    <li><a href="beco-shop.html?cat=stone">Sintered Stones <span>36</span></a></li>
+    <li><a href="beco-shop.html?cat=wpc">WPC Wall Panels <span>80</span></a></li>
+    <li><a href="beco-shop.html?cat=accessories">Accessories <span>320+</span></a></li>
+  </ul>
+  <ul class="mob-links">
+    <li><a href="beco-products.html">Products <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-about.html" class="active">About Us <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-contact.html">Contact <i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul>
+  <div class="mob-nav-foot">
+    <a href="beco-shop.html" class="btn btn-primary" style="justify-content:center">
+      <i class="fa-solid fa-bag-shopping"></i> Browse Products
+    </a>
+    <a href="https://api.whatsapp.com/send?phone=254733886655" class="btn btn-wa" style="justify-content:center" target="_blank">
+      <i class="fa-brands fa-whatsapp"></i> WhatsApp Us
+    </a>
+    <div class="mob-contact"><i class="fa-solid fa-phone"></i><span>+254 733 886 655</span></div>
+  </div>
+</nav>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-wrap">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-mark"><span>B</span></div>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li class="has-mega">
+        <a href="beco-products.html">Products</a>
+        <div class="mega-menu">
+          <a class="mega-item" href="beco-shop.html?cat=lighting"><div class="mega-icon" style="background:linear-gradient(135deg,#141420,#1E1E30)"><i class="fa-solid fa-lightbulb"></i></div><div><div class="mega-label">Lighting</div><div class="mega-count">88 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=stone"><div class="mega-icon" style="background:linear-gradient(135deg,#2A2A2E,#1A1C22)"><i class="fa-solid fa-gem"></i></div><div><div class="mega-label">Sintered Stones</div><div class="mega-count">36 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=wpc"><div class="mega-icon" style="background:linear-gradient(135deg,#1E2A1A,#243820)"><i class="fa-solid fa-grip-lines-vertical"></i></div><div><div class="mega-label">WPC Wall Panels</div><div class="mega-count">80 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=accessories"><div class="mega-icon" style="background:linear-gradient(135deg,#2A2018,#3A2C1A)"><i class="fa-solid fa-screwdriver-wrench"></i></div><div><div class="mega-label">Accessories</div><div class="mega-count">320 products</div></div></a>
+        </div>
+      </li>
+      <li><a href="beco-shop.html">Shop</a></li>
+      <li><a href="beco-about.html" class="active">About</a></li>
+      <li><a href="beco-contact.html">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="beco-shop.html" class="nav-icon-btn" title="Browse products"><i class="fa-solid fa-bag-shopping" style="font-size:14px"></i></a>
+      <a href="beco-contact.html" class="btn-quote"><i class="fa-solid fa-message" style="font-size:11px"></i> Get Quote</a>
+      <div class="hamburger" id="ham"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HERO -->
+<header class="page-hero">
+  <div class="container hero-inner">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>About</span>
+    </div>
+    <h1 class="page-hero-title reveal">About <em>Beco</em></h1>
+    <p class="page-hero-sub reveal" style="transition-delay:.1s">A material partner built for interior teams who know what they need — and need it now.</p>
+  </div>
+</header>
+
+<!-- STORY SECTION -->
+<section class="section bg-warm">
+  <div class="container">
+    <div class="grid-2-split" style="align-items:start;gap:80px">
+      <!-- Image stack -->
+      <div class="img-stack reveal" style="height:480px;position:relative">
+        <div class="img-main" style="position:absolute;top:0;left:0;right:56px;bottom:56px">
+          <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=80" alt="Beco Interiors showroom" style="width:100%;height:100%;object-fit:cover;border-radius:6px">
+        </div>
+        <div class="img-accent">
+          <span class="ia-n">10<sup>+</sup></span>
+          <span class="ia-l">Years in</span>
+          <span class="ia-l">Nairobi</span>
+        </div>
+      </div>
+      <!-- Copy -->
+      <div class="reveal" style="transition-delay:.1s">
+        <div class="eyebrow">Our Story</div>
+        <h2 class="section-title">Kenya's trusted<br>interior materials <em>partner</em></h2>
+        <p class="lead">Beco Interiors is a Nairobi-based specialist supplier of premium building and interior finishing materials, serving architects, interior designers, contractors, and developers who demand quality they can rely on.</p>
+        <p style="font-size:15px;color:var(--text-2);line-height:1.8;margin-top:16px">Located at Urban Square in Nairobi's Industrial Area, our showroom stocks over 520 products across four core categories — sintered stone, lighting, WPC wall panels, and accessories. We make specification easier, quoting faster, and sourcing simpler.</p>
+        <!-- Stats -->
+        <div class="stats-strip" style="margin-top:32px">
+          <div class="stat-box"><div class="stat-n">520<sup style="font-size:.55em">+</sup></div><div class="stat-l">Products in stock</div></div>
+          <div class="stat-box"><div class="stat-n">4</div><div class="stat-l">Core categories</div></div>
+          <div class="stat-box"><div class="stat-n">2<sup style="font-size:.55em">hr</sup></div><div class="stat-l">Quote turnaround</div></div>
+          <div class="stat-box"><div class="stat-n">1</div><div class="stat-l">Nairobi showroom</div></div>
+        </div>
+        <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap">
+          <a href="beco-contact.html#showroom" class="btn btn-primary"><i class="fa-solid fa-location-dot" style="font-size:11px"></i> Visit Showroom</a>
+          <a href="beco-shop.html" class="btn btn-outline">Browse Products</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION & VISION -->
+<section class="section bg-dark">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="eyebrow light">Direction</div>
+      <h2 class="section-title on-dark">Mission &amp; <em>Vision</em></h2>
+    </div>
+    <div class="grid-2 reveal" style="transition-delay:.1s;gap:16px">
+      <div style="padding:36px;border:1px solid rgba(255,255,255,0.08);border-radius:6px;border-top:3px solid var(--red)">
+        <div class="eyebrow light" style="margin-bottom:14px"><i class="fa-solid fa-bullseye" style="font-size:14px"></i>&nbsp;&nbsp;Mission</div>
+        <p style="font-family:var(--display);font-size:clamp(18px,2.5vw,26px);font-weight:300;color:white;line-height:1.5;letter-spacing:-.5px">To make premium interior materials accessible, reliable, and easy to specify for every professional and homeowner building quality spaces in Kenya.</p>
+      </div>
+      <div style="padding:36px;border:1px solid rgba(255,255,255,0.08);border-radius:6px;border-top:3px solid var(--gold)">
+        <div class="eyebrow light" style="margin-bottom:14px;color:var(--gold)"><i class="fa-solid fa-eye" style="font-size:14px"></i>&nbsp;&nbsp;Vision</div>
+        <p style="font-family:var(--display);font-size:clamp(18px,2.5vw,26px);font-weight:300;color:white;line-height:1.5;letter-spacing:-.5px">To be Kenya's most trusted interior materials supplier — setting the standard for quality, range, and service from a single Nairobi destination.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CORE VALUES -->
+<section class="section bg-cream">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="eyebrow">What Drives Us</div>
+      <h2 class="section-title">Our core <em>values</em></h2>
+    </div>
+    <div class="grid-5 reveal" style="transition-delay:.1s">
+      <div class="feat-card light" style="text-align:center">
+        <div class="feat-icon">🤝</div>
+        <div class="feat-title" style="color:var(--dark)">Integrity</div>
+        <div class="feat-text" style="color:var(--text-2)">Honest, transparent dealings on every order.</div>
+      </div>
+      <div class="feat-card light" style="text-align:center">
+        <div class="feat-icon">💡</div>
+        <div class="feat-title" style="color:var(--dark)">Innovation</div>
+        <div class="feat-text" style="color:var(--text-2)">Forward-thinking materials and finishes.</div>
+      </div>
+      <div class="feat-card light" style="text-align:center">
+        <div class="feat-icon">🏆</div>
+        <div class="feat-title" style="color:var(--dark)">Excellence</div>
+        <div class="feat-text" style="color:var(--text-2)">Quality without compromise, always.</div>
+      </div>
+      <div class="feat-card light" style="text-align:center">
+        <div class="feat-icon">🎯</div>
+        <div class="feat-title" style="color:var(--dark)">Client Focus</div>
+        <div class="feat-text" style="color:var(--text-2)">Your project success is our measure.</div>
+      </div>
+      <div class="feat-card light" style="text-align:center">
+        <div class="feat-icon">🌍</div>
+        <div class="feat-title" style="color:var(--dark)">Partnership</div>
+        <div class="feat-text" style="color:var(--text-2)">Long-term relationships, not one-off sales.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW WE WORK -->
+<section class="section bg-warm">
+  <div class="container">
+    <div class="section-header split reveal">
+      <div>
+        <div class="eyebrow">How We Work</div>
+        <h2 class="section-title">A process built around<br>your <em>project flow</em></h2>
+      </div>
+    </div>
+    <div style="background:white;border:1px solid var(--linen);border-radius:6px;overflow:hidden" class="reveal" style="transition-delay:.1s">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-step">01</div>
+          <div>
+            <div class="timeline-title">Discover &amp; Specify</div>
+            <p class="timeline-text">Browse our full range online or visit the showroom in person. Our team is available to assist with material selection and specification for residential, commercial, and hospitality projects.</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-step">02</div>
+          <div>
+            <div class="timeline-title">Shortlist &amp; Sample</div>
+            <p class="timeline-text">Narrow your selection by finish, application, and budget. Samples can be viewed in the showroom, and our team provides guidance on what works best together.</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-step">03</div>
+          <div>
+            <div class="timeline-title">Request a Quote</div>
+            <p class="timeline-text">Submit your cart online or contact us directly. We prepare a formal quote with pricing, availability, and lead times within 2 business hours for stocked items.</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-step">04</div>
+          <div>
+            <div class="timeline-title">Collect or Arrange Delivery</div>
+            <p class="timeline-text">Confirm, pay, and collect from Urban Square — or arrange delivery to your project site in Nairobi. We work around your schedule, not a generic ecommerce checkout.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY BECO (3-col points) -->
+<section class="section bg-dark">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="eyebrow light">Why Partner With Us</div>
+      <h2 class="section-title on-dark">What professionals say<br>sets <em>Beco apart</em></h2>
+    </div>
+    <div class="grid-3 reveal" style="transition-delay:.1s">
+      <div style="display:flex;gap:16px">
+        <div style="font-family:var(--display);font-size:44px;font-weight:300;color:rgba(200,40,30,.18);line-height:1;flex-shrink:0;width:52px">01</div>
+        <div>
+          <div style="font-family:var(--display);font-size:22px;font-weight:400;color:white;margin-bottom:8px">Specialist Range</div>
+          <p style="font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.7">Deep expertise in architectural finishes — we know what works in Nairobi's climate and building standards.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div style="font-family:var(--display);font-size:44px;font-weight:300;color:rgba(200,40,30,.18);line-height:1;flex-shrink:0;width:52px">02</div>
+        <div>
+          <div style="font-family:var(--display);font-size:22px;font-weight:400;color:white;margin-bottom:8px">Ready Local Stock</div>
+          <p style="font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.7">520+ products in our Nairobi warehouse. No waiting on imports or dealing with uncertain lead times.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div style="font-family:var(--display);font-size:44px;font-weight:300;color:rgba(200,40,30,.18);line-height:1;flex-shrink:0;width:52px">03</div>
+        <div>
+          <div style="font-family:var(--display);font-size:22px;font-weight:400;color:white;margin-bottom:8px">WhatsApp Orders</div>
+          <p style="font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.7">The fastest order channel for busy contractors and designers. Message us and get a response in minutes.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div style="font-family:var(--display);font-size:44px;font-weight:300;color:rgba(200,40,30,.18);line-height:1;flex-shrink:0;width:52px">04</div>
+        <div>
+          <div style="font-family:var(--display);font-size:22px;font-weight:400;color:white;margin-bottom:8px">Premium Quality</div>
+          <p style="font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.7">Every product is curated for performance and aesthetics. We don't stock materials we wouldn't use ourselves.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div style="font-family:var(--display);font-size:44px;font-weight:300;color:rgba(200,40,30,.18);line-height:1;flex-shrink:0;width:52px">05</div>
+        <div>
+          <div style="font-family:var(--display);font-size:22px;font-weight:400;color:white;margin-bottom:8px">Kenyan Business</div>
+          <p style="font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.7">We understand the local market, how projects run here, and what delivery expectations are realistic in Nairobi.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div style="font-family:var(--display);font-size:44px;font-weight:300;color:rgba(200,40,30,.18);line-height:1;flex-shrink:0;width:52px">06</div>
+        <div>
+          <div style="font-family:var(--display);font-size:22px;font-weight:400;color:white;margin-bottom:8px">After-Sales Support</div>
+          <p style="font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.7">Product guidance, installation advice, and responsive follow-up whenever you need it during or after a project.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-section">
+  <div class="cta-bg-text" aria-hidden="true">BECO</div>
+  <div class="container">
+    <div class="cta-inner reveal">
+      <div>
+        <div class="eyebrow" style="color:rgba(255,255,255,0.4)"><i class="fa-solid fa-location-dot" style="font-size:12px"></i>&nbsp;&nbsp;Nairobi, Kenya</div>
+        <h2 class="cta-title">Visit our showroom in<br><em>Industrial Area.</em></h2>
+        <p class="cta-sub">Urban Square, Shop 8 & 9, Enterprise Road. Open Monday to Saturday, 8am–6pm.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="beco-contact.html" class="btn btn-primary"><i class="fa-solid fa-location-dot" style="font-size:11px"></i> Get Directions</a>
+        <a href="beco-shop.html" class="btn btn-outline-w">Browse Products</a>
+        <div class="cta-tel"><i class="fa-solid fa-phone"></i><span>+254 722 333 730</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo">
+          <div class="logo-mark"><span>B</span></div>
+          <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+        </a>
+        <p>Kenya's premium supplier of interior finishing materials — lighting, sintered stone, WPC wall panels, and accessories.</p>
+        <div class="footer-social">
+          <a href="#" class="soc-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="soc-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="https://api.whatsapp.com/send?phone=254733886655" class="soc-btn" title="WhatsApp" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Products</div>
+        <ul class="footer-links">
+          <li><a href="beco-shop.html?cat=lighting">Lighting Solutions</a></li>
+          <li><a href="beco-shop.html?cat=stone">Sintered Stones</a></li>
+          <li><a href="beco-shop.html?cat=wpc">WPC Wall Panels</a></li>
+          <li><a href="beco-shop.html?cat=accessories">Accessories</a></li>
+          <li><a href="beco-shop.html">Shop All Products</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <ul class="footer-links">
+          <li><a href="beco-about.html">About Us</a></li>
+          <li><a href="beco-products.html">Products</a></li>
+          <li><a href="beco-contact.html">Contact</a></li>
+          <li><a href="beco-contact.html#showroom">Visit Showroom</a></li>
+          <li><a href="beco-design-system.html">Design System</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-location-dot"></i><span class="fc-val">Urban Square, Shop 8 & 9, Enterprise Road, Industrial Area, Nairobi</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-phone"></i><span class="fc-val">+254 722 333 730<br>+254 733 886 655</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-envelope"></i><span class="fc-val">info@beco.co.ke</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-regular fa-clock"></i><span class="fc-val">Mon–Sat: 8am–6pm</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Beco Interiors Limited. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Sitemap</a>
+      </div>
+      <span class="footer-by">Designed by <a href="https://api.whatsapp.com/send?phone=254741980127&text=Hello%20Brightex%20Solutions%2C%20I%20saw%20the%20Beco%20Interiors%20website%20and%20would%20love%20to%20enquire%20about%20product%20design%20services." target="_blank">Brightex Solutions</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="beco-pages.js"></script>
+</body>
+</html>

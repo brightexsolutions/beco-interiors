@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop All Products — Beco Interiors</title>
+<meta name="description" content="Browse 520+ interior finishing products — lighting, sintered stone, WPC wall panels, and accessories. Build your quote and our team gets back to you within 2 hours.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* === VARS === */
+:root{
+  --red:#C8281E;--red-dark:#9E1F17;--red-tint:#F7EAEA;
+  --black:#111111;--dark:#1E1E1E;--smoke:#4A4540;--stone:#8A8078;
+  --linen:#E6DDD4;--cream:#F2EDE6;--warm-white:#FAF7F5;--white:#FFFFFF;
+  --gold:#C4972A;--wa-green:#25D366;
+  --bg:#FAF7F5;--text-1:#1E1E1E;--text-2:#4A4540;
+  --display:'Cormorant Garamond',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --nav-h:72px;--max-w:1380px;
+  --ease:cubic-bezier(.25,.1,.25,1);
+  --eout:cubic-bezier(0,0,.2,1);
+  --espr:cubic-bezier(.34,1.56,.64,1);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.13);
+  --shadow-red:0 8px 28px rgba(200,40,30,.32);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text-1);-webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden}
+img{display:block;max-width:100%}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;border:none;background:none;font-family:var(--sans)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--linen);border-radius:2px}
+
+/* === NAV === */
+#nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:990;background:rgba(250,247,245,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 1px 0 rgba(0,0,0,.07)}
+.nav-wrap{max-width:var(--max-w);margin:0 auto;padding:0 48px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.nav-logo{display:flex;align-items:center;gap:11px;flex-shrink:0}
+.logo-mark{width:36px;height:36px;background:var(--red);border-radius:2px;display:flex;align-items:center;justify-content:center}
+.logo-mark span{font-family:var(--display);font-size:21px;font-weight:600;color:white;line-height:1}
+.logo-text{display:flex;flex-direction:column;line-height:1.2}
+.logo-name{font-family:var(--display);font-size:17px;font-weight:500;letter-spacing:3.5px;text-transform:uppercase;color:var(--dark)}
+.logo-sub{font-size:8px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--stone)}
+.nav-links{display:flex;align-items:center;list-style:none}
+.nav-links>li>a{display:block;padding:8px 16px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--smoke);transition:color .18s;position:relative;white-space:nowrap}
+.nav-links>li>a:hover,.nav-links>li>a.active{color:var(--red)}
+.nav-links>li>a::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:1px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .25s var(--eout)}
+.nav-links>li>a:hover::after,.nav-links>li>a.active::after{transform:scaleX(1)}
+.has-mega{position:relative}
+.mega-menu{position:absolute;top:calc(100% + 12px);left:50%;width:520px;background:white;border-radius:8px;box-shadow:var(--shadow-lg),0 0 0 1px rgba(0,0,0,.05);padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;opacity:0;visibility:hidden;transform:translateX(-50%) translateY(6px);transition:opacity .2s,transform .2s,visibility .2s;pointer-events:none}
+.has-mega:hover .mega-menu{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.mega-item{display:flex;align-items:center;gap:13px;padding:13px;border-radius:6px;cursor:pointer;transition:background .15s}
+.mega-item:hover{background:var(--cream)}
+.mega-icon{width:44px;height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;flex-shrink:0}
+.mega-label{font-size:13px;font-weight:600;color:var(--dark)}
+.mega-count{font-size:11px;color:var(--stone);margin-top:1px}
+.nav-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nav-icon-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;color:var(--smoke);font-size:14px;position:relative}
+.nav-icon-btn:hover{background:var(--cream);color:var(--dark)}
+.cart-badge{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0);transition:all .2s var(--espr)}
+.cart-badge.show{opacity:1;transform:scale(1)}
+.btn-quote{display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--red);color:white;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px;white-space:nowrap;transition:background .2s,transform .15s,box-shadow .2s}
+.btn-quote:hover{background:var(--red-dark);transform:translateY(-1px);box-shadow:var(--shadow-red)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px 4px}
+.hamburger span{display:block;width:22px;height:1.5px;background:var(--dark);transition:all .25s}
+
+/* === MOBILE NAV === */
+.mob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:991;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.mob-overlay.open{opacity:1;visibility:visible}
+.mob-nav{position:fixed;top:0;right:0;bottom:0;width:300px;max-width:88vw;background:white;z-index:992;transform:translateX(100%);transition:transform .35s var(--ease);display:flex;flex-direction:column;overflow-y:auto}
+.mob-nav.open{transform:translateX(0)}
+.mob-nav-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--linen)}
+.mob-close{width:34px;height:34px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--dark);cursor:pointer;transition:background .15s}
+.mob-close:hover{background:var(--linen)}
+.mob-links{flex:1;padding:12px 0;list-style:none}
+.mob-links>li>a{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;font-size:14px;font-weight:500;color:var(--dark);border-bottom:1px solid rgba(0,0,0,.04);transition:color .15s,background .15s}
+.mob-links>li>a:hover,.mob-links>li>a.active{color:var(--red);background:var(--warm-white)}
+.mob-links>li>a i{font-size:12px;color:var(--stone)}
+.mob-sub-head{padding:10px 24px 6px;font-size:9.5px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--stone)}
+.mob-sub-links{list-style:none}
+.mob-sub-links li a{display:flex;align-items:center;justify-content:space-between;padding:12px 24px 12px 36px;font-size:13px;color:var(--smoke);border-bottom:1px solid rgba(0,0,0,.03);transition:color .15s}
+.mob-sub-links li a:hover{color:var(--red)}
+.mob-sub-links li a span{font-size:10px;font-weight:600;background:var(--cream);color:var(--stone);padding:2px 6px;border-radius:10px}
+.mob-nav-foot{padding:20px 24px;border-top:1px solid var(--linen);display:flex;flex-direction:column;gap:12px}
+.mob-contact{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--smoke)}
+.mob-contact i{color:var(--red)}
+
+/* === BUTTONS === */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:14px 28px;border-radius:2px;border:1.5px solid transparent;transition:all .22s var(--ease);cursor:pointer;white-space:nowrap}
+.btn-primary{background:var(--red);color:white;border-color:var(--red)}
+.btn-primary:hover{background:var(--red-dark);transform:translateY(-1px);box-shadow:var(--shadow-red)}
+.btn-outline{background:transparent;color:var(--dark);border-color:rgba(30,30,30,.28)}
+.btn-outline:hover{background:var(--dark);color:white}
+.btn-wa{background:var(--wa-green);color:white;border-color:var(--wa-green)}
+.btn-wa:hover{background:#1da854}
+
+/* === SHOP HEADER === */
+.shop-header{padding-top:var(--nav-h);background:var(--dark)}
+.shop-header-inner{max-width:var(--max-w);margin:0 auto;padding:36px 48px}
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;flex-wrap:wrap}
+.breadcrumb a{color:rgba(255,255,255,.35);transition:color .15s}
+.breadcrumb a:hover{color:var(--red)}
+.breadcrumb i{font-size:9px}
+.shop-title{font-family:var(--display);font-size:clamp(32px,5vw,56px);font-weight:300;letter-spacing:-1.5px;color:white;line-height:1.05}
+.shop-title em{font-style:italic;color:var(--red)}
+.shop-meta-bar{display:flex;align-items:center;gap:20px;margin-top:14px;flex-wrap:wrap}
+.shop-meta-bar span{font-size:13px;color:rgba(255,255,255,.38)}
+.shop-meta-bar strong{color:rgba(255,255,255,.7)}
+
+/* === MOBILE FILTER BAR (top, mobile-only) === */
+.mob-filter-bar{display:none;align-items:center;gap:8px;padding:12px 20px;background:white;border-bottom:1px solid var(--linen);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:var(--nav-h);z-index:50}
+.mob-filter-bar::-webkit-scrollbar{display:none}
+.mob-filter-chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--linen);border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--smoke);background:white;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.mob-filter-chip.active{border-color:var(--red);background:var(--red-tint);color:var(--red)}
+.mob-filter-chip i{font-size:10px}
+
+/* === SHOP BODY === */
+.shop-body{max-width:var(--max-w);margin:0 auto;padding:32px 48px;display:grid;grid-template-columns:260px 1fr;gap:36px;align-items:start}
+
+/* === SIDEBAR === */
+.sidebar{background:white;border-radius:6px;border:1px solid var(--linen);overflow:hidden;position:sticky;top:calc(var(--nav-h) + 20px)}
+.sidebar-head{padding:18px 20px;border-bottom:1px solid var(--linen);display:flex;align-items:center;justify-content:space-between}
+.sidebar-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dark)}
+.sidebar-reset{font-size:11px;color:var(--red);cursor:pointer;font-weight:600;opacity:.8;transition:opacity .15s}
+.sidebar-reset:hover{opacity:1}
+.filter-group{padding:18px 20px;border-bottom:1px solid var(--linen)}
+.filter-group:last-child{border-bottom:none}
+.filter-label{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:12px}
+.filter-option{display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer;user-select:none}
+.filter-option:last-child{margin-bottom:0}
+.fcheck{width:18px;height:18px;border-radius:3px;border:1.5px solid var(--linen);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.filter-option.active .fcheck{background:var(--red);border-color:var(--red)}
+.filter-option.active .fcheck::after{content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;font-size:8px;color:white}
+.fradio{width:18px;height:18px;border-radius:50%;border:2px solid var(--linen);transition:all .15s;flex-shrink:0;position:relative}
+.filter-option.active .fradio{border-color:var(--red)}
+.filter-option.active .fradio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--red)}
+.ftext{font-size:13px;color:var(--text-2);transition:color .15s;line-height:1.3}
+.filter-option.active .ftext{color:var(--red);font-weight:500}
+.fcount{font-size:10px;color:var(--stone);margin-left:auto;background:var(--cream);padding:2px 7px;border-radius:10px;flex-shrink:0}
+
+/* === SORT BAR === */
+.sort-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.result-count{font-size:13px;color:var(--stone)}
+.result-count strong{color:var(--dark)}
+.sort-right{display:flex;align-items:center;gap:16px}
+.sort-select-wrap{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--smoke)}
+.sort-select-wrap select{border:1.5px solid var(--linen);border-radius:4px;padding:7px 32px 7px 12px;font-size:12px;font-weight:500;font-family:var(--sans);color:var(--dark);cursor:pointer;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8078' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;outline:none;transition:border-color .15s}
+.sort-select-wrap select:focus{border-color:var(--red)}
+.view-toggle{display:flex;align-items:center;gap:2px}
+.view-btn{width:32px;height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--stone);cursor:pointer;transition:all .15s}
+.view-btn.active{background:var(--dark);color:white}
+.view-btn:not(.active):hover{background:var(--cream);color:var(--dark)}
+
+/* === PRODUCTS GRID === */
+.products-area{min-height:400px}
+.products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.products-grid.list-view{grid-template-columns:1fr}
+
+/* Product card — grid view */
+.p-card{background:white;border-radius:4px;overflow:hidden;border:1px solid rgba(0,0,0,.04);transition:transform .25s var(--ease),box-shadow .25s;cursor:pointer}
+.p-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.p-img{height:220px;position:relative;overflow:hidden;background:var(--cream)}
+.p-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease)}
+.p-card:hover .p-img img{transform:scale(1.05)}
+.p-badge{position:absolute;top:12px;left:12px;z-index:1;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:1px}
+.badge-new{background:var(--dark);color:white}
+.badge-hot{background:var(--red);color:white}
+.badge-poa{background:rgba(196,151,42,.15);color:var(--gold);border:1px solid rgba(196,151,42,.25)}
+.p-body{padding:18px;display:flex;flex-direction:column;gap:8px}
+.p-cat{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red)}
+.p-name{font-family:var(--display);font-size:18px;font-weight:500;color:var(--dark);line-height:1.2}
+.p-sku{font-family:var(--mono);font-size:10px;color:var(--stone)}
+.p-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--linen);margin-top:auto;gap:10px}
+.p-price{font-family:var(--display);font-size:20px;font-weight:500;color:var(--dark)}
+.p-price.poa{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--stone)}
+.p-btns{display:flex;align-items:center;gap:6px}
+.p-add-btn{display:flex;align-items:center;gap:5px;padding:7px 11px;background:var(--red);color:white;font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-radius:2px;transition:all .15s;white-space:nowrap;border:none;cursor:pointer;font-family:var(--sans)}
+.p-add-btn:hover{background:var(--red-dark)}
+.p-add-btn.added{background:var(--dark)}
+.p-add-btn i{font-size:10px}
+.p-wa-btn{width:32px;height:32px;background:var(--wa-green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;transition:transform .15s var(--espr),box-shadow .2s;flex-shrink:0}
+.p-wa-btn:hover{transform:scale(1.12);box-shadow:0 4px 14px rgba(37,211,102,.4)}
+
+/* Product card — list view */
+.products-grid.list-view .p-card{display:grid;grid-template-columns:200px 1fr}
+.products-grid.list-view .p-img{height:100%;min-height:160px}
+.products-grid.list-view .p-body{padding:20px;display:flex;flex-direction:column;justify-content:space-between}
+.products-grid.list-view .p-name{font-size:22px}
+.products-grid.list-view .p-sku{margin-bottom:2px}
+.p-desc{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px;display:none}
+.products-grid.list-view .p-desc{display:block}
+
+/* Empty state */
+.empty-state{grid-column:1/-1;text-align:center;padding:80px 0}
+.empty-state i{font-size:48px;color:var(--linen);margin-bottom:20px;display:block}
+.empty-state h3{font-family:var(--display);font-size:28px;font-weight:300;color:var(--stone);margin-bottom:8px}
+.empty-state p{font-size:14px;color:var(--stone)}
+
+/* === PRODUCT DETAIL DRAWER === */
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:993;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.detail-overlay.open{opacity:1;visibility:visible}
+.detail-drawer{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:96vw;background:white;z-index:994;transform:translateX(100%);transition:transform .38s var(--ease);display:flex;flex-direction:column;overflow-y:auto}
+.detail-drawer.open{transform:translateX(0)}
+.detail-img{width:100%;height:320px;position:relative;overflow:hidden;flex-shrink:0;background:var(--cream)}
+.detail-img img{width:100%;height:100%;object-fit:cover}
+.detail-img-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.32))}
+.detail-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--dark);cursor:pointer;backdrop-filter:blur(6px);transition:background .15s}
+.detail-close:hover{background:white}
+.detail-badge-wrap{position:absolute;top:16px;left:16px}
+.detail-body{padding:28px 28px 40px;flex:1}
+.detail-cat{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.detail-name{font-family:var(--display);font-size:30px;font-weight:400;color:var(--dark);line-height:1.1;margin-bottom:8px}
+.detail-sku{font-family:var(--mono);font-size:11px;color:var(--stone);margin-bottom:16px}
+.detail-price-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--linen)}
+.detail-price{font-family:var(--display);font-size:34px;font-weight:300;color:var(--dark)}
+.detail-price.poa{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone)}
+.detail-unit{font-size:12px;color:var(--stone)}
+.detail-desc{font-size:14px;color:var(--text-2);line-height:1.75;margin-bottom:20px}
+.detail-specs{margin-bottom:24px}
+.detail-specs-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:12px}
+.spec-row{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.05)}
+.spec-row:last-child{border-bottom:none}
+.spec-key{font-size:12px;font-weight:600;color:var(--dark);width:130px;flex-shrink:0}
+.spec-val{font-size:12px;color:var(--smoke)}
+.detail-actions{display:flex;flex-direction:column;gap:10px;position:sticky;bottom:0;background:white;padding:16px 28px;border-top:1px solid var(--linen);margin:0 -28px -40px}
+.detail-add-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;background:var(--red);color:white;font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px;cursor:pointer;transition:all .2s;border:none;width:100%;font-family:var(--sans)}
+.detail-add-btn:hover{background:var(--red-dark);transform:translateY(-1px);box-shadow:var(--shadow-red)}
+.detail-add-btn.added{background:var(--dark)}
+.detail-wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:rgba(37,211,102,.1);color:#1a9d4e;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-radius:2px;cursor:pointer;transition:background .15s;text-decoration:none}
+.detail-wa-btn:hover{background:rgba(37,211,102,.18)}
+
+/* === CART DRAWER === */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:994;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.cart-overlay.open{opacity:1;visibility:visible}
+.cart-drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;background:white;z-index:995;transform:translateX(100%);transition:transform .38s var(--ease);display:flex;flex-direction:column}
+.cart-drawer.open{transform:translateX(0)}
+.cart-head{display:flex;align-items:center;justify-content:space-between;padding:22px 26px;border-bottom:1px solid var(--linen)}
+.cart-title{font-family:var(--display);font-size:24px;font-weight:400;color:var(--dark);display:flex;align-items:center;gap:10px}
+.cart-count{font-size:11px;font-weight:700;background:var(--red);color:white;padding:2px 8px;border-radius:10px}
+.cart-close{width:34px;height:34px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--dark);cursor:pointer;transition:background .15s}
+.cart-close:hover{background:var(--linen)}
+.cart-body{flex:1;overflow-y:auto;padding:12px 26px}
+.cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;text-align:center;padding:40px 0}
+.cart-empty i{font-size:44px;color:var(--linen)}
+.cart-empty h3{font-family:var(--display);font-size:22px;font-weight:300;color:var(--stone)}
+.cart-empty p{font-size:13px;color:var(--stone)}
+.cart-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--linen)}
+.cart-item:last-child{border-bottom:none}
+.ci-img{width:68px;height:68px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--cream)}
+.ci-img img{width:100%;height:100%;object-fit:cover}
+.ci-info{flex:1;min-width:0}
+.ci-cat{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.ci-name{font-family:var(--display);font-size:15px;font-weight:500;color:var(--dark);line-height:1.2;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-sku{font-family:var(--mono);font-size:9.5px;color:var(--stone);margin-bottom:8px}
+.ci-bottom{display:flex;align-items:center;justify-content:space-between}
+.ci-price{font-family:var(--display);font-size:17px;font-weight:400;color:var(--dark)}
+.ci-price.poa{font-family:var(--sans);font-size:10px;font-weight:600;text-transform:uppercase;color:var(--stone)}
+.ci-right{display:flex;align-items:center;gap:8px}
+.qty-ctrl{display:flex;align-items:center;border:1.5px solid var(--linen);border-radius:3px;overflow:hidden}
+.qty-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--smoke);cursor:pointer;transition:background .15s;background:none;border:none;font-family:var(--sans)}
+.qty-btn:hover{background:var(--cream)}
+.qty-val{width:32px;text-align:center;font-size:12px;font-weight:600;color:var(--dark);border-left:1.5px solid var(--linen);border-right:1.5px solid var(--linen);height:26px;line-height:26px}
+.ci-remove{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--stone);cursor:pointer;transition:all .15s;background:none;border:none}
+.ci-remove:hover{background:var(--red-tint);color:var(--red)}
+.cart-foot{padding:18px 26px;border-top:1px solid var(--linen)}
+.cart-subtotal{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.cart-sub-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone)}
+.cart-sub-val{font-family:var(--display);font-size:28px;font-weight:300;color:var(--dark)}
+.cart-poa-note{font-size:11.5px;color:var(--stone);line-height:1.55;margin-bottom:14px;display:none}
+.cart-poa-note.show{display:block}
+.cart-poa-note i{color:var(--gold)}
+.cart-cta{display:flex;flex-direction:column;gap:8px}
+.cart-cta-main{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--red);color:white;font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px;cursor:pointer;transition:all .2s;border:none;width:100%;font-family:var(--sans)}
+.cart-cta-main:hover{background:var(--red-dark);transform:translateY(-1px);box-shadow:var(--shadow-red)}
+.cart-cta-wa{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:var(--wa-green);color:white;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-radius:2px;text-decoration:none;transition:background .2s}
+.cart-cta-wa:hover{background:#1da854}
+
+/* === QUOTE MODAL === */
+.modal-bg{position:fixed;inset:0;background:rgba(17,17,17,.72);z-index:996;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{opacity:1;visibility:visible}
+.modal{background:white;border-radius:8px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;position:relative}
+.modal-head{padding:26px 30px 18px;border-bottom:1px solid var(--linen);display:flex;align-items:flex-start;justify-content:space-between;gap:20px;position:sticky;top:0;background:white;z-index:1}
+.modal-title{font-family:var(--display);font-size:28px;font-weight:400;color:var(--dark);line-height:1.1}
+.modal-title em{font-style:italic;color:var(--red)}
+.modal-sub{font-size:13px;color:var(--stone);margin-top:4px}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--dark);cursor:pointer;flex-shrink:0}
+.modal-close:hover{background:var(--linen)}
+.modal-body{padding:26px 30px}
+
+/* Steps */
+.steps-bar{display:flex;align-items:center;margin-bottom:26px}
+.step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .3s}
+.step-dot.done,.step-dot.active{background:var(--red);color:white}
+.step-dot.active{box-shadow:0 0 0 4px var(--red-tint)}
+.step-dot.pending{background:var(--cream);color:var(--stone)}
+.step-line{flex:1;height:2px;background:var(--linen);transition:background .3s}
+.step-line.done{background:var(--red)}
+.modal-step{display:none}
+.modal-step.active{display:block}
+
+/* Form fields */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.frow.full{grid-template-columns:1fr}
+.fgroup{display:flex;flex-direction:column;gap:5px}
+.flabel{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dark)}
+.flabel em{color:var(--red);font-style:normal}
+.finput,.fselect,.ftextarea{border:1.5px solid var(--linen);border-radius:4px;padding:11px 14px;font-size:14px;font-family:var(--sans);color:var(--dark);background:white;outline:none;transition:border-color .15s;width:100%}
+.finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--red)}
+.finput::placeholder,.ftextarea::placeholder{color:var(--stone)}
+.fselect{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8078' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.ftextarea{resize:vertical;min-height:90px}
+.radio-group{display:flex;gap:10px;flex-wrap:wrap}
+.radio-opt{display:flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid var(--linen);border-radius:4px;cursor:pointer;transition:all .15s;font-size:13px;font-weight:500;color:var(--smoke)}
+.radio-opt.sel{border-color:var(--red);background:var(--red-tint);color:var(--red)}
+.radio-opt i{font-size:13px}
+.finput.err,.fselect.err{border-color:#DC2626}
+.ferr{font-size:11px;color:#DC2626;margin-top:3px}
+
+/* Order summary */
+.order-summary{background:var(--warm-white);border-radius:6px;padding:14px 16px;margin-bottom:18px}
+.os-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:10px}
+.os-item{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:13px}
+.os-item:last-child{margin-bottom:0}
+.os-name{color:var(--dark);flex:1}
+.os-qty{color:var(--stone);white-space:nowrap}
+.os-price{color:var(--dark);font-weight:600;white-space:nowrap}
+
+/* Modal nav */
+.modal-nav{display:flex;align-items:center;gap:10px;margin-top:22px}
+.btn-back{display:flex;align-items:center;gap:6px;padding:11px 18px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);background:none;border:1.5px solid var(--linen);border-radius:2px;cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.btn-back:hover{color:var(--dark);border-color:var(--dark)}
+.btn-next{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background:var(--red);color:white;border:none;border-radius:2px;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.btn-next:hover{background:var(--red-dark)}
+
+/* Success */
+.success-wrap{text-align:center;padding:10px 0 24px}
+.success-icon{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#16A34A,#15803d);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:26px;color:white}
+.success-ref{font-family:var(--mono);font-size:17px;color:var(--red);background:var(--red-tint);padding:7px 18px;border-radius:3px;display:inline-block;margin-bottom:14px;letter-spacing:2px}
+.success-title{font-family:var(--display);font-size:28px;font-weight:300;color:var(--dark);margin-bottom:8px}
+.success-body{font-size:14px;color:var(--text-2);line-height:1.7;max-width:380px;margin:0 auto 20px}
+.success-steps{background:var(--warm-white);border-radius:6px;padding:18px;text-align:left;margin-bottom:20px}
+.ss-row{display:flex;gap:12px;margin-bottom:12px}
+.ss-row:last-child{margin-bottom:0}
+.ss-num{width:24px;height:24px;border-radius:50%;background:var(--red);color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.ss-text{font-size:13px;color:var(--text-2);line-height:1.5}
+
+/* === RESPONSIVE === */
+@media(max-width:1100px){.products-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:960px){
+  .shop-body{grid-template-columns:1fr;padding:24px}
+  .sidebar{display:none}
+  .mob-filter-bar{display:flex}
+  .products-grid{grid-template-columns:repeat(2,1fr)}
+  .shop-header-inner{padding:28px 24px}
+}
+@media(max-width:768px){
+  .nav-wrap{padding:0 20px}
+  .nav-right{gap:2px}
+  .nav-icon-btn{width:34px;height:34px}
+  .btn-quote{display:none}
+  .hamburger{display:flex}
+  .nav-links,.mega-menu{display:none!important}
+  .shop-body{padding:16px 20px}
+  .sort-bar{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:18px}
+  .sort-right{width:100%;justify-content:space-between}
+  .sort-select-wrap{flex:1;min-width:0}
+  .sort-select-wrap select{width:100%}
+  .products-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .frow{grid-template-columns:1fr}
+  .modal-bg{padding:0;align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-width:100%;max-height:94vh}
+  .modal-body{padding:20px}
+  .modal-head{padding:18px 20px 14px}
+  .cart-drawer{width:100%;max-width:100%}
+  .detail-drawer{width:100%;max-width:100%}
+  .products-grid.list-view .p-card{grid-template-columns:1fr}
+  .products-grid.list-view .p-img{height:200px}
+}
+@media(max-width:480px){
+  .shop-header-inner{padding:24px 20px}
+  .shop-meta-bar{gap:10px}
+  .products-grid{grid-template-columns:1fr}
+  .radio-group{flex-direction:column}
+  .modal-nav{flex-direction:column}
+  .modal-nav .btn-back,.modal-nav .btn-next{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- MOBILE NAV -->
+<div class="mob-overlay" id="mobOverlay"></div>
+<nav class="mob-nav" id="mobNav">
+  <div class="mob-nav-head">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-mark"><span>B</span></div>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <button class="mob-close" id="mobClose"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <ul class="mob-links">
+    <li><a href="index.html">Home <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-shop.html" class="active">Shop All <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-products.html">Products <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-about.html">About <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-contact.html">Contact <i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul>
+  <div class="mob-sub-head">Categories</div>
+  <ul class="mob-sub-links">
+    <li><a href="javascript:void(0)" onclick="setActiveCat('lighting');closeMob()">Lighting <span>5</span></a></li>
+    <li><a href="javascript:void(0)" onclick="setActiveCat('stone');closeMob()">Sintered Stones <span>5</span></a></li>
+    <li><a href="javascript:void(0)" onclick="setActiveCat('wpc');closeMob()">WPC Wall Panels <span>5</span></a></li>
+    <li><a href="javascript:void(0)" onclick="setActiveCat('accessories');closeMob()">Accessories <span>5</span></a></li>
+  </ul>
+  <div class="mob-nav-foot">
+    <button class="cart-cta-main" onclick="openCart();closeMob()">
+      <i class="fa-solid fa-bag-shopping"></i> View Quote Cart (<span id="mobCartCount">0</span>)
+    </button>
+    <a href="https://api.whatsapp.com/send?phone=254733886655" class="cart-cta-wa" target="_blank">
+      <i class="fa-brands fa-whatsapp" style="font-size:15px"></i> WhatsApp Us
+    </a>
+    <div class="mob-contact"><i class="fa-solid fa-phone"></i><span>+254 733 886 655</span></div>
+  </div>
+</nav>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-wrap">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-mark"><span>B</span></div>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li class="has-mega">
+        <a href="beco-products.html">Products</a>
+        <div class="mega-menu">
+          <a class="mega-item" href="beco-shop.html?cat=lighting">
+            <div class="mega-icon" style="background:linear-gradient(135deg,#141420,#1E1E30)"><i class="fa-solid fa-lightbulb"></i></div>
+            <div><div class="mega-label">Lighting</div><div class="mega-count">88 products</div></div>
+          </a>
+          <a class="mega-item" href="beco-shop.html?cat=stone">
+            <div class="mega-icon" style="background:linear-gradient(135deg,#2A2A2E,#1A1C22)"><i class="fa-solid fa-gem"></i></div>
+            <div><div class="mega-label">Sintered Stones</div><div class="mega-count">36 products</div></div>
+          </a>
+          <a class="mega-item" href="beco-shop.html?cat=wpc">
+            <div class="mega-icon" style="background:linear-gradient(135deg,#1E2A1A,#243820)"><i class="fa-solid fa-grip-lines-vertical"></i></div>
+            <div><div class="mega-label">WPC Wall Panels</div><div class="mega-count">80 products</div></div>
+          </a>
+          <a class="mega-item" href="beco-shop.html?cat=accessories">
+            <div class="mega-icon" style="background:linear-gradient(135deg,#2A2018,#3A2C1A)"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+            <div><div class="mega-label">Accessories</div><div class="mega-count">320 products</div></div>
+          </a>
+        </div>
+      </li>
+      <li><a href="beco-shop.html" class="active">Shop</a></li>
+      <li><a href="beco-about.html">About</a></li>
+      <li><a href="beco-contact.html">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="nav-icon-btn" onclick="openCart()" title="Quote Cart">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span class="cart-badge" id="navBadge">0</span>
+      </button>
+      <button class="btn-quote" onclick="openQuote()">
+        <i class="fa-solid fa-file-invoice" style="font-size:11px"></i> Request Quote
+      </button>
+      <div class="hamburger" id="ham"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</nav>
+
+<!-- PRODUCT DETAIL DRAWER -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-drawer" id="detailDrawer">
+  <div class="detail-img" id="detailImg">
+    <img id="detailImgSrc" src="" alt="">
+    <div class="detail-img-overlay"></div>
+    <button class="detail-close" onclick="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="detail-badge-wrap" id="detailBadge"></div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-cat" id="detailCat"></div>
+    <div class="detail-name" id="detailName"></div>
+    <div class="detail-sku" id="detailSku"></div>
+    <div class="detail-price-row">
+      <div class="detail-price" id="detailPrice"></div>
+      <div class="detail-unit" id="detailUnit"></div>
+    </div>
+    <div class="detail-desc" id="detailDesc"></div>
+    <div class="detail-specs">
+      <div class="detail-specs-title">Specifications</div>
+      <div id="detailSpecs"></div>
+    </div>
+    <div class="detail-actions">
+      <button class="detail-add-btn" id="detailAddBtn" onclick="addFromDetail()">
+        <i class="fa-solid fa-plus"></i> Add to Quote Cart
+      </button>
+      <a class="detail-wa-btn" id="detailWaBtn" href="#" target="_blank">
+        <i class="fa-brands fa-whatsapp" style="font-size:15px"></i> Quick Enquiry via WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-head">
+    <div class="cart-title">
+      <i class="fa-solid fa-bag-shopping" style="color:var(--red);font-size:18px"></i>
+      Quote Cart
+      <span class="cart-count" id="cartCount">0</span>
+    </div>
+    <button class="cart-close" onclick="closeCart()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="cart-body" id="cartBody">
+    <div class="cart-empty" id="cartEmpty">
+      <i class="fa-solid fa-bag-shopping"></i>
+      <h3>Your cart is empty</h3>
+      <p>Browse products and add items to<br>build your quote request.</p>
+    </div>
+    <div id="cartItems"></div>
+  </div>
+  <div class="cart-foot" id="cartFoot" style="display:none">
+    <div class="cart-subtotal">
+      <span class="cart-sub-label">Estimated Total</span>
+      <span class="cart-sub-val" id="cartTotal">KSh 0</span>
+    </div>
+    <p class="cart-poa-note" id="poaNote">
+      <i class="fa-solid fa-circle-info"></i>
+      Items marked "Price on Request" will be confirmed when our team calls you back.
+    </p>
+    <div class="cart-cta">
+      <button class="cart-cta-main" onclick="closeCart();openQuote()">
+        <i class="fa-solid fa-file-invoice"></i> Request Formal Quote
+      </button>
+      <a id="cartWaLink" href="#" class="cart-cta-wa" target="_blank">
+        <i class="fa-brands fa-whatsapp" style="font-size:15px"></i> Send Cart via WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- QUOTE MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="quoteModal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Request a <em>Quote</em></div>
+        <div class="modal-sub">We call you back within 2 hours with pricing & availability.</div>
+      </div>
+      <button class="modal-close" onclick="closeQuote()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="steps-bar">
+        <div class="step-dot active" id="sd1">1</div>
+        <div class="step-line" id="sl1"></div>
+        <div class="step-dot pending" id="sd2">2</div>
+        <div class="step-line" id="sl2"></div>
+        <div class="step-dot pending" id="sd3"><i class="fa-solid fa-check" style="font-size:10px"></i></div>
+      </div>
+
+      <!-- Step 1: Contact -->
+      <div class="modal-step active" id="step1">
+        <p style="font-size:13px;color:var(--stone);margin-bottom:18px">Your details — needed to prepare the formal quotation document.</p>
+        <div class="frow">
+          <div class="fgroup"><label class="flabel">Full Name <em>*</em></label><input class="finput" id="f_name" type="text" placeholder="e.g. James Mwangi"></div>
+          <div class="fgroup"><label class="flabel">Company / Firm</label><input class="finput" id="f_company" type="text" placeholder="e.g. JM Architects (optional)"></div>
+        </div>
+        <div class="frow">
+          <div class="fgroup"><label class="flabel">Phone Number <em>*</em></label><input class="finput" id="f_phone" type="tel" placeholder="+254 7XX XXX XXX"></div>
+          <div class="fgroup"><label class="flabel">Email Address <em>*</em></label><input class="finput" id="f_email" type="email" placeholder="you@example.com"></div>
+        </div>
+        <div id="step1err" style="font-size:12px;color:#DC2626;margin-bottom:4px;display:none"><i class="fa-solid fa-circle-exclamation"></i> Please fill in all required fields.</div>
+        <div class="modal-nav"><div></div>
+          <button class="btn-next" onclick="nextStep1()">
+            Next: Project Details <i class="fa-solid fa-arrow-right" style="font-size:11px"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Project -->
+      <div class="modal-step" id="step2">
+        <p style="font-size:13px;color:var(--stone);margin-bottom:18px">Help us tailor the quote to your project.</p>
+        <div class="frow full" style="margin-bottom:14px">
+          <div class="fgroup">
+            <label class="flabel">Project Type</label>
+            <div class="radio-group">
+              <div class="radio-opt sel" data-group="ptype" onclick="selRadio(this)"><i class="fa-solid fa-house"></i> Residential</div>
+              <div class="radio-opt" data-group="ptype" onclick="selRadio(this)"><i class="fa-solid fa-building"></i> Commercial</div>
+              <div class="radio-opt" data-group="ptype" onclick="selRadio(this)"><i class="fa-solid fa-hotel"></i> Hospitality</div>
+              <div class="radio-opt" data-group="ptype" onclick="selRadio(this)"><i class="fa-solid fa-hammer"></i> Contractor</div>
+            </div>
+          </div>
+        </div>
+        <div class="frow full" style="margin-bottom:14px">
+          <div class="fgroup">
+            <label class="flabel">Fulfil via</label>
+            <div class="radio-group">
+              <div class="radio-opt sel" data-group="fulfil" onclick="selRadio(this);toggleDelivery(false)"><i class="fa-solid fa-store"></i> Showroom Pickup</div>
+              <div class="radio-opt" data-group="fulfil" onclick="selRadio(this);toggleDelivery(true)"><i class="fa-solid fa-truck"></i> Site Delivery</div>
+            </div>
+          </div>
+        </div>
+        <div id="deliveryField" class="frow full" style="display:none;margin-bottom:14px">
+          <div class="fgroup"><label class="flabel">Delivery Address</label><input class="finput" id="f_address" type="text" placeholder="Street, estate, Nairobi"></div>
+        </div>
+        <div class="frow">
+          <div class="fgroup">
+            <label class="flabel">Timeline</label>
+            <select class="fselect" id="f_timeline">
+              <option value="">Select...</option>
+              <option value="urgent">Urgent — within 3 days</option>
+              <option value="week">Within 1 week</option>
+              <option value="2weeks">Within 2 weeks</option>
+              <option value="month">Within 1 month</option>
+              <option value="flexible">Flexible</option>
+            </select>
+          </div>
+          <div class="fgroup">
+            <label class="flabel">Budget (KSh, optional)</label>
+            <input class="finput" id="f_budget" type="text" placeholder="e.g. KSh 150,000">
+          </div>
+        </div>
+        <div class="frow full">
+          <div class="fgroup"><label class="flabel">Additional Notes</label><textarea class="ftextarea" id="f_notes" placeholder="Specific finishes, quantities, questions for our team..."></textarea></div>
+        </div>
+        <!-- Order summary -->
+        <div class="order-summary" id="orderSummary">
+          <div class="os-title">Your Cart</div>
+          <div id="summaryItems"></div>
+        </div>
+        <div class="modal-nav">
+          <button class="btn-back" onclick="goStep(1)"><i class="fa-solid fa-arrow-left" style="font-size:10px"></i> Back</button>
+          <button class="btn-next" onclick="submitQuote()">
+            <i class="fa-solid fa-paper-plane" style="font-size:11px"></i> Submit Request
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div class="modal-step" id="step3">
+        <div class="success-wrap">
+          <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+          <div class="success-ref" id="refNum">BECO-2026-0001</div>
+          <div class="success-title">Quote Request Received!</div>
+          <p class="success-body">Our team will review your cart and call you back within <strong>2 business hours</strong> to confirm pricing, availability and delivery.</p>
+          <div class="success-steps">
+            <div class="ss-row"><div class="ss-num">1</div><div class="ss-text">Team reviews your cart & prepares a formal quotation document</div></div>
+            <div class="ss-row"><div class="ss-num">2</div><div class="ss-text">We call you within 2 hours to confirm pricing, availability & delivery</div></div>
+            <div class="ss-row"><div class="ss-num">3</div><div class="ss-text">Confirm & pay — then collect at Industrial Area or receive delivery</div></div>
+          </div>
+          <p style="font-size:13px;color:var(--stone)">Need faster? Call us:<br><strong style="color:var(--dark)">+254 722 333 730 / +254 733 886 655</strong></p>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+            <button class="btn-next" style="flex:none;padding:12px 24px" onclick="closeQuote();clearCart()">Done <i class="fa-solid fa-check" style="font-size:10px"></i></button>
+            <a id="emailQuoteLink" href="#" class="btn-back" style="text-decoration:none"><i class="fa-regular fa-envelope" style="font-size:11px"></i> Open in Email App</a>
+            <a href="https://api.whatsapp.com/send?phone=254733886655" class="cart-cta-wa" style="flex:none;padding:12px 20px;text-decoration:none" target="_blank"><i class="fa-brands fa-whatsapp" style="font-size:14px"></i> Also message us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHOP HEADER -->
+<div class="shop-header">
+  <div class="shop-header-inner">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="bcCat">All Products</span>
+    </div>
+    <h1 class="shop-title" id="shopTitle">Shop <em>All Products</em></h1>
+    <div class="shop-meta-bar">
+      <span id="shopCountMeta"><strong>20</strong> products shown</span>
+      <span style="color:rgba(255,255,255,.15)">·</span>
+      <span>Add items to your cart, then request a formal quote</span>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE FILTER CHIPS (sticky below nav on mobile) -->
+<div class="mob-filter-bar" id="mobFilterBar">
+  <div class="mob-filter-chip active" data-cat="all" onclick="setActiveCat('all')"><i class="fa-solid fa-border-all"></i> All</div>
+  <div class="mob-filter-chip" data-cat="lighting" onclick="setActiveCat('lighting')"><i class="fa-solid fa-lightbulb"></i> Lighting</div>
+  <div class="mob-filter-chip" data-cat="stone" onclick="setActiveCat('stone')"><i class="fa-solid fa-gem"></i> Stones</div>
+  <div class="mob-filter-chip" data-cat="wpc" onclick="setActiveCat('wpc')"><i class="fa-solid fa-grip-lines-vertical"></i> WPC Panels</div>
+  <div class="mob-filter-chip" data-cat="accessories" onclick="setActiveCat('accessories')"><i class="fa-solid fa-screwdriver-wrench"></i> Accessories</div>
+</div>
+
+<!-- SHOP BODY -->
+<div class="shop-body">
+
+  <!-- SIDEBAR FILTERS -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-title">Filters</span>
+      <span class="sidebar-reset" onclick="resetFilters()">Clear All</span>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Category</div>
+      <div class="filter-option active" data-cat="all" onclick="setActiveCat('all',this)">
+        <div class="fradio"></div><span class="ftext">All Products</span><span class="fcount">20</span>
+      </div>
+      <div class="filter-option" data-cat="lighting" onclick="setActiveCat('lighting',this)">
+        <div class="fradio"></div><span class="ftext">Lighting</span><span class="fcount">5</span>
+      </div>
+      <div class="filter-option" data-cat="stone" onclick="setActiveCat('stone',this)">
+        <div class="fradio"></div><span class="ftext">Sintered Stones</span><span class="fcount">5</span>
+      </div>
+      <div class="filter-option" data-cat="wpc" onclick="setActiveCat('wpc',this)">
+        <div class="fradio"></div><span class="ftext">WPC Wall Panels</span><span class="fcount">5</span>
+      </div>
+      <div class="filter-option" data-cat="accessories" onclick="setActiveCat('accessories',this)">
+        <div class="fradio"></div><span class="ftext">Accessories</span><span class="fcount">5</span>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Pricing</div>
+      <div class="filter-option active" data-price="all" onclick="setPriceFilter('all',this)">
+        <div class="fcheck"></div><span class="ftext">All</span>
+      </div>
+      <div class="filter-option" data-price="priced" onclick="setPriceFilter('priced',this)">
+        <div class="fcheck"></div><span class="ftext">Fixed Price</span>
+      </div>
+      <div class="filter-option" data-price="poa" onclick="setPriceFilter('poa',this)">
+        <div class="fcheck"></div><span class="ftext">Price on Request</span>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <div class="filter-option active" data-badge="all" onclick="setBadgeFilter('all',this)">
+        <div class="fcheck"></div><span class="ftext">All Items</span>
+      </div>
+      <div class="filter-option" data-badge="hot" onclick="setBadgeFilter('hot',this)">
+        <div class="fcheck"></div><span class="ftext">Best Sellers</span>
+      </div>
+      <div class="filter-option" data-badge="new" onclick="setBadgeFilter('new',this)">
+        <div class="fcheck"></div><span class="ftext">New Arrivals</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="sort-bar">
+      <span class="result-count" id="resultCount"><strong>20</strong> products</span>
+      <div class="sort-right">
+        <div class="sort-select-wrap">
+          <i class="fa-solid fa-arrow-up-arrow-down" style="color:var(--stone);font-size:11px"></i>
+          <select id="sortSel" onchange="renderProducts()">
+            <option value="default">Latest</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="price-desc">Price: High → Low</option>
+            <option value="bestseller">Best Sellers First</option>
+          </select>
+        </div>
+        <div class="view-toggle">
+          <div class="view-btn active" id="gridBtn" onclick="setView('grid')" title="Grid view"><i class="fa-solid fa-grip"></i></div>
+          <div class="view-btn" id="listBtn" onclick="setView('list')" title="List view"><i class="fa-solid fa-list"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="products-area">
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const PRODUCTS = [
+  // LIGHTING
+  {id:'TL-MAG-03',name:'Magnetic Track Light System',cat:'lighting',catLabel:'Lighting',price:null,poa:true,badge:null,unit:'/ set',
+   img:'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&w=800&q=80',
+   desc:'Flexible magnetic track lighting system for retail, hospitality and residential ceilings. Easy tool-free repositioning of individual spotlights.',
+   specs:[['Type','Magnetic Track'],['Wattage','8W per head'],['Colour Temp','3000K / 4000K'],['Coverage','1m – 3m track lengths'],['IP Rating','IP20']]},
+  {id:'CL-LED-24',name:'LED Cabinet Under-Light Bar',cat:'lighting',catLabel:'Lighting',price:1200,poa:false,badge:'hot',unit:'/ pc',
+   img:'https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?auto=format&fit=crop&w=800&q=80',
+   desc:'Slim LED strip bar for kitchen cabinets, display shelves and wardrobes. Motion-sensor version available on request.',
+   specs:[['Type','LED Bar Light'],['Wattage','5W'],['Length','500mm'],['Colour Temp','3000K Warm White'],['IP Rating','IP44']]},
+  {id:'PL-DROP-08',name:'Pendant Drop Light — Brass',cat:'lighting',catLabel:'Lighting',price:3800,poa:false,badge:'new',unit:'/ pc',
+   img:'https://images.unsplash.com/photo-1513506003901-1e6a35576f03?auto=format&fit=crop&w=800&q=80',
+   desc:'Minimalist brass pendant with smoked glass globe. Cord length adjustable up to 1.5m. Ideal for dining areas and bedside.',
+   specs:[['Material','Brass / Smoked Glass'],['Bulb','E27 — max 40W'],['Cord Length','Adjustable 50–150cm'],['Shade Diameter','180mm']]},
+  {id:'RS-LED-12',name:'Recessed Ceiling Spotlight',cat:'lighting',catLabel:'Lighting',price:680,poa:false,badge:null,unit:'/ pc',
+   img:'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&w=800&q=80',
+   desc:'Clean recessed downlight for plasterboard ceilings. Available in white or matt black finish. Cut-out: 75mm.',
+   specs:[['Type','Recessed Downlight'],['Wattage','7W LED'],['Cut-out','75mm'],['Beam Angle','38°'],['IP Rating','IP44']]},
+  {id:'OL-WALL-06',name:'Outdoor Wall Sconce',cat:'lighting',catLabel:'Lighting',price:2400,poa:false,badge:null,unit:'/ pc',
+   img:'https://images.unsplash.com/photo-1513506003901-1e6a35576f03?auto=format&fit=crop&w=800&q=80',
+   desc:'Weatherproof wall-mount exterior light. Powder-coated black aluminium housing. Suitable for gates, driveways and terraces.',
+   specs:[['Material','Aluminium'],['IP Rating','IP65'],['Wattage','12W LED'],['Colour','Matt Black']]},
+
+  // SINTERED STONE
+  {id:'SS-CAL-120',name:'Calacatta White Slab 1200×600',cat:'stone',catLabel:'Sintered Stones',price:25000,poa:false,badge:'hot',unit:'/ slab',
+   img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=800&q=80',
+   desc:'High-performance sintered stone with classic Calacatta veining. Heat, scratch and stain resistant. Ideal for kitchen counters, bathroom walls and flooring.',
+   specs:[['Size','1200 × 600mm'],['Thickness','12mm'],['Finish','Polished / Matt'],['Hardness','Mohs 7+'],['Heat Resistant','Yes — up to 300°C']]},
+  {id:'SS-NER-120',name:'Nero Marquina Black Slab',cat:'stone',catLabel:'Sintered Stones',price:25000,poa:false,badge:null,unit:'/ slab',
+   img:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=800&q=80',
+   desc:'Deep black sintered stone with subtle gold veining. A dramatic statement surface for feature walls, kitchen islands and vanity tops.',
+   specs:[['Size','1200 × 600mm'],['Thickness','12mm'],['Finish','Polished'],['Hardness','Mohs 7+']]},
+  {id:'SS-SAH-120',name:'Sahara Beige Slab 1200×600',cat:'stone',catLabel:'Sintered Stones',price:22000,poa:false,badge:'new',unit:'/ slab',
+   img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=800&q=80',
+   desc:'Warm sandy tones with natural stone texture. Versatile for outdoor cladding, bathroom floors and open-plan kitchen surfaces.',
+   specs:[['Size','1200 × 600mm'],['Thickness','12mm'],['Finish','Matt / Brushed'],['Outdoor Use','Yes — frost resistant']]},
+  {id:'SS-CEM-090',name:'Cemento Grey Tile 900×600',cat:'stone',catLabel:'Sintered Stones',price:18000,poa:false,badge:null,unit:'/ slab',
+   img:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=800&q=80',
+   desc:'Industrial-look micro-cement sintered tile. Pairs well with exposed concrete and wood interiors. Excellent for commercial floors.',
+   specs:[['Size','900 × 600mm'],['Thickness','10mm'],['Finish','Matt'],['Anti-slip','R10 rating']]},
+  {id:'SS-POR-120',name:'Portoro Gold Vein Slab',cat:'stone',catLabel:'Sintered Stones',price:null,poa:true,badge:null,unit:'/ slab',
+   img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=800&q=80',
+   desc:'Luxury black and gold sintered stone. Limited stock — pricing varies by batch. Contact us for current availability.',
+   specs:[['Size','1200 × 600mm'],['Thickness','12mm'],['Finish','Polished'],['Stock','Limited — enquire']]},
+
+  // WPC
+  {id:'WD-FLT-OAK',name:'Fluted Oak Panel 2900×150mm',cat:'wpc',catLabel:'WPC Wall Panels',price:1850,poa:false,badge:'hot',unit:'/ m',
+   img:'https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&w=800&q=80',
+   desc:'Premium WPC fluted wall panel in natural oak finish. Moisture-proof, sound-absorbing and easy to install with adhesive. Popular for TV feature walls and bedroom headboards.',
+   specs:[['Length','2900mm'],['Width','150mm'],['Thickness','20mm'],['Material','WPC (Wood Plastic Composite)'],['Install','Adhesive + clip system']]},
+  {id:'WD-SOL-WAL',name:'Solid Walnut Panel 2900×200mm',cat:'wpc',catLabel:'WPC Wall Panels',price:2200,poa:false,badge:'new',unit:'/ m',
+   img:'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=800&q=80',
+   desc:'Wide solid-face WPC panel in deep walnut finish. Clean, seamless look for full accent walls. Fire retardant class B1.',
+   specs:[['Length','2900mm'],['Width','200mm'],['Thickness','18mm'],['Fire Rating','Class B1'],['Surface','Embossed wood grain']]},
+  {id:'WD-SOL-CBK',name:'Carbon Black Solid Panel',cat:'wpc',catLabel:'WPC Wall Panels',price:1950,poa:false,badge:null,unit:'/ m',
+   img:'https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&w=800&q=80',
+   desc:'Matte carbon black solid WPC panel. Creates a sophisticated backdrop for contemporary interiors. UV stable for both indoor and sheltered outdoor use.',
+   specs:[['Length','2900mm'],['Width','150mm'],['Thickness','20mm'],['UV Stable','Yes'],['Outdoor','Sheltered areas OK']]},
+  {id:'WD-FLT-PNE',name:'Natural Pine Fluted Panel',cat:'wpc',catLabel:'WPC Wall Panels',price:1600,poa:false,badge:null,unit:'/ m',
+   img:'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=800&q=80',
+   desc:'Light natural pine finish fluted panel. Ideal for creating warm, Scandinavian-inspired spaces. Termite and rot resistant.',
+   specs:[['Length','2900mm'],['Width','150mm'],['Thickness','20mm'],['Termite Resistant','Yes'],['Water Resistant','Yes']]},
+  {id:'WD-HOL-ASH',name:'White Ash Hollow Panel',cat:'wpc',catLabel:'WPC Wall Panels',price:1400,poa:false,badge:null,unit:'/ m',
+   img:'https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&w=800&q=80',
+   desc:'Hollow-core WPC panel in white ash tone. Lightweight and quick to install. Sound-dampening properties make it ideal for offices and meeting rooms.',
+   specs:[['Length','2900mm'],['Width','150mm'],['Core','Hollow'],['Weight','Approx 2.1 kg/m'],['Acoustic','Sound dampening']]},
+
+  // ACCESSORIES
+  {id:'ML19-GOLD',name:'Gold Bar Handle 128mm',cat:'accessories',catLabel:'Accessories',price:850,poa:false,badge:'hot',unit:'/ pc',
+   img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80',
+   desc:'Solid brass cabinet handle in brushed gold finish. Centres: 128mm. Suitable for kitchen doors, wardrobes and sideboard drawers.',
+   specs:[['Material','Solid Brass'],['Finish','Brushed Gold'],['Centre Distance','128mm'],['Fixing','M4 screws included']]},
+  {id:'KN-BLK-RND',name:'Matte Black Round Knob',cat:'accessories',catLabel:'Accessories',price:380,poa:false,badge:null,unit:'/ pc',
+   img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80',
+   desc:'Clean minimalist round knob in matte black. Works on kitchen, bathroom and furniture doors. Available for bulk orders.',
+   specs:[['Material','Zinc Alloy'],['Finish','Matte Black'],['Diameter','35mm'],['Thread','M4']]},
+  {id:'HT-4030',name:'Door Hinge Set 5×3 — Gold',cat:'accessories',catLabel:'Accessories',price:950,poa:false,badge:null,unit:'/ pair',
+   img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80',
+   desc:'Heavy-duty door hinge in brushed gold. 5×3 inch plate. Suitable for interior timber doors up to 50kg. Sold in pairs.',
+   specs:[['Size','5 × 3 inch'],['Material','Steel'],['Finish','Brushed Gold'],['Max Load','50kg per pair']]},
+  {id:'SL-CHR-400',name:'Chrome Sofa Leg 400mm',cat:'accessories',catLabel:'Accessories',price:1200,poa:false,badge:'new',unit:'/ set of 4',
+   img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80',
+   desc:'Polished chrome tapered sofa legs, 400mm height. Adjustable foot pad included. Fits most sofas and lounge chairs. Sold in sets of 4.',
+   specs:[['Height','400mm'],['Material','Steel'],['Finish','Polished Chrome'],['Thread','M8'],['Max Load','80kg per leg']]},
+  {id:'HS-BLK-RD',name:'Black Sliding Door Handle Set',cat:'accessories',catLabel:'Accessories',price:2800,poa:false,badge:null,unit:'/ set',
+   img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80',
+   desc:'Minimalist flush pull handle for sliding barn doors and sliding wardrobe panels. Matte black, sold as a set (2 handles, fixings, and door guide).',
+   specs:[['Material','Stainless Steel'],['Finish','Matte Black'],['Handle Length','200mm'],['Door Thickness','35–45mm']]}
+];
+
+const FALLBACK_IMAGES = {
+  lighting: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80',
+  stone: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=900&q=80',
+  wpc: 'https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&w=900&q=80',
+  accessories: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=80'
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let activeCat = 'all';
+let priceFilter = 'all';
+let badgeFilter = 'all';
+let currentView = 'grid';
+let cart = [];
+let currentDetailId = null;
+
+function getProductImage(product) {
+  return product.img || FALLBACK_IMAGES[product.cat] || FALLBACK_IMAGES.accessories;
+}
+
+function buildFallbackAttr(product) {
+  const fallback = getProductImage(product);
+  return `onerror="this.onerror=null;this.src='${fallback}'"`;
+}
+
+function composeQuoteEmailLink(ref) {
+  const name = document.getElementById('f_name').value.trim() || 'Beco team';
+  const company = document.getElementById('f_company').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  const email = document.getElementById('f_email').value.trim();
+  const timeline = document.getElementById('f_timeline').value || 'Not specified';
+  const budget = document.getElementById('f_budget').value.trim() || 'Not specified';
+  const delivery = document.querySelector('.radio-opt.sel[data-group="fulfil"]')?.textContent.trim() || 'Showroom Pickup';
+  const projectType = document.querySelector('.radio-opt.sel[data-group="ptype"]')?.textContent.trim() || 'Residential';
+  const address = document.getElementById('f_address').value.trim() || 'Not provided';
+  const notes = document.getElementById('f_notes').value.trim() || 'No additional notes.';
+  const items = cart.map(c => `- ${c.name} (${c.id}) x${c.qty}${c.poa ? ' - POA' : ` - KSh ${(c.price * c.qty).toLocaleString()}`}`).join('\n');
+  const subject = `Quote Request ${ref} - ${name}`;
+  const body = [
+    `Quote reference: ${ref}`,
+    '',
+    `Client: ${name}`,
+    `Company: ${company || 'Not provided'}`,
+    `Phone: ${phone}`,
+    `Email: ${email}`,
+    `Project type: ${projectType}`,
+    `Fulfilment: ${delivery}`,
+    `Delivery address: ${address}`,
+    `Timeline: ${timeline}`,
+    `Budget: ${budget}`,
+    '',
+    'Requested items:',
+    items,
+    '',
+    'Additional notes:',
+    notes
+  ].join('\n');
+  return `mailto:info@beco.co.ke?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+/* ============================================================
+   FILTER / RENDER
+   ============================================================ */
+function filteredProducts() {
+  let items = [...PRODUCTS];
+  if (activeCat !== 'all') items = items.filter(p => p.cat === activeCat);
+  if (priceFilter === 'priced') items = items.filter(p => !p.poa);
+  if (priceFilter === 'poa')    items = items.filter(p => p.poa);
+  if (badgeFilter !== 'all')   items = items.filter(p => p.badge === badgeFilter);
+  const sort = document.getElementById('sortSel')?.value || 'default';
+  if (sort === 'price-asc')  items.sort((a,b) => (a.price||99999) - (b.price||99999));
+  if (sort === 'price-desc') items.sort((a,b) => (b.price||0) - (a.price||0));
+  if (sort === 'bestseller') items.sort((a,b) => (b.badge==='hot'?1:0) - (a.badge==='hot'?1:0));
+  return items;
+}
+
+function renderProducts() {
+  const items = filteredProducts();
+  const grid = document.getElementById('productsGrid');
+  document.getElementById('resultCount').innerHTML = `<strong>${items.length}</strong> products`;
+  document.getElementById('shopCountMeta').innerHTML = `<strong>${items.length}</strong> products shown`;
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <i class="fa-solid fa-box-open"></i>
+      <h3>No products found</h3>
+      <p>Try adjusting your filters</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(p => {
+    const inCart = cart.some(c => c.id === p.id);
+    const priceHtml = p.poa
+      ? `<span class="p-price poa">Price on Request</span>`
+      : `<span class="p-price">KSh ${p.price.toLocaleString()}</span>`;
+    const badgeHtml = p.badge === 'hot' ? `<span class="p-badge badge-hot">Best Seller</span>`
+                    : p.badge === 'new' ? `<span class="p-badge badge-new">New</span>`
+                    : p.poa            ? `<span class="p-badge badge-poa">POA</span>` : '';
+    const descHtml = `<p class="p-desc">${p.desc}</p>`;
+    const waMsg = encodeURIComponent(`Hi Beco! I'm interested in the ${p.name} (${p.id}). Can you please advise on availability and pricing?`);
+    return `
+    <div class="p-card" onclick="openDetail('${p.id}')">
+      <div class="p-img">
+        <img src="${getProductImage(p)}" alt="${p.name}" loading="lazy" ${buildFallbackAttr(p)}>
+        ${badgeHtml}
+      </div>
+      <div class="p-body">
+        <div class="p-cat">${p.catLabel}</div>
+        <div class="p-name">${p.name}</div>
+        <div class="p-sku">SKU: ${p.id}</div>
+        ${descHtml}
+        <div class="p-footer">
+          ${priceHtml}
+          <div class="p-btns" onclick="event.stopPropagation()">
+            <button class="p-add-btn${inCart?' added':''}" id="add-${p.id}" onclick="addToCart('${p.id}')">
+              <i class="fa-solid fa-${inCart?'check':'plus'}"></i> ${inCart?'Added':'Quote'}
+            </button>
+            <a class="p-wa-btn" href="https://api.whatsapp.com/send?phone=254733886655&text=${waMsg}" target="_blank" title="WhatsApp enquiry">
+              <i class="fa-brands fa-whatsapp"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   FILTER SETTERS
+   ============================================================ */
+function setActiveCat(cat, el) {
+  activeCat = cat;
+  // update sidebar
+  document.querySelectorAll('[data-cat]').forEach(o => o.classList.toggle('active', o.dataset.cat === cat));
+  // update mobile chips
+  document.querySelectorAll('.mob-filter-chip[data-cat]').forEach(c => c.classList.toggle('active', c.dataset.cat === cat));
+  // update page title
+  const titles = {all:'All Products',lighting:'Lighting Solutions',stone:'Sintered Stones',wpc:'WPC Wall Panels',accessories:'Accessories'};
+  const bc = {all:'All Products',lighting:'Lighting',stone:'Sintered Stones',wpc:'WPC Wall Panels',accessories:'Accessories'};
+  document.getElementById('shopTitle').innerHTML = `Shop <em>${titles[cat]||'All Products'}</em>`;
+  document.getElementById('bcCat').textContent = bc[cat] || 'All Products';
+  renderProducts();
+}
+function setPriceFilter(val, el) {
+  priceFilter = val;
+  document.querySelectorAll('[data-price]').forEach(o => o.classList.toggle('active', o.dataset.price === val));
+  renderProducts();
+}
+function setBadgeFilter(val, el) {
+  badgeFilter = val;
+  document.querySelectorAll('[data-badge]').forEach(o => o.classList.toggle('active', o.dataset.badge === val));
+  renderProducts();
+}
+function resetFilters() {
+  activeCat = 'all'; priceFilter = 'all'; badgeFilter = 'all';
+  document.getElementById('sortSel').value = 'default';
+  setActiveCat('all');
+  document.querySelectorAll('[data-price]').forEach(o => o.classList.toggle('active', o.dataset.price === 'all'));
+  document.querySelectorAll('[data-badge]').forEach(o => o.classList.toggle('active', o.dataset.badge === 'all'));
+}
+function setView(v) {
+  currentView = v;
+  const grid = document.getElementById('productsGrid');
+  grid.classList.toggle('list-view', v === 'list');
+  document.getElementById('gridBtn').classList.toggle('active', v === 'grid');
+  document.getElementById('listBtn').classList.toggle('active', v === 'list');
+}
+
+/* ============================================================
+   PRODUCT DETAIL DRAWER
+   ============================================================ */
+function openDetail(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  currentDetailId = id;
+  const inCart = cart.some(c => c.id === id);
+
+  document.getElementById('detailImgSrc').src = getProductImage(p);
+  document.getElementById('detailImgSrc').alt = p.name;
+  document.getElementById('detailImgSrc').onerror = function () {
+    this.onerror = null;
+    this.src = FALLBACK_IMAGES[p.cat] || FALLBACK_IMAGES.accessories;
+  };
+  document.getElementById('detailCat').textContent = p.catLabel;
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailSku').textContent = 'SKU: ' + p.id;
+  document.getElementById('detailDesc').textContent = p.desc || '';
+  document.getElementById('detailUnit').textContent = p.unit || '';
+
+  const priceEl = document.getElementById('detailPrice');
+  if (p.poa) { priceEl.className = 'detail-price poa'; priceEl.textContent = 'Price on Request'; }
+  else { priceEl.className = 'detail-price'; priceEl.textContent = 'KSh ' + p.price.toLocaleString(); }
+
+  const badgeEl = document.getElementById('detailBadge');
+  badgeEl.innerHTML = p.badge === 'hot' ? '<span class="p-badge badge-hot">Best Seller</span>'
+                    : p.badge === 'new' ? '<span class="p-badge badge-new">New</span>'
+                    : p.poa ? '<span class="p-badge badge-poa">POA</span>' : '';
+
+  const specsEl = document.getElementById('detailSpecs');
+  specsEl.innerHTML = (p.specs||[]).map(([k,v]) => `
+    <div class="spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></div>`).join('');
+
+  const btn = document.getElementById('detailAddBtn');
+  if (inCart) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Added to Cart'; btn.classList.add('added'); }
+  else { btn.innerHTML = '<i class="fa-solid fa-plus"></i> Add to Quote Cart'; btn.classList.remove('added'); }
+
+  const waMsg = encodeURIComponent(`Hi Beco! I'm interested in the ${p.name} (${p.id}). Can you please advise on availability and pricing?`);
+  document.getElementById('detailWaBtn').href = `https://api.whatsapp.com/send?phone=254733886655&text=${waMsg}`;
+
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function addFromDetail() {
+  if (currentDetailId) addToCart(currentDetailId);
+  const btn = document.getElementById('detailAddBtn');
+  btn.innerHTML = '<i class="fa-solid fa-check"></i> Added to Cart';
+  btn.classList.add('added');
+}
+
+/* ============================================================
+   CART
+   ============================================================ */
+function addToCart(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  const existing = cart.find(c => c.id === id);
+  if (existing) { existing.qty++; }
+  else { cart.push({...p, qty: 1}); }
+  updateCartUI();
+  renderProducts();
+  // flash cart badge
+  const badge = document.getElementById('navBadge');
+  badge.classList.add('show');
+  badge.style.transform = 'scale(1.4)';
+  setTimeout(() => { badge.style.transform = ''; }, 200);
+}
+function removeFromCart(id) {
+  cart = cart.filter(c => c.id !== id);
+  updateCartUI();
+  renderProducts();
+}
+function changeQty(id, delta) {
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty = Math.max(1, item.qty + delta);
+  updateCartUI();
+}
+function updateCartUI() {
+  const total = cart.reduce((s,c) => s + c.qty, 0);
+  const badge = document.getElementById('navBadge');
+  const countEl = document.getElementById('cartCount');
+  const mobCount = document.getElementById('mobCartCount');
+  badge.textContent = total;
+  badge.classList.toggle('show', total > 0);
+  countEl.textContent = total;
+  if (mobCount) mobCount.textContent = total;
+
+  const body = document.getElementById('cartBody');
+  const empty = document.getElementById('cartEmpty');
+  const itemsEl = document.getElementById('cartItems');
+  const foot = document.getElementById('cartFoot');
+
+  const hasPOA = cart.some(c => c.poa);
+  document.getElementById('poaNote').classList.toggle('show', hasPOA);
+
+  if (!cart.length) {
+    empty.style.display = '';
+    itemsEl.innerHTML = '';
+    foot.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  foot.style.display = '';
+  itemsEl.innerHTML = cart.map(c => `
+    <div class="cart-item">
+      <div class="ci-img"><img src="${getProductImage(c)}" alt="${c.name}" loading="lazy" ${buildFallbackAttr(c)}></div>
+      <div class="ci-info">
+        <div class="ci-cat">${c.catLabel}</div>
+        <div class="ci-name">${c.name}</div>
+        <div class="ci-sku">SKU: ${c.id}</div>
+        <div class="ci-bottom">
+          <div class="ci-price ${c.poa?'poa':''}">${c.poa ? 'Price on Request' : 'KSh '+(c.price*c.qty).toLocaleString()}</div>
+          <div class="ci-right">
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="changeQty('${c.id}',-1)"><i class="fa-solid fa-minus" style="font-size:9px"></i></button>
+              <div class="qty-val">${c.qty}</div>
+              <button class="qty-btn" onclick="changeQty('${c.id}',1)"><i class="fa-solid fa-plus" style="font-size:9px"></i></button>
+            </div>
+            <button class="ci-remove" onclick="removeFromCart('${c.id}')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  const subtotal = cart.filter(c=>!c.poa).reduce((s,c) => s + c.price*c.qty, 0);
+  document.getElementById('cartTotal').textContent = subtotal > 0
+    ? 'KSh ' + subtotal.toLocaleString() + (hasPOA ? ' +POA' : '')
+    : 'Pricing on Request';
+
+  // WA link
+  const waMsg = cart.map(c => `• ${c.name} (${c.id}) ×${c.qty}${c.price?' — KSh '+c.price.toLocaleString():'  — POA'}`).join('%0A');
+  document.getElementById('cartWaLink').href =
+    `https://api.whatsapp.com/send?phone=254733886655&text=Hi%20Beco!%20I'd%20like%20to%20place%20an%20order%3A%0A${waMsg}%0A%0APlease%20advise%20on%20availability%20and%20delivery.`;
+}
+function openCart() {
+  document.getElementById('cartOverlay').classList.add('open');
+  document.getElementById('cartDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function clearCart() { cart = []; updateCartUI(); renderProducts(); }
+
+/* ============================================================
+   QUOTE MODAL
+   ============================================================ */
+let currentStep = 1;
+function openQuote() {
+  if (!cart.length) {
+    openCart();
+    return;
+  }
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  buildSummary();
+  goStep(1);
+}
+function closeQuote() {
+  document.getElementById('modalBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function goStep(n) {
+  currentStep = n;
+  for (let i=1;i<=3;i++) {
+    document.getElementById('step'+i).classList.toggle('active', i===n);
+    const dot = document.getElementById('sd'+i);
+    dot.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
+    if (i < n) dot.innerHTML = '<i class="fa-solid fa-check" style="font-size:10px"></i>';
+    else dot.textContent = i < 3 ? i : '';
+    if (i < 3) {
+      document.getElementById('sl'+i).classList.toggle('done', i < n);
+    }
+  }
+  document.getElementById('sd3').innerHTML = n === 3
+    ? '<i class="fa-solid fa-check" style="font-size:10px"></i>'
+    : '<i class="fa-solid fa-check" style="font-size:10px;opacity:.4"></i>';
+}
+function nextStep1() {
+  const name = document.getElementById('f_name').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  const email = document.getElementById('f_email').value.trim();
+  const errEl = document.getElementById('step1err');
+  if (!name || !phone || !email) { errEl.style.display = ''; return; }
+  errEl.style.display = 'none';
+  goStep(2);
+}
+function selRadio(el) {
+  const group = el.dataset.group;
+  document.querySelectorAll(`.radio-opt[data-group="${group}"]`).forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function toggleDelivery(show) {
+  document.getElementById('deliveryField').style.display = show ? '' : 'none';
+}
+function buildSummary() {
+  document.getElementById('summaryItems').innerHTML = cart.map(c => `
+    <div class="os-item">
+      <span class="os-name">${c.name}</span>
+      <span class="os-qty">×${c.qty}</span>
+      <span class="os-price">${c.poa ? 'POA' : 'KSh '+( c.price*c.qty).toLocaleString()}</span>
+    </div>`).join('');
+}
+function submitQuote() {
+  const ref = 'BECO-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
+  document.getElementById('refNum').textContent = ref;
+  document.getElementById('emailQuoteLink').href = composeQuoteEmailLink(ref);
+  goStep(3);
+}
+
+/* ============================================================
+   MOBILE NAV
+   ============================================================ */
+function openMob() {
+  document.getElementById('mobNav').classList.add('open');
+  document.getElementById('mobOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMob() {
+  document.getElementById('mobNav').classList.remove('open');
+  document.getElementById('mobOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('ham').addEventListener('click', openMob);
+document.getElementById('mobClose').addEventListener('click', closeMob);
+document.getElementById('mobOverlay').addEventListener('click', closeMob);
+
+/* ============================================================
+   URL PARAM — pre-filter from landing page links
+   ============================================================ */
+function readURLParam() {
+  const params = new URLSearchParams(window.location.search);
+  const cat = params.get('cat');
+  if (cat && ['lighting','stone','wpc','accessories'].includes(cat)) setActiveCat(cat);
+  else renderProducts();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+readURLParam();
+updateCartUI();
+</script>
+</body>
+</html>
