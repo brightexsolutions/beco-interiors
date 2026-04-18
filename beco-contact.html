@@ -22,8 +22,9 @@
 }
 .map-placeholder i { font-size: 40px; color: var(--linen); }
 .map-placeholder p { font-size: 15px; color: var(--stone); }
-.map-placeholder a { color: var(--red); font-weight: 600; text-decoration: none; }
-.map-placeholder a:hover { text-decoration: underline; }
+.map-placeholder a:not(.btn) { color: var(--red); font-weight: 600; text-decoration: none; }
+.map-placeholder a:not(.btn):hover { text-decoration: underline; }
+.map-placeholder .btn { color: var(--white); }
 
 .hours-row {
   display: flex; justify-content: space-between; align-items: center;
