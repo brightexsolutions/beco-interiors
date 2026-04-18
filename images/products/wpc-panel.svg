@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">WPC wall panel illustration</title>
+  <desc id="desc">Fluted wall panel artwork for Beco Interiors WPC products.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6B4A32"/>
+      <stop offset="100%" stop-color="#1E1A19"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <g opacity="0.88">
+    <rect x="110" y="96" width="980" height="608" rx="30" fill="#D6B28A"/>
+    <rect x="160" y="128" width="56" height="544" rx="28" fill="#7B573A"/>
+    <rect x="232" y="128" width="56" height="544" rx="28" fill="#8A6240"/>
+    <rect x="304" y="128" width="56" height="544" rx="28" fill="#704D33"/>
+    <rect x="376" y="128" width="56" height="544" rx="28" fill="#8F6742"/>
+    <rect x="448" y="128" width="56" height="544" rx="28" fill="#755036"/>
+    <rect x="520" y="128" width="56" height="544" rx="28" fill="#936A45"/>
+    <rect x="592" y="128" width="56" height="544" rx="28" fill="#785438"/>
+    <rect x="664" y="128" width="56" height="544" rx="28" fill="#9B734C"/>
+    <rect x="736" y="128" width="56" height="544" rx="28" fill="#7E593C"/>
+    <rect x="808" y="128" width="56" height="544" rx="28" fill="#A27952"/>
+    <rect x="880" y="128" width="56" height="544" rx="28" fill="#856044"/>
+    <rect x="952" y="128" width="56" height="544" rx="28" fill="#AE845A"/>
+  </g>
+  <text x="150" y="684" fill="#FFF8F0" font-family="DM Sans, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="8">WPC WALL PANELS</text>
+  <text x="150" y="724" fill="#F1E4D2" font-family="DM Sans, Arial, sans-serif" font-size="24" opacity="0.86">Fluted, solid and hollow composite panels in warm wood tones</text>
+</svg>

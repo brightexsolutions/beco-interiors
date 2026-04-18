@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Sintered stone slab illustration</title>
+  <desc id="desc">Marble-inspired slab artwork for Beco Interiors sintered stones.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F3EEE8"/>
+      <stop offset="100%" stop-color="#D8CEC5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#E8DED5"/>
+  <rect x="100" y="80" width="1000" height="640" rx="26" fill="url(#bg)" stroke="#B9ACA1" stroke-width="8"/>
+  <path d="M190 160c82 48 132 40 196 8s146-26 220 24 128 52 196 16 134-40 208 14" fill="none" stroke="#C59A3A" stroke-width="9" opacity="0.75"/>
+  <path d="M158 274c118 34 176 30 236 0s140-28 214 20 136 54 220 20 162-40 244-2" fill="none" stroke="#86786F" stroke-width="7" opacity="0.55"/>
+  <path d="M160 394c98 40 164 44 244 12s156-24 236 24 144 56 226 24 132-30 196 10" fill="none" stroke="#E7E0D8" stroke-width="16" opacity="0.75"/>
+  <path d="M168 520c92 36 158 36 232 2s144-30 230 16 148 54 222 26 142-34 212-10" fill="none" stroke="#3B3735" stroke-width="6" opacity="0.45"/>
+  <text x="150" y="676" fill="#2B2725" font-family="DM Sans, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="8">SINTERED STONE</text>
+  <text x="150" y="718" fill="#4A4540" font-family="DM Sans, Arial, sans-serif" font-size="24" opacity="0.82">Calacatta, Nero Marquina, Sahara and statement slab finishes</text>
+</svg>

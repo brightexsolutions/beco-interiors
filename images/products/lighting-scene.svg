@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Lighting collection illustration</title>
+  <desc id="desc">Warm interior lighting scene for Beco Interiors products.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16151D"/>
+      <stop offset="100%" stop-color="#403228"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFE1A8"/>
+      <stop offset="100%" stop-color="#D18A2C"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <rect x="72" y="72" width="1056" height="656" rx="36" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+  <circle cx="312" cy="214" r="78" fill="url(#glow)" opacity="0.95"/>
+  <circle cx="610" cy="182" r="54" fill="url(#glow)" opacity="0.9"/>
+  <circle cx="860" cy="240" r="66" fill="url(#glow)" opacity="0.92"/>
+  <rect x="250" y="214" width="124" height="330" rx="62" fill="#0F1115"/>
+  <rect x="570" y="182" width="80" height="292" rx="40" fill="#0F1115"/>
+  <rect x="806" y="240" width="108" height="260" rx="54" fill="#0F1115"/>
+  <rect x="144" y="590" width="912" height="34" rx="17" fill="#A9742E" opacity="0.35"/>
+  <text x="150" y="684" fill="#F7EADA" font-family="DM Sans, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="8">LIGHTING COLLECTION</text>
+  <text x="150" y="724" fill="#E6DDD4" font-family="DM Sans, Arial, sans-serif" font-size="24" opacity="0.82">Track lights, pendants, sconces and cabinet lighting</text>
+</svg>

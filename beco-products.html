@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products — Beco Interiors</title>
+<meta name="description" content="Explore Beco Interiors' four product collections — sintered stone, lighting, WPC wall panels, and architectural accessories.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="beco-pages.css">
+</head>
+<body>
+
+<!-- MOBILE NAV -->
+<div class="mob-overlay" id="mobOverlay"></div>
+<nav class="mob-nav" id="mobNav">
+  <div class="mob-nav-head">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-mark"><img src="images/Beco-Interiors-Logo.png" alt=""></span>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <button class="mob-close" id="mobClose"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <ul class="mob-links">
+    <li><a href="index.html">Home <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-shop.html">Shop All Products <i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul>
+  <div class="mob-sub-head">Product Categories</div>
+  <ul class="mob-sub-links">
+    <li><a href="beco-shop.html?cat=lighting">Lighting Solutions <span>88</span></a></li>
+    <li><a href="beco-shop.html?cat=stone">Sintered Stones <span>36</span></a></li>
+    <li><a href="beco-shop.html?cat=wpc">WPC Wall Panels <span>80</span></a></li>
+    <li><a href="beco-shop.html?cat=accessories">Accessories <span>320+</span></a></li>
+  </ul>
+  <ul class="mob-links">
+    <li><a href="beco-products.html" class="active">Products <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-about.html">About Us <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-contact.html">Contact <i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul>
+  <div class="mob-nav-foot">
+    <a href="beco-shop.html" class="btn btn-primary" style="justify-content:center"><i class="fa-solid fa-bag-shopping"></i> Browse Products</a>
+    <a href="https://api.whatsapp.com/send?phone=254722333730" class="btn btn-wa" style="justify-content:center" target="_blank"><i class="fa-brands fa-whatsapp"></i> WhatsApp Us</a>
+    <div class="mob-contact"><i class="fa-solid fa-phone"></i><span>+254 722 333 730</span></div>
+  </div>
+</nav>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-wrap">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-mark"><img src="images/Beco-Interiors-Logo.png" alt=""></span>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li class="has-mega">
+        <a href="beco-products.html" class="active">Products</a>
+        <div class="mega-menu">
+          <a class="mega-item" href="beco-shop.html?cat=lighting"><div class="mega-icon" style="background:linear-gradient(135deg,#141420,#1E1E30)"><i class="fa-solid fa-lightbulb"></i></div><div><div class="mega-label">Lighting</div><div class="mega-count">88 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=stone"><div class="mega-icon" style="background:linear-gradient(135deg,#2A2A2E,#1A1C22)"><i class="fa-solid fa-gem"></i></div><div><div class="mega-label">Sintered Stones</div><div class="mega-count">36 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=wpc"><div class="mega-icon" style="background:linear-gradient(135deg,#1E2A1A,#243820)"><i class="fa-solid fa-grip-lines-vertical"></i></div><div><div class="mega-label">WPC Wall Panels</div><div class="mega-count">80 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=accessories"><div class="mega-icon" style="background:linear-gradient(135deg,#2A2018,#3A2C1A)"><i class="fa-solid fa-screwdriver-wrench"></i></div><div><div class="mega-label">Accessories</div><div class="mega-count">320 products</div></div></a>
+        </div>
+      </li>
+      <li><a href="beco-shop.html">Shop</a></li>
+      <li><a href="beco-about.html">About</a></li>
+      <li><a href="beco-contact.html">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="beco-shop.html?openCart=1" class="nav-icon-btn" title="Open quote cart" data-cart-link><i class="fa-solid fa-bag-shopping" style="font-size:14px"></i><span class="nav-cart-badge" data-cart-badge>0</span></a>
+      <a href="beco-contact.html" class="btn-quote"><i class="fa-solid fa-message" style="font-size:11px"></i> Get Quote</a>
+      <div class="hamburger" id="ham"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HERO -->
+<header class="page-hero">
+  <div class="container hero-inner">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Products</span>
+    </div>
+    <h1 class="page-hero-title reveal">Product <em>Collections</em></h1>
+    <p class="page-hero-sub reveal" style="transition-delay:.1s">Four specialist product families — everything an interior project needs, stocked in Nairobi.</p>
+    <div class="page-hero-actions reveal" style="transition-delay:.2s">
+      <a href="beco-shop.html" class="btn btn-primary">Shop All 520+ Products <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></a>
+      <a href="beco-contact.html" class="btn btn-outline-w">Request Sourcing Help</a>
+    </div>
+  </div>
+</header>
+
+<!-- CATEGORY GRID -->
+<section class="section bg-warm">
+  <div class="container">
+    <div class="section-header split reveal">
+      <div>
+        <div class="eyebrow">What We Supply</div>
+        <h2 class="section-title">Four collections,<br>one <em>showroom</em></h2>
+      </div>
+      <a href="beco-shop.html" class="btn btn-outline">Browse All Products <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a>
+    </div>
+
+    <!-- Main category grid — editorial asymmetric -->
+    <div class="reveal category-grid" style="transition-delay:.1s">
+      <!-- Sintered Stone — large card (spans 2 rows) -->
+      <a href="beco-shop.html?cat=stone" class="cat-card cat-card-featured" style="text-decoration:none">
+        <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=900&q=80')"></div>
+        <div class="cat-ov"></div>
+        <div class="cat-arrow"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px"></i></div>
+        <div class="cat-body">
+          <span class="cat-eyebrow">36 Products · Flagship Collection</span>
+          <div class="cat-name large">Sintered<br>Stone</div>
+          <div class="cat-sub">Slabs · Countertops · Wall cladding · Large-format surfaces</div>
+        </div>
+      </a>
+      <!-- Lighting -->
+      <a href="beco-shop.html?cat=lighting" class="cat-card" style="text-decoration:none">
+        <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&w=700&q=80')"></div>
+        <div class="cat-ov"></div>
+        <div class="cat-arrow"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px"></i></div>
+        <div class="cat-body">
+          <span class="cat-eyebrow">88 Products</span>
+          <div class="cat-name medium">Lighting Solutions</div>
+          <div class="cat-sub">Cabinet · Ceiling · Track · Outdoor · LED</div>
+        </div>
+      </a>
+      <!-- WPC Panels -->
+      <a href="beco-shop.html?cat=wpc" class="cat-card" style="text-decoration:none">
+        <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&w=700&q=80')"></div>
+        <div class="cat-ov"></div>
+        <div class="cat-arrow"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px"></i></div>
+        <div class="cat-body">
+          <span class="cat-eyebrow">80 Products</span>
+          <div class="cat-name medium">WPC Wall Panels</div>
+          <div class="cat-sub">Fluted · Solid · Hollow</div>
+        </div>
+      </a>
+      <!-- Accessories -->
+      <a href="beco-shop.html?cat=accessories" class="cat-card" style="text-decoration:none">
+        <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=700&q=80')"></div>
+        <div class="cat-ov"></div>
+        <div class="cat-arrow"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px"></i></div>
+        <div class="cat-body">
+          <span class="cat-eyebrow">320 Products</span>
+          <div class="cat-name medium">Accessories</div>
+          <div class="cat-sub">Handles · Hinges · Knobs · Sofa Legs</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- SINTERED STONE SPOTLIGHT -->
+<section class="section bg-dark">
+  <div class="container">
+    <div class="grid-2-split" style="gap:72px;align-items:center">
+      <div class="reveal">
+        <div class="eyebrow light">Flagship Product Line</div>
+        <h2 class="section-title on-dark">Sintered stone<br>leads the <em>offer</em></h2>
+        <p class="lead on-dark">Our signature product range — ultra-compact sintered stone surfaces with premium veining, exceptional heat resistance, and a finish profile suited to kitchens, bathrooms, reception areas, and feature walls.</p>
+        <ul style="list-style:none;display:grid;gap:12px;margin-top:24px">
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(255,255,255,.55)"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0"></i> Calacatta, Nero Marquina, Sahara, Cemento and bold finishes</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(255,255,255,.55)"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0"></i> Suitable for countertops, cladding, floors, vanities, and commercial surfaces</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(255,255,255,.55)"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0"></i> Heat, scratch, and stain resistant — virtually maintenance-free</li>
+          <li style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(255,255,255,.55)"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0"></i> 36 in-stock references available from our Nairobi showroom</li>
+        </ul>
+        <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap">
+          <a href="beco-shop.html?cat=stone" class="btn btn-primary">Browse Sintered Stone <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></a>
+          <a href="beco-contact.html" class="btn btn-outline-w">Request a Sample</a>
+        </div>
+      </div>
+      <div class="reveal" style="transition-delay:.15s;position:relative;min-height:420px">
+        <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=80" alt="Nero Marquina sintered stone" style="width:100%;height:420px;object-fit:cover;border-radius:6px">
+        <div style="position:absolute;bottom:20px;left:20px;right:20px;background:rgba(250,247,245,.92);backdrop-filter:blur(12px);border-radius:4px;padding:16px 18px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div><div style="font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Best Application</div><div style="font-size:14px;font-weight:600;color:var(--dark)">Kitchen &amp; Bathroom Surfaces</div></div>
+          <div><div style="font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Hardness Rating</div><div style="font-size:14px;font-weight:600;color:var(--dark)">Mohs 7+ — Scratch Resistant</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OTHER COLLECTIONS DETAIL -->
+<section class="section bg-cream">
+  <div class="container">
+    <div class="section-header split reveal">
+      <div>
+        <div class="eyebrow">Supporting Collections</div>
+        <h2 class="section-title">Complete the brief<br>with <em>every finish</em></h2>
+      </div>
+    </div>
+    <div class="grid-3 reveal" style="transition-delay:.1s">
+      <div class="card">
+        <div class="card-img" style="height:220px">
+          <img src="https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&w=700&q=80" alt="Lighting collection" style="height:220px">
+        </div>
+        <div class="card-body">
+          <div class="card-cat">88 Products</div>
+          <div class="card-title">Lighting Solutions</div>
+          <p class="card-text">Track systems, pendants, cabinet LED bars, outdoor fixtures, and ceiling downlights for every residential and commercial application.</p>
+          <a href="beco-shop.html?cat=lighting" class="btn btn-outline" style="margin-top:18px;font-size:11px;padding:10px 20px">View Lighting <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-img" style="height:220px">
+          <img src="https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&w=700&q=80" alt="WPC wall panels" style="height:220px">
+        </div>
+        <div class="card-body">
+          <div class="card-cat">80 Products</div>
+          <div class="card-title">WPC Wall Panels</div>
+          <p class="card-text">Fluted, solid, and hollow WPC panels in oak, walnut, pine, and carbon black finishes. Moisture-proof and easy to install for feature walls and cladding.</p>
+          <a href="beco-shop.html?cat=wpc" class="btn btn-outline" style="margin-top:18px;font-size:11px;padding:10px 20px">View WPC Panels <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-img" style="height:220px">
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=700&q=80" alt="Accessories" style="height:220px">
+        </div>
+        <div class="card-body">
+          <div class="card-cat">320 Products</div>
+          <div class="card-title">Accessories</div>
+          <p class="card-text">Handles, knobs, hinges, sofa legs, drawer slides, cable organizers, and internal door locks — the finishing details that complete every interior.</p>
+          <a href="beco-shop.html?cat=accessories" class="btn btn-outline" style="margin-top:18px;font-size:11px;padding:10px 20px">View Accessories <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECT TYPES -->
+<section class="section bg-warm">
+  <div class="container">
+    <div class="section-header center reveal">
+      <div class="eyebrow">Who We Serve</div>
+      <h2 class="section-title">Built for every<br><em>project type</em></h2>
+    </div>
+    <div class="grid-3 reveal" style="transition-delay:.1s">
+      <div class="feat-card light">
+        <div class="feat-icon"><i class="fa-solid fa-house" style="color:var(--red)"></i></div>
+        <div class="feat-title">Residential</div>
+        <div class="feat-text">High-end kitchen renovations, bathroom upgrades, feature walls, and curated living spaces that need a refined, practical material palette.</div>
+      </div>
+      <div class="feat-card light">
+        <div class="feat-icon"><i class="fa-solid fa-hotel" style="color:var(--red)"></i></div>
+        <div class="feat-title">Hospitality</div>
+        <div class="feat-text">Restaurants, boutique apartments, guest rooms, and reception spaces that demand premium materials with visual impact and maintenance resilience.</div>
+      </div>
+      <div class="feat-card light">
+        <div class="feat-icon"><i class="fa-solid fa-building" style="color:var(--red)"></i></div>
+        <div class="feat-title">Commercial</div>
+        <div class="feat-text">Showrooms, offices, retail spaces, and developer projects that benefit from stocked materials and a simplified, reliable sourcing partner.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-bg-text" aria-hidden="true">BECO</div>
+  <div class="container">
+    <div class="cta-inner reveal">
+      <div>
+        <div class="eyebrow" style="color:rgba(255,255,255,0.4)">Can't find what you need?</div>
+        <h2 class="cta-title">Ask our team for<br><em>sourcing help.</em></h2>
+        <p class="cta-sub">If it's not in our current range, we may be able to source it. Send us a spec sheet or describe what you're looking for.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="beco-shop.html" class="btn btn-primary"><i class="fa-solid fa-bag-shopping" style="font-size:11px"></i> Open Shop</a>
+        <a href="beco-contact.html" class="btn btn-outline-w">Contact Our Team</a>
+        <a href="https://api.whatsapp.com/send?phone=254722333730" class="btn btn-wa" target="_blank"><i class="fa-brands fa-whatsapp" style="font-size:14px"></i> WhatsApp Us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo">
+          <span class="logo-mark"><img src="images/Beco-Interiors-Logo.png" alt=""></span>
+          <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+        </a>
+        <p>Kenya's premium supplier of interior finishing materials — lighting, sintered stone, WPC wall panels, and accessories.</p>
+        <div class="footer-social">
+          <a href="#" class="soc-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="soc-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="https://api.whatsapp.com/send?phone=254722333730" class="soc-btn" title="WhatsApp" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Products</div>
+        <ul class="footer-links">
+          <li><a href="beco-shop.html?cat=lighting">Lighting Solutions</a></li>
+          <li><a href="beco-shop.html?cat=stone">Sintered Stones</a></li>
+          <li><a href="beco-shop.html?cat=wpc">WPC Wall Panels</a></li>
+          <li><a href="beco-shop.html?cat=accessories">Accessories</a></li>
+          <li><a href="beco-shop.html">Shop All Products</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <ul class="footer-links">
+          <li><a href="beco-about.html">About Us</a></li>
+          <li><a href="beco-products.html">Products</a></li>
+          <li><a href="beco-contact.html">Contact</a></li>
+          <li><a href="beco-contact.html#showroom">Visit Showroom</a></li>
+          <li><a href="beco-design-system.html">Design System</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-location-dot"></i><span class="fc-val">Urban Square, Shop 8 & 9, Enterprise Road, Industrial Area, Nairobi</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-phone"></i><span class="fc-val">+254 722 333 730</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-envelope"></i><span class="fc-val">info@beco.co.ke</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-regular fa-clock"></i><span class="fc-val">Mon–Sat: 8am–6pm</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Beco Interiors Limited. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Sitemap</a>
+      </div>
+      <span class="footer-by">Designed by <a href="https://api.whatsapp.com/send?phone=254741980127&text=Hello%20Brightex%20Solutions%2C%20I%20saw%20the%20Beco%20Interiors%20website%20and%20would%20love%20to%20enquire%20about%20product%20design%20services." target="_blank">Brightex Solutions</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="beco-pages.js"></script>
+</body>
+</html>

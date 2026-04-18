@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design System — Beco Interiors</title>
+<meta name="description" content="Beco Interiors Design System — a complete visual language covering color, typography, components, spacing, and navigation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="beco-pages.css">
+<style>
+.ds-section { margin-bottom: 64px; }
+.ds-block { background: white; border: 1px solid var(--linen); border-radius: 6px; padding: 28px; margin-bottom: 12px; }
+.ds-block-dark { background: var(--dark); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 28px; margin-bottom: 12px; }
+.mono-tag { font-family: var(--mono); font-size: 11px; color: var(--stone); background: var(--cream); padding: 2px 8px; border-radius: 3px; }
+.ds-toc { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px 0; }
+.ds-toc a {
+  padding: 7px 14px; border: 1px solid var(--linen); border-radius: 20px;
+  font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--smoke); transition: all .15s;
+}
+.ds-toc a:hover { background: var(--red); color: white; border-color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- MOBILE NAV -->
+<div class="mob-overlay" id="mobOverlay"></div>
+<nav class="mob-nav" id="mobNav">
+  <div class="mob-nav-head">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-mark"><img src="images/Beco-Interiors-Logo.png" alt=""></span>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <button class="mob-close" id="mobClose"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <ul class="mob-links">
+    <li><a href="index.html">Home <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-shop.html">Shop All Products <i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul>
+  <div class="mob-sub-head">Product Categories</div>
+  <ul class="mob-sub-links">
+    <li><a href="beco-shop.html?cat=lighting">Lighting Solutions <span>88</span></a></li>
+    <li><a href="beco-shop.html?cat=stone">Sintered Stones <span>36</span></a></li>
+    <li><a href="beco-shop.html?cat=wpc">WPC Wall Panels <span>80</span></a></li>
+    <li><a href="beco-shop.html?cat=accessories">Accessories <span>320+</span></a></li>
+  </ul>
+  <ul class="mob-links">
+    <li><a href="beco-products.html">Products <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-about.html">About Us <i class="fa-solid fa-chevron-right"></i></a></li>
+    <li><a href="beco-contact.html">Contact <i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul>
+  <div class="mob-nav-foot">
+    <a href="beco-shop.html" class="btn btn-primary" style="justify-content:center"><i class="fa-solid fa-bag-shopping"></i> Browse Products</a>
+    <a href="https://api.whatsapp.com/send?phone=254722333730" class="btn btn-wa" style="justify-content:center" target="_blank"><i class="fa-brands fa-whatsapp"></i> WhatsApp Us</a>
+    <div class="mob-contact"><i class="fa-solid fa-phone"></i><span>+254 722 333 730</span></div>
+  </div>
+</nav>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-wrap">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-mark"><img src="images/Beco-Interiors-Logo.png" alt=""></span>
+      <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li class="has-mega">
+        <a href="beco-products.html">Products</a>
+        <div class="mega-menu">
+          <a class="mega-item" href="beco-shop.html?cat=lighting"><div class="mega-icon" style="background:linear-gradient(135deg,#141420,#1E1E30)"><i class="fa-solid fa-lightbulb"></i></div><div><div class="mega-label">Lighting</div><div class="mega-count">88 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=stone"><div class="mega-icon" style="background:linear-gradient(135deg,#2A2A2E,#1A1C22)"><i class="fa-solid fa-gem"></i></div><div><div class="mega-label">Sintered Stones</div><div class="mega-count">36 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=wpc"><div class="mega-icon" style="background:linear-gradient(135deg,#1E2A1A,#243820)"><i class="fa-solid fa-grip-lines-vertical"></i></div><div><div class="mega-label">WPC Wall Panels</div><div class="mega-count">80 products</div></div></a>
+          <a class="mega-item" href="beco-shop.html?cat=accessories"><div class="mega-icon" style="background:linear-gradient(135deg,#2A2018,#3A2C1A)"><i class="fa-solid fa-screwdriver-wrench"></i></div><div><div class="mega-label">Accessories</div><div class="mega-count">320 products</div></div></a>
+        </div>
+      </li>
+      <li><a href="beco-shop.html">Shop</a></li>
+      <li><a href="beco-about.html">About</a></li>
+      <li><a href="beco-contact.html">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="beco-shop.html?openCart=1" class="nav-icon-btn" title="Open quote cart" data-cart-link><i class="fa-solid fa-bag-shopping" style="font-size:14px"></i><span class="nav-cart-badge" data-cart-badge>0</span></a>
+      <a href="beco-contact.html" class="btn-quote"><i class="fa-solid fa-message" style="font-size:11px"></i> Get Quote</a>
+      <div class="hamburger" id="ham"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HERO -->
+<header class="page-hero">
+  <div class="container hero-inner">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Design System</span>
+    </div>
+    <h1 class="page-hero-title reveal">Design <em>System</em></h1>
+    <p class="page-hero-sub reveal" style="transition-delay:.1s">The complete visual language for Beco Interiors — colors, typography, spacing, components, and principles.</p>
+    <div class="ds-toc reveal" style="transition-delay:.2s">
+      <a href="#colors">Colors</a>
+      <a href="#typography">Typography</a>
+      <a href="#buttons">Buttons</a>
+      <a href="#components">Components</a>
+      <a href="#spacing">Spacing</a>
+      <a href="#navigation">Navigation</a>
+      <a href="#voice">Voice</a>
+    </div>
+  </div>
+</header>
+
+<!-- DESIGN SYSTEM BODY -->
+<section class="section bg-warm" id="colors">
+  <div class="container">
+
+    <!-- COLORS -->
+    <div class="ds-section reveal">
+      <div class="ds-section-label">01 — Color Palette</div>
+
+      <div style="margin-bottom:18px">
+        <div class="type-tag">Primary — Beco Red (never overuse — command through restraint)</div>
+        <div class="swatch-row">
+          <div class="swatch"><div class="swatch-fill" style="background:#C8281E"></div><div class="swatch-info"><div class="swatch-name">Beco Red ★</div><div class="swatch-hex">#C8281E</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#9E1F17"></div><div class="swatch-info"><div class="swatch-name">Red Dark</div><div class="swatch-hex">#9E1F17</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#E03A30"></div><div class="swatch-info"><div class="swatch-name">Red Mid</div><div class="swatch-hex">#E03A30</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#F7EAEA;border-bottom:1px solid #eee"></div><div class="swatch-info"><div class="swatch-name">Red Tint</div><div class="swatch-hex">#F7EAEA</div></div></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px">
+        <div class="type-tag">Warm Neutrals — carry most of the page weight</div>
+        <div class="swatch-row">
+          <div class="swatch"><div class="swatch-fill" style="background:#111111"></div><div class="swatch-info"><div class="swatch-name">Obsidian</div><div class="swatch-hex">#111111</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#1E1E1E"></div><div class="swatch-info"><div class="swatch-name">Charcoal</div><div class="swatch-hex">#1E1E1E</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#4A4540"></div><div class="swatch-info"><div class="swatch-name">Smoke</div><div class="swatch-hex">#4A4540</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#8A8078"></div><div class="swatch-info"><div class="swatch-name">Stone</div><div class="swatch-hex">#8A8078</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#E6DDD4"></div><div class="swatch-info"><div class="swatch-name">Linen</div><div class="swatch-hex">#E6DDD4</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#F2EDE6"></div><div class="swatch-info"><div class="swatch-name">Cream</div><div class="swatch-hex">#F2EDE6</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#FAF7F5;border:1px solid #e8e0d8"></div><div class="swatch-info"><div class="swatch-name">Warm White</div><div class="swatch-hex">#FAF7F5</div></div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="type-tag">Accents & Functional</div>
+        <div class="swatch-row">
+          <div class="swatch"><div class="swatch-fill" style="background:#C4972A"></div><div class="swatch-info"><div class="swatch-name">Gold</div><div class="swatch-hex">#C4972A</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#25D366"></div><div class="swatch-info"><div class="swatch-name">WhatsApp</div><div class="swatch-hex">#25D366</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#16A34A"></div><div class="swatch-info"><div class="swatch-name">Success</div><div class="swatch-hex">#16A34A</div></div></div>
+          <div class="swatch"><div class="swatch-fill" style="background:#DC2626"></div><div class="swatch-info"><div class="swatch-name">Error</div><div class="swatch-hex">#DC2626</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TYPOGRAPHY -->
+    <div class="ds-section reveal" id="typography">
+      <div class="ds-section-label">02 — Typography</div>
+      <div class="ds-block">
+        <div class="type-tag">Cormorant Garamond — Display · Hero Headlines · Section Titles</div>
+        <div style="font-family:var(--display);font-size:clamp(48px,7vw,80px);font-weight:300;color:var(--dark);letter-spacing:-2.5px;line-height:.95;margin:16px 0 12px">Premium Surfaces <em style="color:var(--red)">Defined</em></div>
+        <div style="font-family:var(--display);font-size:36px;font-weight:400;letter-spacing:-1px;margin-bottom:10px;color:var(--dark)">Section Heading — 36px / Weight 400</div>
+        <div style="font-family:var(--display);font-size:22px;font-style:italic;color:var(--red);margin-bottom:10px">Italic accent phrase — sub-heading / 22px</div>
+        <div class="mono-tag">font-family: 'Cormorant Garamond', Georgia, serif</div>
+      </div>
+      <div class="ds-block">
+        <div class="type-tag">DM Sans — Interface · Body Copy · Navigation · Buttons</div>
+        <div style="font-size:18px;font-weight:500;color:var(--dark);margin-bottom:8px">UI Heading — DM Sans 500 / 18px</div>
+        <p style="font-size:15px;color:var(--text-2);line-height:1.75;max-width:640px;margin-bottom:12px">Body Regular — Beco Interiors supplies premium building and interior design materials for architects, designers, and contractors in Nairobi. Every product is in stock, every order gets a personal response.</p>
+        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red)">Eyebrow Label / 10.5px</span>
+          <span style="font-family:var(--mono);font-size:11.5px;color:var(--stone)">SKU: ML19-GOLD · ST-CAL-120</span>
+          <span style="font-size:12px;color:var(--stone)">Caption / Muted</span>
+        </div>
+        <div class="mono-tag" style="margin-top:10px">font-family: 'DM Sans', system-ui, sans-serif</div>
+      </div>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="ds-section reveal" id="buttons">
+      <div class="ds-section-label">03 — Buttons</div>
+      <div class="ds-block">
+        <div class="type-tag" style="margin-bottom:16px">On light backgrounds</div>
+        <div class="component-row">
+          <button class="btn btn-primary">Primary Button</button>
+          <button class="btn btn-dark">Dark Button</button>
+          <button class="btn btn-outline">Outline Button</button>
+          <button class="btn btn-ghost">Ghost Link →</button>
+          <button class="btn btn-wa"><i class="fa-brands fa-whatsapp" style="font-size:14px"></i> WhatsApp Order</button>
+        </div>
+      </div>
+      <div class="ds-block-dark">
+        <div class="type-tag" style="margin-bottom:16px;color:rgba(255,255,255,.4)">On dark backgrounds</div>
+        <div class="component-row">
+          <button class="btn btn-primary">Primary Button</button>
+          <button class="btn btn-outline-w">Outline White</button>
+          <button class="btn btn-ghost" style="color:rgba(255,255,255,.7)">Ghost on Dark →</button>
+          <button class="btn btn-wa"><i class="fa-brands fa-whatsapp" style="font-size:14px"></i> WhatsApp</button>
+        </div>
+      </div>
+      <div style="background:var(--warm-white);padding:14px 16px;border-radius:4px;font-size:13px;color:var(--smoke);border:1px solid var(--linen)">
+        <strong style="color:var(--dark)">Spec:</strong> DM Sans · 11.5px / 600 · 1.5px letter-spacing · ALL CAPS · 2px border-radius · 14px 28px padding · 22ms transition
+      </div>
+    </div>
+
+    <!-- COMPONENTS -->
+    <div class="ds-section reveal" id="components">
+      <div class="ds-section-label">04 — Components</div>
+
+      <!-- Eyebrow pattern -->
+      <div class="type-tag" style="margin-bottom:12px">Eyebrow Pattern — used above every major heading</div>
+      <div class="grid-2" style="margin-bottom:20px;gap:12px">
+        <div class="ds-block">
+          <div class="eyebrow">On Light Background</div>
+          <div style="font-family:var(--display);font-size:34px;font-weight:300;color:var(--dark);letter-spacing:-1px;line-height:1.05">Section Title <em style="color:var(--red)">Here</em></div>
+        </div>
+        <div class="ds-block-dark">
+          <div class="eyebrow light">On Dark Background</div>
+          <div style="font-family:var(--display);font-size:34px;font-weight:300;color:white;letter-spacing:-1px;line-height:1.05">Dark Section <em style="color:var(--red)">Title</em></div>
+        </div>
+      </div>
+
+      <!-- Feature cards -->
+      <div class="type-tag" style="margin-bottom:12px">Feature Cards — light and dark variants</div>
+      <div class="grid-3" style="margin-bottom:20px;gap:12px">
+        <div class="feat-card light">
+          <div class="feat-icon"><i class="fa-solid fa-gem" style="color:var(--red)"></i></div>
+          <div class="feat-title">Light Feature Card</div>
+          <div class="feat-text">White background with subtle border. Hover reveals red border + light red tint. Used on light/cream sections.</div>
+        </div>
+        <div class="feat-card" style="background:var(--dark)">
+          <div class="feat-icon"><i class="fa-solid fa-lightbulb"></i></div>
+          <div class="feat-title">Dark Feature Card</div>
+          <div class="feat-text" style="color:rgba(255,255,255,.4)">Transparent with light white border. Hover reveals red border + subtle red tint. Used on dark sections.</div>
+        </div>
+        <div style="padding:22px;border-radius:4px;background:var(--red-tint);border:1px solid rgba(200,40,30,.15)">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:8px">Red Tint Variant</div>
+          <div style="font-size:14px;color:var(--dark);font-weight:600">Stat highlight or featured info badge</div>
+        </div>
+      </div>
+
+      <!-- Contact card -->
+      <div class="type-tag" style="margin-bottom:12px">Contact Card</div>
+      <div class="grid-3" style="gap:12px">
+        <div class="contact-card">
+          <div class="cc-icon"><i class="fa-brands fa-whatsapp" style="font-size:22px;color:var(--wa-green)"></i></div>
+          <div><div class="cc-label">Fastest Channel</div><div class="cc-val">WhatsApp</div><div class="cc-sub">+254 722 333 730</div></div>
+          <p style="font-size:13px;color:var(--text-2)">Short description of the contact channel and when to use it.</p>
+          <button class="btn btn-wa" style="width:100%;justify-content:center"><i class="fa-brands fa-whatsapp" style="font-size:14px"></i> Open Channel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPACING -->
+    <div class="ds-section reveal" id="spacing">
+      <div class="ds-section-label">05 — Spacing System</div>
+      <div class="ds-block">
+        <div class="type-tag" style="margin-bottom:20px">8px base unit — all spacing is a multiple of 8</div>
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+          <div style="text-align:center"><div style="width:4px;height:4px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">4</div></div>
+          <div style="text-align:center"><div style="width:8px;height:8px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">8</div></div>
+          <div style="text-align:center"><div style="width:12px;height:12px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">12</div></div>
+          <div style="text-align:center"><div style="width:16px;height:16px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">16</div></div>
+          <div style="text-align:center"><div style="width:24px;height:24px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">24</div></div>
+          <div style="text-align:center"><div style="width:32px;height:32px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">32</div></div>
+          <div style="text-align:center"><div style="width:48px;height:48px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">48</div></div>
+          <div style="text-align:center"><div style="width:64px;height:64px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">64</div></div>
+          <div style="text-align:center"><div style="width:88px;height:88px;background:var(--red);margin:0 auto 6px;border-radius:1px"></div><div style="font-size:10px;color:var(--stone)">88 ← section</div></div>
+        </div>
+      </div>
+      <div class="grid-3" style="gap:12px">
+        <div class="ds-block"><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Section Padding</div><div style="font-size:13px;color:var(--smoke)">88px top & bottom desktop, 64px tablet, 52px mobile.</div></div>
+        <div class="ds-block"><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Card Padding</div><div style="font-size:13px;color:var(--smoke)">24–40px internal padding. Cards use 4px border-radius consistently.</div></div>
+        <div class="ds-block"><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Grid Gap</div><div style="font-size:13px;color:var(--smoke)">18–24px gaps on product grids. 64–80px gap on split 2-col layouts.</div></div>
+      </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="ds-section reveal" id="navigation">
+      <div class="ds-section-label">06 — Navigation</div>
+
+      <!-- Desktop nav sample -->
+      <div class="type-tag" style="margin-bottom:12px">Desktop Navigation</div>
+      <div style="background:var(--dark);border-radius:6px;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;background:var(--red);border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:18px;font-weight:600;color:white">B</div>
+          <div style="font-family:var(--display);font-size:14px;font-weight:500;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,.75)">Beco</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);padding:6px 12px">Home</span>
+          <span style="font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);padding:6px 12px">Products ↓</span>
+          <span style="font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);padding:6px 12px;position:relative">Shop<span style="position:absolute;bottom:0;left:12px;right:12px;height:1px;background:var(--red)"></span></span>
+          <span style="font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);padding:6px 12px">About</span>
+          <span style="font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);padding:6px 12px">Contact</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(255,255,255,.5)"><i class="fa-solid fa-bag-shopping"></i></div>
+          <div style="background:var(--red);color:white;font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;border-radius:2px">Get Quote</div>
+        </div>
+      </div>
+      <div style="background:var(--warm-white);padding:12px 16px;border-radius:4px;font-size:13px;color:var(--smoke);border:1px solid var(--linen)">
+        <strong style="color:var(--dark)">Behaviour:</strong> Homepage nav starts transparent (white text), transitions to frosted-glass on scroll. Inner page navs are always solid warm-white. Height: 72px. CTA button is always red. Active links show a 1px red underline reveal.
+      </div>
+
+      <!-- Architecture -->
+      <div class="type-tag" style="margin-top:24px;margin-bottom:12px">Navigation Architecture</div>
+      <div class="ds-block">
+        <div style="font-family:var(--mono);font-size:13px;color:var(--dark);line-height:2">
+          Home<br>
+          Products &nbsp;<span style="color:var(--stone)">↓ mega menu</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;└ Lighting <span style="color:var(--stone)">88 products</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;└ Sintered Stones <span style="color:var(--stone)">36 products</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;└ WPC Wall Panels <span style="color:var(--stone)">80 products</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;└ Accessories <span style="color:var(--stone)">320 products</span><br>
+          Shop &nbsp;<span style="color:var(--stone)">all products, filterable</span><br>
+          About<br>
+          Contact<br>
+          <span style="color:var(--stone)">[🔍 Search] &nbsp;[🛒 Cart] &nbsp;[Get Quote →]</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOICE & TONE -->
+    <div class="ds-section reveal" id="voice">
+      <div class="ds-section-label">07 — Voice &amp; Tone</div>
+      <div class="grid-2" style="gap:12px">
+        <div class="ds-block">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:14px"><i class="fa-solid fa-check" style="color:var(--wa-green)"></i> &nbsp;Write Like This</div>
+          <ul style="list-style:none;display:grid;gap:10px">
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0;font-size:11px"></i> Confident and premium — without sounding inflated</li>
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0;font-size:11px"></i> Specific: say <em>KSh 850</em> not "affordable"; say <em>2 hours</em> not "fast"</li>
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0;font-size:11px"></i> CTA verbs go to the destination: "Shop Lighting →" not "Click here"</li>
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-check" style="color:var(--red);margin-top:2px;flex-shrink:0;font-size:11px"></i> Warm and Kenyan in the About and Contact pages</li>
+          </ul>
+        </div>
+        <div class="ds-block">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:14px"><i class="fa-solid fa-xmark" style="color:#DC2626"></i> &nbsp;Avoid This</div>
+          <ul style="list-style:none;display:grid;gap:10px">
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-xmark" style="color:#DC2626;margin-top:2px;flex-shrink:0;font-size:11px"></i> Generic filler: "world-class", "cutting-edge", "transformative"</li>
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-xmark" style="color:#DC2626;margin-top:2px;flex-shrink:0;font-size:11px"></i> Weak CTAs: "Click here", "Learn more" (without context)</li>
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-xmark" style="color:#DC2626;margin-top:2px;flex-shrink:0;font-size:11px"></i> Overcrowded headings — one strong idea per heading</li>
+            <li style="font-size:14px;color:var(--text-2);display:flex;gap:10px"><i class="fa-solid fa-xmark" style="color:#DC2626;margin-top:2px;flex-shrink:0;font-size:11px"></i> Placeholder pages and dead nav links (rebuild trust)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo">
+          <span class="logo-mark"><img src="images/Beco-Interiors-Logo.png" alt=""></span>
+          <div class="logo-text"><span class="logo-name">Beco</span><span class="logo-sub">Interiors</span></div>
+        </a>
+        <p>Kenya's premium supplier of interior finishing materials — lighting, sintered stone, WPC wall panels, and accessories.</p>
+        <div class="footer-social">
+          <a href="#" class="soc-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="soc-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="https://api.whatsapp.com/send?phone=254722333730" class="soc-btn" title="WhatsApp" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Products</div>
+        <ul class="footer-links">
+          <li><a href="beco-shop.html?cat=lighting">Lighting Solutions</a></li>
+          <li><a href="beco-shop.html?cat=stone">Sintered Stones</a></li>
+          <li><a href="beco-shop.html?cat=wpc">WPC Wall Panels</a></li>
+          <li><a href="beco-shop.html?cat=accessories">Accessories</a></li>
+          <li><a href="beco-shop.html">Shop All Products</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <ul class="footer-links">
+          <li><a href="beco-about.html">About Us</a></li>
+          <li><a href="beco-products.html">Products</a></li>
+          <li><a href="beco-contact.html">Contact</a></li>
+          <li><a href="beco-contact.html#showroom">Visit Showroom</a></li>
+          <li><a href="beco-design-system.html">Design System</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-location-dot"></i><span class="fc-val">Urban Square, Shop 8 & 9, Enterprise Road, Industrial Area, Nairobi</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-phone"></i><span class="fc-val">+254 722 333 730</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-solid fa-envelope"></i><span class="fc-val">info@beco.co.ke</span></div>
+        <div class="footer-contact-row"><i class="fc-icon fa-regular fa-clock"></i><span class="fc-val">Mon–Sat: 8am–6pm</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Beco Interiors Limited. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Sitemap</a>
+      </div>
+      <span class="footer-by">Designed by <a href="https://api.whatsapp.com/send?phone=254741980127&text=Hello%20Brightex%20Solutions%2C%20I%20saw%20the%20Beco%20Interiors%20website%20and%20would%20love%20to%20enquire%20about%20product%20design%20services." target="_blank">Brightex Solutions</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="beco-pages.js"></script>
+</body>
+</html>

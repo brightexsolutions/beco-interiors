@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Architectural accessories illustration</title>
+  <desc id="desc">Hardware and finishing accessories artwork for Beco Interiors.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1A1C21"/>
+      <stop offset="100%" stop-color="#4C3523"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F1CB72"/>
+      <stop offset="100%" stop-color="#B9852E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <rect x="120" y="110" width="360" height="68" rx="34" fill="url(#gold)"/>
+  <circle cx="200" cy="144" r="14" fill="#2B241F"/>
+  <circle cx="400" cy="144" r="14" fill="#2B241F"/>
+  <circle cx="660" cy="250" r="84" fill="none" stroke="#D5D7DA" stroke-width="26"/>
+  <circle cx="660" cy="250" r="18" fill="#D5D7DA"/>
+  <rect x="190" y="320" width="214" height="214" rx="34" fill="#111315" stroke="#6E737A" stroke-width="8"/>
+  <rect x="776" y="344" width="240" height="42" rx="21" fill="#D2A449"/>
+  <rect x="776" y="428" width="240" height="42" rx="21" fill="#D2A449"/>
+  <rect x="776" y="512" width="240" height="42" rx="21" fill="#D2A449"/>
+  <circle cx="836" cy="365" r="8" fill="#241C17"/>
+  <circle cx="836" cy="449" r="8" fill="#241C17"/>
+  <circle cx="836" cy="533" r="8" fill="#241C17"/>
+  <circle cx="956" cy="365" r="8" fill="#241C17"/>
+  <circle cx="956" cy="449" r="8" fill="#241C17"/>
+  <circle cx="956" cy="533" r="8" fill="#241C17"/>
+  <text x="150" y="684" fill="#F7EEE5" font-family="DM Sans, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="8">ARCHITECTURAL ACCESSORIES</text>
+  <text x="150" y="724" fill="#E6DDD4" font-family="DM Sans, Arial, sans-serif" font-size="24" opacity="0.84">Handles, knobs, hinges and hardware finishing details</text>
+</svg>
