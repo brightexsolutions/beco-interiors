@@ -1,1 +1,36 @@
+# Raw, unprocessed source material. Never committed.
+# One category of Drive photography is already over 1GB.
+_incoming/
+*.zip
+
+# Internal Brightex reference material: build plan, client brief,
+# technical build doc, proposal. Not for client distribution.
+files/
+
+# Agent and editor state
 .codex
+.DS_Store
+
+# Secrets. Values live in a password manager, names in docs/ENVIRONMENT.md
+.env
+.env.*
+!.env.example
+*.pem
+service-account*.json
+
+# Build output and dependencies
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# Note: docs/ is deliberately NOT ignored. It holds the committed
+# documentation set and travels with the code.
