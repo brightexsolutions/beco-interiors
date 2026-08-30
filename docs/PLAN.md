@@ -8,8 +8,8 @@ Brightex material.
 
 | Milestone | Days | Status |
 |---|---|---|
-| M0 Rules and rails | 0.5 | In progress |
-| M1 Foundation and infrastructure | 3.5 | Not started |
+| M0 Rules and rails | 0.5 | **Done**, commit 0c9566c |
+| M1 Foundation and infrastructure | 3.5 | Next |
 | M2 Drive import pipeline | 3.5 | Not started |
 | M3 Design system | 2.0 | Not started, overlaps M2 |
 | M4 Storefront, SEO, conversion, motion | 8.5 | Not started |
