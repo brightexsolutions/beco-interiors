@@ -167,7 +167,11 @@ booking, live chat widgets, email marketing platforms.
 - **Naming:** kebab-case files and directories, PascalCase components, camelCase functions,
   snake_case database columns. Slugs derive from Drive folder names so the taxonomy stays
   traceable to its source
-- **Commits:** imperative mood, present tense, no em dashes, explain why when it is not obvious
+- **Commits:** imperative mood, present tense, no em dashes, explain why when it is not
+  obvious. **Never include agent attribution.** No `Co-Authored-By: Claude`, no
+  `Co-Authored-By: Codex`, no "Generated with" notice. A commit is authored by the person who
+  ran and reviewed the work. Enforced by `.githooks/commit-msg`, activated with
+  `git config core.hooksPath .githooks`. See the `git-commit` skill
 - **Migrations:** one file per change, RLS policies and their tests in the same migration. No
   table exists without a policy and a test proving it
 
