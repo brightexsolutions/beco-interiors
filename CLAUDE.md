@@ -153,6 +153,10 @@ Never set up Search Console, GA4 or the Google Business Profile under a Brightex
 belong to Beco under their own Google account, with Brightex as manager only. Full matrix in
 `docs/OWNERSHIP.md`.
 
+What happens if Brightex stops working on this is in `docs/HANDOVER.md`, written to be shown
+to Beco. Keep it accurate: an exit plan describing accounts that no longer exist is worse than
+none, because it is trusted.
+
 ## Out of scope
 
 Do not build unless the plan is formally revised: online payments, automated WhatsApp intake

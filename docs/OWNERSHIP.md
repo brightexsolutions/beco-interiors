@@ -103,14 +103,10 @@ rollback is possible and nothing needed is stranded.
 
 ## If the relationship ends
 
-Almost nothing moves, which is the point of this arrangement.
+Full procedure, scenarios, verification checklist and the emergency path are in
+**`docs/HANDOVER.md`**, which is written to be shown to Beco.
 
-1. Vercel projects redeploy from the same repo under a Beco or successor account. DNS records
-   on Beco's own Cloudflare zone repoint. No registrar change
-2. The repository is transferred or copied to Beco
-3. Beco removes Brightex's memberships on Cloudflare, Supabase and Resend, rotates the dev
-   account password, and deletes the `developer` record to retire Studio
-
-Beco also holds a read only copy of the repository throughout, so a Vercel problem on
-Brightex's side is recoverable by Beco in about an hour without Brightex. Ownership of the code
-does not change.
+The short version: almost nothing moves. The database, DNS, images, email sender and monitoring
+already sit in accounts Beco owns. Brightex holds only the repository and the Vercel projects,
+and Beco holds a read only copy of the repository throughout, so a redeploy elsewhere takes
+about an hour without Brightex's involvement.
