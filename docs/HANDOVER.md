@@ -26,7 +26,7 @@ already been done, continuously, since setup.
 | Scenario | What happens | Urgency |
 |---|---|---|
 | **Planned handover** | Beco takes the platform in house or moves to another agency. Full procedure below, worked through together | Scheduled |
-| **Retainer paused or ended, no dispute** | Nothing technical changes immediately. The platform keeps running. Brightex stops making changes. Vercel Pro becomes Beco's cost, see section 6 | 30 days |
+| **Retainer paused or ended, no dispute** | Nothing technical changes immediately. The platform keeps running. Brightex stops making changes. Vercel Pro becomes Beco's cost, see section 6. **Beco must take over the monthly checklist in `docs/RETAINER.md` section 8** | 30 days |
 | **Relationship ends badly** | Same procedure, but assume no cooperation. Everything below is designed to work without Brightex's participation | Immediate |
 | **Brightex unreachable, no notice** | The emergency path, section 7. Beco can restore full control alone, in about an hour | Immediate |
 

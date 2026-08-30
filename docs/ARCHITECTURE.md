@@ -789,3 +789,4 @@ Beco runs mid year sales and clearance sales. Those reach the site without a dev
 | What is tested where | `docs/TEST-COVERAGE.md` |
 | What must be walked by hand | `docs/QA-CHECKLIST.md` |
 | What happens if Brightex stops | `docs/HANDOVER.md` |
+| How the ongoing engagement runs | `docs/RETAINER.md` |
