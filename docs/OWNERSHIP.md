@@ -24,7 +24,7 @@ resolving.
 | Google Business Profile | Beco's own Google account | Manager |
 | GA4 | Beco's own Google account | Editor |
 | Search Console | Beco's own Google account | Full user |
-| Google Drive, BECO PRODUCTS | okechirene21@gmail.com | Editor, plus a service account share from the owner |
+| Google Drive, BECO PRODUCTS | okechirene21@gmail.com | Editor, and editors can re-share, so Brightex adds the import service account itself |
 | Zoho Mail, info@beco.co.ke | Beco | None needed |
 | WhatsApp Business, +254 722 333 730 | Beco | None needed, click to chat only |
 
@@ -43,6 +43,32 @@ Two things and nothing else.
 Brightex Studio deploys from Brightex's Vercel but answers on `developer.beco.co.ke`, a record
 on Beco's Cloudflare zone. Beco can therefore retire Studio by deleting one DNS record. That is
 a reasonable place for the control to sit given it is their domain.
+
+### The Drive sharing chain
+
+```
+  okechirene21@gmail.com            OWNER, Beco side
+        |
+        |  shared as Editor
+        v
+  info.brightexsolutions@gmail.com  Brightex
+        |
+        |  shared onward as Editor, which only worked because
+        |  the folder allows editors to change permissions
+        v
+  gbrownze@gmail.com                working account
+        |
+        |  same mechanism adds the import service account
+        v
+  beco-import@<project>.iam.gserviceaccount.com
+```
+
+Two consequences. Brightex can add and rotate the import service account without going back to
+Irene, which removes a dependency from M2. And the access list will grow over time, so it is
+worth auditing at launch and again at handover, since anyone in the chain can add more people.
+
+If the owner ever turns off editor re-sharing, adding or rotating the service account needs
+Irene again. Worth knowing before it happens rather than during an outage.
 
 ## Credential rules
 

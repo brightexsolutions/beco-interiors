@@ -8,6 +8,18 @@ description: How a Drive folder becomes seeded categories, products, and image d
 Reads the Drive API directly through a service account. **The zip was a one time bootstrap and
 is retired.** Never re download an archive to check for changes.
 
+## Access
+
+`BECO PRODUCTS` is owned by okechirene21@gmail.com and shared to Brightex as Editor. The folder
+allows editors to re-share, so **Brightex adds and rotates the import service account itself**
+without going back to the owner.
+
+If a share ever fails, check whether editor re-sharing was turned off before assuming the
+service account is misconfigured.
+
+The Claude Drive connector cannot see this folder, and that is a stale connector index rather
+than a permissions problem. The pipeline does not use the connector, so it does not matter.
+
 ## Change detection
 
 `import_files` holds every file ever seen: Drive file id, path, `md5Checksum`, size,

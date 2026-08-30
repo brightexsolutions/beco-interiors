@@ -50,7 +50,7 @@ Anything cut or deferred is recorded here with a reason, never silently dropped.
 | Item | Owner | Blocks |
 |---|---|---|
 | Nameserver change to Cloudflare | Beco | M1 DNS half |
-| Drive service account share | okechirene21@gmail.com | M2 live sync |
+| Drive service account share | **Brightex, no longer blocked.** Editors can re-share this folder, proven by the Brightex to gbrownze hop | M2 live sync |
 | `products.csv`: prices, specs, descriptions | Beco | M4 being a catalog rather than a gallery |
 | Old beco.co.ke URL list | Beco | M6 redirect map |
 | Pre migration baseline capture | Brightex | M6, and it stops existing at cutover |
