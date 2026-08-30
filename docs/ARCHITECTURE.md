@@ -23,6 +23,7 @@ Full reasoning behind every choice is in `files/BUILD-PLAN.md`.
 13. Analytics and the conversion funnel
 14. Backup and restore
 15. Announcement lifecycle
+16. Blog authoring with Gemini
 
 ---
 
@@ -777,6 +778,92 @@ Beco runs mid year sales and clearance sales. Those reach the site without a dev
 
 ---
 
+## 16. Blog authoring with Gemini
+
+Blog publishing is Brightex's job, not Beco's, so this lives entirely in Studio. **The Gemini
+key is Brightex's and never leaves the studio project.** The storefront and the dashboard have
+no knowledge of it.
+
+```
+  BRIGHTEX in Studio                                        SERVICES
+       |
+       |  title or brief, target search term,
+       |  optionally related products or a category
+       v
+  +--------------------------------------------+
+  |  server action, studio only                 |
+  |  GEMINI_API_KEY never reaches a browser     |
+  |                                             |
+  |  Context sent with the prompt:              |
+  |   - the house voice rules                   |
+  |   - NO EM DASHES, stated explicitly         |
+  |   - real product names and specs, so the    |
+  |     model writes about actual stock         |
+  +---------------------+-----------------------+
+                        |
+                        v  -----------------> GEMINI API
+                        |  <----------------- draft + metadata
+                        |
+       +----------------v-----------------+
+       |  VALIDATOR, not the prompt       |
+       |  rejects: em dashes, banned      |
+       |  phrases, bad heading order,     |
+       |  over long meta, duplicate slug  |
+       |                                  |
+       |  The prompt asks. This enforces. |
+       +----------------+-----------------+
+                        |
+                        v
+       +----------------------------------+
+       |  HUMAN EDIT, required            |
+       |  Every product claim checked      |
+       |  against products.specs, which   |
+       |  is the real source of truth     |
+       |  Internal links added to real    |
+       |  category and product pages      |
+       +----------------+-----------------+
+                        |
+       +----------------v-----------------+
+       |  COVER IMAGE                     |
+       |  upload, or provide a URL        |
+       |          |                       |
+       |          v                       |
+       |  same Sharp pipeline as products |
+       |  AVIF + WebP, 4 widths, blur     |
+       |          |                       |
+       |          v                       |
+       |  R2. Never hotlinked, because a  |
+       |  third party URL will rot        |
+       |                                  |
+       |  alt text REQUIRED before publish|
+       +----------------+-----------------+
+                        |
+                        v
+                  seo-checklist
+                        |
+                        v
+  blog_posts: status draft -> published
+              published_at stamped
+              prompt and model stored on the row
+              author is A PERSON, never "AI"
+              audit_log written
+                        |
+                        v
+              revalidateTag('blog')
+              sitemap picks it up
+              BlogPosting JSON-LD emitted
+```
+
+**Gemini drafts. A person publishes.** Google penalises scaled content abuse, meaning bulk
+generated pages made to rank, and does not penalise AI assistance on genuinely useful content.
+Two reviewed articles a month is firmly the latter, but only while the review is real.
+
+**Timing.** The three launch articles under D28 are drafted with Gemini outside the app and
+seeded through a migration, because Studio is M7 and sits after launch. The in app authoring
+tool ships with Studio. The key is usable today either way.
+
+---
+
 ## Where to go next
 
 | Question | Document |
@@ -792,3 +879,4 @@ Beco runs mid year sales and clearance sales. Those reach the site without a dev
 | How the ongoing engagement runs | `docs/RETAINER.md` |
 | How to provision and deploy | `docs/DEPLOYMENT.md` |
 | Where a credential comes from | `docs/ENVIRONMENT.md` |
+| How a blog post gets written | `.claude/skills/blog-content` |

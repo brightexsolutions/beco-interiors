@@ -130,8 +130,16 @@ Everything it read is Beco's and stays Beco's: `analytics_events` and `blog_post
 Beco's own database and are unaffected by Studio going away. Published blog content remains on
 the site. Only the authoring and cross client reporting interface disappears.
 
+**Gemini assisted blog drafting** goes with Studio, for the same reason. The API key is
+Brightex's, billed to Brightex, and used only in Brightex tooling.
+
+What Beco keeps: **every article already published stays on the site**, in Beco's own database,
+unaffected. The blog renders from `blog_posts` on the storefront, which is Beco's. Only the
+authoring tool disappears.
+
 If Beco wants a replacement blog editor after handover, that is a small piece of new work, not
-a recovery of something withheld.
+a recovery of something withheld. Any Gemini key, including one of Beco's own, drops into the
+same server action.
 
 ---
 

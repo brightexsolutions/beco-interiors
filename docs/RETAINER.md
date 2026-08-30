@@ -68,7 +68,8 @@ Everything in Essential Care, plus the work that makes the platform earn.
 
 Everything in Growth Plan, plus content and strategy.
 
-- 2 blog articles written and published a month, targeting the agreed search terms
+- 2 blog articles written and published a month, targeting the agreed search terms. Drafted
+  with Gemini, **edited and fact checked by a person before publishing**, never posted raw
 - Social copy for Instagram and Facebook
 - Priority support, 4 hour response during business hours
 - Quarterly digital strategy review
@@ -114,6 +115,7 @@ Billed at cost with invoices attached, or paid directly by Beco. Never marked up
 | Cloudflare and R2 | Free | Beco account, free |
 | Resend | Free under 3,000 a month, then about USD 20 | Beco, when triggered |
 | Monitoring and cron | Free | Free |
+| Gemini API, blog drafting | Free tier covers 2 articles a month comfortably | **Brightex**, own key, own cost |
 
 **Beco's day one recurring cost is the domain renewal.** Everything else is free tier or
 carried by Brightex inside the retainer.

@@ -15,7 +15,7 @@ Brightex material.
 | M4 Storefront, SEO, conversion, motion | 8.5 | Not started |
 | M5 Operations dashboard | 6.5 | Not started |
 | M6 Launch | 3.5 | Not started |
-| M7 Brightex Studio | 4.0 | After launch, unbilled |
+| M7 Brightex Studio | 4.5 | After launch, unbilled. Gemini blog drafting, D40 |
 
 28 working days sequential, 26 calendar once M3 overlaps M2, against 20 available. The gap is
 6 days and is closed by staging the motion and taking the dashboard cuts below, accepting a

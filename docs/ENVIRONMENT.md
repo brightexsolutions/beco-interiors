@@ -50,6 +50,8 @@ anything there you would not print on a billboard.
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Drive import identity | See section 3.1 | pipeline, backup |
 | `AGE_PUBLIC_KEY` | Backup encryption, public half | `age-keygen -o key.txt`, then read the public line | backup workflow |
 | `AGE_SECRET_KEY` | Decrypts backups | The private half. **Store in the password manager and nowhere else.** Losing it makes every backup useless | restore only, never in CI |
+| `GEMINI_API_KEY` | Blog draft generation. **Brightex's key, in Studio only** | See 3.6 | **studio only** |
+| `GEMINI_MODEL` | Model id, so it changes without a deploy | Google's current model list. Do not hardcode | studio only |
 | `VERCEL_TOKEN` | Optional, CLI deploys | vercel.com, Settings, Tokens | CI, if used |
 
 ### Local only
@@ -125,6 +127,28 @@ manager as `AGE_SECRET_KEY` and **never goes into CI**, because CI only needs to
 not read them.
 
 **If the private key is lost, every backup is permanently unreadable.** Store it in two places.
+
+### 3.6 Gemini API key, for blog drafting
+
+Used only by Brightex Studio, server side, to draft blog content from a title or a brief.
+**Never reaches the storefront or the dashboard**, and never reaches a browser.
+
+1. `aistudio.google.com/apikey`, signed in as **Brightex**, not becointeriorsdev and not Beco
+2. Create an API key. Bind it to a Google Cloud project if you want quota visibility and
+   billing alerts, which is worth doing
+3. Store it as a Vercel environment variable on the **studio project only**
+
+**This key is Brightex property**, unlike almost everything else in this file. Studio is
+Brightex tooling and the drafting capability goes with Brightex at handover. That is recorded
+in `docs/HANDOVER.md` and it is a deliberate consequence of D19, not an oversight.
+
+Set `GEMINI_MODEL` rather than hardcoding a model id. Google renames and retires models, and a
+config value is a one line change instead of a deploy.
+
+**Quota:** there is a free tier, and drafting two articles a month sits far inside it. Set a
+billing alert anyway, because a loop bug against a paid API is an expensive way to learn.
+
+**Rotate:** at handover, on any Brightex staff change, and annually.
 
 ---
 

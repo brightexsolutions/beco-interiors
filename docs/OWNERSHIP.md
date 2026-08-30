@@ -39,6 +39,7 @@ Two things and nothing else.
 |---|---|
 | GitHub repository | Private. Holds all three surfaces including Brightex Studio |
 | Vercel, three projects | Hobby today. Pro before cutover, see Risks |
+| Gemini API key | Brightex's own, used only in Studio to draft blog content. Never in the storefront or dashboard. Goes with Brightex at handover |
 
 Brightex Studio deploys from Brightex's Vercel but answers on `developer.beco.co.ke`, a record
 on Beco's Cloudflare zone. Beco can therefore retire Studio by deleting one DNS record. That is
