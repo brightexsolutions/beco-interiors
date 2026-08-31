@@ -37,6 +37,16 @@ jobs:
             exit 1
           fi
 
+      - name: No browser dialogs
+        run: |
+          if grep -rnE "window\.(confirm|alert|prompt)\(|(^|[^.\w])(confirm|alert|prompt)\(" \
+               --include="*.ts" --include="*.tsx" apps packages tools \
+               | grep -v node_modules | grep -v "confirm-dialog" | grep -v "onConfirm"; then
+            echo "Browser dialog found. Use ConfirmDialog or toast() from @beco/ui."
+            echo "See CLAUDE.md rule 4."
+            exit 1
+          fi
+
       - run: pnpm check:secrets
       - run: pnpm typecheck
       - run: pnpm --filter @beco/ui check:contrast

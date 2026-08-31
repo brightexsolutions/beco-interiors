@@ -67,7 +67,38 @@ means the operation was observed:
 
 Never ship `onClick={() => {}}`, `href="#"`, or a control disabled with no reason given.
 
-### 4. Security is not negotiable
+### 4. Never use a browser dialog
+
+**No `window.confirm`, `window.alert`, or `window.prompt`. Ever.**
+
+They cannot be styled, they cannot be branded, they block the main thread, they are inconsistent
+across browsers, they are untestable in jsdom, and on mobile they look like a phishing warning.
+A destructive action confirmed by a grey system box on a site selling premium materials is a
+credibility problem, not just an aesthetic one.
+
+Use the shared components instead:
+
+| Instead of | Use |
+|---|---|
+| `window.confirm` | `<ConfirmDialog>` from `@beco/ui` |
+| `window.alert` | `toast()` from `@beco/ui` |
+| `window.prompt` | A real form in a `<Dialog>` |
+
+`ConfirmDialog` is required for anything destructive or irreversible: deleting a product,
+cancelling an order, marking a quote lost, deactivating a user, changing a role. It states what
+will happen, names the thing being acted on, and its confirm button says the verb, "Delete
+product", never "OK".
+
+A lint rule fails the build on all three globals. The rule is the backstop, not the standard.
+
+### 5. Build it once, in @beco/ui
+
+If a pattern appears twice, it belongs in `@beco/ui`. Duplicated components drift, and drifted
+components are how a design system quietly dies.
+
+See `docs/COMPONENTS.md` for the inventory and what each one is for.
+
+### 6. Security is not negotiable
 
 - RLS on every table, deny by default, tested for anonymous and each role individually
 - The service role key is server only. Never in client code, never in a `NEXT_PUBLIC_`
@@ -80,7 +111,7 @@ Never ship `onClick={() => {}}`, `href="#"`, or a control disabled with no reaso
 - Soft delete anything with commercial meaning, so the audit trail points at a real record
 - Audit logging goes in as each feature is built, never in a catch up pass
 
-### 5. Milestone discipline
+### 7. Milestone discipline
 
 Start every milestone by expanding it into a written todo list. Add what you discover rather
 than remembering it. At the end, walk the list and verify each item against reality, not
