@@ -332,16 +332,110 @@ The one sequence where order genuinely matters. Budget half a day, not an aftern
 
 ## 7. Environments
 
-| Environment | Where | Data | Indexed |
-|---|---|---|---|
-| Local | `localhost`, `supabase start` | Seeded fixtures | n/a |
-| Preview | Vercel, per branch | Points at production Supabase, read heavy | No, Vercel previews are noindex by default |
-| Staging | `staging.beco.co.ke` | Production Supabase | No, password protected and noindex |
-| Production | `www`, `dashboard`, `developer` | Live | Storefront only |
+**Two Supabase projects. Nothing but production ever touches production data.**
 
-Preview and staging share the production database, which is a deliberate free tier compromise.
-**So a destructive migration is never tested against a preview.** Test destructive changes
-locally, against `supabase db reset`, where the data does not matter.
+| Environment | Where | Database | Indexed |
+|---|---|---|---|
+| Local | `localhost`, `supabase start` | Local Docker Postgres, seeded fixtures | n/a |
+| Preview | Vercel, per pull request | **`beco-staging`** | No |
+| Staging | `staging.beco.co.ke` | **`beco-staging`** | No, password protected and noindex |
+| Production | `www`, `dashboard` | **`beco-prod`** | Storefront only |
+
+Both Supabase projects sit in Beco's organisation. **The free tier allows exactly two active
+projects per organisation, so this fits precisely and uses the allowance up.** A third would
+need Pro, which is worth knowing before someone tries.
+
+Each project needs its own keep alive cron, since each pauses independently after roughly a
+week of inactivity.
+
+### Staging data is seeded, never copied from production
+
+**Do not clone production into staging.** `quotes` and `orders` hold real customer names, phone
+numbers and email addresses. Copying them into a lower environment, which more people can reach
+and which is password protected rather than properly secured, is a data protection problem
+under Kenya's Data Protection Act 2019 and a needless one.
+
+Staging is seeded from `supabase/seed.sql`: the real 24 products from the import pipeline,
+which are not personal data, plus **fictional** customers, quotes and orders. That also makes
+staging deterministic, so a test failure means a real regression rather than someone having
+edited a row.
+
+### The rule this exists to enforce
+
+**Nothing tests against live data.** Not a preview deploy, not staging, not a developer's
+laptop. A destructive migration, a bad seed, or a stray test submission cannot reach the
+database Beco's team is working in.
+
+Before this split, a preview deploy could have written a test quote into the real `quotes`
+table and it would have appeared in the dashboard alongside genuine leads.
+
+---
+
+## 11. Deployment pipeline
+
+**Vercel's Git integration is deliberately not used.** The repository is not connected to
+Vercel, and no push builds anything on its own.
+
+Reasons it is worth the extra setup:
+
+- **Vercel's Git integration builds every push regardless of whether tests pass.** You discover
+  a build is broken after it has deployed rather than before
+- Build minutes are burned on work in progress commits that were never going to ship
+- Migrations and deploys need ordering. A deploy that lands before its migration is an outage,
+  and Git integration has no opinion about that
+- Production deserves an approval gate, and Git integration has none
+
+Instead, **GitHub Actions owns deployment** through the Vercel CLI.
+
+```
+  pull request
+      |
+      v
+  CI: typecheck, lint, secrets, no browser dialogs,
+      unit, component, RLS against a local database
+      |
+      | all green, and only then
+      v
+  vercel build --target=preview
+  vercel deploy --prebuilt              -> preview URL, beco-staging DB
+      |
+      v
+  Lighthouse CI against that preview, budgets enforced
+      |
+      | review, approve, merge
+      v
+  main
+      |
+      v
+  migrations applied to beco-staging, automatically
+  deploy to staging.beco.co.ke
+      |
+      | MANUAL APPROVAL, GitHub Environment "production"
+      v
+  migrations applied to beco-prod
+  deploy to www and dashboard
+```
+
+**Migrations run before the deploy that needs them**, and production migrations run only after
+a human approves. The CSV export of products, quotes and orders runs automatically first, per
+the backup rule.
+
+**Rollback stays instant.** Vercel deployments remain immutable, so promoting a previous one is
+still one command. Not using Git integration changes how deploys are triggered, not how they
+are undone.
+
+### Required secrets
+
+| Secret | Where |
+|---|---|
+| `VERCEL_TOKEN` | vercel.com, Settings, Tokens |
+| `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_STOREFRONT`, `VERCEL_PROJECT_ID_DASHBOARD` | `.vercel/project.json` after `vercel link` |
+| `SUPABASE_ACCESS_TOKEN` | Supabase, Account, Access Tokens |
+| `SUPABASE_STAGING_REF`, `SUPABASE_PROD_REF` | Each project's ref |
+| `SUPABASE_STAGING_DB_PASSWORD`, `SUPABASE_PROD_DB_PASSWORD` | Each project's database settings |
+
+**Turn off Vercel's Git integration explicitly** in each project's settings after linking, or
+it will keep building alongside the pipeline and the two will race.
 
 ---
 

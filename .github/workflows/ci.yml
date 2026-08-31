@@ -51,4 +51,14 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm --filter @beco/ui check:contrast
       - run: pnpm test:unit
+
+      # RLS policies are tested against a LOCAL ephemeral database.
+      # Nothing in CI ever connects to staging or production.
+      - uses: supabase/setup-cli@v1
+      - name: RLS policy tests, local database only
+        run: |
+          supabase start
+          supabase test db
+          supabase stop
+
       - run: pnpm build

@@ -98,7 +98,20 @@ components are how a design system quietly dies.
 
 See `docs/COMPONENTS.md` for the inventory and what each one is for.
 
-### 6. Security is not negotiable
+### 6. Never touch production data
+
+**`beco-prod` and `beco-staging` are separate Supabase projects.** Local development uses
+`supabase start`. Preview deploys and staging point at `beco-staging`. **Nothing tests against
+live data, ever.**
+
+Staging is seeded from `supabase/seed.sql` with fictional customers, never cloned from
+production, because `quotes` and `orders` hold real names and phone numbers.
+
+**Deployment is owned by GitHub Actions, not Vercel's Git integration**, which is switched off.
+Nothing deploys unless CI passed. Migrations run before the deploy that needs them, and
+production migrations run only after a human approves. See D44, D45 and `docs/DEPLOYMENT.md`.
+
+### 7. Security is not negotiable
 
 - RLS on every table, deny by default, tested for anonymous and each role individually
 - The service role key is server only. Never in client code, never in a `NEXT_PUBLIC_`
@@ -111,7 +124,7 @@ See `docs/COMPONENTS.md` for the inventory and what each one is for.
 - Soft delete anything with commercial meaning, so the audit trail points at a real record
 - Audit logging goes in as each feature is built, never in a catch up pass
 
-### 7. Milestone discipline
+### 8. Milestone discipline
 
 Start every milestone by expanding it into a written todo list. Add what you discover rather
 than remembering it. At the end, walk the list and verify each item against reality, not

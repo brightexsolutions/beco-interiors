@@ -8,7 +8,16 @@ own secret store. This file is committed; a value in it is a leak.
 
 ---
 
-## 1. The rule that governs this file
+## 1. Two databases, and the rule that governs this file
+
+**`beco-prod` and `beco-staging` are separate Supabase projects.** Preview deploys, staging and
+every test point at staging. **Nothing but production ever touches production data.** A
+destructive migration, a bad seed or a stray test submission cannot reach the database Beco's
+team works in. See D44.
+
+Vercel environment variables are scoped so that Preview receives the **staging** Supabase URL,
+anon key and service role key, and Production receives the production ones. **Never paste a
+production service role key into a Preview environment.**
 
 The storefront receives **only** public variables. The service role key and every other admin
 secret exist solely in the dashboard and studio environments, server side.
@@ -52,7 +61,14 @@ anything there you would not print on a billboard.
 | `AGE_SECRET_KEY` | Decrypts backups | The private half. **Store in the password manager and nowhere else.** Losing it makes every backup useless | restore only, never in CI |
 | `GEMINI_API_KEY` | Blog draft generation. **Brightex's key, in Studio only** | See 3.6 | **studio only** |
 | `GEMINI_MODEL` | Model id, so it changes without a deploy | Google's current model list. Do not hardcode | studio only |
-| `VERCEL_TOKEN` | Optional, CLI deploys | vercel.com, Settings, Tokens | CI, if used |
+| `VERCEL_TOKEN` | **Required.** GitHub Actions owns deployment, per D45 | vercel.com, Settings, Tokens | CI |
+| `VERCEL_ORG_ID` | Vercel team id | `.vercel/project.json` after `vercel link` | CI |
+| `VERCEL_PROJECT_ID_STOREFRONT` | | Same, per project | CI |
+| `VERCEL_PROJECT_ID_DASHBOARD` | | Same, per project | CI |
+| `SUPABASE_ACCESS_TOKEN` | Applies migrations | Supabase, Account, Access Tokens | CI |
+| `SUPABASE_STAGING_REF` | The `beco-staging` project | Supabase project URL | CI |
+| `SUPABASE_PROD_REF` | The `beco-prod` project | Supabase project URL | CI |
+| `SUPABASE_STAGING_DB_PASSWORD` | | Project database settings | CI |
 
 ### Local only
 

@@ -320,6 +320,8 @@ In order, before M1 begins.
 | 6 | Add slug history and 301s from former slugs | 2.3, prevents self inflicted ranking loss |
 | 7 | Optimistic locking on quote save | 2.2, prevents silent data loss |
 | 8 | Report boundaries in `Africa/Nairobi` | 1.6, otherwise the figures are quietly wrong |
+| 11 | ~~Preview and staging share the production database~~ **Done, D44** | A preview deploy could have written a test quote into the real quotes table and it would have shown in the dashboard beside genuine leads. Now two projects |
+| 12 | ~~Vercel Git integration builds every push~~ **Done, D45** | Deploys now happen only after CI passes, migrations run before the deploy that needs them, and production is behind an approval gate |
 | 9 | Rename the stock stat card to what it can honestly show | 2.1, resolves a contradiction |
 | 10 | Decide quote expiry behaviour and unpriced quote totals | 2.4 and 2.5, product decisions needed before M5 |
 
