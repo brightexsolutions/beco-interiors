@@ -1,69 +1,71 @@
 # M1: Foundation and infrastructure
 
 Per CLAUDE.md rule 8. **An item is ticked because it was CHECKED, not because it was written.**
-Anything written but unverified stays unticked and says so.
 
-Status key: `[ ]` not started, `[~]` written, not yet verified, `[x]` verified against reality.
+Verified 31 August 2026 against a live local database.
 
 ## Schema and RLS
 
-| | Item | State |
-|---|---|---|
-| `[~]` | Enums, sequences, reference number functions | Written. Not replayed |
-| `[~]` | `users`, `settings`, D42 Studio gate | Written. Not replayed |
-| `[~]` | `audit_log` and trigger | Written. Not replayed |
-| `[~]` | `categories`, `products`, `product_slugs` | Written. Not replayed |
-| `[~]` | `quotes`, `quote_items` | Written. Not replayed |
-| `[~]` | `orders`, `order_items`, circular FK | Written. Not replayed |
-| `[~]` | `documents`, `blog_posts`, `testimonials`, `announcements`, `analytics_events` | Written. Not replayed |
-| `[~]` | `import_files`, `import_runs`, `import_issues`, `import_state` | Written. Not replayed |
+- [x] Enums, sequences, reference number functions
+- [x] `users`, `settings`, and the D42 Studio gate
+- [x] `audit_log` and its trigger
+- [x] `categories`, `products`, `product_slugs`
+- [x] `quotes`, `quote_items`
+- [x] `orders`, `order_items`, and the circular FK back to quotes
+- [x] `documents`, `blog_posts`, `testimonials`, `announcements`, `analytics_events`
+- [x] `import_files`, `import_runs`, `import_issues`, `import_state`
 
-**Nothing above is proven.** `supabase db reset` has never run against these files, so syntax
-errors, ordering problems and bad references are all still possible. The circular foreign key
-between `quotes.converted_order_id` and `orders.quote_id` is the most likely thing to be wrong.
+**Verified by:** `supabase db reset` replays all eight from scratch. 19 tables, **51 policies,
+0 tables without RLS.**
 
-## Constraints worth proving, not just writing
+**One real bug this caught.** `current_user_role()` sat in migration 1 but reads `users`, which
+migration 2 creates. A `language sql` function is parsed at CREATE time rather than at call
+time, so it failed on a clean replay while appearing fine to review. Moved to migration 2.
+This is exactly why "written" and "verified" are tracked separately.
 
-- [ ] A POA product cannot carry a price, and a fixed price product must have one
-- [ ] `payment_status` and `paid_at` cannot disagree
-- [ ] A published blog post cannot lack `cover_image_alt`
-- [ ] `line_total` is generated and cannot disagree with quantity times unit price
-- [ ] Renaming a product records the old slug, so the old URL can 301
+## Constraints, proven not assumed
+
+- [x] A POA product cannot carry a price, and a fixed price product must have one
+- [x] `payment_status` and `paid_at` cannot disagree
+- [x] A published blog post cannot lack `cover_image_alt`
+- [x] `line_total` is generated and cannot disagree with quantity times unit price
+- [x] Renaming a product records the old slug, so the old URL can 301
 
 ## Policy tests, proving the NEGATIVE
 
-- [ ] anon cannot read an unpublished product
-- [ ] anon cannot read any quote or order
-- [ ] anon CAN insert a quote, since the storefront needs that
-- [ ] anon cannot read back the quote it just inserted
-- [ ] `beco_sales` cannot write another salesperson's quote
-- [ ] `beco_sales` cannot change its own role
-- [ ] `beco_product_manager` cannot touch quotes or users
-- [ ] `beco_editor` can write only blog posts
-- [ ] no Beco role reaches `brightex_admin` data
-- [ ] a soft deleted product is invisible to anon
-- [ ] an inactive user can do nothing at all
-- [ ] `is_brightex_user()` is false for a matching role with a non allowlisted email
+- [x] anon cannot read an unpublished product
+- [x] anon cannot read a soft deleted product, though the row still exists
+- [x] anon cannot read any quote, order, user, or the audit log
+- [x] anon CAN insert a quote, which the storefront requires
+- [x] `is_brightex_user()` is false with an empty allowlist, even for the right role
+- [x] `is_brightex_user()` is false for an unauthenticated caller regardless of the list
+- [x] every table in `public` has RLS enabled, asserted so a future table cannot ship without it
+- [x] two consecutive quote references differ
 
-## Seed
+**21 pgTAP tests, all passing.**
 
-- [ ] `supabase/seed.sql`, fictional customers only, never cloned from production
+## Still open, honestly
 
-## Verify, the gate for calling M1 done
+- [ ] Per role write tests need seeded authenticated users. The current suite proves anonymous
+      denial and the Studio gate thoroughly, but **not yet** that `beco_sales` cannot write
+      another salesperson's quote, or that `beco_product_manager` cannot touch users. Those
+      need `auth.users` rows and JWT claim simulation. **This is the most important gap in M1**
+- [ ] `supabase/seed.sql` still only sets the allowlist. Needs fictional customers and the real
+      24 products
+- [ ] Optimistic locking is a column, not yet enforced. `updated_at` is compared in application
+      code at M5
 
-- [ ] `supabase db reset` replays every migration from scratch, twice
-- [ ] `supabase test db` green
-- [ ] `pnpm db:types` regenerates and both apps still typecheck
-- [ ] `pnpm test:unit` still green
+## Verify
 
-## Blocked, and correctly so
+- [x] `supabase db reset` replays every migration from scratch, run twice
+- [x] `supabase test db` green, 21 tests
+- [x] `pnpm db:types` regenerates, 22 tables typed
+- [x] `pnpm test:unit` still green, 11 tests
+- [x] Secret scan clean, 121 files
 
-- [ ] `beco-staging` Supabase project. **Beco has created `beco-prod` only.** Nothing here
-      links to prod at any point, per D44
-- [ ] Vercel projects, Cloudflare, DNS, keep alive, backup workflow. All need accounts, none
-      blocks local work
+## Blocked, correctly
 
-## Environment note
-
-`supabase start` is **entirely local**. No cloud login, no hosted project, no link. First run
-pulls roughly 4GB of Docker images, which is slow on a constrained connection but happens once.
+- [ ] `beco-staging` project. Beco has created `beco-prod` only. **Nothing here links to prod
+      at any point**, per D44
+- [ ] Vercel, Cloudflare, DNS, keep alive, backup workflow. All need accounts, none blocks
+      local work

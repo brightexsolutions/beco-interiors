@@ -36,12 +36,6 @@ language sql volatile as $$
   select 'BEC-O-' || lpad(nextval('order_reference_seq')::text, 5, '0');
 $$;
 
-create or replace function current_user_role() returns user_role
-language sql stable security definer set search_path = public as $$
-  select role from users where id = auth.uid() and is_active;
-$$;
-
-create or replace function is_admin() returns boolean
-language sql stable security definer set search_path = public as $$
-  select current_user_role() in ('beco_admin','brightex_admin');
-$$;
+-- current_user_role() and is_admin() live in migration 2, after `users`
+-- exists. A `language sql` function is parsed at CREATE time, so it cannot
+-- reference a table that has not been created yet.

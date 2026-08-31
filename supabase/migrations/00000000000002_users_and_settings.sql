@@ -20,6 +20,18 @@ create table users (
   updated_at            timestamptz not null default now()
 );
 
+-- Role helpers. Defined here rather than in migration 1 because they read
+-- `users`, and a `language sql` function is parsed at CREATE time.
+create or replace function current_user_role() returns user_role
+language sql stable security definer set search_path = public as $$
+  select role from users where id = auth.uid() and is_active;
+$$;
+
+create or replace function is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select current_user_role() in ('beco_admin','brightex_admin');
+$$;
+
 -- D42: Studio requires TWO independent conditions, both checked here rather
 -- than in middleware alone. An EXPLICIT ADDRESS LIST, not a domain suffix,
 -- because Brightex's real addresses are gmail.com and a suffix check would
