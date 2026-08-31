@@ -880,3 +880,6 @@ tool ships with Studio. The key is usable today either way.
 | How to provision and deploy | `docs/DEPLOYMENT.md` |
 | Where a credential comes from | `docs/ENVIRONMENT.md` |
 | How a blog post gets written | `.claude/skills/blog-content` |
+| What the product must do | `docs/PRD.md` |
+| The one page version | `docs/architecture-essential.md` |
+| Known weaknesses and gaps | `docs/REVIEW.md` |
