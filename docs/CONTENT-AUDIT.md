@@ -41,11 +41,6 @@ Three of these claims are not merely cosmetic:
 | **"520+ products"** | Home, About, Products | Drive holds 24 products and 15 empty folders. The number appears fabricated |
 | **Category counts:** Lighting 88, Sintered Stones 36, WPC 80, Accessories 320 | Nav, mega menu, Products | Sum to 524, hence "520+". Sintered Stones is 24 in reality, not 36. Precise looking numbers with no source |
 | **"2 hour quote turnaround"** | Home, About, Contact | Appears 5 times. **The same prototype also says 24 hour once**, so it is not even internally consistent. Is this a real operational commitment Beco can keep? |
-| **Showroom address:** Urban Square, Shop 8 & 9, Enterprise Road, Industrial Area, Nairobi | Footer, Contact, About | Consistent across the prototype, which means one person wrote it once, not that it is verified. **Highest risk item in this table** |
-| **"Easy to find off Mombasa Road"**, "on-site parking available" | Contact | Unverified |
-| **Phone +254 722 333 730** | Everywhere | Also the WhatsApp number in the plan. Confirm both are current |
-| **info@beco.co.ke** | Everywhere | Confirm it is monitored, since quote notifications go here |
-| **Mon to Sat, 8am to 6pm** | Footer, Contact | Confirm, and confirm holiday handling |
 | **Mission and vision statements** | About | Do not match the guideline's mission text. The guideline's own wording should probably win |
 | **Five core values** with emoji icons | About | Source unknown |
 | **Testimonials** | Home | Are there real client testimonials, with permission to publish? |
@@ -59,6 +54,14 @@ Three of these claims are not merely cosmetic:
 | Brand tone is "Elegance" | Guideline, page 1, in those words |
 | Sells sintered stone, lighting, panels, accessories | Guideline strapline and mission |
 | Nairobi and East Africa focus | Guideline mission |
+| **Showroom address:** Urban Square, Shop 8 & 9, Enterprise Road, Industrial Area, Nairobi | **Confirmed by Brightex, 31 Aug 2026**, who dealt with the client directly |
+| **Phone +254 722 333 730** | Same |
+| **info@beco.co.ke** | Same |
+| **Mon to Sat, 8am to 6pm** | Same |
+
+Not everything in the prototype was invented. The contact block came from real client contact,
+and the design itself was genuinely validated. The problem is specifically the **catalogue,
+the counts and the claims**, which were filled in to make the design demonstrable.
 
 ---
 
@@ -86,11 +89,18 @@ check.
 
 ---
 
-## The one thing to confirm first
+## Still open, in order of consequence
 
-**The showroom address.** Everything else can be fixed after launch with an edit. The address
-propagates into structured data, the Google Business Profile and eventually third party
-listings, and it is the one that is genuinely painful to unpick.
+The address is confirmed, which removes the urgent one. These remain:
 
-Confirm before the Business Profile is claimed, which per `docs/DEPLOYMENT.md` section 9 should
-start in week one because postcard verification is slow.
+1. **WPC or SPC.** A factual product error either way it resolves. A materials supplier getting
+   a material name wrong is expensive to credibility, and it affects category names, URLs and
+   search terms
+2. **The 2 hour quote promise.** A public operational commitment the dashboard is being built
+   to measure. Beco either commits to it or it comes off the site
+3. **"10+ years".** Contradicted by Beco's own guideline. Comes off unless Beco says the
+   guideline is out of date
+4. **"520+ products" and the category counts.** Recommend dropping rather than correcting.
+   Proof that is wrong is worse than no proof, and a site does not need a statistic
+5. **Testimonials.** Real, with permission to publish, or placeholder
+6. **Mission and vision.** The guideline has its own wording, which should probably win
