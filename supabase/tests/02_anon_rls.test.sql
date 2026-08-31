@@ -6,29 +6,33 @@ select plan(8);
 insert into categories (id, name, slug, is_published)
   values ('11111111-1111-1111-1111-111111111111', 'Sintered Stones', 'sintered-stones', true);
 insert into products (name, slug, category_id, is_published, price_display_mode)
-  values ('Published Stone', 'published-stone',
+  values ('Published Stone', 'zz-test-published',
           '11111111-1111-1111-1111-111111111111', true, 'poa');
 insert into products (name, slug, category_id, is_published, price_display_mode)
-  values ('Draft Stone', 'draft-stone',
+  values ('Draft Stone', 'zz-test-draft',
           '11111111-1111-1111-1111-111111111111', false, 'poa');
 insert into products (name, slug, is_published, price_display_mode, deleted_at)
-  values ('Deleted Stone', 'deleted-stone', true, 'poa', now());
+  values ('Deleted Stone', 'zz-test-deleted', true, 'poa', now());
 insert into quotes (customer_name, customer_phone) values ('Real Customer', '0722111222');
 
 set local role anon;
 
+-- Scoped to this file's own fixtures, so the seed's 24 real products do not
+-- make the assertion meaningless. A test that counts everything breaks the
+-- moment someone adds a row.
 select results_eq(
-  $$select count(*)::int from products$$, ARRAY[1],
-  'anon sees ONLY the published, non deleted product'
+  $$select count(*)::int from products where slug like 'zz-test-%'$$,
+  ARRAY[1],
+  'of three fixtures, anon sees ONLY the published, non deleted one'
 );
 
 select is_empty(
-  $$select * from products where slug = 'draft-stone'$$,
+  $$select * from products where slug = 'zz-test-draft'$$,
   'anon cannot read an unpublished product'
 );
 
 select is_empty(
-  $$select * from products where slug = 'deleted-stone'$$,
+  $$select * from products where slug = 'zz-test-deleted'$$,
   'a soft deleted product is invisible to anon, even though the row still exists'
 );
 
