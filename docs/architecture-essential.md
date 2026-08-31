@@ -58,6 +58,10 @@ A bigger catalog does.**
 monitoring are all in Beco's accounts. Brightex holds the repository, two Vercel projects and
 its own Gemini key. If Brightex vanished, the site keeps serving; only future changes stop.
 
+**3b. The signature scroll section is built from the image roles**, not from new photography.
+A bookmatch slab parts along its mirror seam, then each stone runs slab to on stand to
+application. It scales to every future category automatically because it is the data model.
+
 **4. Content arrives late and messy, so nothing may block on it.** Templates are data driven.
 The import pipeline is incremental and reports what it skipped rather than guessing. Empty
 categories are `noindex` until they have products, then flip automatically.

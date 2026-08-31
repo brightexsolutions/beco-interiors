@@ -39,5 +39,42 @@ interaction inventory, enforced by a lint rule on empty handlers and `href="#"`.
 looks right and does nothing passes every visual review, which is why it survives.
 *Reverses if:* never.
 
+## D43 Signature scroll section: Bookmatch Open, then Slab to Surface
+
+Benchmarked against elegantfittings.co.ke, a **direct competitor** in the same market, whose
+scroll section walks the viewer into a house. Inspected: Next.js on Vercel, headless WordPress
+media, no canvas and no video, so the effect is layered images cross fading in a sticky
+container. Technically well within reach.
+
+Deliberately not copied, for two reasons. Their concept is spatial and needs a coherent
+photoshoot of one property, which Beco does not have and would have to commission. And a
+recognisable version of a competitor's signature moment reads as following them, to exactly the
+audience that has seen both sites.
+
+Beco's version is built from the `slab`, `on_stand`, `bookmatch` and `application` image roles
+the import pipeline already resolves, which makes it different by construction rather than by
+disguise, and means it scales to all 24 stones and every future category with no new design
+work.
+
+The bookmatch parting along its own mirror seam could only be a stone company's moment. Seven
+stones have that shot today, so it runs once as the opening beat, with the repeating structure
+carrying the rest.
+
+*Reverses if:* the bookmatch parting reads as gimmicky on a real device, in which case the
+section falls back to Slab to Surface alone, which stands on its own.
+
+## D31 revised, 31 August 2026: pinning is kept on mobile
+
+Originally all pinning was dropped on mobile. That was too absolute. Sticky based pinning is
+not what makes mobile scrolling bad; scroll jacking is, and there is none here. Since mobile is
+most of the traffic, the original rule would have built the signature moment for the minority.
+
+Now: pinning is kept, with a capped scroll distance and three scenes instead of six. The native
+scrollbar always behaves normally and a fast flick still reaches the footer. Reduced motion
+still collapses everything to a stack.
+
+*Reverses if:* it feels wrong on a real device during M4. The stacked fallback is built either
+way, because reduced motion needs it.
+
 Remaining decisions D4 to D22, D24 to D34 and D36 to D39 are recorded in
 `files/BUILD-PLAN.md` and are migrated here as each becomes load bearing in the code.
