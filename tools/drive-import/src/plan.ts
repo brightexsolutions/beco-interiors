@@ -14,6 +14,8 @@ import type { ImageRole } from '@beco/types';
 export interface PlannedFile {
   driveFileId: string;
   path: string;
+  /** Carried through so the download cache can key on content, not just id. */
+  md5: string | null;
   categorySlug: string;
   productSlug: string;
   productName: string;
@@ -136,6 +138,7 @@ export const buildPlan = (
 
     files.push({
       driveFileId: 'id' in c.file ? c.file.id : c.file.driveFileId,
+      md5: c.file.md5 ?? null,
       path: c.file.path,
       categorySlug: slugify(categoryFolder),
       productSlug,

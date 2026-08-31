@@ -61,7 +61,7 @@ const main = async () => {
 
   console.log('\nDONE');
   console.log(`  ${result.productsTouched} products`);
-  console.log(`  ${result.downloaded} downloaded, ${(result.bytesIn / 1e6).toFixed(0)}MB in`);
+  console.log(`  ${result.downloaded} downloaded, ${result.cacheHits} from cache, ${(result.bytesIn / 1e6).toFixed(0)}MB in`);
   console.log(`  ${result.uploaded} derivatives, ${(result.bytesOut / 1e6).toFixed(1)}MB out`);
   console.log(`  ${(1 - result.bytesOut / Math.max(result.bytesIn, 1)) * 100 | 0}% smaller`);
   console.log(`  ${mins} minutes`);

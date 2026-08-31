@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { ProductCard } from '../product-card';
 
 describe('ProductCard', () => {
-  it('renders a POA product without inventing a price', () => {
+  it('renders a POA product without inventing a price, and says it ONCE', () => {
     render(<ProductCard name="Limestone Ivory" href="/product/limestone-ivory"
                         priceDisplayMode="poa" availability="poa" />);
     expect(screen.getByText('Limestone Ivory')).toBeDefined();
     expect(screen.getByText('Price on application')).toBeDefined();
-    expect(screen.getByText('Call for price')).toBeDefined();
+    // The badge suppresses itself here. Saying "Price on application" beside
+    // "Call for price" is the same sentence twice, which is what shipped first.
+    expect(screen.queryByText(/call for price|enquire/i)).toBeNull();
   });
 
   it('the CARD itself has no border and no shadow, which is the whole point', () => {

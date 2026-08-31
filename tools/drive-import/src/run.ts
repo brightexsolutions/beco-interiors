@@ -5,6 +5,7 @@ import { processImage } from './images';
 import { assessQuality } from './quality';
 import { createStorage } from './storage';
 import { slugify, titleise } from './slug';
+import { readCache, writeCache } from './cache';
 
 /**
  * Executes an import plan: downloads only what changed, generates derivatives,
@@ -22,6 +23,7 @@ const db = () =>
 export interface RunResult {
   runId: string;
   downloaded: number;
+  cacheHits: number;
   uploaded: number;
   productsTouched: number;
   bytesIn: number;
@@ -72,7 +74,7 @@ export const executePlan = async (
   }
 
   const ROLE_ORDER = ['slab', 'on_stand', 'bookmatch', 'application', 'unknown'] as const;
-  let downloaded = 0, uploaded = 0, bytesIn = 0, bytesOut = 0;
+  let downloaded = 0, uploaded = 0, bytesIn = 0, bytesOut = 0, cacheHits = 0;
   const warnings: string[] = [];
 
   for (const [productSlug, files] of byProduct) {
@@ -89,9 +91,16 @@ export const executePlan = async (
 
       if (!file.needsDownload) continue;
 
-      log(`  ${productSlug}  ${file.path.split('/').pop()}`);
-      const bytes = await source.download(file.driveFileId);
-      downloaded++;
+      // Cache hit means a db reset does not cost a re-download of 44MB.
+      const cached = readCache(file.driveFileId, file.md5 ?? null);
+      const bytes = cached ?? (await source.download(file.driveFileId));
+      if (!cached) {
+        writeCache(file.driveFileId, file.md5 ?? null, bytes);
+        downloaded++;
+      } else {
+        cacheHits++;
+      }
+      log(`  ${productSlug}  ${file.path.split('/').pop()}${cached ? '  (cached)' : ''}`);
       bytesIn += bytes.byteLength;
 
       const quality = await assessQuality(bytes, file.path);
@@ -155,6 +164,6 @@ export const executePlan = async (
                issues: plan.issues.length, warnings: warnings.length },
   }).eq('id', runId);
 
-  return { runId, downloaded, uploaded, productsTouched: byProduct.size,
+  return { runId, downloaded, cacheHits, uploaded, productsTouched: byProduct.size,
            bytesIn, bytesOut, warnings };
 };

@@ -62,7 +62,7 @@ export function ProductCard({
             compareAtPrice={compareAtPrice}
             unit={unit}
           />
-          <AvailabilityBadge availability={availability} />
+          <AvailabilityBadge availability={availability} priceDisplayMode={priceDisplayMode} />
         </div>
       </div>
     </a>
