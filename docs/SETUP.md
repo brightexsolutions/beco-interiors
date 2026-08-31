@@ -36,6 +36,27 @@ supabase status          # NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_RO
 secrets. They are still not committed, because muscle memory is how a real key eventually ends
 up in a template.
 
+### If pnpm says "Ignored build scripts"
+
+pnpm 10 and later block postinstall scripts by default, which is a good default: a postinstall
+is arbitrary code execution at install time.
+
+Three are approved deliberately in `pnpm-workspace.yaml`, one at a time rather than blanket
+allowed: `esbuild` for vitest, `@tailwindcss/oxide` for Tailwind 4, and `sharp` for the image
+pipeline.
+
+**Two gotchas if the warning persists after that.**
+
+`pnpm` 11 **no longer reads the `pnpm` field in `package.json`.** The setting belongs in
+`pnpm-workspace.yaml`, which is where ours is.
+
+And pnpm **caches the earlier decision** in `node_modules/.modules.yaml`, so it keeps replaying
+"ignored" even once the config is right. Clear it and reinstall:
+
+```sh
+rm -rf node_modules/.modules.yaml && pnpm install
+```
+
 **Verify:**
 
 ```sh

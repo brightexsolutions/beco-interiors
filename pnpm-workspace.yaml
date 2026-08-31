@@ -2,5 +2,21 @@ packages:
   - "apps/*"
   - "packages/*"
   - "tools/*"
+
 allowBuilds:
   esbuild: set this to true or false
+
+# pnpm 10+ blocks postinstall scripts by default, which is a good default:
+# a postinstall is arbitrary code execution at install time.
+#
+# These are approved DELIBERATELY, one at a time, not blanket allowed:
+#   esbuild             links its platform binary, used by vitest
+#   @tailwindcss/oxide  Tailwind 4's native engine
+#   sharp               libvips bindings, the image pipeline depends on it
+#
+# Declared here rather than approved interactively, so CI behaves exactly
+# like a laptop and a new clone needs no manual step.
+onlyBuiltDependencies:
+  - esbuild
+  - "@tailwindcss/oxide"
+  - sharp
