@@ -41,6 +41,8 @@ These carry business rules, so they exist once and are tested once.
 | `DataTable` | P | Desktop table. **Mobile treatment is per table, not one blanket rule**: quotes and orders become full cards because each row is a decision, stock and products keep a reduced column table with a detail sheet because those are scanning tables |
 | `StatCard` | P | States a number, its comparison, and what it implies. A number with no comparison is decoration |
 | `StatusPill` | P | Quote and order lifecycle states |
+| `LiveUpdateBanner` | P | "3 new quotes, show". **Never inserts rows into a list under the user's finger.** See D46 |
+| `LastUpdated` | P | "Updated 2 minutes ago, Refresh". Honest about staleness and gives control back |
 | `AuditEntry` | P | Before and after, readable by a human |
 
 ## States

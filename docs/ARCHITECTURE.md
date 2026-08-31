@@ -24,6 +24,7 @@ Full reasoning behind every choice is in `files/BUILD-PLAN.md`.
 14. Backup and restore
 15. Announcement lifecycle
 16. Blog authoring with Gemini
+17. Live updates on the dashboard
 
 ---
 
@@ -878,6 +879,84 @@ Two reviewed articles a month is firmly the latter, but only while the review is
 **Timing.** The three launch articles under D28 are drafted with Gemini outside the app and
 seeded through a migration, because Studio is M7 and sits after launch. The in app authoring
 tool ships with Studio. The key is usable today either way.
+
+---
+
+## 17. Live updates on the dashboard
+
+Three tiers, because "realtime everywhere" is the expensive wrong answer.
+
+```
+  TIER 1  REALTIME, WebSocket, two tables only
+          quotes and orders
+             |
+             |  Supabase Realtime, RLS enforced on the stream so a
+             |  salesperson receives only events for rows it could
+             |  already read. Subscribing is not a way around a policy.
+             v
+          a new quote lands, or someone else claims one
+
+  TIER 2  REVALIDATE ON FOCUS, everything else
+          tab regains focus -> refetch
+             |
+             |  Covers "I came back to my desk", which in practice is
+             |  most of the value, at almost no cost.
+             v
+          stock, products, reports, audit log
+
+  TIER 3  EXPLICIT REFRESH, always available
+          "Updated 2 minutes ago  ·  Refresh"
+             |
+             v
+          honest about staleness, and gives control back
+```
+
+### The rule that matters most
+
+**A new row never inserts itself into a list someone is touching.**
+
+If a salesperson is tapping a row and a new quote pushes the list down, they open the wrong
+customer's quote, in front of that customer. So realtime shows a **banner, not an insertion**:
+
+```
+  +--------------------------------------------------+
+  |  3 new quotes            [ Show ]                |   <- tap to apply
+  +--------------------------------------------------+
+  |  BEC-Q-00041   Achieng      KES 148,000   new    |
+  |  BEC-Q-00040   Otieno       KES  92,400   quoted |
+```
+
+The list changes when the user chooses. Never reorder under someone's finger.
+
+### What each tier updates
+
+| Surface | Tier | Why |
+|---|---|---|
+| Quotes list, and the unassigned queue | 1 | Two salespeople watching the same queue will otherwise both work the same lead |
+| Quote detail, while open | 1 | Someone else claiming or reassigning it mid edit. Pairs with optimistic locking |
+| New quote count in the nav | 1 | The 2 hour promise depends on someone noticing |
+| Orders, payment status | 1 | Marked paid by a colleague at the counter |
+| Stock, products | 2 | One product manager, rarely concurrent |
+| Reports, audit log, imports | 2 | Snapshots and history. Live would be noise |
+
+### Practical constraints
+
+- **Disconnect when the tab is hidden.** A persistent socket on a phone in a showroom drains
+  battery for updates nobody is looking at
+- **Patch the list, never refetch it.** Naive realtime turns every change into a full reload,
+  which is worse than polling
+- **Reconnect with backoff**, and on reconnect do one refetch, because events during the gap
+  are lost
+- **Degrade silently.** If the socket fails, tier 2 and tier 3 still work. Realtime is an
+  enhancement, never the only path to correct data
+- Free tier allows 200 concurrent connections and 2M messages a month. With around six staff
+  accounts this is not close to a limit
+
+### Why not polling
+
+Polling every 30 seconds across six accounts for eight hours is roughly 5,800 requests a day
+against a free tier, to deliver a handful of actual changes. Realtime on two tables plus
+revalidate on focus costs less and arrives faster.
 
 ---
 

@@ -326,6 +326,18 @@ Drive changes feed page token and the last full reconciliation timestamp.
 
 ---
 
+## Realtime
+
+`quotes` and `orders` are in the `supabase_realtime` publication, with `replica identity full`
+so an UPDATE payload carries the old row. That is what lets a client tell `assigned_to` changed
+from null to someone else, which is the event another salesperson needs.
+
+**Nothing else is published.** Stock has one product manager, reports are snapshots, the audit
+log is historical. RLS applies to the stream, so a salesperson receives events only for rows it
+could already read.
+
+See D46 and `docs/ARCHITECTURE.md` section 17.
+
 ## RLS summary
 
 ```
