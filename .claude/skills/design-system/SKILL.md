@@ -33,6 +33,38 @@ The prototype's warm cream, `#C8281E`, linen and gold are retired. Do not reintr
 8px base, everything a multiple. Section padding 120 desktop, 88 tablet, 64 mobile. Touch
 targets 44px minimum, 8px apart.
 
+## Radix and shadcn
+
+We use **Radix primitives via shadcn's copy paste approach** for behaviour: dialog, dropdown,
+select, combobox, popover, tabs, toast, and the dashboard data table. Those are the components
+where accessibility is genuinely hard, meaning focus trapping, keyboard navigation, ARIA
+relationships and escape handling, and Radix solves them properly.
+
+**shadcn is a starting point you overwrite, not a look you adopt.**
+
+Section 11.1 of the brief forbids "the default admin template look", and unstyled shadcn *is*
+that look. It is recognisable at a glance from its radius, its muted greys and its button
+treatment, which is why so many dashboards look identical.
+
+**The rule: if a component looks like default shadcn, it is not finished.** No shadcn default
+colour, radius, shadow or spacing survives into a shipped component. Restyle every one against
+the tokens below.
+
+`packages/ui/src/components/button.tsx` is the reference. Follow its shape: `cva` for variants,
+`cn` for merging, tokens for every value.
+
+The storefront uses far less of this than the dashboard. It is bespoke editorial layout, where
+a component library helps least, and the signature scroll section is entirely custom.
+
+## Tailwind
+
+Tailwind 4 reads the `@theme` block in `tokens.css`, so `bg-charcoal` and
+`var(--color-charcoal)` are the same value and the tokens cannot live in two places.
+
+`packages/ui/src/tokens/palette.ts` holds the palette in TypeScript, and a test asserts
+`tokens.css` contains every one of those values, so the stylesheet and the contrast checker
+cannot drift apart.
+
 ## Checks before a component is done
 
 - [ ] No hardcoded colours, sizes, or spacing

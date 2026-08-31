@@ -1,93 +1,98 @@
+@import 'tailwindcss';
+
 /* ============================================================
    BECO DESIGN TOKENS
-   Source of truth. Nothing hardcodes a colour, size or spacing.
 
-   Palette comes from the April 2025 brand guideline, not the
-   prototype. See docs/BRAND-GUIDELINE-NOTES.md and D2.
+   Single source of truth. Tailwind generates its utilities from
+   the @theme block below, so `bg-charcoal` and `var(--color-charcoal)`
+   are the same value. Nothing hardcodes a colour, size or spacing.
 
-   THREE colours, no secondary, deliberately. The guideline calls
-   the palette "intentionally narrow" as a stated position, so a
-   fourth colour contradicts the brand rather than filling a gap.
-   The prototype's gold is retired.
+   Palette from the April 2025 brand guideline, not the prototype.
+   THREE colours, no secondary, deliberately: the guideline calls the
+   palette "intentionally narrow" as a stated position, so a fourth
+   colour contradicts the brand rather than filling a gap. The
+   prototype's gold is retired. See docs/BRAND-GUIDELINE-NOTES.md.
 
-   TODO M3: replace the placeholder hex values below with exact
-   conversions once pages 20 and 21 of the guideline are viewed.
-   Pantone conversions here are approximations and MUST be checked.
+   Values mirror packages/ui/src/tokens/palette.ts, asserted by test.
    ============================================================ */
 
-:root {
+@theme {
   /* --- Brand. Three, and only three. --- */
-  --warm-red: #ed1c24;        /* Pantone Red C, CMYK 0/100/100/0. APPROXIMATE, verify */
-  --charcoal: #101820;        /* Pantone Black 6C, CMYK 40/0/0/100. A COOL black, verify */
-  --high-vis-white: #ffffff;  /* CMYK 0/0/0/0. Pure white */
+  --color-warm-red: #ed1c24;
+  /* Warm Red carries white text at only 4.38:1, below the 4.5 AA floor.
+     Pure warm-red is for FILLS, RULES and BADGES. Anything with white text
+     on it uses warm-red-deep, which measures 5.88:1. Verified, not assumed. */
+  --color-warm-red-deep: #c81419;
+  --color-charcoal: #101820;
+  --color-high-vis-white: #ffffff;
 
-  /* Warm Red at full saturation is 4.38:1 against white, which FAILS AA (4.5)
-     for normal sized text. So pure --warm-red is for FILLS, RULES and BADGES
-     where no small text sits on it. Anything carrying white text at body size
-     uses --warm-red-deep. Verified by check:contrast, not assumed. */
-  --warm-red-deep: #c81419;
-
-  /* --- Neutral ramp, generated from the COOL charcoal, never a warm grey.
-         The guideline calls charcoal "a cooling counter to our warming red". --- */
-  --neutral-950: #0b1119;
-  --neutral-900: #101820;
-  --neutral-700: #333d47;
-  --neutral-500: #6b757f;
-  --neutral-300: #b9c0c7;
-  --neutral-200: #d7dce0;
-  --neutral-100: #eceef0;
-  --neutral-50:  #f6f7f8;
+  /* --- Neutrals, generated from the COOL charcoal, never a warm grey. --- */
+  --color-neutral-950: #0b1119;
+  --color-neutral-900: #101820;
+  --color-neutral-700: #333d47;
+  --color-neutral-500: #6b757f;
+  --color-neutral-300: #b9c0c7;
+  --color-neutral-200: #d7dce0;
+  --color-neutral-100: #eceef0;
+  --color-neutral-50: #f6f7f8;
 
   /* --- Functional. Never brand colours. --- */
-  --success: #16a34a;
-  --error: #dc2626;
-  --whatsapp: #25d366;
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-whatsapp: #25d366;
 
-  /* --- Type. Titillium Web plus Cormorant Garamond, self hosted.
-         F1 Display is NEVER deployed, see D3. --- */
+  /* --- Type. Self hosted. F1 Display is NEVER deployed, see D3. --- */
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-ui: 'Titillium Web', system-ui, sans-serif;
 
-  /* Type floor is 16px EVERYWHERE including the dashboard. */
-  --text-xs: 0.875rem;  /* 14px. Small print floor, used rarely */
-  --text-sm: 1rem;      /* 16px. Absolute floor */
-  --text-base: 1.0625rem; /* 17px. Body on desktop */
+  /* Type floor is 16px EVERYWHERE, dashboard included. */
+  --text-xs: 0.875rem;      /* 14px, small print floor, used rarely */
+  --text-sm: 1rem;          /* 16px, absolute floor */
+  --text-base: 1.0625rem;   /* 17px, body on desktop */
   --text-lg: 1.25rem;
   --text-xl: 1.5rem;
   --text-2xl: 2rem;
   --text-3xl: 2.75rem;
   --text-4xl: 4rem;
 
-  --leading-body: 1.6;
-  --leading-display: 1.15;
-  --measure: 68ch;
-
-  /* --- Spacing. 8px base, everything a multiple. --- */
-  --space-1: 0.5rem;
-  --space-2: 1rem;
-  --space-3: 1.5rem;
-  --space-4: 2rem;
-  --space-6: 3rem;
-  --space-8: 4rem;
-  --space-11: 5.5rem;
-  --space-15: 7.5rem;
-
-  /* Deliberately more generous than the prototype's 88/64/52. */
-  --section-y: var(--space-15);   /* 120px desktop */
-  --touch-target: 2.75rem;        /* 44px minimum */
+  /* --- Spacing, 8px base. --- */
+  --spacing: 0.5rem;
 
   --radius-card: 4px;
   --radius-button: 2px;
-  --max-width: 1380px;
 
   /* --- Motion. Long expo out, settled rather than snappy. --- */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --reveal-duration: 500ms;
-  --reveal-stagger: 60ms;
+  --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (max-width: 1024px) { :root { --section-y: var(--space-11); } }  /* 88px */
-@media (max-width: 640px)  { :root { --section-y: var(--space-8); } }   /* 64px */
+:root {
+  --leading-body: 1.6;
+  --leading-display: 1.15;
+  --measure: 68ch;
+  --touch-target: 2.75rem;   /* 44px minimum */
+  --max-width: 1380px;
+  --reveal-duration: 500ms;
+  --reveal-stagger: 60ms;
+  /* Deliberately more generous than the prototype's 88/64/52. */
+  --section-y: 7.5rem;       /* 120px desktop */
+}
+
+@media (max-width: 1024px) { :root { --section-y: 5.5rem; } }  /* 88px */
+@media (max-width: 640px)  { :root { --section-y: 4rem; } }    /* 64px */
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--color-charcoal);
+  background: var(--color-high-vis-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every interactive element meets the 44px touch target. */
+button, a[role='button'], input, select, textarea {
+  min-height: var(--touch-target);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
