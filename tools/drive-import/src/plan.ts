@@ -32,6 +32,10 @@ export interface ImportPlan {
   files: PlannedFile[];
   issues: Issue[];
   misnests: Misnest[];
+  /** Category folders whose files have no product folder to belong to. */
+  looseFolders: Array<{ folder: string; count: number }>;
+  /** Gallery and brand files, correctly loose, handled elsewhere. */
+  galleryFiles: number;
   counts: ReturnType<typeof summarise>;
   /** Products where no file resolved to a slab shot. */
   productsWithoutSlab: string[];
@@ -40,6 +44,15 @@ export interface ImportPlan {
 }
 
 const IGNORE = /(^|\/)(\.DS_Store|Thumbs\.db|desktop\.ini)$/i;
+
+/**
+ * Folders that are NOT product categories. They hold gallery and brand
+ * material, so loose files in them are correct rather than a mistake, and
+ * reporting them as errors would bury the real problems.
+ */
+const NON_PRODUCT_FOLDERS = new Set([
+  'SITE PHOTOS', 'SITE VIDEOS', 'BRAND IDENTITY', 'BECO BACKUPS',
+]);
 
 export const buildPlan = (
   listing: readonly DriveFile[],
@@ -69,6 +82,8 @@ export const buildPlan = (
   const files: PlannedFile[] = [];
   const slabByProduct = new Map<string, boolean>();
   const unknownByProduct = new Map<string, boolean>();
+  /** Category folders holding files directly, with no product folder. */
+  const looseByFolder = new Map<string, number>();
 
   for (const c of classified) {
     if (c.outcome === 'missing') {
@@ -84,13 +99,18 @@ export const buildPlan = (
     }
 
     const segments = c.file.path.split('/');
+    const top = segments[0] ?? '';
+
+    // Gallery and brand folders are handled elsewhere, not as products.
+    if (NON_PRODUCT_FOLDERS.has(top.toUpperCase())) {
+      looseByFolder.set(top, (looseByFolder.get(top) ?? 0) + 1);
+      continue;
+    }
+
     if (segments.length < 3) {
-      issues.push({
-        path: c.file.path,
-        reason:
-          'Expected CATEGORY/PRODUCT/file. A file directly inside a category folder has ' +
-          'no product to belong to, so it is skipped rather than guessed at.',
-      });
+      // Counted per folder and reported ONCE. Repeating this 157 times for a
+      // single folder buries the actual problems in noise.
+      looseByFolder.set(top, (looseByFolder.get(top) ?? 0) + 1);
       continue;
     }
 
@@ -127,10 +147,29 @@ export const buildPlan = (
     });
   }
 
+  // One issue per folder, not per file.
+  for (const [folder, count] of looseByFolder) {
+    if (NON_PRODUCT_FOLDERS.has(folder.toUpperCase())) continue;
+    issues.push({
+      path: folder,
+      reason:
+        `${count} file(s) sit directly in "${folder}" with no product folder, so there is ` +
+        'nothing to name a product after and no way to tell which photographs belong ' +
+        'together. Create one folder per product inside it, named exactly as the product ' +
+        'should appear on the site, and move the photographs in.',
+    });
+  }
+
   return {
     files,
     issues,
     misnests,
+    looseFolders: [...looseByFolder]
+      .filter(([f]) => !NON_PRODUCT_FOLDERS.has(f.toUpperCase()))
+      .map(([folder, count]) => ({ folder, count })),
+    galleryFiles: [...looseByFolder]
+      .filter(([f]) => NON_PRODUCT_FOLDERS.has(f.toUpperCase()))
+      .reduce((n, [, c]) => n + c, 0),
     counts: summarise(classified),
     productsWithoutSlab: [...slabByProduct].filter(([, has]) => !has).map(([slug]) => slug),
     productsWithUnknowns: [...unknownByProduct.keys()],

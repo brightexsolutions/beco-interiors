@@ -2,35 +2,47 @@
 import { buildPlan } from './plan';
 import { renderReport } from './report';
 import { createFixtureSource } from './fixture-source';
-import { createGoogleDriveSource } from './drive';
+import { createGoogleDriveSource } from './google-drive';
+import { executePlan } from './run';
+import { createClient } from '@supabase/supabase-js';
 
 /**
- * pnpm drive:import --dry-run           classify everything, change nothing
- * pnpm drive:import --dry-run --fixture run against the real export defects,
- *                                       with no service account and no network
- * pnpm drive:import                     incremental import
+ * pnpm drive:import --dry-run    classify everything, change nothing
+ * pnpm drive:import --fixture    run against fixtures, no network
+ * pnpm drive:import              incremental import
  */
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has('--dry-run');
 const useFixture = args.has('--fixture') || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
 
 const main = async () => {
-  if (useFixture) {
-    console.log('\nUsing the FIXTURE source: the real 29 August export, defects included.');
-    console.log('No service account configured, so nothing touches Drive. See docs/SETUP.md 2.1.');
-  }
-
   const source = useFixture ? createFixtureSource() : createGoogleDriveSource();
   const rootId = process.env.DRIVE_ROOT_FOLDER_ID ?? 'fixture';
+  if (useFixture) console.log('\nFIXTURE source. Nothing touches Drive.');
 
+  console.log('\nListing Drive...');
   const [listing, folders] = await Promise.all([
     source.listAll(rootId),
     source.listFolders(rootId),
   ]);
+  console.log(`  ${listing.length} files, ${folders.length} folders`);
 
-  // TODO M2: read import_files from the database. Empty means every file
-  // classifies as new, which is correct for a first run.
-  const known: never[] = [];
+  // Everything seen before, so a second run downloads nothing.
+  let known: Array<{ driveFileId: string; path: string; md5: string | null;
+                     role: null; productId: null }> = [];
+  if (!useFixture && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+                            { auth: { persistSession: false } });
+    const { data } = await sb.from('import_files').select('drive_file_id,path,md5_checksum');
+    known = (data ?? []).map((r) => ({
+      driveFileId: r.drive_file_id as string,
+      path: r.path as string,
+      md5: (r.md5_checksum as string | null) ?? null,
+      role: null, productId: null,
+    }));
+    console.log(`  ${known.length} previously imported`);
+  }
 
   const plan = buildPlan(listing, folders, known);
   console.log(renderReport(plan));
@@ -39,10 +51,26 @@ const main = async () => {
     console.log('Dry run. Nothing downloaded, nothing written.\n');
     return;
   }
-  console.log('Download, derivatives and upload land next. Use --dry-run for now.\n');
+
+  console.log('Importing...\n');
+  const started = Date.now();
+  const result = await executePlan(plan, source, { onProgress: (m) => console.log(m) });
+  const mins = ((Date.now() - started) / 60000).toFixed(1);
+
+  console.log('\nDONE');
+  console.log(`  ${result.productsTouched} products`);
+  console.log(`  ${result.downloaded} downloaded, ${(result.bytesIn / 1e6).toFixed(0)}MB in`);
+  console.log(`  ${result.uploaded} derivatives, ${(result.bytesOut / 1e6).toFixed(1)}MB out`);
+  console.log(`  ${(1 - result.bytesOut / Math.max(result.bytesIn, 1)) * 100 | 0}% smaller`);
+  console.log(`  ${mins} minutes`);
+  if (result.warnings.length) {
+    console.log(`\n  ${result.warnings.length} size budget warning(s):`);
+    for (const w of result.warnings.slice(0, 10)) console.log(`    ${w}`);
+  }
+  console.log('');
 };
 
 main().catch((err: unknown) => {
-  console.error(err instanceof Error ? err.message : err);
+  console.error('\nFAILED:', err instanceof Error ? err.message : err);
   process.exit(1);
 });

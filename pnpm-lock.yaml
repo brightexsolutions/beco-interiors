@@ -153,6 +153,9 @@ importers:
       '@beco/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@supabase/supabase-js':
+        specifier: ^2.112.4
+        version: 2.112.4
       googleapis:
         specifier: ^176.0.0
         version: 176.0.0

@@ -41,6 +41,27 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('');
   }
 
+  if (plan.looseFolders.length) {
+    L.push('CATEGORIES WITH NO PRODUCT FOLDERS');
+    L.push('----------------------------------');
+    L.push('  Photographs are sitting loose in the category. There is nothing to name a');
+    L.push('  product after, and no way to tell which photographs belong together.');
+    L.push('');
+    for (const { folder, count } of plan.looseFolders.sort((a, b) => b.count - a.count)) {
+      L.push(`  ${String(count).padStart(4)}  ${folder}`);
+    }
+    L.push('');
+    L.push('  Fix: inside each, create one folder per product named exactly as the product');
+    L.push('  should appear on the site, and move its photographs in.');
+    L.push('');
+  }
+
+  if (plan.galleryFiles) {
+    L.push(`  ${plan.galleryFiles} gallery and brand file(s) skipped, which is correct.`);
+    L.push('  Site photos, site videos and brand identity are not products.');
+    L.push('');
+  }
+
   if (plan.productsWithoutSlab.length) {
     L.push('PRODUCTS WITH NO SLAB SHOT');
     L.push('--------------------------');

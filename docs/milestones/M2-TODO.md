@@ -29,7 +29,22 @@ since CI must never reach a real Drive folder.
 - [x] **Service account works against the real folder.** Verified: 17 categories, 24
       stones, md5 on every file
 - [x] **R2 works.** Verified: write, read, list, delete round trip
-- [ ] Google Drive source implementation, wiring the verified access into `DriveSource`
+- [x] Google Drive source, full listing walk
+- [x] Sharp derivatives and R2 upload
+- [x] **Full import run: 24 of 24 products, 4.6 images each, 337 objects in R2, 97% smaller**
+- [x] Gallery ordering correct: slab, on_stand, bookmatch, application
+- [x] **Pure White has 3 images and reads correctly**, proving galleries handle a short gallery
+
+## Known, from the real run
+
+- [ ] **40 of 337 R2 objects exceed the 150KB budget.** These are leftovers from the first run
+      at flat quality 78. Re encoding now scales quality with width, but the incremental logic
+      correctly skipped already imported files, so the old derivatives remain. Needs a
+      `--force-reprocess` flag
+- [ ] Sharp's 268MP default guard rejected one real slab scan. Raised to 2 gigapixels rather
+      than disabled, since the guard exists to stop a decompression bomb
+- [ ] `md5_checksum` is written as null, so change detection currently falls back to path
+      comparison. Wire the Drive md5 through
 - [ ] Sharp derivatives and R2 upload
 - [ ] Read `import_files` from the database, so a second run genuinely downloads nothing. The
       CLI currently hardcodes an empty set, which is correct for a first run and honest about it

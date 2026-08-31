@@ -115,10 +115,31 @@ describe('buildPlan incrementality', () => {
     expect(plan.files[0]!.role).toBe('on_stand');
   });
 
-  it('a file directly inside a category has no product, so it is skipped not guessed', () => {
-    const plan = buildPlan([f('99', '12MM SINTERED STONES/loose.jpg')], FOLDERS, []);
+  it('loose files in a category are reported ONCE per folder, not once per file', () => {
+    // Real case: Irene uploaded 157 photographs directly into HANDLES with no
+    // product folders. Reporting that 157 times buries every other problem.
+    const listing = Array.from({ length: 12 }, (_, i) =>
+      f(`loose-${i}`, `HANDLES/IMG_${1000 + i}.HEIC`),
+    );
+    const plan = buildPlan(listing, [], []);
     expect(plan.files).toHaveLength(0);
-    const issue = plan.issues.find((i) => i.path.includes('loose.jpg'));
-    expect(issue?.reason).toContain('no product to belong to');
+    expect(plan.looseFolders).toEqual([{ folder: 'HANDLES', count: 12 }]);
+    const issue = plan.issues.find((i) => i.path === 'HANDLES');
+    expect(plan.issues).toHaveLength(1);
+    expect(issue?.reason).toContain('12 file(s)');
+    expect(issue?.reason).toContain('one folder per product');
+  });
+
+  it('gallery and brand folders are NOT reported as errors', () => {
+    // Site photos and videos legitimately have no products. Flagging them as
+    // mistakes would bury the categories that genuinely need fixing.
+    const plan = buildPlan([
+      f('g1', 'SITE PHOTOS/IMG_2158.HEIC'),
+      f('g2', 'SITE VIDEOS/clip.mov'),
+      f('g3', 'BRAND IDENTITY/guideline.pdf'),
+    ], [], []);
+    expect(plan.issues).toHaveLength(0);
+    expect(plan.looseFolders).toHaveLength(0);
+    expect(plan.galleryFiles).toBe(3);
   });
 });
