@@ -11,11 +11,14 @@ export default defineConfig({
         },
       },
       {
+        // Component tests run in jsdom. NO browser, no Playwright, per D23.
         test: {
           name: 'component',
-          include: ['apps/**/*.test.tsx'],
+          include: ['packages/**/*.test.tsx', 'apps/**/*.test.tsx'],
           environment: 'jsdom',
+          setupFiles: ['./vitest.setup.ts'],
         },
+        esbuild: { jsx: 'automatic' },
       },
     ],
   },
