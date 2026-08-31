@@ -581,7 +581,10 @@ website. It is frequently the first result for "interior materials Nairobi".
    - Name, exactly as it appears on the site
    - Category: primary something like Building Materials Supplier, plus secondaries
    - **Address, phone and hours identical to the site and to the `LocalBusiness` schema.** A
-     mismatch between those three is a real ranking drag and free to fix
+     mismatch between those three is a real ranking drag and free to fix.
+     **Confirm the address with Beco first.** It comes from the prototype, which invented much
+     of its content, and it is unverified. See `docs/CONTENT-AUDIT.md`. Publishing a wrong
+     address into structured data and a Business Profile is painful to unpick
    - Website pointing at `https://www.beco.co.ke`
    - Products and services
    - **Photos.** You now have 24 slab shots and dozens of in situ application photographs. Most

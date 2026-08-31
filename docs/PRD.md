@@ -40,7 +40,7 @@ Measured, not asserted.
 |---|---|---|
 | Quotes reach the business structured | `quotes` rows with items attached | Replaces ad hoc enquiries |
 | Counter quotes get faster | Taps and time to issue a 3 item quote | Under 12 taps, under 2 minutes |
-| The 2 hour promise is kept | Age of oldest unanswered quote | Visible on the dashboard, red when breached |
+| Quote response time | Age of oldest unanswered quote | Visible on the dashboard, red when breached. **The 2 hour figure is inherited from the prototype and unconfirmed**, see `docs/CONTENT-AUDIT.md`. Beco sets the real target |
 | Attribution works | Quotes and closed value per salesperson | Answerable without a spreadsheet |
 | The site is found | Rankings for the 5 target terms against the pre migration baseline | Improving by month 3 |
 | Leads are attributed | Quote submissions, WhatsApp clicks, calls, by product | All three captured |

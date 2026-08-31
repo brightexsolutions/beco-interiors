@@ -219,7 +219,8 @@ through it once a month and record the result. Brightex Studio exists to make th
 
 - [ ] Audit log skimmed for anything unexpected: role changes, unusual deletions, failed logins
 - [ ] Dashboard user list still matches who actually works there. Leavers deactivated
-- [ ] Quote response times against the 2 hour promise the site makes
+- [ ] Quote response times against whatever target Beco has agreed. The prototype's 2 hour
+      figure is unconfirmed, see `docs/CONTENT-AUDIT.md`
 
 ### Every quarter
 
