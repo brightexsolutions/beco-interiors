@@ -60,28 +60,37 @@ tell us which one is the flat slab shot, or simply rename them in Drive.
 
 ## 3. What is missing right now
 
-**12mm Sintered Stones, missing the on stand shot:**
+**On stand shots.** Checked against Drive on 31 August 2026. By file name, three folders have
+no file named as an on stand shot:
 
-- Limestone Creamy
-- Moire White
-- Pure White
-- Sandstone Beige
-- Sandstone Ivory
+- **Moire White**: APP 1, APP 2, APP 3, MOIRE WHITE SLAB
+- **Pure White**: APP 1, APP 2, PURE WHITE SLAB
+- **Sandstone Ivory**: APP 1, APP 2, APP 3, SANDSTONE IVORY SLAB
 
-Everything else in that category is complete. The other fifteen category folders are still
+Limestone Creamy has a file named `DSC02078` which may well be the on stand shot, and Sandstone
+Beige has five files with supplier names. Both just need renaming.
+
+Irene notes that every stone does have an on stand photo. If these three exist under a
+different name, renaming them to `SLAB ON STAND` is all that is needed. If they are genuinely
+not there, they are quick to take. The other fifteen category folders are still
 empty.
 
 ---
 
-## 4. Bookmatch shots, now a priority
+## 4. Bookmatch: a product fact, not a missing photo
 
-The website's main feature section is built around bookmatched slabs. As you scroll, the two
-mirrored halves separate to reveal the finished room behind them. It only works because the
-veining mirrors, which is something only stone can do.
+**Corrected by Irene, 31 August 2026:** only the slabs marked BOOK MATCH are bookmatched. The
+rest are **One Face**. That is a property of how the slab was manufactured, not something a
+photographer can go and capture, so there is no shot list to fill here.
 
-**Seven stones have a bookmatch shot today. More would be directly useful.**
+This matters beyond photography. **Book match versus one face is a specification buyers care
+about**, so it belongs on the product page as a spec, and it goes in the product spreadsheet.
 
-How to shoot it:
+The website's main feature section uses a bookmatched slab, because the mirrored veining is
+something only stone can do. It features the stones that genuinely are bookmatched, which is
+correct rather than limiting.
+
+If a new bookmatched slab arrives in stock, this is how to shoot it:
 
 - Both slabs in frame, complete, nothing cropped off
 - Straight on, camera square to the wall, not at an angle
