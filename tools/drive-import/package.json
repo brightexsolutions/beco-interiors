@@ -1,0 +1,13 @@
+{
+  "name": "@beco/drive-import",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "googleapis": "^176.0.0",
+    "sharp": "^0.35.4",
+    "@aws-sdk/client-s3": "^3.1121.0",
+    "@beco/types": "workspace:*"
+  }
+}

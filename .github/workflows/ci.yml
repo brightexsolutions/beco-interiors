@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # AGENTS.md must stay a symlink to CLAUDE.md so the two agents cannot
+      # drift apart onto different rules.
+      - name: AGENTS.md is a symlink to CLAUDE.md
+        run: |
+          test -L AGENTS.md || { echo "AGENTS.md must be a symlink"; exit 1; }
+          test "$(readlink AGENTS.md)" = "CLAUDE.md" || { echo "wrong target"; exit 1; }
+
+      - name: No em dashes in source or docs
+        run: |
+          if grep -rl "—" --include="*.ts" --include="*.tsx" --include="*.sql" \
+               --include="*.md" --include="*.css" . \
+               | grep -v node_modules | grep -v "^./prototype/" | grep -v "^./files/"; then
+            echo "Em dash found. Use a comma, a period, or a colon."
+            exit 1
+          fi
+
+      - run: pnpm check:secrets
+      - run: pnpm typecheck
+      - run: pnpm --filter @beco/ui check:contrast
+      - run: pnpm test:unit
+      - run: pnpm build
