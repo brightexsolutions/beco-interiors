@@ -38,12 +38,13 @@ Two things and nothing else.
 | Asset | Notes |
 |---|---|
 | GitHub repository | Private. Holds all three surfaces including Brightex Studio |
-| Vercel, three projects | Hobby today. Pro before cutover, see Risks |
-| Gemini API key | Brightex's own, used only in Studio to draft blog content. Never in the storefront or dashboard. Goes with Brightex at handover |
+| Vercel, two projects | Storefront and dashboard. Hobby today, Pro before cutover |
+| Gemini API key | Brightex's own, server side in the dashboard, used only by the Studio routes. Never reaches a browser or the storefront. Goes with Brightex at handover |
 
-Brightex Studio deploys from Brightex's Vercel but answers on `developer.beco.co.ke`, a record
-on Beco's Cloudflare zone. Beco can therefore retire Studio by deleting one DNS record. That is
-a reasonable place for the control to sit given it is their domain.
+Studio is not separately deployed. It is routes inside the dashboard at `/dashboard/studio`,
+reachable only by an account that is both `brightex_admin` and on the `brightex_allowed_emails`
+list. Beco retires Brightex's access by removing that email from the list, which is a single
+edit rather than a DNS change.
 
 ### The Drive sharing chain
 

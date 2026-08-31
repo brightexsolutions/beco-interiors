@@ -38,16 +38,13 @@ Full reasoning behind every choice is in `files/BUILD-PLAN.md`.
    |  Next.js, service role, server only  |  |  Next.js, anon key     |
    |  quotes, stock, orders, reports,     |  |  catalog, quote cart,  |
    |  users, announcements, imports       |  |  blog, gallery         |
-   +--------------------------------------+  +------------------------+
-                    \                                  /
-                     \                                /
-   +-----------------------------+                   /
-   |  developer.beco.co.ke       |                  /
-   |  Brightex Studio, after     |                 /
-   |  launch. brightex_admin     |                /
-   +-----------------------------+               /
-                     \                          /
-                      v                        v
+   |                                      |  +------------------------+
+   |  /dashboard/studio  <-- Brightex only|             /
+   |  blog authoring, reporting           |            /
+   |  gated by role AND email allowlist   |           /
+   +--------------------------------------+          /
+                     \                              /
+                      v                            v
              +------------------------------------------+
              |   CLOUDFLARE   zone on Beco's account    |
              |   WAF, 1 rate limit rule, edge cache     |
@@ -111,13 +108,16 @@ whole point of the split.
   |  SUPABASE_SERVICE_ROLE_KEY       server only, never bundled   |
   |  RESEND_API_KEY                  server only                  |
   |  R2 credentials                  server only                  |
+  |  GEMINI_API_KEY                  server only, Studio routes   |
   |                                                               |
   |  noindex, blocked in robots.txt, Cloudflare cache bypassed    |
   +--------------------------------------------------------------+
 
-  +--------------------------------------------------------------+
-  |  STUDIO PROJECT               brightex_admin only, post launch|
-  +--------------------------------------------------------------+
+  There is no third project. Studio lives inside the dashboard at
+  /dashboard/studio, gated by D42. The deployment split exists so the
+  PUBLIC site cannot reach admin tools. It was never about separating
+  two authenticated admin surfaces that share a database and a role
+  system, and RLS is the real enforcement between them.
 
   Enforced by:
     - CI check + pre-commit hook: fails on a service role JWT in
@@ -627,6 +627,23 @@ alone.
    data
 
   +----------------------------------------------------------+
+  |  STUDIO ROUTES require BOTH, per D42                      |
+  |                                                           |
+  |    role = 'brightex_admin'                                |
+  |      AND                                                  |
+  |    email IN settings.brightex_allowed_emails              |
+  |                                                           |
+  |  An EXPLICIT ADDRESS LIST, not a domain suffix, because   |
+  |  Brightex's real addresses are gmail.com and a suffix     |
+  |  check would match every Gmail account in existence.      |
+  |                                                           |
+  |  Two independent conditions, both in Postgres. A wrongly  |
+  |  escalated role still cannot reach Studio. Revoking is    |
+  |  removing one row from a list.                            |
+  +----------------------------------------------------------+
+      |
+      v
+  +----------------------------------------------------------+
   |  LAYER 3: THE UI, which is NOT security                   |
   |  Role based views mean a salesperson lands on their own   |
   |  quotes and does not see staff performance or settings.   |
@@ -780,9 +797,9 @@ Beco runs mid year sales and clearance sales. Those reach the site without a dev
 
 ## 16. Blog authoring with Gemini
 
-Blog publishing is Brightex's job, not Beco's, so this lives entirely in Studio. **The Gemini
-key is Brightex's and never leaves the studio project.** The storefront and the dashboard have
-no knowledge of it.
+Blog publishing is Brightex's job, not Beco's. It lives at `/dashboard/studio/blog`, inside
+the dashboard, gated by D42. **The Gemini key is Brightex's, server side in the dashboard
+project, and never reaches a browser.** The storefront has no knowledge of it.
 
 ```
   BRIGHTEX in Studio                                        SERVICES
@@ -791,7 +808,7 @@ no knowledge of it.
        |  optionally related products or a category
        v
   +--------------------------------------------+
-  |  server action, studio only                 |
+  |  server action, Studio routes only          |
   |  GEMINI_API_KEY never reaches a browser     |
   |                                             |
   |  Context sent with the prompt:              |

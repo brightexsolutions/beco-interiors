@@ -22,7 +22,9 @@ item checkout. Three surfaces from one monorepo:
 
 - `apps/storefront` to www.beco.co.ke, public
 - `apps/dashboard` to dashboard.beco.co.ke, Beco's operations tools
-- `apps/studio` to developer.beco.co.ke, Brightex only, built after launch
+- Brightex Studio is **not a separate app**. It is routes at `/dashboard/studio`, reachable
+  only by an account that is both `brightex_admin` and on the `brightex_allowed_emails`
+  allowlist in `settings`. Built after launch. See D9 and D42
 
 The quotation flow is the product. A salesperson at the counter must raise, price and issue a
 branded quote from a phone faster than writing it on paper. Test it more thoroughly than

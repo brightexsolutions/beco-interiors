@@ -85,10 +85,10 @@ the engagement letter rather than assumed.
 
 ### The Vercel projects
 
-Three deployments, on Brightex's Vercel account. **This is the only genuine dependency in the
+Two deployments, storefront and dashboard, on Brightex's Vercel account. **This is the only genuine dependency in the
 entire platform**, and section 7 exists because of it.
 
-At handover: Beco creates a Vercel account, connects the repository, and the three projects
+At handover: Beco creates a Vercel account, connects the repository, and both projects
 redeploy. DNS already sits on Beco's own Cloudflare, so repointing is a record edit that Beco
 makes themselves. No Brightex involvement is technically required.
 
@@ -103,7 +103,7 @@ attempted.
 |---|---|---|---|
 | 1 | Beco creates a Vercel account, or nominates a successor agency's | Beco | Account exists, billing set |
 | 2 | Repository transferred or cloned to a Beco owned account | Brightex, or Beco alone using the read only copy | `git clone` from the new location succeeds |
-| 3 | Three Vercel projects created against the new repository | Beco or successor | All three build successfully |
+| 3 | Both Vercel projects created against the new repository | Beco or successor | Both build successfully |
 | 4 | Environment variables recreated from `docs/ENVIRONMENT.md` | Beco or successor | Each surface boots and reaches the database |
 | 5 | DNS records repointed on Beco's Cloudflare zone | Beco | All hostnames resolve to the new deployments over HTTPS |
 | 6 | Certificate issuance confirmed, per the ordering in `docs/RUNBOOK.md` | Beco or successor | No redirect loop, padlock present on all hostnames |
@@ -111,7 +111,7 @@ attempted.
 | 8 | becointeriorsdev password rotated, MFA re enrolled, backup codes reissued | Beco | Brightex's old credential fails to log in |
 | 9 | Brightex removed from GA4, Search Console, Google Business Profile, Drive | Beco | Access lists checked |
 | 10 | Drive service account key rotated, or the service account access revoked and reissued | Beco | Import pipeline runs with the new key |
-| 11 | `developer.beco.co.ke` DNS record deleted, retiring Brightex Studio | Beco | Hostname no longer resolves |
+| 11 | Brightex addresses removed from `brightex_allowed_emails`, retiring Studio access | Beco | `/dashboard/studio` returns 403 for every remaining account |
 | 12 | Brightex confirms in writing that local copies of credentials are destroyed | Brightex | Written confirmation received |
 | 13 | Backup restore drill run once by the new owner | Beco or successor | A restored database boots the storefront |
 
@@ -122,9 +122,10 @@ handover that has not really happened.
 
 ## 5. What Beco does not receive
 
-**Brightex Studio**, the internal agency console at `developer.beco.co.ke`. Beco never paid for
-it, never used it, and it is Brightex operational tooling for running the agency side of this
-and other engagements. It is removed at handover, not transferred.
+**Brightex Studio**, the routes at `/dashboard/studio`. Beco never paid for it, never used it,
+and it is Brightex operational tooling. At handover the code may remain in the repository, but
+**access ends the moment Brightex's address leaves the `brightex_allowed_emails` list**, which
+Beco controls. There is no deployment to tear down and no DNS record to delete.
 
 Everything it read is Beco's and stays Beco's: `analytics_events` and `blog_posts` live in
 Beco's own database and are unaffected by Studio going away. Published blog content remains on
@@ -272,7 +273,7 @@ The handover is complete when every one of these is true and has been checked, n
 - [ ] A quote can be submitted on the site and appears in the dashboard
 - [ ] A quote PDF generates and sends
 - [ ] The nightly backup ran, and a restore from it was performed successfully
-- [ ] `developer.beco.co.ke` no longer resolves
+- [ ] No remaining account can reach `/dashboard/studio`
 - [ ] Beco holds the repository and has cloned it independently
 - [ ] Brightex has confirmed destruction of local credentials in writing
 

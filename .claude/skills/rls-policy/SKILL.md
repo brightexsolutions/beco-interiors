@@ -23,6 +23,30 @@ anonymous.
 | `beco_admin` | All Beco data and staff reports |
 | `brightex_admin` | Everything including users. No Beco role reaches anything gated to it |
 
+**Studio routes require two independent conditions**, both enforced in Postgres, per D42:
+
+```sql
+create or replace function is_brightex_user() returns boolean
+language sql stable security definer as $$
+  select exists (
+    select 1 from users u
+    where u.id = auth.uid()
+      and u.is_active
+      and u.role = 'brightex_admin'
+      and u.email = any (
+        select jsonb_array_elements_text(value)
+        from settings where key = 'brightex_allowed_emails'
+      )
+  );
+$$;
+```
+
+**An explicit address list, not a domain suffix.** Brightex's real addresses are gmail.com, so
+a suffix check would match every Gmail account in existence. Test that specifically.
+
+Two conditions means a wrongly escalated role still cannot reach Studio, and revoking access is
+removing one string from a list rather than a migration.
+
 ## Testing, in pgTAP, per table
 
 Prove the negative, not just the positive. For every table:

@@ -142,14 +142,14 @@ side only.
 
 ### 3.7 Vercel projects
 
-**Three separate projects from one repository.** This is the security boundary in Section 10,
-not a convenience, so it is not negotiable into a single project with three routes.
+**Two separate projects from one repository.** This is the security boundary in Section 10, and
+it is about the public site not reaching admin tools. Studio is routes inside the dashboard per
+D9, not a third project.
 
 | Project | Root Directory | Domain |
 |---|---|---|
 | `beco-storefront` | `apps/storefront` | `www.beco.co.ke`, apex redirects to it |
 | `beco-dashboard` | `apps/dashboard` | `dashboard.beco.co.ke` |
-| `beco-studio` | `apps/studio` | `developer.beco.co.ke` |
 
 For each: connect the repository, set the Root Directory, and set the Ignored Build Step to
 Turborepo's, so a storefront change does not rebuild the dashboard and burn build minutes.
@@ -171,7 +171,8 @@ Turborepo's, so a storefront change does not rebuild the dashboard and burn buil
                            R2_ACCESS_KEY_ID
                            R2_SECRET_ACCESS_KEY
 
-  beco-studio              same server only set as dashboard
+  Studio has no project of its own. Its routes live in the dashboard
+  and use its environment, plus GEMINI_API_KEY and GEMINI_MODEL.
 ```
 
 **The storefront never receives a service role key or any admin secret.** If it is fully
@@ -199,7 +200,6 @@ Records:
   beco.co.ke          A or CNAME -> Vercel      proxied    redirects to www
   www                 CNAME      -> Vercel      proxied
   dashboard           CNAME      -> Vercel      proxied    noindex, robots blocked
-  developer           CNAME      -> Vercel      proxied    noindex, robots blocked
   staging             CNAME      -> Vercel      proxied    noindex, password protected
   img                 CNAME      -> R2          proxied    product image CDN
   MX                  -> Zoho                   DNS only   untouched, human mail
@@ -270,7 +270,7 @@ UptimeRobot under becointeriorsdev, one monitor per live surface.
       |
       |                  Codex review pass at milestone close
       v
-  merge to main  ------> production deploy, all three projects,
+  merge to main  ------> production deploy, both projects,
                          Turborepo rebuilds only what changed
 ```
 
@@ -404,7 +404,7 @@ migrations and `pg_dump`.
 **Cache rules**, in order:
 
 ```
-  1  hostname is dashboard.beco.co.ke or developer.beco.co.ke
+  1  hostname is dashboard.beco.co.ke
      -> BYPASS cache entirely
      Reason: no authenticated response may ever be cached
 
@@ -437,12 +437,12 @@ Ten in ten minutes is generous for a human specifying a project and hostile to a
 | Setting | Value |
 |---|---|
 | Framework preset | Next.js |
-| Root Directory | `apps/storefront`, `apps/dashboard`, `apps/studio` |
+| Root Directory | `apps/storefront`, `apps/dashboard` |
 | Node version | 22.x |
 | Install command | `pnpm install --frozen-lockfile` |
 | Ignored Build Step | `npx turbo-ignore` |
 | Function region | Closest available to Nairobi, same as Supabase |
-| Deployment Protection | **On for studio and staging.** Off for the public storefront |
+| Deployment Protection | **On for staging.** Off for the public storefront |
 | Environment scoping | Production and Preview set separately. **Never expose a production service role key to Preview** |
 
 **Image optimization is deliberately unused.** A custom `next/image` loader points at
@@ -502,7 +502,7 @@ rather than forgetting it.
 |---|---|
 | Storefront | Indexed. Sitemap generated from the database |
 | Dashboard | `noindex, nofollow` header **and** `robots.txt` disallow. Both, not either |
-| Studio | Same as dashboard |
+| Studio routes | Inherit the dashboard's noindex |
 | Staging | Same, plus deployment protection |
 | Empty categories | `noindex` automatically while `published_product_count` is 0, per D27 |
 | Filtered category URLs | Canonical to the base category, `noindex`, per D29 |

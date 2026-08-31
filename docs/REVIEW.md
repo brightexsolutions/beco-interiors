@@ -222,9 +222,11 @@ appearance is after it is public.
 
 ## Part 3: What is over engineered
 
-### 3.1 Studio as a third application
+### 3.1 Studio as a third application, ACCEPTED and fixed
 
-**The clearest case of over engineering in the plan.**
+**Was the clearest case of over engineering in the plan. Resolved on 31 August 2026 as D9 and
+D42.** Studio is now routes at `/dashboard/studio`, gated by role and an email allowlist. No
+third project, no third domain, no third environment set. M7 drops from 4.5 days to 3.5.
 
 Studio is a blog editor plus a reports page, for one role, used by one company. It currently
 costs: a third Next.js app, a third Vercel project, a third deployment target, a third
@@ -314,7 +316,7 @@ In order, before M1 begins.
 | 2 | Make the full listing walk the primary import mechanism | 1.2, the specified approach may not work at all |
 | 3 | Dismiss announcements by cookie, not `localStorage` | 1.3, otherwise the CLS fix does not work |
 | 4 | WebP only, three widths, at launch | 3.3, recovers most of the M2 overrun |
-| 5 | Fold Studio into the dashboard behind `brightex_admin` | 3.1, removes a deployment and a domain |
+| 5 | ~~Fold Studio into the dashboard~~ **Done, D9 and D42** | 3.1, removed a deployment and a domain |
 | 6 | Add slug history and 301s from former slugs | 2.3, prevents self inflicted ranking loss |
 | 7 | Optimistic locking on quote save | 2.2, prevents silent data loss |
 | 8 | Report boundaries in `Africa/Nairobi` | 1.6, otherwise the figures are quietly wrong |

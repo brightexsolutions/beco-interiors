@@ -8,14 +8,18 @@ what you need to hold in your head.
 ## The shape
 
 ```
-   BUYER                    BECO STAFF              BRIGHTEX
-     |                          |                       |
-     v                          v                       v
-  www.beco.co.ke      dashboard.beco.co.ke    developer.beco.co.ke
-  anon key only       service role, server    Studio, after launch
-     |                          |                       |
-     +--------------------------+-----------------------+
-                                |
+   BUYER                         BECO STAFF and BRIGHTEX
+     |                                    |
+     v                                    v
+  www.beco.co.ke                 dashboard.beco.co.ke
+  anon key only                  service role, server only
+                                   |
+                                   +-- /dashboard/studio
+                                       Brightex only, gated by
+                                       role AND email allowlist
+     |                                    |
+     +------------------+-----------------+
+                        |
                     CLOUDFLARE  (Beco's account)
                     WAF, 1 rate limit rule, edge cache
                                 |
@@ -32,9 +36,13 @@ what you need to hold in your head.
                                     source of truth
 ```
 
-Three deployments from one monorepo. **The split is a security boundary, not a convenience:**
+**Two** deployments from one monorepo. The split is a security boundary, not a convenience:
 the storefront can never receive an admin secret, so compromising it yields the anon key that
 every visitor's browser already holds.
+
+Studio is not a third app. It is routes inside the dashboard, because that boundary was always
+about the public site not reaching admin tools, never about separating two authenticated admin
+surfaces sharing one database and one role system.
 
 ## Five things that explain most decisions
 
@@ -47,7 +55,7 @@ Images on R2 where egress is free. The result: **more traffic does not quickly c
 A bigger catalog does.**
 
 **3. Beco owns the infrastructure. Brightex owns the code.** Database, DNS, images, email and
-monitoring are all in Beco's accounts. Brightex holds the repository, the Vercel projects and
+monitoring are all in Beco's accounts. Brightex holds the repository, two Vercel projects and
 its own Gemini key. If Brightex vanished, the site keeps serving; only future changes stop.
 
 **4. Content arrives late and messy, so nothing may block on it.** Templates are data driven.
@@ -95,8 +103,7 @@ Four things about it that matter:
 
 ```
   apps/storefront    public
-  apps/dashboard     Beco operations
-  apps/studio        Brightex, after launch
+  apps/dashboard     Beco operations, plus /studio for Brightex
   packages/ui        tokens and components. Nothing invents its own colour
   packages/types     generated from the database
   packages/validation  zod schemas, shared, server authoritative
