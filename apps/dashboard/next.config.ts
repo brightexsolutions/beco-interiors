@@ -1,13 +1,27 @@
 import type { NextConfig } from 'next';
 
 // Dashboard CSP. No analytics, no tag manager: neither is loaded here.
-// CSP written EXPLICITLY rather than left permissive, as the brief requires.
-// font-src is 'self' only, which is possible because fonts are self hosted (D3).
-// There is no fonts.gstatic.com entry and there should never be one.
+
+// React needs eval() in DEVELOPMENT ONLY, for reconstructing callstacks and
+// other debugging features. It never uses eval in production. So the policy is
+// built per environment rather than loosened everywhere: production stays
+// tight and development actually runs.
+const isDev = process.env.NODE_ENV !== 'production';
+
+const scriptSrc = [
+  "'self'",
+  // Next.js inlines a small bootstrap script. Tighten to a nonce once the app
+  // is stable, and record that as a follow up rather than forgetting it.
+  "'unsafe-inline'",
+  ...(isDev ? ["'unsafe-eval'"] : []),
+].join(' ');
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' ",
+  `script-src ${scriptSrc}`,
   "style-src 'self' 'unsafe-inline'",
+  // 'self' only, which is possible because fonts are self hosted. See D3.
+  // There is no fonts.gstatic.com entry and there should never be one.
   "font-src 'self'",
   "img-src 'self' data: blob: https://img.beco.co.ke",
   `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''}`,
@@ -15,7 +29,7 @@ const csp = [
   "form-action 'self'",
   "base-uri 'self'",
   "object-src 'none'",
-  'upgrade-insecure-requests',
+  ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
 const config: NextConfig = {
