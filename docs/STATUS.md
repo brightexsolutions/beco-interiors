@@ -5,7 +5,12 @@
 Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, `BLOCKED`
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
-Last updated: 31 August 2026.
+Last updated: 31 August 2026, evening.
+
+**Drive access confirmed live.** The service account
+`beco-import@beco-platform.iam.gserviceaccount.com` reads BECO PRODUCTS: 17 category folders,
+24 stones, and **`md5Checksum` present on every file**, which is the one thing the incremental
+design depends on. Sizes confirm the 44MB reality.
 
 ---
 
@@ -15,7 +20,7 @@ Last updated: 31 August 2026.
 |---|---|---|---|
 | M0 | Rules and rails | 0.5 | **DONE** |
 | M1 | Foundation and infrastructure | 3.5 | **WIP**, schema done, infrastructure blocked |
-| M2 | Drive import pipeline | 3.5 | TODO |
+| M2 | Drive import pipeline | 3.5 | **WIP**, logic verified, Drive access confirmed live |
 | M3 | Design system | 2.0 | TODO, overlaps M2 |
 | M4 | Storefront, SEO, conversion, motion | 8.5 | TODO |
 | M5 | Operations dashboard | 6.5 | TODO |
@@ -69,9 +74,9 @@ Last updated: 31 August 2026.
 
 | Item | On whom |
 |---|---|
-| `beco-staging` Supabase project | Beco created `beco-prod` only. **Nothing links to prod at any point**, per D44 |
+| ~~`beco-staging` Supabase project~~ | **DONE**, 31 Aug |
 | Vercel projects, token, Pro upgrade | Brightex |
-| Cloudflare account, zone, R2 bucket | Beco account, Brightex sets up |
+| Cloudflare account, R2 bucket | **Account created, Brightex invited, bucket `beco-product-images` created.** R2 API token still needed |
 | Nameserver change | Beco. Everything downstream of DNS waits |
 | Keep alive cron, backup workflow, uptime | Needs the accounts above |
 
