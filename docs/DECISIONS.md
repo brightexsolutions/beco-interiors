@@ -42,14 +42,32 @@ looks right and does nothing passes every visual review, which is why it survive
 ## D43 Signature scroll section: Bookmatch Open, then Slab to Surface
 
 Benchmarked against elegantfittings.co.ke, a **direct competitor** in the same market, whose
-scroll section walks the viewer into a house. Inspected: Next.js on Vercel, headless WordPress
-media, no canvas and no video, so the effect is layered images cross fading in a sticky
-container. Technically well within reach.
+scroll section walks the viewer into a house.
 
-Deliberately not copied, for two reasons. Their concept is spatial and needs a coherent
-photoshoot of one property, which Beco does not have and would have to commission. And a
-recognisable version of a competitor's signature moment reads as following them, to exactly the
-audience that has seen both sites.
+**Corrected 31 August 2026 after inspecting it in DevTools.** An earlier read of the server
+HTML found no canvas and concluded it was layered cross fading. That was wrong. There is a
+`<canvas>`, created client side, and the assets are `hero-frames/frame_0001.webp` served at
+1200w through 3840w. It is **frame sequence scrubbing**, the Apple product page technique:
+dozens of numbered frames drawn to a canvas with the index driven by scroll progress.
+
+**Their imagery is AI generated, not photographed.** The renders and the Dekton product naming
+make that clear, so the earlier claim that their concept needs a photoshoot Beco cannot afford
+was also wrong. They did not shoot it either.
+
+Deliberately not copied, now for three reasons.
+
+**Cost.** Frame sequence scrubbing means dozens of full width images. Even at 80KB each, forty
+frames is 3.2MB before anything else on the page loads, and the canvas cannot paint until
+enough frames are buffered. It is incompatible with an LCP under 2.0s on a Nairobi mobile
+connection, and our performance budget is not decoration.
+
+**Credibility.** Beco has real photography of real installations. A competitor showing
+generated rooms that do not exist is an opening, not a standard to match. "Real Kenyan
+projects" is a positioning advantage for a supplier whose whole claim is stock on the ground in
+Nairobi.
+
+**Differentiation.** A recognisable version of a competitor's signature moment reads as
+following them, to exactly the audience that has seen both sites.
 
 Beco's version is built from the `slab`, `on_stand`, `bookmatch` and `application` image roles
 the import pipeline already resolves, which makes it different by construction rather than by
