@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { DriveSource } from './drive';
 import { buildPlan, type ImportPlan, type PlannedFile } from './plan';
 import { processImage } from './images';
+import { assessQuality } from './quality';
 import { createStorage } from './storage';
 import { slugify, titleise } from './slug';
 
@@ -93,6 +94,9 @@ export const executePlan = async (
       downloaded++;
       bytesIn += bytes.byteLength;
 
+      const quality = await assessQuality(bytes, file.path);
+      for (const w of quality.warnings) warnings.push(w);
+
       const processed = await processImage(bytes);
       for (const d of processed.derivatives) {
         await storage.upload(`${keyBase}-${d.width}.${d.format}`, d.body, `image/${d.format}`);
@@ -108,6 +112,12 @@ export const executePlan = async (
         width: processed.width,
         height: processed.height,
         blur: processed.blurDataUrl,
+        // Measured from the photograph itself, not guessed. Drives a colour
+        // swatch, a colour filter, and flags images needing a reshoot.
+        avgColor: quality.averageHex,
+        dominantColor: quality.dominantHex,
+        lightness: Math.round(quality.lightness),
+        uniformBackground: quality.uniformBackground,
         sort: index,
       });
 
