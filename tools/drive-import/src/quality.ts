@@ -19,8 +19,10 @@ export interface Quality {
   /** Average colour, for a swatch or a colour filter. */
   averageHex: string;
   dominantHex: string;
-  /** Corner variance. Low means a clean backdrop, which cutouts need. See D33. */
+  /** Corners agree AND the subject stands apart from them. Cutouts need this. */
   uniformBackground: boolean;
+  /** How far the centre differs from the backdrop. Near zero means no subject. */
+  subjectContrast: number;
   warnings: string[];
 }
 
@@ -55,19 +57,41 @@ export const assessQuality = async (source: Buffer, label: string): Promise<Qual
     warnings.push(`${label}: almost pure black (${lightness.toFixed(0)}% lightness). Underexposed?`);
   }
 
-  // Sample the four corners. A clean backdrop varies little across them, which
-  // is what makes background removal quick rather than manual.
+  // Sample the four corners against the centre. A clean backdrop means the
+  // corners agree with each other AND differ from the middle, which is what
+  // makes background removal quick rather than manual. See D33.
+  //
+  // CAREFUL: `sharp().stats()` reads the INPUT image and silently ignores a
+  // preceding `.extract()`. The crop must be materialised with `.toBuffer()`
+  // first, or every region returns identical numbers and the check quietly
+  // measures nothing. This cost an hour to find.
   const w = meta.width ?? 0;
   const h = meta.height ?? 0;
   let uniformBackground = false;
-  if (w > 60 && h > 60) {
-    const patch = async (left: number, top: number) =>
-      (await sharp(source, opts).extract({ left, top, width: 24, height: 24 }).stats())
-        .channels.map((c) => c.mean);
-    const corners = (await Promise.all([
-      patch(0, 0), patch(w - 24, 0), patch(0, h - 24), patch(w - 24, h - 24),
-    ])).flat();
-    uniformBackground = Math.max(...corners) - Math.min(...corners) < 25;
+  let subjectContrast = 0;
+
+  if (w > 200 && h > 200) {
+    const box = Math.max(48, Math.floor(Math.min(w, h) * 0.08));
+    const mean = async (left: number, top: number) => {
+      const crop = await sharp(source, opts)
+        .extract({ left, top, width: box, height: box })
+        .toBuffer();
+      const s = await sharp(crop).stats();
+      return s.channels.reduce((a, c) => a + c.mean, 0) / s.channels.length;
+    };
+    const [tl, tr, bl, br, centre] = await Promise.all([
+      mean(0, 0),
+      mean(w - box, 0),
+      mean(0, h - box),
+      mean(w - box, h - box),
+      mean(Math.floor((w - box) / 2), Math.floor((h - box) / 2)),
+    ]);
+    const corners = [tl, tr, bl, br];
+    const cornerSpread = Math.max(...corners) - Math.min(...corners);
+    const backdrop = corners.reduce((a, v) => a + v, 0) / 4;
+    subjectContrast = Math.abs(backdrop - centre);
+    // Corners agree with each other, and the subject stands apart from them.
+    uniformBackground = cornerSpread < 20 && subjectContrast > 20;
   }
 
   return {
@@ -76,6 +100,7 @@ export const assessQuality = async (source: Buffer, label: string): Promise<Qual
     averageHex: hex(r, g, b),
     dominantHex: hex(stats.dominant.r, stats.dominant.g, stats.dominant.b),
     uniformBackground,
+    subjectContrast,
     warnings,
   };
 };
