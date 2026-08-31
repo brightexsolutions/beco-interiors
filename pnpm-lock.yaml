@@ -68,6 +68,9 @@ importers:
 
   apps/storefront:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.1121.0
+        version: 3.1121.0
       '@beco/supabase-client':
         specifier: workspace:*
         version: link:../../packages/supabase-client
@@ -80,6 +83,9 @@ importers:
       '@beco/validation':
         specifier: workspace:*
         version: link:../../packages/validation
+      '@supabase/supabase-js':
+        specifier: ^2.112.4
+        version: 2.112.4
       next:
         specifier: ^16.3.3
         version: 16.3.3(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

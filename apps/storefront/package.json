@@ -10,10 +10,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1121.0",
     "@beco/supabase-client": "workspace:*",
     "@beco/types": "workspace:*",
     "@beco/ui": "workspace:*",
     "@beco/validation": "workspace:*",
+    "@supabase/supabase-js": "^2.112.4",
     "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

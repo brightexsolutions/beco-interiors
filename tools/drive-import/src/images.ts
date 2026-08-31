@@ -22,7 +22,10 @@ const SHARP_OPTS = { failOn: 'none', limitInputPixels: 2_000_000_000 } as const;
  * checked rather than hoped for.
  */
 export interface Derivative {
+  /** The CANONICAL width this derivative answers for, used in its filename. */
   width: number;
+  /** What the image actually is. Smaller when the source could not fill it. */
+  actualWidth: number;
   format: string;
   body: Buffer;
   bytes: number;
@@ -60,7 +63,10 @@ export const processImage = async (source: Buffer): Promise<ProcessedImage> => {
   const warnings: string[] = [];
 
   for (const target of imageConfig.widths) {
-    // Never upscale. A 400px source stays 400px rather than being blown up.
+    // Never upscale: a narrow source stays its own size rather than being
+    // blown up. But the FILENAME still uses the canonical target width, or a
+    // loader asking for -1600.webp gets a 404 whenever a source happened to
+    // be narrower. Six of 113 real images hit exactly that.
     const w = Math.min(target, width || target);
     for (const format of imageConfig.formats) {
       const pipeline = sharp(source, SHARP_OPTS)
@@ -74,8 +80,24 @@ export const processImage = async (source: Buffer): Promise<ProcessedImage> => {
         format === 'avif'
           ? await pipeline.avif({ quality: q, effort: 4 }).toBuffer()
           : await pipeline.webp({ quality: q, effort: 5 }).toBuffer();
-      derivatives.push({ width: w, format, body, bytes: body.byteLength });
+      derivatives.push({
+        width: target,        // canonical, for the key
+        actualWidth: w,       // truthful, for the srcset descriptor
+        format,
+        body,
+        bytes: body.byteLength,
+      });
     }
+  }
+
+  // A source too small to fill the largest requested width will look soft on
+  // a product page, so it is worth saying rather than silently upscaling.
+  const largest = Math.max(...imageConfig.widths);
+  if (width && width < largest) {
+    warnings.push(
+      `source is only ${width}px wide, below the ${largest}px target, so the largest ` +
+        'rendition is upscaled by the browser and will look soft. Worth reshooting.',
+    );
   }
 
   const card = derivatives.find((d) => d.width === Math.min(...imageConfig.widths));

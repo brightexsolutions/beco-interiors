@@ -58,6 +58,7 @@ export const buildPlan = (
   listing: readonly DriveFile[],
   folders: readonly FolderNode[],
   known: readonly KnownFile[],
+  opts: { force?: boolean } = {},
 ): ImportPlan => {
   const misnests = detectMisnests(folders);
   const excluded = misnestedPaths(misnests);
@@ -143,7 +144,10 @@ export const buildPlan = (
       outcome: c.outcome,
       // Only new and changed files are fetched. A rename re resolves its role
       // from metadata and never re downloads 44MB.
-      needsDownload: c.outcome === 'new' || c.outcome === 'changed',
+      // `force` re-downloads and re-encodes everything, for when the pipeline
+      // itself changed rather than the source. Without it, a fix to the
+      // encoder never reaches files already marked unchanged.
+      needsDownload: opts.force || c.outcome === 'new' || c.outcome === 'changed',
     });
   }
 

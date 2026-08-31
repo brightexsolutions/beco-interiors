@@ -13,6 +13,7 @@ import { createClient } from '@supabase/supabase-js';
  */
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has('--dry-run');
+const force = args.has('--force');
 const useFixture = args.has('--fixture') || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
 
 const main = async () => {
@@ -44,7 +45,7 @@ const main = async () => {
     console.log(`  ${known.length} previously imported`);
   }
 
-  const plan = buildPlan(listing, folders, known);
+  const plan = buildPlan(listing, folders, known, { force });
   console.log(renderReport(plan));
 
   if (dryRun) {
@@ -52,6 +53,7 @@ const main = async () => {
     return;
   }
 
+  if (force) console.log('FORCE: re-downloading and re-encoding everything.\n');
   console.log('Importing...\n');
   const started = Date.now();
   const result = await executePlan(plan, source, { onProgress: (m) => console.log(m) });
