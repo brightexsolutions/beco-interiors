@@ -7,10 +7,13 @@ waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
 Last updated: 31 August 2026, evening.
 
-**Drive access confirmed live.** The service account
-`beco-import@beco-platform.iam.gserviceaccount.com` reads BECO PRODUCTS: 17 category folders,
-24 stones, and **`md5Checksum` present on every file**, which is the one thing the incremental
-design depends on. Sizes confirm the 44MB reality.
+**Both external dependencies confirmed against real infrastructure.**
+
+- **Drive:** `beco-import@beco-platform.iam.gserviceaccount.com` reads BECO PRODUCTS. 17
+  category folders, 24 stones, and **`md5Checksum` present on every file**, which is the one
+  thing the incremental design depends on. Sizes confirm the 44MB reality
+- **R2:** write, read with matching contents, list and delete all succeed against
+  `beco-product-images`, with a token scoped to that bucket alone
 
 ---
 
@@ -76,7 +79,7 @@ design depends on. Sizes confirm the 44MB reality.
 |---|---|
 | ~~`beco-staging` Supabase project~~ | **DONE**, 31 Aug |
 | Vercel projects, token, Pro upgrade | Brightex |
-| Cloudflare account, R2 bucket | **Account created, Brightex invited, bucket `beco-product-images` created.** R2 API token still needed |
+| ~~Cloudflare account, R2 bucket, token~~ | **DONE and verified**, 31 Aug |
 | Nameserver change | Beco. Everything downstream of DNS waits |
 | Keep alive cron, backup workflow, uptime | Needs the accounts above |
 

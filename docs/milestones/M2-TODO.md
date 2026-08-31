@@ -26,7 +26,10 @@ since CI must never reach a real Drive folder.
 
 ## Still to build
 
-- [ ] Google Drive source implementation. **Blocked on the service account**
+- [x] **Service account works against the real folder.** Verified: 17 categories, 24
+      stones, md5 on every file
+- [x] **R2 works.** Verified: write, read, list, delete round trip
+- [ ] Google Drive source implementation, wiring the verified access into `DriveSource`
 - [ ] Sharp derivatives and R2 upload
 - [ ] Read `import_files` from the database, so a second run genuinely downloads nothing. The
       CLI currently hardcodes an empty set, which is correct for a first run and honest about it
