@@ -54,5 +54,8 @@ Anything cut or deferred is recorded here with a reason, never silently dropped.
 | `products.csv`: prices, specs, descriptions | Beco | M4 being a catalog rather than a gallery |
 | Old beco.co.ke URL list | Beco | M6 redirect map |
 | Pre migration baseline capture | Brightex | M6, and it stops existing at cutover |
+| Brand guideline pages 20 to 21, Website Design Application | Beco or Brightex, they are images | M3 |
+| Confirm "10+ years" versus the guideline's "new entrant" | Beco | M4 About page copy |
+| Confirm whether Lighting stays a category | Beco | M4 navigation and taxonomy |
 | Which Sandstone Beige file is the slab | Beco | M2 |
 | Vercel Pro upgrade | Brightex | M6 cutover |

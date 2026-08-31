@@ -91,6 +91,21 @@ How to shoot it:
 
 ---
 
+## 4b. Room shots: what the brand guideline asks for
+
+The Beco brand guideline is specific about photography, so these are the brand's own rules
+rather than ours.
+
+- **Hero the location.** The photograph is about the space, not a close crop of the product
+- **The wider interior space is the focus**, always
+- **People are welcome but never the focal point.** Show them working or moving, which also
+  makes them less identifiable. Shallow depth of field or a little motion blur is the intended
+  technique
+- **Authentic people in authentic situations.** Real projects and real spaces, not staged
+
+Wide room shots are more useful to us than tight product crops, and they suit the main homepage
+feature better.
+
 ## 5. Shot pattern for every product
 
 Aim for four to six images per product:
