@@ -6,7 +6,7 @@ import { cn } from '../lib/cn';
  */
 export interface AvailabilityBadgeProps {
   availability: 'in_stock' | 'pre_order' | 'poa';
-  className?: string;
+  className?: string | undefined;
 }
 
 const LABEL = {

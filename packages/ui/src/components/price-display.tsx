@@ -17,12 +17,15 @@ import { cn } from '../lib/cn';
  */
 export interface PriceDisplayProps {
   priceDisplayMode: 'fixed' | 'poa';
-  price?: number | null;
-  compareAtPrice?: number | null;
-  unit?: string | null;
-  currency?: string;
-  size?: 'default' | 'large';
-  className?: string;
+  // `| undefined` is explicit because tsconfig sets exactOptionalPropertyTypes,
+  // which is on purpose: it stops `{ price: undefined }` being silently treated
+  // as an absent key. Forwarded props must admit undefined.
+  price?: number | null | undefined;
+  compareAtPrice?: number | null | undefined;
+  unit?: string | null | undefined;
+  currency?: string | undefined;
+  size?: 'default' | 'large' | undefined;
+  className?: string | undefined;
 }
 
 /** KES 25,000. Kenyan formatting, no decimals, since slabs are not priced in cents. */

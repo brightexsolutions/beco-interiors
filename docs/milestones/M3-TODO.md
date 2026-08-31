@@ -18,9 +18,8 @@ Per CLAUDE.md rule 8. Ticked only when **checked**.
 - [x] Titillium Web self hosted, 400 and 600, Latin subset, 24KB
 - [x] Cormorant Garamond self hosted, 400 and 500, Latin subset, 45KB
 - [x] `@font-face` with `font-display: swap` and unicode-range. **69KB for the whole type system**
-- [ ] **No Google Fonts request in the network panel.** The prototype loads three families
-      render blocking; that is exactly what we are removing
-- [ ] Verify `font-src 'self'` in the CSP still holds, which is only possible because of this
+- [x] **Zero Google Fonts requests**, verified against the rendered page
+- [x] `font-src 'self'` holds, which is only possible because of the above
 
 ### Logo
 
@@ -36,16 +35,18 @@ Per CLAUDE.md rule 8. Ticked only when **checked**.
       spreadsheet row can never render "KES null". Refuses to fake a sale when
       `compare_at_price` is not actually higher
 - [x] `AvailabilityBadge`. Warm Red only on POA, the state that changes what a buyer does
-- [ ] `ProductCard`. No border, no shadow. Fixed 4:5 frame, image scales on hover, red hairline
-      under the name
-- [ ] `ProductGallery`. Ordered by role. **Must read correctly on three images as well as six**
-- [ ] `EmptyState`, `LoadingState`, `ErrorState`
+- [x] `ProductCard`, 5 tests. No border, no shadow, fixed 4:5 frame. A test asserts the card
+      itself carries neither, scoped so the badge's own border does not false positive
+- [x] `ProductGallery`, 8 tests. Ordered by role, **reads correctly on three as well as six**,
+      and renders a page rather than a hole when a product has no photographs at all
+- [x] `EmptyState`, `LoadingState`, `ErrorState`. Skeletons match the final 4:5 frame so the
+      swap causes no shift
 - [ ] `Field`, `Input`, `QuantityStepper`
 
 ### Gallery
 
-- [ ] A page rendering every component in every state, holdable next to
-      `prototype/beco-design-system.html`
+- [x] **`/design-system` renders, HTTP 200.** A real route rather than a private folder, so it
+      can be opened on staging and looked at. `noindex`, kept out of the sitemap
 
 ## Verify
 
@@ -55,3 +56,11 @@ Per CLAUDE.md rule 8. Ticked only when **checked**.
 - [ ] Every touch target at least 44px
 - [ ] `prefers-reduced-motion` stops all motion
 - [ ] Component tests in jsdom, no browser
+
+
+## Still open
+
+- [ ] SVG logo from the vector source. Currently no logo in the gallery at all
+- [ ] `Field`, `Input`, `QuantityStepper`
+- [ ] Lint rule enforcing the 16px floor. Currently a convention, not a check
+- [ ] Real product photographs in the gallery instead of placeholder gradients

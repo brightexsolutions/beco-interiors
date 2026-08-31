@@ -10,12 +10,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@beco/supabase-client": "workspace:*",
+    "@beco/types": "workspace:*",
+    "@beco/ui": "workspace:*",
+    "@beco/validation": "workspace:*",
     "next": "^16.3.3",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "@beco/ui": "workspace:*",
-    "@beco/types": "workspace:*",
-    "@beco/validation": "workspace:*",
-    "@beco/supabase-client": "workspace:*"
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18"
   }
 }
