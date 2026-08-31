@@ -1,6 +1,6 @@
 -- Constraints, proven rather than assumed.
 begin;
-select plan(7);
+select plan(9);
 
 -- A POA product must not carry a price, and a fixed price product must.
 -- Enforced in the database rather than trusted to the application.
@@ -64,6 +64,30 @@ select results_eq(
      where quote_id = 'cccccccc-0000-0000-0000-000000000001'$$,
   $$select 75000::numeric(12,2)$$,
   'line_total is generated from quantity times unit price'
+);
+
+-- The audit trigger must work on tables WITHOUT a deleted_at column.
+-- Naming old.deleted_at directly breaks every such table, because PL/pgSQL
+-- resolves the field reference even when the guard before it is false.
+insert into settings (key, value) values ('zz_test_key', '"a"'::jsonb);
+select lives_ok(
+  $$update settings set value = '"b"'::jsonb where key = 'zz_test_key'$$,
+  'auditing works on a table with no deleted_at column'
+);
+
+-- And a soft delete on a table that HAS it still registers as a delete.
+insert into products (name, slug, price_display_mode)
+  values ('ZZ Soft Delete', 'zz-test-soft-delete', 'poa');
+update products set deleted_at = now() where slug = 'zz-test-soft-delete';
+-- Asserts the delete was RECORDED, rather than that it sorted last. Ordering
+-- is now reliable thanks to clock_timestamp(), but existence is the actual
+-- requirement and a weaker assumption to rest on.
+select isnt_empty(
+  $$select 1 from audit_log
+     where entity_type = 'products'
+       and entity_id = (select id from products where slug = 'zz-test-soft-delete')
+       and action = 'delete'$$,
+  'a soft delete is audited as a delete, not an update'
 );
 
 select * from finish();

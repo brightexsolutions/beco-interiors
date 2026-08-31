@@ -13,7 +13,11 @@ create table audit_log (
   before       jsonb,
   after        jsonb,
   ip           inet,
-  created_at   timestamptz not null default now()
+  -- clock_timestamp(), not now(). now() returns TRANSACTION start time, so
+  -- every row written in one transaction would share a timestamp and the
+  -- trail could not be ordered within it. An audit log that cannot say what
+  -- happened first is a weaker audit log.
+  created_at   timestamptz not null default clock_timestamp()
 );
 
 create index audit_log_entity_idx on audit_log (entity_type, entity_id, created_at desc);
@@ -34,8 +38,14 @@ begin
     v_action := 'delete'; v_before := to_jsonb(old);
   else
     v_before := to_jsonb(old); v_after := to_jsonb(new);
-    if to_jsonb(old) ? 'deleted_at'
-       and old.deleted_at is null and new.deleted_at is not null then
+    -- Compare through jsonb, never `old.deleted_at`. PL/pgSQL resolves a
+    -- record field reference even when the guard before it is false, so
+    -- naming the column directly breaks this trigger on every table that
+    -- does not have it. `users` is one, and the failure only surfaced once a
+    -- users UPDATE finally got past RLS.
+    if (v_before ? 'deleted_at')
+       and v_before ->> 'deleted_at' is null
+       and v_after  ->> 'deleted_at' is not null then
       v_action := 'delete';
     else
       v_action := 'update';
