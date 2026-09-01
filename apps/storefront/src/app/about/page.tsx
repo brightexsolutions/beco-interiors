@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { buttonClasses, Reveal } from '@beco/ui';
 import { PageHeader } from '@/components/page-header';
 import { RoomStack } from '@/components/room-stack';
+import { RotatingStatement } from '@/components/rotating-statement';
 import { getPublishedProducts, blurProps, primaryImage } from '@/lib/products';
 import { SITE } from '@/lib/site';
 
@@ -116,6 +117,34 @@ export default async function AboutPage() {
           ))}
         </ol>
       </section>
+
+      {/* --- Where the material goes. A photograph with the room type knocked
+              out of it in outline, cycling through what Beco actually
+              supplies. The image is a real installation. --- */}
+      {heroImage ? (
+        <section aria-label="Where our materials go" className="relative overflow-hidden bg-charcoal">
+          <div className="relative h-[46vh] min-h-[20rem] w-full sm:h-[58vh]">
+            <Image
+              src={heroImage.path}
+              alt=""
+              fill
+              sizes="100vw"
+              {...blurProps(heroImage)}
+              className="object-cover opacity-70"
+            />
+            <div className="absolute inset-0 flex items-center justify-center px-6">
+              <h2 className="w-full text-center font-display text-[15vw] leading-none tracking-[0.02em] text-high-vis-white sm:text-[12vw]">
+                <RotatingStatement
+                  words={['NAIROBI', 'KITCHENS', 'BATHROOMS', 'OFFICES', 'SHOWROOMS']}
+                />
+              </h2>
+            </div>
+          </div>
+          <p className="mx-auto max-w-[1380px] px-6 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
+            Supplied, cut and installed across the city
+          </p>
+        </section>
+      ) : null}
 
       {/* --- The showroom, against real installations. --- */}
       <section className="border-y border-neutral-200 bg-neutral-50">

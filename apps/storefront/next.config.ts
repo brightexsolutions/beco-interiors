@@ -24,6 +24,10 @@ const csp = [
   // There is no fonts.gstatic.com entry and there should never be one.
   "font-src 'self'",
   "img-src 'self' data: blob: https://img.beco.co.ke https://www.google-analytics.com",
+  // Showroom and site footage, served from our own origin or the R2 image
+  // domain. Stated explicitly rather than left to fall back to default-src,
+  // because rule 7 asks for a CSP written out rather than inherited.
+  "media-src 'self' https://img.beco.co.ke",
   `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} https://www.google-analytics.com`,
   "frame-ancestors 'none'",
   "form-action 'self'",

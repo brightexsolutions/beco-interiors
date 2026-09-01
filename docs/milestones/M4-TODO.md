@@ -163,8 +163,15 @@ Irene supplied both missing pieces, which closes A9 and the largest content risk
 - [ ] Cyprus Grey has a description but is not in the sheet and has no photography
 - [ ] Two more price lists to process: `BECO HANDLES 2 PRICELIST-1 (3).xlsx` and
       `BECO Product Prices-1 (1).pdf`
-- [ ] **Still no video anywhere in Drive**, so the "video in view" effect has no content. That
-      is a content dependency, not a build gap
+- [x] Video in view is BUILT: autoplays muted at 50% visibility, pauses the moment it leaves,
+      poster always set, no autoplay under reduced motion. `media-src` added to the CSP
+- [ ] **Beco's footage is not web ready.** Ten or more `.MOV` files landed in Drive on 31
+      August at 42 to 78MB each. QuickTime containers play unevenly across browsers and a
+      45MB file on a Nairobi mobile connection is unusable, so they need transcoding to MP4
+      and WebM at roughly 2 to 5MB per loop with a poster frame extracted. **ffmpeg is not
+      installed on this machine**, so that step cannot run here yet
+- [ ] Office accessories photography has landed in Drive. The category is already seeded, so
+      the next import run picks it up
 
 ## Found during this milestone, not planned
 

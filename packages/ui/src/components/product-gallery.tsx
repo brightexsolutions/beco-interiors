@@ -1,28 +1,28 @@
 'use client';
 
-// Interactive: the thumbnail strip holds selection state. Marked as a client
+// Interactive: the layered strip holds selection state. Marked as a client
 // component so it can be imported from a server component, which is the
 // default everywhere else. Keep this island small: the surrounding product
 // page stays server rendered for SEO.
 import { useState, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
-import { CardDeck } from './card-deck';
 
 /**
+ * A large frame carrying the photograph, and a layer of cards over its bottom
+ * edge. Pressing a card brings it into the frame behind them.
+ *
  * Ordered by image role, which is the order a specifier reads a material in:
  * the raw slab, then the slab on a stand for scale, then bookmatched if it is,
  * then applications.
  *
  * **Must read correctly on three images as well as six.** Five real products
- * have no on-stand shot, and Pure White has only three images total, so a
- * layout that assumes six is a layout that breaks on a fifth of the catalogue.
+ * have no on-stand shot and Pure White has only three images total, so a
+ * layout that assumes six breaks on a fifth of the catalogue. The strip simply
+ * has fewer cards; the frame behind it does not change size.
  *
- * The photographs are held as a DECK rather than as a single frame with a
- * strip beside it. A deck occupies exactly one card's worth of space whatever
- * it holds, so three images and six make the same shape, and the depth behind
- * the front card is itself the count. The thumbnails stay, because a deck
- * alone makes the fourth photograph three clicks away and is not reachable by
- * a screen reader in any useful order.
+ * The frame keeps every image mounted and crossfades between them rather than
+ * swapping the src. Swapping means a blank frame while the next file decodes,
+ * which on a 44MB source downscaled to 800px is long enough to see.
  */
 export type GalleryRole = 'slab' | 'on_stand' | 'bookmatch' | 'application' | 'unknown';
 
@@ -68,41 +68,65 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
   }
 
   return (
-    <div className={cn('flex flex-col gap-5 sm:flex-row-reverse sm:gap-6', className)}>
-      <figure className="min-w-0 flex-1">
-        <CardDeck
-          cards={ordered.map((img, i) => ({
-            key: `${img.role}-${i}`,
-            node: img.node,
-            label: `${ROLE_LABEL[img.role]}, photograph ${i + 1} of ${ordered.length}`,
-          }))}
-          active={active}
-          onActiveChange={setActive}
-        />
-        <figcaption className="mt-4 font-ui text-sm text-neutral-500">
-          {ROLE_LABEL[current.role]}
-        </figcaption>
-      </figure>
+    <div className={cn('relative', className)}>
+      {/* --- The frame. Every image stays mounted and crossfades, so pressing
+              a card never leaves an empty frame while a file decodes. --- */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 sm:aspect-[4/3]">
+        {ordered.map((img, i) => (
+          <div
+            key={`${img.role}-${i}`}
+            aria-hidden={i !== active}
+            className={cn(
+              'absolute inset-0 transition-opacity duration-700 ease-brand motion-reduce:transition-none',
+              i === active ? 'opacity-100' : 'opacity-0',
+            )}
+          >
+            {img.node}
+          </div>
+        ))}
 
-      {/* One thumbnail per image. Three looks deliberate, six looks deliberate.
-          These are also the only way to reach a specific photograph directly,
-          which the deck on its own cannot offer. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+        />
+
+        {/* What is being looked at, named on the photograph itself. */}
+        <p className="absolute left-0 top-0 bg-charcoal px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-high-vis-white">
+          {ROLE_LABEL[current.role]}
+        </p>
+      </div>
+
+      {/* --- The layer. Cards overlap each other and the frame's bottom edge,
+              so the strip reads as photographs resting on the picture rather
+              than as a toolbar under it. --- */}
       {ordered.length > 1 ? (
-        <ul className="flex gap-3 sm:flex-col" role="tablist" aria-label="Product photographs">
+        <ul
+          role="tablist"
+          aria-label="Product photographs"
+          className="relative z-10 -mt-10 flex justify-center pl-3 sm:-mt-14 sm:justify-start sm:pl-8"
+        >
           {ordered.map((img, i) => (
-            <li key={i}>
+            <li key={i} className="-ml-3 first:ml-0 sm:-ml-4">
               <button
                 type="button"
                 role="tab"
                 aria-selected={i === active}
                 aria-label={`${ROLE_LABEL[img.role]}, photograph ${i + 1} of ${ordered.length}`}
                 onClick={() => setActive(i)}
+                style={{
+                  // A slight fan, alternating, so the strip is a handful of
+                  // photographs rather than a row of equal squares.
+                  transform: `rotate(${(i % 2 === 0 ? -1 : 1) * 2.2}deg)`,
+                  zIndex: i === active ? 30 : 10 + i,
+                }}
                 className={cn(
-                  'block h-20 w-20 overflow-hidden bg-neutral-100 transition-opacity',
-                  // The selected state is a red hairline, not a heavy ring.
+                  'block h-20 w-16 overflow-hidden bg-neutral-100 sm:h-24 sm:w-20',
+                  'shadow-[0_12px_30px_rgba(16,24,32,0.28)] ring-1 ring-inset',
+                  'transition-transform duration-500 ease-brand hover:!rotate-0 hover:-translate-y-2',
+                  'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
                   i === active
-                    ? 'opacity-100 outline outline-1 outline-offset-2 outline-warm-red'
-                    : 'opacity-70 hover:opacity-100',
+                    ? 'ring-warm-red !rotate-0 -translate-y-2'
+                    : 'ring-charcoal/15 opacity-85 hover:opacity-100',
                 )}
               >
                 {img.node}
@@ -111,6 +135,10 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
           ))}
         </ul>
       ) : null}
+
+      <p aria-live="polite" className="sr-only">
+        {ROLE_LABEL[current.role]}, photograph {active + 1} of {ordered.length}
+      </p>
     </div>
   );
 }

@@ -15,12 +15,20 @@ const read = (app: string) => readFileSync(`apps/${app}/next.config.ts`, 'utf8')
  * Comments stripped, so an assertion cannot be satisfied or broken by prose.
  * The first version of this test failed against its own comment explaining
  * that there is no fonts.gstatic.com entry.
+ *
+ * The line comment rule must NOT fire on the `//` inside a URL. It used to,
+ * which silently truncated every origin in the policy to `https:` and made
+ * every assertion about a URL meaningless: `not.toContain('googletagmanager')`
+ * passed because the helper had eaten the word, not because the policy lacked
+ * it. A negative assertion that cannot fail is worse than no assertion.
  */
+const stripLineComment = (line: string) => line.replace(/(^|[^:])\/\/.*$/, '$1');
+
 const policy = (app: string) =>
   read(app)
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n')
-    .map((line) => line.replace(/\/\/.*$/, ''))
+    .map(stripLineComment)
     .join('\n');
 
 describe.each(['storefront', 'dashboard'])('%s CSP', (app) => {
@@ -80,5 +88,28 @@ describe('dashboard specifically', () => {
     const code = policy('dashboard');
     expect(code).not.toContain('googletagmanager');
     expect(code).not.toContain('google-analytics');
+  });
+});
+
+describe('media', () => {
+  it('states media-src explicitly rather than inheriting default-src', () => {
+    // Rule 7 asks for a CSP written out. Showroom footage would otherwise
+    // fall back to default-src, which works but hides the decision.
+    expect(policy('storefront')).toContain("media-src 'self' https://img.beco.co.ke");
+  });
+
+  it('does not open media to the whole web', () => {
+    expect(policy('storefront')).not.toContain("media-src *");
+  });
+});
+
+describe('the test helper itself', () => {
+  it('strips a line comment', () => {
+    expect(stripLineComment("  'foo', // a note")).toBe("  'foo', ");
+  });
+
+  it('does NOT strip the slashes inside a URL', () => {
+    // The bug this replaces made every URL assertion in this file vacuous.
+    expect(stripLineComment("  'https://img.beco.co.ke',")).toBe("  'https://img.beco.co.ke',");
   });
 });

@@ -6,6 +6,7 @@ import { SlabRail } from '@/components/slab-rail';
 import { SlabToSurface } from '@/components/slab-to-surface';
 import { RoomStack } from '@/components/room-stack';
 import { CompletedInteriors } from '@/components/completed-interiors';
+import { ShowroomFilm } from '@/components/showroom-film';
 import {
   getPublishedProducts, getCategoriesWithProducts, primaryImage,
   type CatalogueProduct, blurProps,
@@ -204,6 +205,40 @@ export default async function HomePage() {
           <RoomStack products={products} />
         </div>
       </section>
+
+      {/* --- The showroom, full bleed. Video in view, the sixth effect in
+              D31's vocabulary, built in full and running on a real photograph
+              until Beco supplies footage. --- */}
+      {applicationImage ? (
+        <section aria-label="The showroom" className="relative">
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal sm:aspect-[16/9] lg:aspect-[21/9]">
+            <ShowroomFilm poster={applicationImage} />
+          </div>
+          <div className="mx-auto max-w-[1380px] px-6">
+            <div className="-mt-16 max-w-[32rem] bg-charcoal p-10 text-high-vis-white sm:-mt-24 sm:p-12">
+              <div className="flex items-center gap-4">
+                <span aria-hidden className="h-px w-8 bg-warm-red" />
+                <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                  The showroom
+                </p>
+              </div>
+              <p className="mt-5 max-w-[16ch] font-display text-4xl leading-[1.1] sm:text-5xl">
+                Come and put a hand on it.
+              </p>
+              <p className="mt-4 max-w-[42ch] text-base leading-[1.65] text-neutral-300">
+                Urban Square, Enterprise Road, six days a week. The full range is on the floor,
+                and a slab reads differently in person than it does on a screen.
+              </p>
+              <Link
+                href="/contact"
+                className="mt-7 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-8 hover:underline"
+              >
+                Directions and hours
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* --- The pinned rail. Eight stones rather than twelve: the track
               crosses roughly 150vw over 190vh of pin instead of 250vw, so the

@@ -113,6 +113,19 @@
    each control, which is the kind of thing that gets missed
    on the next component someone writes.
    ============================================================ */
+/* Knocked out type: the photograph reads through the letterforms. A solid
+   fill at display size is a bar of colour across the image, which is the
+   opposite of the effect. */
+.beco-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.9);
+  paint-order: stroke fill;
+}
+
+@media (min-width: 640px) {
+  .beco-outline { -webkit-text-stroke-width: 2px; }
+}
+
 @layer base {
   button:not(:disabled),
   [role='button']:not(:disabled),

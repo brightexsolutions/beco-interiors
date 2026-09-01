@@ -46,6 +46,23 @@ export const SOCIAL: { name: string; url: string | null }[] = [
   { name: 'X', url: null },
 ];
 
+/**
+ * The showroom film.
+ *
+ * **Null until Beco supplies footage.** The SITE VIDEOS folder in Drive is
+ * still empty, and no video has ever been shared, so there is nothing to play.
+ *
+ * Deliberately not filled with stock footage or with something generated: a
+ * film that reads as Beco's showroom but is not would be a fabricated record
+ * of a real place, and it would be on the page a buyer uses to decide whether
+ * to drive there.
+ *
+ * Until then the section runs on a real installation photograph, which is
+ * true. Set this to a path under `public/` and it becomes a video with no
+ * other change.
+ */
+export const SHOWROOM_FILM: { src: string; type: string } | null = null;
+
 /** Prefilled, so a buyer never has to explain what they are asking about. */
 export const whatsappLink = (context?: string) =>
   `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
