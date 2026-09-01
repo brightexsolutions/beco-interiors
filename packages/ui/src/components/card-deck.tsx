@@ -34,7 +34,11 @@ export interface CardDeckProps {
   active: number;
   onActiveChange: (index: number) => void;
   className?: string | undefined;
-  /** Frame shape. Slabs are portrait; a room reads better wider. */
+  /**
+   * Frame shape. Slabs are portrait; a room reads better wider. Height is
+   * capped on large screens, because a 4:5 frame in a wide column becomes a
+   * photograph nearly a thousand pixels tall.
+   */
   aspect?: string | undefined;
 }
 
@@ -42,7 +46,8 @@ export interface CardDeckProps {
 const SWIPE_MS = 420;
 
 export function CardDeck({
-  cards, active, onActiveChange, className, aspect = 'aspect-[4/5]',
+  cards, active, onActiveChange, className,
+  aspect = 'aspect-[4/5] lg:aspect-auto lg:h-[min(66vh,38rem)]',
 }: CardDeckProps) {
   // The card in flight, and the one that has just landed at the back and must
   // not tween across the screen to get there.
@@ -74,7 +79,12 @@ export function CardDeck({
   if (cards.length === 0) return null;
 
   return (
-    <div className={cn('relative', aspect, className)}>
+    // The outer box CLIPS. A card leaves to the right and must stop at the
+    // edge of its own column rather than travelling across whatever is beside
+    // it, which on the product page is the price and the quote button. The
+    // padding leaves room for the fan behind the front card.
+    <div className={cn('relative overflow-hidden pb-14', className)}>
+      <div className={cn('relative', aspect)}>
       {cards.map((card, i) => {
         // Distance from the front, which is this card's slot in the fan.
         const slot = (i - active + cards.length) % cards.length;
@@ -137,6 +147,7 @@ export function CardDeck({
       <p aria-live="polite" className="sr-only">
         {cards[active]?.label}
       </p>
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { buttonClasses, cn } from '@beco/ui';
 import { QuoteCounter } from './quote-counter';
@@ -28,6 +29,10 @@ const NAV = [
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
+  // Transparent belongs to the HOME hero and nowhere else. Every other page
+  // starts with content directly beneath the bar, so a transparent header let
+  // a product gallery show through it and read as broken layout.
+  const overHero = usePathname() === '/';
 
   useEffect(() => {
     // Passive, and it only ever flips a boolean, so it cannot become a
@@ -43,7 +48,7 @@ export function SiteHeader() {
       data-scrolled={scrolled ? '' : undefined}
       className={cn(
         'sticky top-0 z-50 transition-colors duration-300 ease-brand',
-        scrolled
+        scrolled || !overHero
           ? 'border-b border-neutral-200 bg-high-vis-white'
           : 'border-b border-transparent bg-transparent',
       )}
