@@ -165,9 +165,20 @@ export async function SiteFooter() {
           </div>
         </div>
 
-        <p className="mt-14 font-ui text-sm text-neutral-500">
-          &copy; {new Date().getFullYear()} Beco Interiors Limited
-        </p>
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 font-ui text-sm text-neutral-500">
+          <p>&copy; {new Date().getFullYear()} Beco Interiors Limited</p>
+          <p>
+            Designed and built by{' '}
+            <a
+              href="https://www.brightexsolutions.co.ke"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-neutral-300 underline-offset-4 transition-colors hover:text-high-vis-white hover:underline"
+            >
+              Brightex Solutions
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );

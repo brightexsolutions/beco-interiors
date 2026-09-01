@@ -29,6 +29,12 @@ const STAGGER = ['lg:mt-0', 'lg:mt-8', 'lg:mt-3', 'lg:mt-12'] as const;
 export function SlabRail({ products }: { products: CatalogueProduct[] }) {
   if (products.length === 0) return null;
 
+  // Each card takes its own slice of the rail's progress, so one animation
+  // description drives all of them. The slices overlap heavily, which is what
+  // makes several cards visibly in motion at once rather than one at a time.
+  const step = 74 / Math.max(1, products.length - 1);
+  const window = 40;
+
   return (
     <section aria-label="The full range" className="border-y border-neutral-200 bg-neutral-50">
       {/* Tall enough for the rail to cross, and no taller. D31 caps total
@@ -70,6 +76,10 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                   <li
                     key={product.id}
                     className={`beco-rail-card w-[68vw] shrink-0 will-change-transform sm:w-[40vw] lg:w-[min(23vw,19rem)] ${STAGGER[i % STAGGER.length]}`}
+                    style={{
+                      animationRange:
+                        `contain ${(i * step).toFixed(2)}% contain ${(i * step + window).toFixed(2)}%`,
+                    }}
                   >
                     <Link href={`/product/${product.slug}`} className="group block">
                       {/* Fixed height rather than a fixed ratio, so the whole

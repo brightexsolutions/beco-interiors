@@ -369,6 +369,43 @@
       to   { transform: scaleX(1); }
     }
 
+    /* --- The rail's real effect: the cards pass THROUGH a centre.
+           Each one is angled and slightly small as it comes in, squares
+           up and reaches full size as it crosses the middle, then angles
+           away as it leaves. Continuous and tied to scroll position, so
+           it turns as fast as you scroll and holds still when you stop.
+
+           An entrance animation was not enough here. A card that animates
+           once on arrival and then sits inert for the rest of a three
+           screen pin makes the section feel like a static row that
+           happens to slide, which is what it looked like.
+
+           Each card takes its own slice of the rail's progress, passed in
+           as an inline animation-range, so one description drives twelve
+           cards. Overrides the entrance below, which stays as the
+           fallback where scroll timelines are unavailable. --- */
+    .beco-rail-stage .beco-rail-card,
+    .beco-rail-stage .beco-rail-card[data-inview] {
+      animation: beco-rail-pass linear both;
+      animation-timeline: --beco-rail;
+      transform-origin: center center;
+    }
+
+    @keyframes beco-rail-pass {
+      0% {
+        opacity: .45;
+        transform: perspective(1500px) rotateY(19deg) translateY(2.4rem) scale(.86);
+      }
+      50% {
+        opacity: 1;
+        transform: perspective(1500px) rotateY(0deg) translateY(0) scale(1);
+      }
+      100% {
+        opacity: .45;
+        transform: perspective(1500px) rotateY(-19deg) translateY(2.4rem) scale(.86);
+      }
+    }
+
     /* --- The pinned rail. The section is tall, the frame inside it
            sticks, and the track slides sideways across exactly the
            distance it overflows by. The page scroll is never intercepted,

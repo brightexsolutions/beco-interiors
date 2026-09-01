@@ -69,3 +69,22 @@ from (values
   ('Travertine Beige', 'travertine-beige', 'one_face', '12MM SINTERED STONES/TRAVERTINE BEIGE')
 ) as r(name, slug, face, source)
 on conflict (slug) do nothing;
+
+-- One live announcement, so the bar is exercised rather than only built.
+--
+-- Deliberately a plain notice and a verifiable one: the stones really are on
+-- the floor at Urban Square. No invented sale, no invented discount, and no
+-- response time promise, because none of those have been confirmed. Beco
+-- replaces this from /dashboard/announcements at M5, and it retires on its own
+-- when ends_at passes even if nobody does.
+insert into announcements (title, body, type, cta_label, cta_url, starts_at, ends_at, priority)
+values (
+  'Now on the floor',
+  'The full 12mm sintered stone range is in the Urban Square showroom.',
+  'notice',
+  'Plan a visit',
+  '/contact',
+  now() - interval '1 day',
+  now() + interval '180 days',
+  10
+) on conflict do nothing;

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '@beco/ui/src/tokens/tokens.css';
 import { ScrollMotion } from '@beco/ui';
+import { AnnouncementBar } from '@/components/announcement-bar';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { MobileActionBar } from '@/components/mobile-action-bar';
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
+        <AnnouncementBar />
         <SiteHeader />
         <div id="main">{children}</div>
         <SiteFooter />

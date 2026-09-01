@@ -51,7 +51,12 @@ Verification for this milestone was done against a running dev server on
 - [x] `SiteHeader`, sticky, nav, business line per D39, quote counter. **Verified** rendering
 - [x] `SiteFooter` as a genuine closing section, not link columns. NAP block for local search
 - [x] `MobileActionBar`, quote primary, WhatsApp secondary, call tertiary per D26
-- [ ] Announcement bar per D36, scheduled, server rendered with reserved height
+- [x] Announcement bar per D36. Server rendered so its height is part of first paint, and
+      dismissal is a COOKIE rather than localStorage, so the server already knows on a later
+      visit and there is no shift after paint. Keyed on the announcement id, so a new one
+      reappears. Scheduling is enforced by the RLS policy rather than by the query, so a live
+      window is the database's guarantee. **Verified:** bar renders, dismiss writes the cookie
+- [x] Brightex credit in the footer, linking to www.brightexsolutions.co.ke
 - [ ] Mega menu with real slab thumbnails
 
 ## The quote flow
