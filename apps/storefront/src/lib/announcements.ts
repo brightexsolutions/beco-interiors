@@ -37,6 +37,3 @@ export const getLiveAnnouncement = async (): Promise<Announcement | null> => {
   if (error) return null;
   return (data as Announcement | null) ?? null;
 };
-
-/** Cookie carrying the id of the announcement this visitor has dismissed. */
-export const DISMISS_COOKIE = 'beco_announcement_dismissed';

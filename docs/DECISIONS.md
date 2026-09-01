@@ -183,3 +183,21 @@ So a profile with a URL renders as a link, and a profile without one renders as 
 drawn, dimmed, labelled "profile coming soon", and not clickable. The row looks complete while
 Beco confirms the handles, and there is still nothing on the page that looks clickable and is
 not. Filling in `SOCIAL` in `apps/storefront/src/lib/site.ts` is the whole change.
+
+## D49, 1 September 2026: the announcement bar is not dismissible
+
+D36 specified a bar dismissible per visitor and remembered client side. It ships without a
+close control.
+
+The bar is already date scheduled, so it appears and retires on its own and cannot go stale.
+The only thing a close button added was letting a visitor silence an announcement that is still
+current, which is the opposite of what it is for. Beco would rather it stayed visible for its
+whole window.
+
+This also removes the cookie the dismissal needed, and with it a small amount of machinery: the
+bar is now a server component with no client island at all, and its only interactive element is
+the call to action, which navigates.
+
+*Reverses if:* a long running announcement starts drawing complaints from repeat visitors, in
+which case the dismissal returns as a cookie rather than as localStorage, for the CLS reason
+recorded on the original implementation.

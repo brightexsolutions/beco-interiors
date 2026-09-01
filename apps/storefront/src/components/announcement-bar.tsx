@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { AnnouncementDismiss } from './announcement-dismiss';
-import { DISMISS_COOKIE, getLiveAnnouncement } from '@/lib/announcements';
+import { getLiveAnnouncement } from '@/lib/announcements';
 
 /**
  * The announcement bar, per D36.
@@ -18,6 +16,13 @@ import { DISMISS_COOKIE, getLiveAnnouncement } from '@/lib/announcements';
  *
  * A clearance inverts to Warm Red so it reads as genuinely different from the
  * site chrome. Everything else is charcoal, which keeps Warm Red rationed.
+ *
+ * **Not dismissible**, which revises D36. The bar already retires on its own
+ * when `ends_at` passes, so the case for a close button was only to let a
+ * visitor silence something still current, and Beco would rather it stayed
+ * visible for its whole window. Nothing here is a control, so there is no
+ * decorative one either: the only interactive element is the call to action,
+ * and it navigates. See D49.
  */
 const TONE = {
   sale: 'bg-charcoal text-high-vis-white',
@@ -32,18 +37,13 @@ export async function AnnouncementBar() {
   const announcement = await getLiveAnnouncement();
   if (!announcement) return null;
 
-  // Already dismissed by this visitor, so it is never rendered at all and
-  // there is nothing for the client to remove after paint.
-  const dismissed = (await cookies()).get(DISMISS_COOKIE)?.value;
-  if (dismissed === announcement.id) return null;
-
   return (
     <aside
       aria-label="Announcement"
       className={`relative z-[60] ${TONE[announcement.type] ?? TONE.notice}`}
     >
-      <div className="mx-auto flex max-w-[1380px] items-center gap-4 px-6 py-2.5">
-        <p className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-1 font-ui text-sm">
+      <div className="mx-auto max-w-[1380px] px-6 py-3">
+        <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">
           <span className="font-semibold uppercase tracking-[0.12em]">{announcement.title}</span>
           {announcement.body ? (
             <span className="text-neutral-300">{announcement.body}</span>
@@ -57,7 +57,6 @@ export async function AnnouncementBar() {
             </Link>
           ) : null}
         </p>
-        <AnnouncementDismiss id={announcement.id} />
       </div>
     </aside>
   );
