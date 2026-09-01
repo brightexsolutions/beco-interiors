@@ -142,3 +142,44 @@ Those two do not currently agree for the hero specifically. The swipe sequence i
 works, and D31's own revision says it reverses on how it feels on a real device during M4, so
 this is settled by looking at it on a phone rather than by argument. Recorded so it is a known
 open question and not an oversight.
+
+## D47, 1 September 2026: the whole taxonomy is seeded, not just what is photographed
+
+Only two categories existed, because a category was created by the import pipeline the first
+time it found a product folder with images in it. The site therefore presented Beco as a
+company that sells sintered stone and handles, when Drive has fourteen product folders and the
+brand's own strapline names four pillars.
+
+All fifteen are now seeded. Thirteen hold nothing yet, and that is fine, because the build
+already handles it: each gets a designed "coming soon" page instead of a 404, and per D27 each
+stays `noindex` and out of the sitemap until it actually holds published products, at which
+point it flips on its own. Verified: `/shop/lighting` returns 200, renders the empty state and
+carries `noindex`, while the sitemap lists only `12mm-sintered-stones` and `handles`.
+
+`source_path` carries the Drive folder VERBATIM, including its misspelling of "ACCOUSTIC",
+because that column is the identity the importer matches on. The display name is spelled
+correctly, since "Accoustic Wall Panels" should not ship on a public page.
+
+**Lighting is included even though it has no Drive folder**, which is a departure from D4's
+rule that Drive folders are the taxonomy. It is named on every page of the brand guideline, in
+the signage artwork and in the mission text, so a site with no lighting contradicts the
+client's own identity. Carrying it as an empty category also means that the moment a LIGHTING
+folder appears the pipeline fills this row rather than creating a second one.
+
+*Reverses if:* Beco confirms the range has genuinely changed since April 2025 and lighting is
+no longer sold, in which case the row is deleted and the strapline usage is revisited with
+them.
+
+## D48, 1 September 2026: unlinked social profiles are drawn, not linked
+
+Beco's social handles have never been supplied. The approved prototype carried Instagram and
+Facebook buttons and every one was `href="#"`, with one labelled "profile coming soon".
+
+A dead link is a control that advertises an operation and does not perform it, which rule 3
+forbids and a lint rule fails the build on. But an empty footer where social icons are expected
+reads as unfinished.
+
+So a profile with a URL renders as a link, and a profile without one renders as a `<span>`:
+drawn, dimmed, labelled "profile coming soon", and not clickable. The row looks complete while
+Beco confirms the handles, and there is still nothing on the page that looks clickable and is
+not. Filling in `SOCIAL` in `apps/storefront/src/lib/site.ts` is the whole change.

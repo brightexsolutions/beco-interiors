@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { EmptyState, buttonClasses } from '@beco/ui';
 import { PageHeader } from '@/components/page-header';
 import { ProductGrid } from '@/components/product-grid';
-import { getPublishedProducts, getCategoriesWithProducts } from '@/lib/products';
+import { getPublishedProducts, getAllCategories } from '@/lib/products';
 
 export const revalidate = 3600;
 
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function ShopPage() {
   const [products, categories] = await Promise.all([
     getPublishedProducts(),
-    getCategoriesWithProducts(),
+    getAllCategories(),
   ]);
 
   return (
@@ -29,16 +29,25 @@ export default async function ShopPage() {
         lede={`${products.length} products, held in Nairobi. Add what the project needs to a list and we will price the whole thing at once.`}
       />
 
-      {categories.length > 1 ? (
-        <nav aria-label="Categories" className="mb-14 flex flex-wrap gap-x-8 gap-y-3 border-y border-neutral-200 py-4">
+      {/* The WHOLE range, including the categories still waiting on
+          photography. Each says plainly whether it is stocked today, because
+          hiding them would present Beco as a stone supplier with a sideline in
+          handles, and pretending they are stocked is what loses a specifier. */}
+      {categories.length > 0 ? (
+        <nav
+          aria-label="Categories"
+          className="mb-14 grid gap-x-8 gap-y-1 border-y border-neutral-200 py-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {categories.map((c) => (
             <Link
               key={c.id}
               href={`/shop/${c.slug}`}
-              className="inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-charcoal transition-colors hover:text-warm-red-deep"
+              className="group flex min-h-11 items-center justify-between gap-4 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-charcoal transition-colors hover:text-warm-red-deep"
             >
-              {c.name}
-              <span className="ml-2 font-normal text-neutral-500">{c.product_count}</span>
+              <span>{c.name}</span>
+              <span className="shrink-0 font-normal normal-case tracking-normal text-neutral-500">
+                {c.product_count > 0 ? c.product_count : 'Coming soon'}
+              </span>
             </Link>
           ))}
         </nav>

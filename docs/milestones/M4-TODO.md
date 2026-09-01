@@ -26,6 +26,9 @@ Verification for this milestone was done against a running dev server on
 - [x] `/contact`. **Verified:** 200. NAP matches the footer and the JSON-LD exactly. No
       response time promise, because the prototype claimed two hours in five places and
       twenty four in a sixth and nobody has confirmed which is real
+- [x] **The full taxonomy seeded**, fifteen categories rather than the two that happened to
+      have photography. Each empty one gets a designed page and stays noindex and out of the
+      sitemap until it holds products, per D27. See D47
 - [ ] `/gallery`
 - [x] Custom 404 routing back into the catalogue. **Verified:** returns 404 and renders
 - [ ] Custom 500

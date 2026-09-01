@@ -1,12 +1,17 @@
 import { SOCIAL } from '@/lib/site';
 
 /**
- * Social profiles, rendered only where a real URL exists.
+ * Social profiles.
  *
- * The prototype shipped these as `href="#"`, which is a control that looks
- * like it goes somewhere and does not. Rule 3 forbids it and a lint rule fails
- * the build on it, so these appear when Beco supplies the handles and are
- * absent until then.
+ * A profile WITH a URL is a link. A profile without one is drawn but is not a
+ * link: it renders as a `<span>`, so the row is visually complete while Beco
+ * confirms the handles, and there is still nothing on the page that looks
+ * clickable and is not.
+ *
+ * That distinction is the whole point. The prototype shipped these as
+ * `href="#"`, which is a control that advertises going somewhere and does
+ * not, and rule 3 forbids it. A placeholder that cannot be clicked is honest;
+ * a link that goes nowhere is a bug a user finds for you.
  *
  * Inline SVG rather than an icon font: the CSP allows no external stylesheet
  * from a font CDN, and a whole icon font for three glyphs is a poor trade
@@ -21,27 +26,46 @@ const PATHS: Record<string, string> = {
     'M6.94 8.5H3.9V21h3.04V8.5ZM5.42 3a1.77 1.77 0 1 0 0 3.53 1.77 1.77 0 0 0 0-3.53ZM21 14.13c0-3.32-1.77-4.87-4.14-4.87-1.9 0-2.76 1.05-3.23 1.79V8.5H10.6c.04.86 0 12.5 0 12.5h3.03v-6.98c0-.27.02-.55.1-.74.22-.55.72-1.11 1.56-1.11 1.1 0 1.55.84 1.55 2.07V21H21v-6.87Z',
 };
 
+const BOX =
+  'flex h-11 w-11 items-center justify-center border transition-colors';
+
 export function SocialLinks({ className }: { className?: string }) {
-  const live = SOCIAL.filter((s): s is { name: string; url: string } => Boolean(s.url));
-  if (live.length === 0) return null;
+  const shown = SOCIAL.filter((s) => PATHS[s.name]);
+  if (shown.length === 0) return null;
 
   return (
     <ul className={className}>
-      {live.map((social) => (
-        <li key={social.name}>
-          <a
-            href={social.url}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Beco Interiors on ${social.name}`}
-            className="flex h-11 w-11 items-center justify-center border border-neutral-700 text-neutral-300 transition-colors hover:border-high-vis-white hover:text-high-vis-white"
-          >
-            <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 fill-current">
-              <path d={PATHS[social.name]} />
-            </svg>
-          </a>
-        </li>
-      ))}
+      {shown.map((social) => {
+        const icon = (
+          <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+            <path d={PATHS[social.name]} />
+          </svg>
+        );
+
+        return (
+          <li key={social.name}>
+            {social.url ? (
+              <a
+                href={social.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Beco Interiors on ${social.name}`}
+                className={`${BOX} border-neutral-700 text-neutral-300 hover:border-high-vis-white hover:text-high-vis-white`}
+              >
+                {icon}
+              </a>
+            ) : (
+              <span
+                title={`${social.name} profile coming soon`}
+                aria-label={`${social.name}, profile coming soon`}
+                className={`${BOX} cursor-default border-neutral-800 text-neutral-700`}
+              >
+                {icon}
+              </span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

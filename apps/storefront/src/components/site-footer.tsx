@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { buttonClasses, cn } from '@beco/ui';
 import { SITE, SOCIAL, whatsappLink } from '@/lib/site';
 import { SocialLinks } from './social-links';
-import { getCategoriesWithProducts } from '@/lib/products';
+import { getAllCategories } from '@/lib/products';
 
 /**
  * A genuine closing section, not grey link columns and a copyright line,
@@ -17,8 +17,10 @@ import { getCategoriesWithProducts } from '@/lib/products';
  * Warm Red appears once here, on the primary action.
  */
 export async function SiteFooter() {
-  // Real categories, so the column cannot list something that is not stocked.
-  const categories = await getCategoriesWithProducts();
+  // The whole range, not only what has been photographed. Hiding the twelve
+  // categories still waiting on photography would present Beco as a stone
+  // supplier with a sideline in handles, which is not the business.
+  const categories = await getAllCategories();
 
   return (
     <footer className="bg-charcoal text-high-vis-white">
@@ -69,7 +71,7 @@ export async function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-16 grid gap-10 border-t border-neutral-700 pt-12 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
+        <div className="mt-16 grid gap-10 border-t border-neutral-700 pt-12 sm:grid-cols-2 lg:mt-20 lg:grid-cols-[1fr_1.3fr_1fr_1fr]">
           <div>
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
               Showroom
@@ -97,16 +99,20 @@ export async function SiteFooter() {
             <ul className="mt-4 space-y-2.5 text-base text-neutral-300">
               {categories.map((category) => (
                 <li key={category.id}>
-                  <Link href={`/shop/${category.slug}`} className="hover:text-high-vis-white">
+                  <Link
+                    href={`/shop/${category.slug}`}
+                    className="group flex items-baseline gap-2 hover:text-high-vis-white"
+                  >
                     {category.name}
+                    {/* Said plainly rather than hidden. A range that is
+                        genuinely coming is worth showing; pretending it is
+                        stocked when it is not is what loses a specifier. */}
+                    {category.product_count === 0 ? (
+                      <span className="font-ui text-sm text-neutral-500">soon</span>
+                    ) : null}
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link href="/shop" className="hover:text-high-vis-white">
-                  All products
-                </Link>
-              </li>
             </ul>
           </div>
 

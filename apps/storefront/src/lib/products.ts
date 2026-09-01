@@ -91,6 +91,30 @@ export const getCategoriesWithProducts = async (): Promise<Category[]> => {
     .filter((c) => c.product_count > 0);
 };
 
+/**
+ * EVERY published category, including those still waiting on photography.
+ *
+ * Used for navigation: the footer and the shop index, where hiding a range
+ * Beco actually sells would misrepresent the business as a stone supplier
+ * with a sideline in handles. Thirteen of the fifteen are empty today.
+ *
+ * NOT used for the sitemap or the home page, which stay on
+ * `getCategoriesWithProducts` so D27's index gating holds: an empty category
+ * is reachable and designed, but it is noindex and out of the sitemap until
+ * it has something to say.
+ */
+export const getAllCategories = async (): Promise<Category[]> => {
+  const { data, error } = await anon()
+    .from('categories')
+    .select('id,name,slug,description,source_path,products(count)')
+    .order('sort_order');
+  if (error) throw new Error(`could not load categories: ${error.message}`);
+  return (data ?? []).map((c) => {
+    const { products, ...rest } = c as typeof c & { products: { count: number }[] };
+    return { ...rest, product_count: products?.[0]?.count ?? 0 } as Category;
+  });
+};
+
 export const getProductsByCategory = async (slug: string): Promise<CatalogueProduct[]> => {
   const { data, error } = await anon()
     .from('products')

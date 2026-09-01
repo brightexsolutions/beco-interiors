@@ -6,9 +6,9 @@ import { render, screen } from '@testing-library/react';
  * carried the label "profile coming soon". That is a control that advertises
  * an operation and does not perform it, which rule 3 forbids outright.
  *
- * So the contract is: a profile with no URL is not rendered, ever. This test
- * exists to stop someone "fixing" an empty footer by putting a placeholder
- * back in.
+ * So the contract is: a profile with no URL is DRAWN but is not a link. The
+ * row looks complete while Beco confirms the handles, and there is still
+ * nothing on the page that looks clickable and is not.
  */
 const load = async (social: { name: string; url: string | null }[]) => {
   vi.resetModules();
@@ -20,40 +20,46 @@ beforeEach(() => vi.resetModules());
 afterEach(() => vi.doUnmock('@/lib/site'));
 
 describe('SocialLinks', () => {
-  it('renders nothing at all when no profile has a URL', async () => {
+  it('draws a placeholder for a profile with no URL, so the row looks complete', async () => {
+    const SocialLinks = await load([{ name: 'Instagram', url: null }]);
+    render(<SocialLinks />);
+    expect(screen.getByLabelText('Instagram, profile coming soon')).toBeInTheDocument();
+  });
+
+  it('makes that placeholder unclickable rather than a link to nowhere', async () => {
     const SocialLinks = await load([
       { name: 'Instagram', url: null },
       { name: 'Facebook', url: null },
     ]);
     const { container } = render(<SocialLinks />);
-    expect(container).toBeEmptyDOMElement();
-  });
-
-  it('never renders a placeholder link', async () => {
-    const SocialLinks = await load([{ name: 'Instagram', url: null }]);
-    const { container } = render(<SocialLinks />);
+    expect(container.querySelectorAll('a')).toHaveLength(0);
     expect(container.querySelector('a[href="#"]')).toBeNull();
   });
 
-  it('renders only the profiles that have a real URL', async () => {
+  it('links a profile that has a real URL', async () => {
     const SocialLinks = await load([
       { name: 'Instagram', url: 'https://instagram.com/becointeriors' },
       { name: 'Facebook', url: null },
     ]);
     render(<SocialLinks />);
-    expect(screen.getAllByRole('link')).toHaveLength(1);
-    expect(screen.getByLabelText('Beco Interiors on Instagram')).toHaveAttribute(
-      'href',
-      'https://instagram.com/becointeriors',
-    );
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', 'https://instagram.com/becointeriors');
   });
 
-  it('opens externally without leaking the referrer', async () => {
+  it('opens a real profile externally without leaking the referrer', async () => {
     const SocialLinks = await load([
       { name: 'LinkedIn', url: 'https://linkedin.com/company/beco' },
     ]);
-    const link = screen.getByRole ? render(<SocialLinks />).container.querySelector('a')! : null;
+    render(<SocialLinks />);
+    const link = screen.getByRole('link');
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noreferrer');
+  });
+
+  it('renders nothing for a profile it has no icon for', async () => {
+    const SocialLinks = await load([{ name: 'Myspace', url: 'https://example.com' }]);
+    const { container } = render(<SocialLinks />);
+    expect(container).toBeEmptyDOMElement();
   });
 });
