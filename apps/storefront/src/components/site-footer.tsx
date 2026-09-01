@@ -17,10 +17,16 @@ import { getAllCategories } from '@/lib/products';
  * Warm Red appears once here, on the primary action.
  */
 export async function SiteFooter() {
-  // The whole range, not only what has been photographed. Hiding the twelve
-  // categories still waiting on photography would present Beco as a stone
-  // supplier with a sideline in handles, which is not the business.
-  const categories = await getAllCategories();
+  const all = await getAllCategories();
+
+  // A footer column is navigation, not an index. Fifteen entries is a list
+  // nobody reads, so it shows a few and hands the rest to /shop.
+  //
+  // Stocked ranges lead, because those are the ones a visitor can act on
+  // today, and the remainder fill up to five in the taxonomy's own order.
+  const stocked = all.filter((c) => c.product_count > 0);
+  const rest = all.filter((c) => c.product_count === 0);
+  const categories = [...stocked, ...rest].slice(0, 5);
 
   return (
     <footer className="bg-charcoal text-high-vis-white">
@@ -71,7 +77,7 @@ export async function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-16 grid gap-10 border-t border-neutral-700 pt-12 sm:grid-cols-2 lg:mt-20 lg:grid-cols-[1fr_1.3fr_1fr_1fr]">
+        <div className="mt-16 grid gap-10 border-t border-neutral-700 pt-12 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
           <div>
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
               Showroom
@@ -101,11 +107,11 @@ export async function SiteFooter() {
                 <li key={category.id}>
                   <Link
                     href={`/shop/${category.slug}`}
-                    className="group flex items-baseline gap-2 hover:text-high-vis-white"
+                    className="flex items-baseline gap-2 hover:text-high-vis-white"
                   >
                     {category.name}
                     {/* Said plainly rather than hidden. A range that is
-                        genuinely coming is worth showing; pretending it is
+                        genuinely coming is worth showing; implying it is
                         stocked when it is not is what loses a specifier. */}
                     {category.product_count === 0 ? (
                       <span className="font-ui text-sm text-neutral-500">soon</span>
@@ -113,6 +119,14 @@ export async function SiteFooter() {
                   </Link>
                 </li>
               ))}
+              <li className="pt-1">
+                <Link
+                  href="/shop"
+                  className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-4 hover:underline"
+                >
+                  All {all.length} ranges
+                </Link>
+              </li>
             </ul>
           </div>
 

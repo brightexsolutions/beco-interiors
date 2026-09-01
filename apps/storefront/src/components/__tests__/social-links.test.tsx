@@ -49,7 +49,7 @@ describe('SocialLinks', () => {
 
   it('opens a real profile externally without leaking the referrer', async () => {
     const SocialLinks = await load([
-      { name: 'LinkedIn', url: 'https://linkedin.com/company/beco' },
+      { name: 'YouTube', url: 'https://youtube.com/@becointeriors' },
     ]);
     render(<SocialLinks />);
     const link = screen.getByRole('link');
@@ -61,5 +61,20 @@ describe('SocialLinks', () => {
     const SocialLinks = await load([{ name: 'Myspace', url: 'https://example.com' }]);
     const { container } = render(<SocialLinks />);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('gives a placeholder and a real profile the same resting appearance', async () => {
+    // A row where two marks are bright and three are grey reads as broken
+    // rather than as pending, which is why they match at rest and differ only
+    // in whether they navigate.
+    const SocialLinks = await load([
+      { name: 'Instagram', url: 'https://instagram.com/becointeriors' },
+      { name: 'TikTok', url: null },
+    ]);
+    const { container } = render(<SocialLinks />);
+    const [live, placeholder] = Array.from(container.querySelectorAll('a, span'));
+    expect(live!.className).toContain('border-neutral-700');
+    expect(placeholder!.className).toContain('border-neutral-700');
+    expect(placeholder!.className).toContain('cursor-default');
   });
 });

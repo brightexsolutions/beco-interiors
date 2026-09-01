@@ -26,21 +26,24 @@ export const SITE = {
 /**
  * Beco's social profiles.
  *
- * **Empty on purpose.** The approved prototype had Instagram and Facebook
- * buttons, but every one of them was `href="#"` and one carried the label
- * "profile coming soon", so nobody has ever supplied a real URL. A dead social
- * link on a supplier's site is worse than no link: it is a control that
- * advertises an operation and does not perform it, which rule 3 forbids and a
- * lint rule fails the build on.
+ * **URLs are placeholders until Beco confirms the handles.** The approved
+ * prototype had Instagram and Facebook buttons and every one was `href="#"`,
+ * with one labelled "profile coming soon", so no real URL has ever been
+ * supplied.
  *
- * Fill a value in and the icon appears in the footer. Leave it null and it is
- * not rendered at all. That is the whole change needed once Beco confirms the
- * handles.
+ * A null here still DRAWS the icon, it just does not make it a link: see
+ * SocialLinks. That keeps the row visually complete without shipping a
+ * control that advertises an operation and does not perform it, which rule 3
+ * forbids and a lint rule fails the build on.
+ *
+ * Filling in a URL is the whole change. Order is the order they appear.
  */
 export const SOCIAL: { name: string; url: string | null }[] = [
   { name: 'Instagram', url: null },
   { name: 'Facebook', url: null },
-  { name: 'LinkedIn', url: null },
+  { name: 'YouTube', url: null },
+  { name: 'TikTok', url: null },
+  { name: 'X', url: null },
 ];
 
 /** Prefilled, so a buyer never has to explain what they are asking about. */
