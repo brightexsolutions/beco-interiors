@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageHeader } from '@/components/page-header';
 import { QuoteBuilder } from '@/components/quote-builder';
 
 export const metadata: Metadata = {
@@ -12,18 +13,14 @@ export const metadata: Metadata = {
 
 export default function QuotePage() {
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-16">
-      <header className="mb-12">
-        <div className="flex items-center gap-4">
-          <span aria-hidden className="h-px w-8 bg-warm-red" />
-          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-            Your list
-          </p>
-        </div>
-        <h1 className="mt-4 max-w-[18ch] font-display text-5xl leading-[1.05] text-charcoal">
-          Request a quote.
-        </h1>
-      </header>
+    <main className="mx-auto max-w-[1380px] px-6 py-20 lg:py-24">
+      <PageHeader
+        className="mb-14"
+        eyebrow="Your list"
+        title="Request a quote."
+        lede="No account, and only two fields we genuinely need. We price the whole list at once."
+      />
+
       <QuoteBuilder />
     </main>
   );

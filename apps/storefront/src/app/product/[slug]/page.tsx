@@ -140,7 +140,7 @@ export default async function ProductPage({ params }: Params) {
               href={SITE.phoneHref}
               data-analytics="call_click"
               data-product={product.slug}
-              className={cn(buttonClasses({ variant: 'ghost' }), 'flex-1 sm:flex-none')}
+              className={cn(buttonClasses({ variant: 'outline' }), 'flex-1 sm:flex-none')}
             >
               {SITE.phone}
             </a>

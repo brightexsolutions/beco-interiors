@@ -70,8 +70,8 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
     <section aria-label="Sintered stone" className="relative border-b border-neutral-200">
       <div className="lg:grid lg:grid-cols-2">
         {/* --- Type. Pinned on desktop, static on mobile. --- */}
-        <div className={`lg:sticky lg:top-15 lg:h-[calc(100vh-3.75rem)] ${GRID_INSET}`}>
-          <div className="flex h-full flex-col py-16 pr-6 lg:justify-center lg:py-20 lg:pr-20">
+        <div className={`lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] ${GRID_INSET}`}>
+          <div className="flex h-full flex-col justify-center pb-14 pr-6 pt-24 lg:py-10 lg:pr-20">
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />
               <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
@@ -79,20 +79,20 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               </p>
             </div>
 
-            <h1 className="mt-7 max-w-[11ch] font-display text-6xl leading-[1.02] tracking-[-0.01em] text-charcoal sm:text-7xl xl:text-[5.5rem]">
+            <h1 className="mt-6 max-w-[12ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-charcoal sm:text-6xl xl:text-7xl">
               <WordReveal text="Surfaces that outlast the room." />
             </h1>
 
-            <p className="mt-7 max-w-[44ch] text-lg leading-[1.6] text-neutral-700">
+            <p className="mt-6 max-w-[42ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
               Large format slabs for kitchens, bathrooms, feature walls and flooring. Heat,
               scratch and stain resistant, and here in the showroom today.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="/quote" className={buttonClasses({ variant: 'primary' })}>
                 Request a quote
               </Link>
-              <Link href="/shop" className={buttonClasses({ variant: 'ghost' })}>
+              <Link href="/shop" className={buttonClasses({ variant: 'outline' })}>
                 See the range
               </Link>
             </div>
@@ -100,7 +100,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             {/* --- The slab indicator. Sits on a hairline at the foot of the
                     pinned column, so the type block above never moves as it
                     updates. Announced politely rather than interrupting. --- */}
-            <div className="mt-14 border-t border-neutral-200 pt-5 lg:mt-16">
+            <div className="mt-12 border-t border-neutral-200 pt-5">
               <div className="flex items-baseline justify-between gap-6">
                 <p aria-live="polite" className="flex items-baseline gap-3 font-ui text-sm">
                   <span className="font-semibold uppercase tracking-[0.14em] text-charcoal">
@@ -130,34 +130,19 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </div>
         </div>
 
-        {/* --- Desktop: the slabs pass, bleeding to the viewport edge. --- */}
-        <div className="hidden lg:block">
+        {/* --- Desktop: each slab is a specimen card that turns toward the
+                reader as it arrives, then settles square. Cards rather than
+                bleeding photographs, because a card can carry the stone's
+                name and its spec, which is what a specifier is actually
+                scrolling to find out. --- */}
+        <div className="hidden lg:block lg:py-16 lg:pr-[max(1.5rem,calc((100vw-1380px)/2))] lg:pl-10">
           {slabs.map((slab, i) => (
             <div
               key={slab.slug}
               ref={(el) => { panels.current[i] = el; }}
-              className="beco-parallax relative h-screen w-full overflow-hidden bg-neutral-100"
+              className="beco-card-flip flex min-h-screen items-center py-8"
             >
-              <Image
-                src={slab.src}
-                alt={slab.alt}
-                fill
-                // The first slab is the LCP element, so it is eager and
-                // unanimated. The rest wait until they are near.
-                priority={i === 0}
-                sizes="50vw"
-                {...blurProps(slab)}
-                className="object-cover"
-              />
-              {/* Names the stone on the photograph itself, so the image is a
-                  labelled specimen rather than a decorative panel. A solid
-                  chip, not a gradient scrim. */}
-              <Link
-                href={`/product/${slab.slug}`}
-                className="absolute bottom-0 left-0 flex min-h-11 items-center bg-charcoal px-5 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-high-vis-white transition-colors hover:bg-warm-red-deep"
-              >
-                {slab.name}
-              </Link>
+              <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness} />
             </div>
           ))}
         </div>
@@ -168,27 +153,68 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-16 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {slabs.map((slab, i) => (
               <li key={slab.slug} className="w-[78vw] shrink-0 snap-center">
-                <Link href={`/product/${slab.slug}`} className="block">
-                  <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
-                    <Image
-                      src={slab.src}
-                      alt={slab.alt}
-                      fill
-                      priority={i === 0}
-                      sizes="78vw"
-                      {...blurProps(slab)}
-                      className="object-cover"
-                    />
-                  </div>
-                  <p className="mt-3 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-charcoal">
-                    {slab.name}
-                  </p>
-                </Link>
+                <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness}
+                          priority={i === 0} sizes="78vw" />
               </li>
             ))}
           </ul>
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * A specimen card.
+ *
+ * The photograph, then a charcoal caption carrying the stone's name, its
+ * thickness and its position in the set. That caption is what makes it a card
+ * rather than a picture: it names what is being looked at, which a buyer
+ * comparing four stones needs and a full bleed photograph cannot give.
+ *
+ * The whole card is one link, so the target is the card and not a word in it.
+ */
+function SlabCard({
+  slab, index, total, thickness, priority = false, sizes = '(min-width: 1024px) 42vw, 78vw',
+}: {
+  slab: HeroSlab;
+  index: number;
+  total: number;
+  thickness: string;
+  priority?: boolean;
+  sizes?: string;
+}) {
+  return (
+    <Link href={`/product/${slab.slug}`} className="group block w-full">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+        <Image
+          src={slab.src}
+          alt={slab.alt}
+          fill
+          // The first slab is the LCP element, so it is eager and unanimated.
+          priority={priority || index === 0}
+          sizes={sizes}
+          {...blurProps(slab)}
+          className="object-cover transition-transform duration-[900ms] ease-brand group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        />
+      </div>
+
+      <div className="flex items-baseline justify-between gap-4 bg-charcoal px-6 py-5 text-high-vis-white">
+        <div>
+          <p className="font-ui text-sm font-semibold uppercase tracking-[0.16em]">
+            {slab.name}
+          </p>
+          <p className="mt-1 font-ui text-sm text-neutral-500">
+            Sintered stone
+            <span aria-hidden className="px-2 text-neutral-700">/</span>
+            {thickness}
+          </p>
+        </div>
+        <p className="font-ui text-sm font-semibold tabular-nums text-neutral-500">
+          {String(index + 1).padStart(2, '0')}
+          <span className="text-neutral-700">/{String(total).padStart(2, '0')}</span>
+        </p>
+      </div>
+    </Link>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { EmptyState, buttonClasses } from '@beco/ui';
+import { PageHeader } from '@/components/page-header';
 import { ProductGrid } from '@/components/product-grid';
 import { getPublishedProducts, getCategoriesWithProducts } from '@/lib/products';
 
@@ -20,30 +21,21 @@ export default async function ShopPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-16">
-      <header className="mb-12">
-        <div className="flex items-center gap-4">
-          <span aria-hidden className="h-px w-8 bg-warm-red" />
-          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-            Everything in stock
-          </p>
-        </div>
-        <h1 className="mt-4 max-w-[16ch] font-display text-5xl leading-[1.05] text-charcoal">
-          Interior finishing materials.
-        </h1>
-        <p className="mt-4 max-w-[62ch] text-base text-neutral-700">
-          {products.length} products, held in Nairobi. Add what the project needs to a list and
-          we will price the whole thing at once.
-        </p>
-      </header>
+    <main className="mx-auto max-w-[1380px] px-6 py-20 lg:py-24">
+      <PageHeader
+        className="mb-14"
+        eyebrow="Everything in stock"
+        title="Interior finishing materials."
+        lede={`${products.length} products, held in Nairobi. Add what the project needs to a list and we will price the whole thing at once.`}
+      />
 
       {categories.length > 1 ? (
-        <nav aria-label="Categories" className="mb-12 flex flex-wrap gap-3">
+        <nav aria-label="Categories" className="mb-14 flex flex-wrap gap-x-8 gap-y-3 border-y border-neutral-200 py-4">
           {categories.map((c) => (
             <Link
               key={c.id}
               href={`/shop/${c.slug}`}
-              className="inline-flex min-h-11 items-center rounded-[2px] border border-neutral-300 px-5 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal transition-colors hover:border-charcoal"
+              className="inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-charcoal transition-colors hover:text-warm-red-deep"
             >
               {c.name}
               <span className="ml-2 font-normal text-neutral-500">{c.product_count}</span>

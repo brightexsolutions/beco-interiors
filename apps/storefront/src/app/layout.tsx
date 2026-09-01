@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '@beco/ui/src/tokens/tokens.css';
+import { ScrollMotion } from '@beco/ui';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { MobileActionBar } from '@/components/mobile-action-bar';
@@ -37,6 +38,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div id="main">{children}</div>
         <SiteFooter />
         <MobileActionBar />
+        {/* Drives the entrance animations. Renders nothing. */}
+        <ScrollMotion />
       </body>
     </html>
   );

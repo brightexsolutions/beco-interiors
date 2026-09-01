@@ -9,6 +9,7 @@ export {
 } from './components/product-gallery';
 export { EmptyState, LoadingState, ErrorState } from './components/states';
 export { Reveal, type RevealProps } from './components/reveal';
+export { ScrollMotion } from './components/scroll-motion';
 export { CountUp, type CountUpProps } from './components/count-up';
 export { WordReveal, type WordRevealProps } from './components/word-reveal';
 export { cn } from './lib/cn';

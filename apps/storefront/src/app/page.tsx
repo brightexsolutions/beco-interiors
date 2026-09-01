@@ -56,19 +56,23 @@ export default async function HomePage() {
     <main>
       {slabs.length > 0 ? <PinnedHero slabs={slabs} thickness="12mm" /> : null}
 
-      {/* --- Stat band. Counts up once on entry, then still. --- */}
+      {/* --- Stat band. Counts up once on entry, then still. Label above
+              figure, on a hairline, so it reads as a specification rather
+              than as three numbers floating in a lot of air. --- */}
       <section className="border-b border-neutral-200">
-        <div className="mx-auto grid max-w-[1380px] gap-px bg-neutral-200 px-6 py-16 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-neutral-200 sm:bg-transparent">
-          <Stat value={products.length} label="Colours on the floor today" suffix="" />
-          <Stat value={12} label="Slab thickness" suffix="mm" />
-          <Stat value={6} label="Days a week, Urban Square" suffix="" />
+        <div className="mx-auto max-w-[1380px] px-6">
+          <dl className="grid divide-y divide-neutral-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <Stat value={products.length} label="Colours on the floor today" suffix="" />
+            <Stat value={12} label="Slab thickness" suffix="mm" />
+            <Stat value={6} label="Days a week, Urban Square" suffix="" />
+          </dl>
         </div>
       </section>
 
       {/* --- The range. One large tile against smaller ones, per the design
               direction, which rules out the even four across grid that treats
               the page as a container to fill. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-24 lg:py-30">
+      <section className="mx-auto max-w-[1380px] px-6 py-20 lg:py-28">
         <div className="beco-rise">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
@@ -130,38 +134,53 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* --- Application showcase. Full bleed, in situ. --- */}
+      {/* --- Application showcase. Full bleed, with the type carried on a
+              charcoal panel that overlaps the image rather than sitting
+              underneath it. The overlap is the whole point: text below a
+              photograph is a caption, text across one is a composition, and
+              this is the section where the material has to look like it
+              belongs in a room. --- */}
       {applicationImage ? (
         <section className="relative">
-          <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-100 sm:aspect-[21/9]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 sm:aspect-[16/9] lg:aspect-[21/9]">
             <div className="beco-scale-crop h-full w-full">
-            <Image
-              src={applicationImage.path}
-              alt={applicationImage.alt}
-              fill
-              sizes="100vw"
-              {...blurProps(applicationImage)}
-              className="object-cover"
-            />
+              <Image
+                src={applicationImage.path}
+                alt={applicationImage.alt}
+                fill
+                sizes="100vw"
+                {...blurProps(applicationImage)}
+                className="object-cover"
+              />
             </div>
           </div>
-          <div className="mx-auto max-w-[1380px] px-6 py-14">
-            <Reveal>
-              <p className="max-w-[24ch] font-display text-3xl leading-[1.15] text-charcoal sm:text-4xl">
+
+          <div className="mx-auto max-w-[1380px] px-6">
+            <div className="-mt-16 max-w-[34rem] bg-charcoal p-10 text-high-vis-white sm:-mt-24 sm:p-12 lg:-mt-32">
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                In place
+              </p>
+              <p className="mt-5 max-w-[18ch] font-display text-4xl leading-[1.1] sm:text-5xl">
                 Specified, cut and installed.
               </p>
-              <p className="mt-4 max-w-[56ch] text-base text-neutral-700">
-                {application?.name} in place. Bring us the drawing or the measurements and we
-                will tell you what it takes.
+              <p className="mt-5 max-w-[42ch] text-base leading-[1.65] text-neutral-300">
+                {application?.name} in a finished space. Bring us the drawing or the
+                measurements and we will tell you what it takes.
               </p>
-            </Reveal>
+              <Link
+                href="/shop"
+                className="mt-7 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-8 hover:underline"
+              >
+                See the range
+              </Link>
+            </div>
           </div>
         </section>
       ) : null}
 
       {/* --- Process. A numbered editorial list on hairline rules, which is
               what goes where three icon-in-a-circle cards would have. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-24 lg:py-30">
+      <section className="mx-auto max-w-[1380px] px-6 py-20 lg:py-28">
         <div className="beco-rise">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
@@ -202,7 +221,7 @@ export default async function HomePage() {
       {/* --- Categories, only those with something in them. Per D27 an empty
               category is not a page worth linking to. --- */}
       {categories.length > 1 ? (
-        <section className="mx-auto max-w-[1380px] px-6 pb-24">
+        <section className="mx-auto max-w-[1380px] px-6 pb-20 lg:pb-28">
           <Reveal>
             <h2 className="font-display text-3xl leading-tight text-charcoal">Browse by category</h2>
           </Reveal>
@@ -229,12 +248,16 @@ export default async function HomePage() {
 
 function Stat({ value, label, suffix }: { value: number; label: string; suffix: string }) {
   return (
-    <div className="bg-high-vis-white px-0 py-6 sm:px-8 sm:py-2 sm:first:pl-0">
-      <p className="font-display text-5xl leading-none text-charcoal tabular-nums">
+    <div className="py-10 sm:px-10 sm:first:pl-0 sm:last:pr-0">
+      <dt className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+        {label}
+      </dt>
+      {/* Tabular and tightened: Cormorant sets numerals loosely, and "12mm"
+          was reading as "1 2mm" at display size. */}
+      <dd className="mt-3 font-display text-5xl leading-none tracking-[-0.02em] text-charcoal tabular-nums">
         <CountUp value={value} />
         {suffix}
-      </p>
-      <p className="mt-2 font-ui text-sm text-neutral-500">{label}</p>
+      </dd>
     </div>
   );
 }

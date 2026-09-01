@@ -24,6 +24,43 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+
+  /* --- The default reveal, and section headings.
+         Driven by `data-inview`, which ScrollMotion sets as an element
+         arrives. Deliberately NOT inside the @supports block below:
+         `animation-timeline` is Chromium only, and the reveals are most
+         of the page's character, so they must not depend on it.
+
+         The default state is VISIBLE. An element that never gets the
+         attribute is simply still, never blank. --- */
+  .beco-reveal[data-inview],
+  .beco-rise[data-inview] {
+    animation: beco-rise-in 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-rise-in {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Slab cards turning toward the reader as they arrive, like a
+         sample lifted off a stack, settling square. --- */
+  .beco-card-flip[data-inview] {
+    animation: beco-card-in 900ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transform-origin: left center;
+  }
+
+  @keyframes beco-card-in {
+    from {
+      opacity: 0;
+      transform: perspective(1400px) rotateY(-22deg) translateY(48px) scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: perspective(1400px) rotateY(0) translateY(0) scale(1);
+    }
+  }
+
   .beco-word {
     animation: beco-word-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
@@ -60,18 +97,5 @@
       to   { transform: scale(1); }
     }
 
-    /* --- A slow rise on section headings, tied to scroll position
-           rather than fired on entry, so a slow scroll shows it
-           slowly. Subtle by design: this runs on many elements. --- */
-    .beco-rise {
-      animation: beco-rise-in linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 90%;
-    }
-
-    @keyframes beco-rise-in {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
   }
 }

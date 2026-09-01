@@ -1,63 +1,38 @@
-'use client';
-
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { cn } from '../lib/cn';
 
 /**
- * The default motion everywhere: fade plus a 16px rise, once, on entry.
+ * The default motion everywhere: a fade and a short rise as the element
+ * enters.
  *
- * Transform and opacity only, never layout properties, so a reveal cannot
- * cost CLS. `once` is deliberate: an element that re-animates every time it
- * re-enters turns a long page into a flicker reel.
+ * A SERVER component: it renders a class and nothing else. The animation is
+ * triggered by ScrollMotion setting `data-inview` as the element arrives.
  *
- * Under prefers-reduced-motion the content is simply present. That is handled
- * in CSS rather than by branching here, so there is no flash of hidden content
- * for a reduced-motion user while JavaScript loads.
+ * The previous version held the hidden state in React and revealed it with an
+ * IntersectionObserver, which meant fourteen elements on the home page shipped
+ * as `opacity-0` and depended on JavaScript arriving to become visible. That
+ * is a bad trade for a marketing page: the failure mode is a blank section,
+ * and it is invisible in testing because JavaScript always arrives locally.
+ *
+ * Now the content is visible by default and the animation is an enhancement
+ * layered on top, so a browser without `animation-timeline`, a reduced-motion
+ * user, and anyone whose JavaScript never runs all see the finished page.
+ *
+ * Transform and opacity only, so a reveal can never cost CLS.
  */
 export interface RevealProps {
   children: ReactNode;
-  /** Milliseconds. Grids stagger their items by 60ms per the motion rules. */
+  /** Stagger, in milliseconds, matching the 60ms grid rhythm. */
   delay?: number | undefined;
   as?: 'div' | 'li' | 'section' | undefined;
   className?: string | undefined;
 }
 
 export function Reveal({ children, delay = 0, as: Tag = 'div', className }: RevealProps) {
-  const ref = useRef<HTMLElement>(null);
-  const [shown, setShown] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    // If the browser cannot observe, show the content rather than hide it.
-    if (typeof IntersectionObserver === 'undefined') {
-      setShown(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setShown(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: '0px 0px -10% 0px' },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   return (
     <Tag
-      ref={ref as never}
-      data-revealed={shown ? '' : undefined}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={cn(
-        'translate-y-4 opacity-0 transition-[opacity,transform] duration-500 ease-brand',
-        'data-revealed:translate-y-0 data-revealed:opacity-100',
-        'motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none',
-        className,
-      )}
+      className={cn('beco-reveal', className)}
+      style={delay ? { animationDelay: `${delay}ms` } : undefined}
     >
       {children}
     </Tag>

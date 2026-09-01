@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { EmptyState, buttonClasses } from '@beco/ui';
+import { PageHeader } from '@/components/page-header';
 import { ProductGrid } from '@/components/product-grid';
 import {
   getCategoryBySlug, getCategorySlugs, getProductsByCategory,
@@ -42,7 +43,7 @@ export default async function CategoryPage({ params }: Params) {
   const products = await getProductsByCategory(slug);
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-16">
+    <main className="mx-auto max-w-[1380px] px-6 py-20 lg:py-24">
       <nav aria-label="Breadcrumb" className="mb-8">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
@@ -53,16 +54,23 @@ export default async function CategoryPage({ params }: Params) {
         </ol>
       </nav>
 
-      <header className="mb-12">
-        <h1 className="max-w-[16ch] font-display text-5xl leading-[1.05] text-charcoal">
-          {category.name}
-        </h1>
-        {category.description ? (
-          <div className="mt-6 max-w-[68ch] space-y-4 text-base leading-[1.6] text-neutral-700">
-            {category.description.split('\n\n').map((para) => <p key={para}>{para}</p>)}
-          </div>
-        ) : null}
-      </header>
+      <PageHeader
+        className="mb-14"
+        eyebrow="The range"
+        title={category.name}
+        aside={
+          products.length > 0 ? (
+            <p className="font-ui text-sm text-neutral-500">
+              {products.length} {products.length === 1 ? 'colour' : 'colours'} in stock
+            </p>
+          ) : undefined
+        }
+        lede={
+          category.description
+            ? category.description.split('\n\n').map((para) => <p key={para}>{para}</p>)
+            : undefined
+        }
+      />
 
       {products.length === 0 ? (
         <EmptyState
