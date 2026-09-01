@@ -70,7 +70,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
     <section aria-label="Sintered stone" className="relative border-b border-neutral-200">
       <div className="lg:grid lg:grid-cols-2">
         {/* --- Type. Pinned on desktop, static on mobile. --- */}
-        <div className={`lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] ${GRID_INSET}`}>
+        <div className={`lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] ${GRID_INSET}`}>
           <div className="flex h-full flex-col justify-center pb-14 pr-6 pt-24 lg:py-10 lg:pr-20">
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />
@@ -186,7 +186,7 @@ function SlabCard({
 }) {
   return (
     <Link href={`/product/${slab.slug}`} className="group block w-full">
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/10">
         <Image
           src={slab.src}
           alt={slab.alt}

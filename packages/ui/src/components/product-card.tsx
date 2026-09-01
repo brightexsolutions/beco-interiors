@@ -49,7 +49,14 @@ export function ProductCard({
 }: ProductCardProps) {
   return (
     <a href={href} className={cn('group block focus:outline-none', className)}>
-      <div className={cn('relative w-full overflow-hidden bg-neutral-100', FRAME[frame], imageClassName)}>
+      {/* The inset hairline is not decoration: Pure White is a white stone
+          photographed on white, so without an edge its card looks like an
+          image that failed to load. The card itself still carries no border. */}
+      <div className={cn(
+        'relative w-full overflow-hidden bg-neutral-100',
+        'after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/10',
+        FRAME[frame], imageClassName,
+      )}>
         <div className="h-full w-full transition-transform duration-[600ms] ease-brand group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">
           {image}
         </div>

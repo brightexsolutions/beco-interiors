@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { ProductCard, Reveal, CountUp } from '@beco/ui';
 import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
 import { SlabRail } from '@/components/slab-rail';
+import { SlabToSurface } from '@/components/slab-to-surface';
+import { RoomStack } from '@/components/room-stack';
 import {
   getPublishedProducts, getCategoriesWithProducts, primaryImage,
   type CatalogueProduct, blurProps,
@@ -51,6 +53,14 @@ export default async function HomePage() {
 
   const featured = products.slice(0, 8);
   const application = products.find((p) => p.images?.some((i) => i.role === 'application'));
+  // The signature section needs BOTH roles. Seven stones have a bookmatch
+  // shot today; the one with the most room photography leads.
+  const signature = products
+    .filter((p) => p.images?.some((i) => i.role === 'bookmatch')
+                && p.images?.some((i) => i.role === 'application'))
+    .sort((a, b) =>
+      b.images.filter((i) => i.role === 'application').length -
+      a.images.filter((i) => i.role === 'application').length)[0];
   const applicationImage = application?.images.find((i) => i.role === 'application');
 
   return (
@@ -73,7 +83,7 @@ export default async function HomePage() {
       {/* --- The range. One large tile against smaller ones, per the design
               direction, which rules out the even four across grid that treats
               the page as a container to fill. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-20 lg:py-28">
+      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
           <div className="flex items-center gap-4">
@@ -138,53 +148,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* --- Application showcase. Full bleed, with the type carried on a
-              charcoal panel that overlaps the image rather than sitting
-              underneath it. The overlap is the whole point: text below a
-              photograph is a caption, text across one is a composition, and
-              this is the section where the material has to look like it
-              belongs in a room. --- */}
-      {applicationImage ? (
-        <section className="relative">
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 sm:aspect-[16/9] lg:aspect-[21/9]">
-            <div className="beco-scale-crop h-full w-full">
-              <Image
-                src={applicationImage.path}
-                alt={applicationImage.alt}
-                fill
-                sizes="100vw"
-                {...blurProps(applicationImage)}
-                className="object-cover"
-              />
-            </div>
-          </div>
-
-          <div className="mx-auto max-w-[1380px] px-6">
-            <div className="-mt-16 max-w-[34rem] bg-charcoal p-10 text-high-vis-white sm:-mt-24 sm:p-12 lg:-mt-32">
-              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                In place
-              </p>
-              <p className="mt-5 max-w-[18ch] font-display text-4xl leading-[1.1] sm:text-5xl">
-                Specified, cut and installed.
-              </p>
-              <p className="mt-5 max-w-[42ch] text-base leading-[1.65] text-neutral-300">
-                {application?.name} in a finished space. Bring us the drawing or the
-                measurements and we will tell you what it takes.
-              </p>
-              <Link
-                href="/shop"
-                className="mt-7 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-8 hover:underline"
-              >
-                See the range
-              </Link>
-            </div>
-          </div>
-        </section>
-      ) : null}
+      {/* --- The signature moment, per D43. --- */}
+      <SlabToSurface product={signature} />
 
       {/* --- Process. A numbered editorial list on hairline rules, which is
               what goes where three icon-in-a-circle cards would have. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-20 lg:py-28">
+      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -199,7 +168,8 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <ol className="mt-14 border-t border-neutral-200">
+        <div className="mt-14 grid gap-16 lg:grid-cols-[1fr_26rem] lg:gap-20">
+          <ol className="border-t border-neutral-200">
           {[
             ['Build a list', 'Add every material the project needs. The list survives a refresh, and no account is required.'],
             ['Send it over', 'Your name and phone number are the only things we genuinely need. Everything else helps us price it faster.'],
@@ -221,7 +191,11 @@ export default async function HomePage() {
               </div>
             </Reveal>
           ))}
-        </ol>
+          </ol>
+
+          {/* Real installations, dealing themselves, opposite the steps. */}
+          <RoomStack products={products} />
+        </div>
       </section>
 
       {/* --- The pinned rail: twelve stones crossing in one screen, which

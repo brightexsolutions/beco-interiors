@@ -23,6 +23,39 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* --- The rail declares its own timeline, so its progress bar can track
+       how far through the pinned run the reader is. A pinned section with
+       no progress indicator is the one that feels stuck: the page stops
+       moving and nothing says for how long. --- */
+.beco-rail-stage {
+  view-timeline-name: --beco-rail;
+  view-timeline-axis: block;
+}
+
+/* --- The signature stage declares a named view timeline, which its
+       descendants inside the sticky frame reference. Declared outside the
+       reduced-motion block because naming a timeline is not itself motion. --- */
+.beco-stage {
+  view-timeline-name: --beco-stage;
+  view-timeline-axis: block;
+}
+
+/* The opening caption is hidden by default and only exists where the scroll
+   timeline can hand it over to the main one. Without timelines the section
+   shows its finished state, which is the room and its caption. */
+.beco-stage-intro { opacity: 0; }
+
+/* Static state: PARTED. Anything that cannot run the animation shows the
+   finished room, never a slab stuck across it. */
+.beco-part-left  { transform: translateX(-101%); }
+.beco-part-right { transform: translateX(101%); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion gets the destination, not the journey. */
+  .beco-part-left  { transform: translateX(-101%); }
+  .beco-part-right { transform: translateX(101%); }
+}
+
 @media (prefers-reduced-motion: no-preference) {
 
   /* --- The default reveal, and section headings.
@@ -87,6 +120,37 @@
     }
   }
 
+  /* --- A hand of room photographs that deals itself.
+         Fanned like cards held in a hand rather than squared into a pile,
+         the front card swiped away to the RIGHT, and the swiped card
+         returning to the BACK of the fan.
+
+         Four cards share one description, each offset by a quarter of the
+         cycle, so the deck cycles with a single animation.
+
+         The return leg happens at opacity 0 and only becomes visible once
+         the card is already at the back and behind the others. An earlier
+         version faded it in while it travelled, and the half transparent
+         card showed through the ones in front of it. --- */
+  .beco-stack-card {
+    animation: beco-stack-cycle var(--stack-cycle, 14s) cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    animation-delay: var(--stack-delay, 0s);
+  }
+
+  @keyframes beco-stack-cycle {
+    /* Slot 0, the front of the fan. */
+    0%, 17%  { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);                    opacity: 1; z-index: 40; }
+    /* Swiped away to the right, lifting as it goes. */
+    23%      { transform: translate3d(145%, -8%, 0) rotate(20deg) scale(1.02);           opacity: 0; z-index: 40; }
+    /* Behind everything, and still invisible while it gets there. */
+    23.5%    { transform: translate3d(-7%, 3.3rem, 0) rotate(-9deg) scale(.91);          opacity: 0; z-index: 10; }
+    26%, 45% { transform: translate3d(-7%, 3.3rem, 0) rotate(-9deg) scale(.91);          opacity: 1; z-index: 10; }
+    /* Advancing up the fan as the cards in front of it leave. */
+    50%, 70% { transform: translate3d(-4.6%, 2.2rem, 0) rotate(-6deg) scale(.94);        opacity: 1; z-index: 20; }
+    75%, 95% { transform: translate3d(-2.3%, 1.1rem, 0) rotate(-3deg) scale(.97);        opacity: 1; z-index: 30; }
+    100%     { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);                    opacity: 1; z-index: 40; }
+  }
+
   .beco-word {
     animation: beco-word-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
@@ -118,6 +182,83 @@
     @keyframes beco-drift-small {
       from { transform: translateY(-5%) scale(1.12); }
       to   { transform: translateY(5%)  scale(1.12); }
+    }
+
+    /* --- Bookmatch Open, per D43.
+           The two halves of a bookmatched pair part along their own
+           mirror seam and the finished room is behind them. That parting
+           could only be a stone company's moment: it is the thing the
+           material actually does, and it is why the slab is sold in
+           pairs.
+
+           Driven by a NAMED timeline declared on the tall section, so
+           elements inside the sticky frame can track the section's
+           progress. A sticky element's own view does not change while it
+           is pinned, so `view()` on the element itself would sit still.
+
+           The static state below the @supports block is PARTED, so a
+           browser without scroll timelines shows the room rather than a
+           slab covering it forever. --- */
+    .beco-stage .beco-part-left {
+      animation: beco-part-left linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 62%;
+    }
+
+    .beco-stage .beco-part-right {
+      animation: beco-part-right linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 62%;
+    }
+
+    @keyframes beco-part-left  { from { transform: translateX(0); } to { transform: translateX(-101%); } }
+    @keyframes beco-part-right { from { transform: translateX(0); } to { transform: translateX(101%); } }
+
+    /* The room settles out of an oversized crop as it is uncovered, so it
+       reads as arriving rather than as having been there all along. */
+    .beco-stage .beco-room {
+      animation: beco-room-settle linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 85%;
+    }
+
+    @keyframes beco-room-settle {
+      from { transform: scale(1.18); }
+      to   { transform: scale(1); }
+    }
+
+    /* The opening state, before anything has parted. It holds the right
+       hand column while the pair is still closed, then hands over to the
+       caption as the room appears. Without it the column is empty charcoal
+       and the section looks unfinished until you scroll. */
+    .beco-stage .beco-stage-intro {
+      animation: beco-fade-away linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 34%;
+    }
+
+    @keyframes beco-fade-away {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-24px); }
+    }
+
+    /* The caption arrives only once the room is actually visible. */
+    .beco-stage .beco-stage-caption {
+      animation: beco-rise-in linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 45% contain 70%;
+    }
+
+    .beco-rail-stage .beco-rail-progress {
+      animation: beco-progress linear both;
+      animation-timeline: --beco-rail;
+      animation-range: contain 0% contain 100%;
+      transform-origin: left center;
+    }
+
+    @keyframes beco-progress {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
     }
 
     /* --- The pinned rail. The section is tall, the frame inside it

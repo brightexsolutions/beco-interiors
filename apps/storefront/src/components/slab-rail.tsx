@@ -23,10 +23,12 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
 
   return (
     <section aria-label="The full range" className="border-y border-neutral-200">
-      {/* Tall on desktop, so the sticky frame has scroll distance to consume.
-          Height is what sets how long the rail takes to cross. */}
-      <div className="lg:h-[320vh]">
-        <div className="lg:sticky lg:top-14 lg:flex lg:h-[calc(100vh-3.5rem)] lg:flex-col lg:justify-center">
+      {/* Tall enough for the rail to cross, and no taller. 320vh pinned the
+          page for three full screens with nothing to say how long it would
+          last, which reads as the scroll being stuck rather than as an
+          effect. D31 caps total pinned distance for exactly this reason. */}
+      <div className="beco-rail-stage lg:h-[190vh]">
+        <div className="lg:sticky lg:top-20 lg:flex lg:h-[calc(100vh-5rem)] lg:flex-col lg:justify-center">
           <div className="mx-auto w-full max-w-[1380px] px-6">
             <div className="flex flex-wrap items-end justify-between gap-6 pb-10 pt-20 lg:pt-0">
               <div className="beco-clip">
@@ -60,7 +62,7 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                 return (
                   <li key={product.id} className="w-[64vw] shrink-0 snap-center sm:w-[38vw] lg:w-[22vw]">
                     <Link href={`/product/${product.slug}`} className="group block">
-                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/10">
                         {img ? (
                           <Image
                             src={img.path}
@@ -81,6 +83,14 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                 );
               })}
             </ul>
+          </div>
+
+          {/* How far through the pinned run we are. Without this the page
+              simply stops moving and nothing says for how long. */}
+          <div className="mx-auto mt-8 hidden w-full max-w-[1380px] px-6 lg:block">
+            <div className="h-px w-full bg-neutral-200">
+              <div className="beco-rail-progress h-full w-full origin-left scale-x-0 bg-charcoal" />
+            </div>
           </div>
         </div>
       </div>

@@ -48,7 +48,7 @@ export function SiteHeader() {
           : 'border-b border-transparent bg-transparent',
       )}
     >
-      <div className="mx-auto flex h-14 max-w-[1380px] items-center justify-between gap-6 px-6">
+      <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between gap-6 px-6">
         {/* The real mark from the brand pack, not a typeset approximation.
             The supplied lockup stacks INTERIORS beneath the square, which at
             this header height would be about four pixels tall, so the mark
@@ -60,7 +60,7 @@ export function SiteHeader() {
             width={400}
             height={390}
             priority
-            className="h-7 w-auto"
+            className="h-9 w-auto"
           />
           <span className="hidden font-ui text-sm font-semibold uppercase tracking-[0.26em] text-charcoal sm:block">
             Interiors

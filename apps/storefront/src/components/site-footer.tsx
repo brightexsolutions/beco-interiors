@@ -17,7 +17,7 @@ import { SITE, whatsappLink } from '@/lib/site';
 export function SiteFooter() {
   return (
     <footer className="bg-charcoal text-high-vis-white">
-      <div className="mx-auto max-w-[1380px] px-6 py-20 lg:py-24">
+      <div className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
         <div className="grid gap-12 lg:grid-cols-[1.5fr_auto] lg:items-end lg:gap-20">
           <div>
             <Image

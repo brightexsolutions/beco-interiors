@@ -21,7 +21,7 @@ export default async function ShopPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-20 lg:py-24">
+    <main className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
       <PageHeader
         className="mb-14"
         eyebrow="Everything in stock"

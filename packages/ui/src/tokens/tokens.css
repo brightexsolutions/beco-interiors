@@ -80,8 +80,19 @@
   --text-3xl: 2.75rem;
   --text-4xl: 4rem;
 
-  /* --- Spacing, 8px base. --- */
-  --spacing: 0.5rem;
+  /* --- Spacing.
+     `--spacing` is Tailwind's STEP UNIT, not the grid. It is the value every
+     numeric spacing utility multiplies, so `p-4` is 4 steps.
+
+     This was set to 0.5rem to mean "8px base". That doubled the entire
+     system: h-11 became 88px instead of the 44px touch target, px-6 became
+     48px, and section padding py-28 became 224px. It is the reason the
+     navbar looked oversized and the pages read as acres of empty white.
+
+     The 8px grid comes from using EVEN steps against a 4px unit, which is
+     the convention the utility names assume: p-2 is 8px, p-4 is 16px,
+     py-14 is 56px. --- */
+  --spacing: 0.25rem;
 
   --radius-card: 4px;
   --radius-button: 2px;

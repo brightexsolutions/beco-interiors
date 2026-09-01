@@ -43,7 +43,7 @@ export default async function CategoryPage({ params }: Params) {
   const products = await getProductsByCategory(slug);
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-20 lg:py-24">
+    <main className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
       <nav aria-label="Breadcrumb" className="mb-8">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
