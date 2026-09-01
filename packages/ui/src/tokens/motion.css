@@ -102,6 +102,22 @@
     to   { transform: scale(1); }
   }
 
+  /* --- The hero slab leans, and straightens when you reach for it.
+         A sample board propped against a wall rather than a picture
+         hung flat on one. The straightening on hover is the whole
+         gesture: it reads as the slab being turned toward you.
+
+         Kept off the LCP card's ENTRANCE: this is a resting state and a
+         hover, not an entry animation, so it cannot delay first paint. --- */
+  .beco-lean {
+    transform: perspective(1600px) rotateY(-7deg) rotateX(1.2deg) rotateZ(-0.5deg);
+    transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .beco-lean:hover {
+    transform: perspective(1600px) rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1.01);
+  }
+
   /* --- A single light sweep across a slab as its card settles.
          Motivated, not decoration: sintered stone is a polished surface
          and this is what a polished surface does when it turns under a

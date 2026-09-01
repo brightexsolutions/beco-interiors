@@ -64,9 +64,10 @@ Verification for this milestone was done against a running dev server on
       pointer and on click or Enter for everything else, escape returns focus to the trigger,
       arrows walk the items, click outside dismisses. Every destination exists
 - [ ] Mega menu with real slab thumbnails
-- [ ] **No mobile navigation at all.** The nav is `hidden md:block`, so on a phone there is no
-      way to reach Shop, About or Contact except the logo and the quote button. Found while
-      adding the dropdown
+- [x] **Mobile navigation.** The nav was `hidden md:block`, so on a phone there was no way to
+      reach Shop, Projects, About or Contact at all, and the only route home was knowing the
+      logo is a link. Panel lists Home explicitly, traps focus, escape returns focus to the
+      trigger, locks the page behind it and closes on navigation. **7 tests**
 
 ## The quote flow
 
@@ -146,6 +147,24 @@ Verification for this milestone was done against a running dev server on
       section that earns the effect rather than the hero borrowing it
 - [ ] Cut out hardware parallax. **Content dependency**, nothing is background removed
 - [ ] Verify by hand: reduced motion, and no pinning on a real phone
+
+## Real product data, 1 September 2026
+
+Irene supplied both missing pieces, which closes A9 and the largest content risk on the build.
+
+- [x] **Prices for all 24 stones**, KES 60,000 to 95,000 per slab, with slab size
+      3200 x 1600 x 12mm, unit and availability. The catalogue is no longer POA: products
+      carry a real price, `in_stock`, and the Product schema now emits a price with
+      `InStock`, which makes these pages eligible for rich results
+- [x] **Descriptions for 21 of them**, with finish, body composition and face type. Face type
+      now comes from Beco's own document rather than being inferred from whether a BOOK MATCH
+      photograph happened to exist
+- [ ] Statuario, Statuario Gold and Taj Mahal are priced but have no description yet
+- [ ] Cyprus Grey has a description but is not in the sheet and has no photography
+- [ ] Two more price lists to process: `BECO HANDLES 2 PRICELIST-1 (3).xlsx` and
+      `BECO Product Prices-1 (1).pdf`
+- [ ] **Still no video anywhere in Drive**, so the "video in view" effect has no content. That
+      is a content dependency, not a build gap
 
 ## Found during this milestone, not planned
 

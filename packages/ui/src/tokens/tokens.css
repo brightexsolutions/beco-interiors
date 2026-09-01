@@ -101,6 +101,31 @@
   --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ============================================================
+   BASE
+
+   Tailwind 4 changed the default cursor on buttons from
+   `pointer` to `default`, matching the browser's own UA
+   stylesheet. Every button in the site inherited that, so
+   controls did not announce themselves as clickable.
+
+   Restored here once rather than adding `cursor-pointer` to
+   each control, which is the kind of thing that gets missed
+   on the next component someone writes.
+   ============================================================ */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
 :root {
   --leading-body: 1.6;
   --leading-display: 1.15;

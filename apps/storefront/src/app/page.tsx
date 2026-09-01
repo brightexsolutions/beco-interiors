@@ -205,10 +205,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* --- The pinned rail: twelve stones crossing in one screen, which
-              a vertical grid cannot do without pushing the page down. Not
-              adjacent to the hero, which is the other pinned section. --- */}
-      <SlabRail products={products.slice(8, 20)} />
+      {/* --- The pinned rail. Eight stones rather than twelve: the track
+              crosses roughly 150vw over 190vh of pin instead of 250vw, so the
+              same scroll produces a pan rather than a lurch. That speed is
+              what made the section feel like the page had stuck. Not adjacent
+              to the hero, which is the other pinned section. --- */}
+      <SlabRail products={products.slice(8, 16)} />
 
       <LocalBusinessSchema />
     </main>

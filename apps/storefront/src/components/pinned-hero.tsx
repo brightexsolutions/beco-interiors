@@ -216,7 +216,13 @@ function SlabCard({
   sizes?: string;
 }) {
   return (
-    <Link href={`/product/${slab.slug}`} className="group block w-full">
+    // The lean lives on the link, so the whole card including its plate
+    // turns as one object rather than the photograph tilting inside a
+    // stationary frame.
+    <Link
+      href={`/product/${slab.slug}`}
+      className="beco-lean group block w-full [transform-style:preserve-3d] motion-reduce:!transform-none motion-reduce:transition-none"
+    >
       {/* Height is driven by the space available, not by the card's own
           ratio, so the photograph and its plate are on screen together. A 3:4
           frame in this column came out taller than the viewport on its own. */}

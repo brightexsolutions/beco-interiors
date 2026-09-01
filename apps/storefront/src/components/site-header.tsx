@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { buttonClasses, cn } from '@beco/ui';
+import { MobileMenu } from './mobile-menu';
 import { NavDropdown, type NavItem } from './nav-dropdown';
 import { QuoteCounter } from './quote-counter';
 import { SITE } from '@/lib/site';
@@ -32,7 +33,11 @@ import { SITE } from '@/lib/site';
  */
 const ABOUT: NavItem[] = [
   { href: '/about', label: 'About Beco', description: 'Who we are and what we stock' },
-  { href: '/gallery', label: 'Projects', description: 'Real interiors, photographed on site' },
+  {
+    href: '/shop/12mm-sintered-stones',
+    label: 'Sintered stone',
+    description: 'What the material is and where it works',
+  },
   { href: '/contact', label: 'The showroom', description: 'Urban Square, Industrial Area' },
 ];
 
@@ -92,6 +97,17 @@ export function SiteHeader() {
               </Link>
             </li>
             <li>
+              {/* Projects is top level rather than buried in the menu: real
+                  installations are the strongest trust content on the site
+                  and the thing a specifier looks for first. */}
+              <Link
+                href="/gallery"
+                className="block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
+              >
+                Projects
+              </Link>
+            </li>
+            <li>
               <NavDropdown label="About" items={ABOUT} />
             </li>
             <li>
@@ -105,7 +121,7 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2 sm:gap-5">
           <a
             href={SITE.phoneHref}
             data-analytics="call_click"
@@ -123,9 +139,11 @@ export function SiteHeader() {
               'h-11 min-h-0 px-5 py-0 text-sm tracking-[0.08em]',
             )}
           >
-            Request a quote
+            <span className="hidden sm:inline">Request a quote</span>
+            <span className="sm:hidden">Quote</span>
             <QuoteCounter />
           </Link>
+          <MobileMenu />
         </div>
       </div>
     </header>
