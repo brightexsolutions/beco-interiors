@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { imageConfig, SIZE_BUDGETS } from './config';
+import { budgetForWidth, imageConfig, QUALITY_FLOOR } from './config';
 
 /**
  * Shared Sharp options.
@@ -29,6 +29,8 @@ export interface Derivative {
   format: string;
   body: Buffer;
   bytes: number;
+  /** What it took to fit the budget. Recorded so a drop in quality is visible. */
+  quality: number;
 }
 
 export interface ProcessedImage {
@@ -53,6 +55,50 @@ const qualityForWidth = (w: number): number => {
   return 76;
 };
 
+/**
+ * Encodes down to a byte budget rather than to a fixed quality.
+ *
+ * Starts at the quality a rendition of this width deserves and steps down
+ * only as far as it must, so an easy image keeps its quality and a heavily
+ * veined one pays for its detail. Stops at QUALITY_FLOOR whether or not the
+ * budget was met, and says so, because silently shipping a banded slab is
+ * worse than shipping a heavy one.
+ *
+ * This costs a handful of extra encodes per image, which is affordable
+ * precisely because it happens once at import and never per request.
+ */
+const encodeWithinBudget = async (
+  source: Buffer,
+  targetWidth: number,
+  format: 'webp' | 'avif',
+  budget: number,
+): Promise<{ body: Buffer; quality: number; withinBudget: boolean }> => {
+  let last: { body: Buffer; quality: number } | null = null;
+
+  // Steps of 6 down to the floor, and the floor itself is always tried:
+  // stepping 62, 56, 50 and stopping leaves quality 45 never attempted, so
+  // the floor would be a number in the config that nothing ever reached.
+  const ladder: number[] = [];
+  for (let q = qualityForWidth(targetWidth); q > QUALITY_FLOOR; q -= 6) ladder.push(q);
+  ladder.push(QUALITY_FLOOR);
+
+  for (const q of ladder) {
+    const pipeline = sharp(source, SHARP_OPTS)
+      .rotate()
+      .resize({ width: targetWidth, withoutEnlargement: true });
+    const body =
+      format === 'avif'
+        ? await pipeline.avif({ quality: q, effort: 4 }).toBuffer()
+        : await pipeline.webp({ quality: q, effort: 5 }).toBuffer();
+    last = { body, quality: q };
+    if (body.byteLength <= budget) return { ...last, withinBudget: true };
+  }
+
+  // Never null: the loop always runs at least once, because every starting
+  // quality is above the floor.
+  return { ...last!, withinBudget: false };
+};
+
 export const processImage = async (source: Buffer): Promise<ProcessedImage> => {
   const image = sharp(source, SHARP_OPTS);
   const meta = await image.metadata();
@@ -68,24 +114,23 @@ export const processImage = async (source: Buffer): Promise<ProcessedImage> => {
     // loader asking for -1600.webp gets a 404 whenever a source happened to
     // be narrower. Six of 113 real images hit exactly that.
     const w = Math.min(target, width || target);
+    const budget = budgetForWidth(target);
     for (const format of imageConfig.formats) {
-      const pipeline = sharp(source, SHARP_OPTS)
-        .rotate()                       // honour EXIF orientation
-        .resize({ width: w, withoutEnlargement: true });
-      // Stone veining is high entropy detail and compresses badly, so a flat
-      // quality produced a 1600px slab at 805KB against a 150KB budget.
-      // Quality falls as width rises, which is where the bytes actually are.
-      const q = qualityForWidth(w);
-      const body =
-        format === 'avif'
-          ? await pipeline.avif({ quality: q, effort: 4 }).toBuffer()
-          : await pipeline.webp({ quality: q, effort: 5 }).toBuffer();
+      const { body, quality, withinBudget } = await encodeWithinBudget(source, w, format, budget);
+      if (!withinBudget) {
+        warnings.push(
+          `${target}px ${format} is ${(body.byteLength / 1024).toFixed(0)}KB at quality ` +
+            `${quality}, over its ${(budget / 1024).toFixed(0)}KB budget even at the quality ` +
+            'floor. The source is unusually detailed. Worth a look before launch.',
+        );
+      }
       derivatives.push({
         width: target,        // canonical, for the key
         actualWidth: w,       // truthful, for the srcset descriptor
         format,
         body,
         bytes: body.byteLength,
+        quality,
       });
     }
   }
@@ -100,20 +145,9 @@ export const processImage = async (source: Buffer): Promise<ProcessedImage> => {
     );
   }
 
-  const card = derivatives.find((d) => d.width === Math.min(...imageConfig.widths));
-  if (card && card.bytes > SIZE_BUDGETS.cardBytes) {
-    warnings.push(
-      `card image is ${(card.bytes / 1024).toFixed(0)}KB, over the ` +
-        `${SIZE_BUDGETS.cardBytes / 1024}KB budget`,
-    );
-  }
-  const hero = derivatives.find((d) => d.width === Math.max(...imageConfig.widths));
-  if (hero && hero.bytes > SIZE_BUDGETS.heroBytes) {
-    warnings.push(
-      `hero image is ${(hero.bytes / 1024).toFixed(0)}KB, over the ` +
-        `${SIZE_BUDGETS.heroBytes / 1024}KB budget`,
-    );
-  }
+  // The per rendition check above already reports anything that could not be
+  // brought under budget, and reports it with the quality it took to try. A
+  // second pass here would say the same thing twice in the run report.
 
   const blur = await sharp(source, SHARP_OPTS)
     .rotate()

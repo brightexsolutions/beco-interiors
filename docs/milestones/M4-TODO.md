@@ -1,46 +1,158 @@
 # M4: Storefront
 
-Per CLAUDE.md rule 8. Ticked only when **checked**.
+Per CLAUDE.md rule 8. **Ticked only when checked against reality, not when written.**
+
+Status key: `[x]` verified · `[~]` built but not yet verified · `[ ]` not started
+
+Verification for this milestone was done against a running dev server on
+`localhost:3000` and against the local Supabase database, on 1 September 2026.
+
+---
 
 ## Pages
 
-- [ ] `/` home. Pinned split hero per D30, category rail, signature section
-- [ ] `/shop` and `/shop/[category]`, filters, automatic noindex when empty per D27
-- [ ] `/product/[slug]`, gallery by role, specs, the three conversion actions
-- [ ] `/quote`, the builder and submission
+- [x] `/` home. Pinned split hero per D30, stat band, range grid, application showcase,
+      numbered process list, category browse. **Verified:** 200, LocalBusiness JSON-LD parses,
+      17 images, h1 present
+- [x] `/shop`. **Verified:** 200, renders all 27 products, category nav present
+- [x] `/shop/[category]`. **Verified:** 200 on `12mm-sintered-stones`, breadcrumb JSON-LD parses
+- [x] `/product/[slug]`. **Verified:** 200 on `amber-jade`, Product and BreadcrumbList JSON-LD
+      both parse, 6 gallery images, all four image URLs return 200 with real bytes
+- [x] `/quote`, the builder and submission. **Verified:** 200, renders the empty state
 - [ ] `/team`, sales agents only. **Directors are never flagged public**
 - [ ] `/about`, `/contact`, `/gallery`
 - [ ] Custom 404 and 500 routing back into the catalogue
 
-## From Irene, 31 Aug
+## Brand assets
 
-- [ ] **Sales agents shown, directors not.** A buyer verifying they are talking to a genuine
-      Beco salesperson is fraud prevention, not vanity. `users` gains public facing fields and
-      an explicit opt in flag
-- [ ] **Corporate clients and brands delivered for.** Strongest trust content available, better
-      than testimonials, because "supplied for these firms" is what closes a specifier.
-      **Renders nothing until real data exists**, rather than shipping a placeholder logo wall
-- [ ] Showroom photos and video, once uploaded
-- [ ] Her sales process document lands before M5, and may change the quote lifecycle
+- [x] Logo mark and stacked lockup derived from the brand pack PNG, not the CMYK PDF
+- [x] Header carries the real mark, not a typeset approximation
+- [x] Footer carries the full white lockup
+- [x] `icon.png` and `apple-icon.png`, so no framework default favicon is ever served.
+      **Verified:** both 200, and the head references them
+- [ ] SVG logo derived from the vector source. No `pdftocairo`, `inkscape` or `rsvg` on this
+      machine, so this needs a tool installed or the SVG requesting from the designer
+- [ ] Confirm with Beco that using the mark alone in the header, with INTERIORS set beside it
+      rather than beneath, is acceptable. The supplied lockup is stacked, and at a 60px header
+      height its descriptor would be about four pixels tall
 
-## Two cautions to raise with Beco before the clients section goes live
+## Chrome
 
-- [ ] **Permission to name clients publicly.** Some corporates prohibit it contractually
-- [ ] A logo wall of brands they supplied **must not imply endorsement**. Framing is "projects
-      we have supplied", with named clients only where written permission exists
+- [x] `SiteHeader`, sticky, nav, business line per D39, quote counter. **Verified** rendering
+- [x] `SiteFooter` as a genuine closing section, not link columns. NAP block for local search
+- [x] `MobileActionBar`, quote primary, WhatsApp secondary, call tertiary per D26
+- [ ] Announcement bar per D36, scheduled, server rendered with reserved height
+- [ ] Mega menu with real slab thumbnails
 
-## SEO and conversion, built in rather than added after
+## The quote flow
 
-- [ ] Metadata on every route, canonical, Open Graph
-- [ ] JSON-LD: Product, LocalBusiness, BreadcrumbList, ItemList
-- [ ] Sitemap from the database, empty categories excluded
-- [ ] Filtered URLs canonicalise to the base, `noindex`, per D29
-- [ ] Three conversion actions ranked identically everywhere per D26
-- [ ] `analytics_events` on the full funnel including `call_click`
+- [x] `quote-list.ts`, localStorage, prototype's `beco_quote_cart_v1` key. **11 tests**
+- [x] `AddToQuote`, quantity plus add. **4 tests**, asserting the list actually changed
+- [x] `QuoteCounter` in the header
+- [x] `submitQuote` server action, zod validated, products resolved server side
+- [x] **Submission verified end to end** by integration test against the local database: the
+      row exists, the items exist, the reference is minted, the quote arrives unowned, and a
+      crafted request cannot supply its own description or price. **7 tests**
+- [ ] Confirmation email through Resend
+- [ ] Rate limiting on the endpoint (Cloudflare rule, needs M1 DNS)
 
-## Verify
+## SEO, per D25 and the seo-checklist skill
 
-- [ ] Lighthouse budgets met with motion live
-- [ ] A quote submits end to end and appears in the database
-- [ ] An empty category renders a designed page and carries `noindex`
-- [ ] Pure White, with three images, still reads correctly
+- [x] Metadata API on every route built so far, with title template
+- [x] Canonical on `/shop`, `/shop/[category]`, `/product/[slug]`, `/quote`
+- [x] `meta_title` and `meta_description` overrides honoured on products
+- [x] JSON-LD: LocalBusiness, Product with Offer, BreadcrumbList. **Verified by parsing**
+- [x] D27 automatic index gating: `robots: noindex` when `product_count === 0`
+- [ ] Validate every block in Google's Rich Results Test
+- [ ] `sitemap.xml` from the database, `robots.txt`
+- [ ] D29 filter canonicalisation. **No filters exist yet**, so this is not yet applicable
+- [ ] `ItemList` on category grids
+- [ ] The 301 redirect map. **Blocked:** the old URL list has not arrived
+- [ ] Three blog articles seeded through a migration
+
+## Design system additions
+
+- [x] `Reveal`, fade plus 16px rise, once, collapses under reduced motion
+- [x] `CountUp`, renders the real number server side and only animates up to it
+- [x] `buttonClasses` exported, so a button-styled link stops being hand copied.
+      **Six duplicates removed**
+- [x] `Button` forwards a ref
+- [x] `ConfirmDialog` **rewritten from the M3 scaffold into a working dialog**. The scaffold
+      rendered unconditionally and its Cancel button was wired to nothing, which was itself a
+      decorative control under rule 3. **9 tests** covering escape, backdrop, focus placement
+      and the focus trap
+- [x] `WordReveal`, the hero headline word by word. Pure CSS and a server component, so the
+      most important sentence on the site does not wait for hydration to become visible
+- [x] `motion.css`: CSS scroll driven parallax, scale and crop, and rise. No scroll handler,
+      so none of it costs INP
+- [x] `ProductCard` gains a `frame` variant, so a lead tile is not cropped to 4:5
+- [ ] `Field` and `Input` extracted from the quote form into `@beco/ui`
+- [ ] 16px floor lint rule
+- [ ] SVG logo derived from the vector PDF
+
+## Motion, per D31 and D32
+
+- [x] Pinned split hero on native `position: sticky`, no scroll hijacking, image bleeding to
+      the viewport edge while the type column stays on the 1380px grid
+- [x] Word by word headline reveal, once, on load, nowhere else
+- [x] Parallax on the hero slabs, capped at 8% travel
+- [x] Scale and crop on the application showcase
+- [x] Pin dropped entirely on mobile, replaced by a snap scroll sequence
+- [x] Reveal with 60ms stagger across grids
+- [x] Count up on the stat band
+- [ ] Category rail, pinned with horizontal translate
+- [ ] Cut out hardware parallax. **Content dependency**, nothing is background removed
+- [ ] Verify by hand: reduced motion, and no pinning on a real phone
+
+## Found during this milestone, not planned
+
+These were discovered while building and are recorded rather than remembered.
+
+- [x] **Two category rows for one Drive folder.** The seed wrote slug
+      `sintered-stones-12mm`, the importer derived `12mm-sintered-stones`, and `source_path`
+      was being set to the slug rather than the folder. The empty duplicate would have shipped
+      as a real page. Migration 11 merges them, makes `source_path` the identity with a unique
+      constraint, and repairs provenance from `import_files`. **Verified:** one category, 25
+      products, `source_path = '12MM SINTERED STONES'`
+- [x] **The importer overwrote commercial fields on every run.** `price_display_mode`,
+      `availability`, `unit` and `is_published` were in a blind upsert, so the first nightly
+      import after Beco priced a product would have reset it to POA and republished anything
+      they had hidden. Now it inserts defaults on first sight and thereafter updates only
+      name, category, images and provenance
+- [x] **Seven packages declared a `typecheck` script with no `tsconfig.json`**, so `tsc` printed
+      its help text and exited non zero. Those seven had never been typechecked. All now have
+      one, all nine pass, and `tools/setup/assert-typecheck.mjs` fails CI if it recurs
+- [x] **`server-only` was imported but never declared as a dependency**, so the guard keeping
+      the service role key out of client bundles resolved only by hoisting accident
+- [x] **Image budgets were warned about, never enforced.** Now encoded to a byte budget with a
+      quality ladder down to a floor. See D46 below
+- [x] **jest-dom matchers were never loaded** in `vitest.setup.ts`, and the oxc JSX transform
+      was misconfigured for `apps/`, so no component test in an app could have run
+- [x] **Tailwind never scanned `packages/ui`.** Its source detection starts from the app
+      directory, so every class used only inside the design system was dropped from the
+      stylesheet. It failed loudly in one place and invisibly everywhere else: the primary
+      "Request a quote" button carried `bg-warm-red-deep text-high-vis-white` and rendered
+      white text on white, so the main call to action was present, correctly classed and
+      impossible to see. Fixed with an explicit `@source`, guarded by a test
+- [x] **The public quote form could never have worked.** Anonymous can insert a quote but
+      cannot select one, and PostgREST adds RETURNING whenever the caller asks for the new
+      row, so asking for the reference number failed the whole insert. Replaced with a single
+      security definer function, `submit_quote`, which is atomic and resolves products from
+      the catalogue so no request can put its own description or price on a line
+- [x] **Two `@media` blocks with identical conditions get merged, and the first one's
+      contents were dropped.** Cost the headline animation until the blocks were collapsed
+- [x] **The logo's PDF is CMYK.** It rasterises to `#d9232a` through sips, with or without a
+      forced sRGB profile, while the guideline and `tokens.css` both say `#ed1c24`. The
+      supplied PNG is exactly `#ed1c24`, so the PNG is the source of truth for derived assets
+      and the PDF is not used
+- [ ] **Two slabs cannot meet the 1600px budget** even at the quality floor. Reported as import
+      issues. Needs a look before launch, see D46
+
+## Definition of done, per CLAUDE.md rule 8
+
+- [ ] Every todo above verified
+- [ ] Interaction inventory complete in `docs/QA-CHECKLIST.md` for every storefront screen
+- [ ] `docs/QA-CHECKLIST.md` walked on a real phone
+- [ ] Lighthouse meets every budget with the choreography live
+- [ ] Codex review pass run, findings resolved or explicitly deferred
+- [ ] Documentation written

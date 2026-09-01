@@ -65,6 +65,10 @@ const main = async () => {
   console.log(`  ${result.uploaded} derivatives, ${(result.bytesOut / 1e6).toFixed(1)}MB out`);
   console.log(`  ${(1 - result.bytesOut / Math.max(result.bytesIn, 1)) * 100 | 0}% smaller`);
   console.log(`  ${mins} minutes`);
+  if (result.failures.length) {
+    console.log(`\n  ${result.failures.length} file(s) skipped, recorded in import_issues:`);
+    for (const f of result.failures.slice(0, 8)) console.log(`    ${f}`);
+  }
   if (result.warnings.length) {
     console.log(`\n  ${result.warnings.length} size budget warning(s):`);
     for (const w of result.warnings.slice(0, 10)) console.log(`    ${w}`);

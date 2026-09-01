@@ -96,3 +96,49 @@ way, because reduced motion needs it.
 
 Remaining decisions D4 to D22, D24 to D34 and D36 to D39 are recorded in
 `files/BUILD-PLAN.md` and are migrated here as each becomes load bearing in the code.
+
+## D46, 1 September 2026: image budgets are set per rendition, and encoded to
+
+The plan carried two image budgets, a 60KB product card and a 150KB hero, and the pipeline
+only ever **warned** when it missed them. Measured against the real catalogue, it missed them
+constantly and nobody was reading the warnings.
+
+Two changes.
+
+**The encoder now targets a byte budget rather than a fixed quality.** Weight is driven by
+entropy, not by width: at one flat quality Beverly Gold encoded to 72KB and Bvlgari to 613KB at
+the same target width. So each rendition starts at the quality its width deserves and steps
+down a ladder until it fits, stopping at a quality floor of 45 whether or not it got there. An
+easy image keeps its quality; a heavily veined one pays for its detail. This costs a handful of
+extra encodes per image, which is affordable precisely because it happens once at import and
+never per request.
+
+**The 1600px budget is set from measurement rather than from the plan.** A 44MB scan of heavily
+veined sintered stone at 1600px and 150KB is roughly 0.06 bits per pixel, and it bands. It is
+not achievable, and a budget that is permanently in breach is a budget that gets ignored. So
+the three widths are budgeted by what they are actually for:
+
+| Width | Role | Budget |
+|---|---|---|
+| 400 | Product card | 60KB, unchanged. Every stone now meets it |
+| 800 | The LCP element on a phone, which is the device the LCP budget is measured on | 150KB, the original hero number, unchanged |
+| 1600 | Desktop retina and gallery detail. Never the measured LCP element, and everything but the first is lazy loaded | 450KB |
+
+Two slabs still exceed 450KB at 1600px even at the quality floor. They are recorded as import
+issues rather than silently shipped, and they need a look before launch: the likely answer is
+that those two sources want reshooting or downscaling, not that the budget is wrong.
+
+*Reverses if:* Lighthouse shows the 1600px rendition is in fact the LCP element on the measured
+profile, in which case the hero's largest served width gets capped instead of the budget raised.
+
+## Open tension to resolve on a real device: the hero pin on mobile
+
+D30 drops the hero pin entirely on mobile in favour of type then a swipe sequence, which is
+what is built. D31 was later revised to **keep** pinning on mobile with a capped scroll
+distance, on the grounds that mobile is most of the traffic and sticky is not what makes mobile
+scrolling bad.
+
+Those two do not currently agree for the hero specifically. The swipe sequence is built and
+works, and D31's own revision says it reverses on how it feels on a real device during M4, so
+this is settled by looking at it on a phone rather than by argument. Recorded so it is a known
+open question and not an oversight.

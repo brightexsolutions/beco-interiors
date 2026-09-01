@@ -17,7 +17,15 @@ export interface PlannedFile {
   /** Carried through so the download cache can key on content, not just id. */
   md5: string | null;
   categorySlug: string;
+  /**
+   * The Drive folder name, verbatim. This is the category's IDENTITY, not the
+   * slug, which is derived and which an editor may later change. Matching on
+   * the slug is what produced two category rows for one Drive folder.
+   */
+  categoryPath: string;
   productSlug: string;
+  /** The Drive folder path, verbatim, so provenance survives a slug change. */
+  productPath: string;
   productName: string;
   role: ImageRole;
   outcome: Classified['outcome'];
@@ -141,6 +149,8 @@ export const buildPlan = (
       md5: c.file.md5 ?? null,
       path: c.file.path,
       categorySlug: slugify(categoryFolder),
+      categoryPath: categoryFolder,
+      productPath: `${categoryFolder}/${productFolder}`,
       productSlug,
       productName: titleise(productFolder),
       role,

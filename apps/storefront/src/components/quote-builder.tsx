@@ -1,0 +1,309 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useState, useTransition } from 'react';
+import { Button, ConfirmDialog, EmptyState, buttonClasses } from '@beco/ui';
+import {
+  clearList, lineCount, readList, removeLine, setQuantity, subscribe,
+  type QuoteLine,
+} from '@/lib/quote-list';
+import { submitQuote, type SubmitResult } from '@/app/quote/actions';
+import { SITE, whatsappLink } from '@/lib/site';
+
+/**
+ * The quote builder.
+ *
+ * No account, and only two required fields, because every extra required
+ * field is a reason to leave. On success the list is cleared and the reference
+ * is shown with a WhatsApp handoff, so the conversation can continue in the
+ * channel most buyers here actually use.
+ */
+export function QuoteBuilder() {
+  const [lines, setLines] = useState<QuoteLine[]>([]);
+  const [mounted, setMounted] = useState(false);
+  const [result, setResult] = useState<SubmitResult | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const update = () => setLines(readList());
+    update();
+    setMounted(true);
+    return subscribe(update);
+  }, []);
+
+  // The list is in localStorage, so the server cannot know it. Rendering
+  // nothing until mounted avoids showing an empty state to someone who has a
+  // full list.
+  if (!mounted) return <div className="min-h-[40vh]" aria-busy="true" />;
+
+  if (result?.ok) {
+    return (
+      <div className="max-w-[60ch] py-8">
+        <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+          Request received
+        </p>
+        <h2 className="mt-4 font-display text-4xl leading-tight text-charcoal">
+          We have it. Reference {result.reference}.
+        </h2>
+        <p className="mt-4 text-base text-neutral-700">
+          Our team is pricing it now and will come back to you on the number you gave us. If it
+          is urgent, send us the reference on WhatsApp and we will pick it up straight away.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <a
+            href={whatsappLink(`my quote ${result.reference}`)}
+            data-analytics="whatsapp_click"
+            className={buttonClasses({ variant: 'primary' })}
+          >
+            Send the reference on WhatsApp
+          </a>
+          <Link href="/shop" className={buttonClasses({ variant: 'outline' })}>
+            Keep browsing
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (lines.length === 0) {
+    return (
+      <EmptyState
+        title="Your quote list is empty"
+        description="Add the materials your project needs and we will price the whole list at once."
+        action={
+          <Link href="/shop" className={buttonClasses({ variant: 'primary' })}>
+            Browse the range
+          </Link>
+        }
+      />
+    );
+  }
+
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const payload = {
+      customerName: String(form.get('customerName') ?? ''),
+      customerPhone: String(form.get('customerPhone') ?? ''),
+      customerEmail: String(form.get('customerEmail') ?? ''),
+      company: String(form.get('company') ?? '') || undefined,
+      projectType: String(form.get('projectType') ?? '') || undefined,
+      fulfilment: (String(form.get('fulfilment') ?? '') || undefined) as
+        | 'pickup' | 'delivery' | undefined,
+      deliveryAddress: String(form.get('deliveryAddress') ?? '') || undefined,
+      projectDetails: String(form.get('projectDetails') ?? '') || undefined,
+      items: lines.map((l) => ({ slug: l.slug, quantity: l.quantity })),
+    };
+    startTransition(async () => {
+      const outcome = await submitQuote(payload);
+      setResult(outcome);
+      if (outcome.ok) clearList();
+    });
+  };
+
+  const fieldError = (name: string) =>
+    !result?.ok && result?.fieldErrors?.[name]?.[0] ? result.fieldErrors[name][0] : undefined;
+
+  return (
+    <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+      {/* --- The list --- */}
+      <section aria-labelledby="list-heading">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 id="list-heading" className="font-display text-2xl text-charcoal">
+            {lineCount(lines)} item{lineCount(lines) === 1 ? '' : 's'}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setConfirmClear(true)}
+            className="font-ui text-sm font-semibold text-neutral-500 underline-offset-4 hover:text-warm-red-deep hover:underline"
+          >
+            Clear the list
+          </button>
+        </div>
+
+        <ul className="mt-6 border-t border-neutral-200">
+          {lines.map((line) => (
+            <li key={line.slug} className="flex gap-4 border-b border-neutral-200 py-5">
+              <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-neutral-100">
+                {line.image ? (
+                  <Image src={line.image} alt="" fill sizes="64px" className="object-cover" />
+                ) : null}
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
+                <div className="flex items-start justify-between gap-4">
+                  <Link
+                    href={`/product/${line.slug}`}
+                    className="font-display text-xl leading-tight text-charcoal hover:text-warm-red-deep"
+                  >
+                    {line.name}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => removeLine(line.slug)}
+                    aria-label={`Remove ${line.name} from your quote list`}
+                    className="shrink-0 font-ui text-sm text-neutral-500 underline-offset-4 hover:text-warm-red-deep hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-stretch rounded-[2px] border border-neutral-300">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(line.slug, line.quantity - 1)}
+                      aria-label={`Decrease quantity of ${line.name}`}
+                      className="flex h-11 w-11 items-center justify-center text-xl text-charcoal"
+                    >
+                      &minus;
+                    </button>
+                    <span className="flex h-11 w-12 items-center justify-center border-x border-neutral-300 font-ui text-base tabular-nums">
+                      {line.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(line.slug, line.quantity + 1)}
+                      aria-label={`Increase quantity of ${line.name}`}
+                      className="flex h-11 w-11 items-center justify-center text-xl text-charcoal"
+                    >
+                      +
+                    </button>
+                  </div>
+                  {line.unit ? (
+                    <span className="font-ui text-sm text-neutral-500">{line.unit}</span>
+                  ) : null}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-6 max-w-[58ch] font-ui text-sm text-neutral-500">
+          Everything here is priced on request, so there is no total to show yet. We will send an
+          itemised quote with delivery or collection set out.
+        </p>
+      </section>
+
+      {/* --- The form --- */}
+      <section aria-labelledby="details-heading">
+        <h2 id="details-heading" className="font-display text-2xl text-charcoal">
+          Where should we send it?
+        </h2>
+        <p className="mt-2 max-w-[52ch] font-ui text-sm text-neutral-500">
+          Your name and phone number are all we genuinely need. Everything else just helps us
+          price it faster.
+        </p>
+
+        <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5">
+          <Field label="Your name" name="customerName" required error={fieldError('customerName')} />
+          <Field
+            label="Phone number" name="customerPhone" type="tel" required
+            autoComplete="tel" placeholder="0722 000 000" error={fieldError('customerPhone')}
+          />
+          <Field
+            label="Email" name="customerEmail" type="email" autoComplete="email"
+            error={fieldError('customerEmail')} hint="Optional"
+          />
+          <Field label="Company" name="company" hint="Optional" error={fieldError('company')} />
+          <Field
+            label="What is the project?" name="projectType" hint="Optional, for example a kitchen refit"
+            error={fieldError('projectType')}
+          />
+
+          <fieldset>
+            <legend className="font-ui text-sm font-semibold text-charcoal">
+              Collection or delivery?
+            </legend>
+            <div className="mt-2 flex gap-6">
+              {[['pickup', 'I will collect'], ['delivery', 'Please deliver']].map(([value, label]) => (
+                <label key={value} className="flex min-h-11 items-center gap-2 font-ui text-base">
+                  <input type="radio" name="fulfilment" value={value} className="h-4 w-4 accent-[var(--color-warm-red-deep)]" />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <Field
+            label="Delivery address" name="deliveryAddress" hint="Optional"
+            error={fieldError('deliveryAddress')}
+          />
+
+          <div>
+            <label htmlFor="projectDetails" className="block font-ui text-sm font-semibold text-charcoal">
+              Anything else we should know?
+              <span className="ml-2 font-normal text-neutral-500">Optional</span>
+            </label>
+            <textarea
+              id="projectDetails" name="projectDetails" rows={4}
+              className="mt-2 block w-full rounded-[2px] border border-neutral-300 px-3 py-2.5 font-ui text-base text-charcoal focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red"
+            />
+          </div>
+
+          {result && !result.ok ? (
+            <p role="alert" className="rounded-[2px] border border-error px-4 py-3 font-ui text-base text-error">
+              {result.error}
+            </p>
+          ) : null}
+
+          <Button type="submit" variant="primary" size="large" disabled={pending} className="w-full">
+            {pending ? 'Sending…' : 'Send my request'}
+          </Button>
+
+          <p className="font-ui text-sm text-neutral-500">
+            Would rather talk? Call{' '}
+            <a href={SITE.phoneHref} data-analytics="call_click" className="font-semibold text-charcoal underline-offset-4 hover:underline">
+              {SITE.phone}
+            </a>
+            .
+          </p>
+        </form>
+      </section>
+
+      <ConfirmDialog
+        open={confirmClear}
+        onOpenChange={setConfirmClear}
+        title="Clear your quote list?"
+        description={`This removes all ${lineCount(lines)} items. It cannot be undone.`}
+        confirmLabel="Clear the list"
+        destructive
+        onConfirm={() => {
+          clearList();
+          setConfirmClear(false);
+        }}
+      />
+    </div>
+  );
+}
+
+function Field({
+  label, name, type = 'text', required, hint, error, placeholder, autoComplete,
+}: {
+  label: string; name: string; type?: string; required?: boolean;
+  hint?: string; error?: string | undefined; placeholder?: string; autoComplete?: string;
+}) {
+  const errorId = `${name}-error`;
+  return (
+    <div>
+      <label htmlFor={name} className="block font-ui text-sm font-semibold text-charcoal">
+        {label}
+        {hint ? <span className="ml-2 font-normal text-neutral-500">{hint}</span> : null}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        required={required}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        className="mt-2 block h-11 w-full rounded-[2px] border border-neutral-300 px-3 font-ui text-base text-charcoal focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red aria-invalid:border-error"
+      />
+      {error ? (
+        <p id={errorId} className="mt-1.5 font-ui text-sm text-error">{error}</p>
+      ) : null}
+    </div>
+  );
+}

@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../lib/cn';
 
@@ -43,9 +44,32 @@ const button = cva(
   },
 );
 
+/**
+ * The same styles, for when the control is genuinely a link.
+ *
+ * A quote call to action that navigates must be an `<a>`, not a button with an
+ * onClick, or it loses middle click, open in new tab, and the status bar
+ * preview. Exported as classes rather than as a component so this package
+ * stays free of next/link, the same reason ProductCard takes its image as a
+ * node.
+ *
+ * Anything that looks like a button must come from here. Hand written copies
+ * of these classes are how the primary action ends up a different red on one
+ * page than on another.
+ */
+export const buttonClasses = button;
+
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof button>;
 
-export function Button({ className, variant, size, ...props }: ButtonProps) {
-  return <button className={cn(button({ variant, size }), className)} {...props} />;
-}
+/**
+ * Forwards its ref, so a dialog can place initial focus on a specific button.
+ * Without this, ConfirmDialog cannot put focus on Cancel, which is the whole
+ * reason Cancel comes first.
+ */
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { className, variant, size, ...props },
+  ref,
+) {
+  return <button ref={ref} className={cn(button({ variant, size }), className)} {...props} />;
+});

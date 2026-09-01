@@ -21,11 +21,13 @@ on conflict (key) do update set value = excluded.value;
 insert into categories (id, name, slug, description, is_published, source_path)
 values (
   '00000000-0000-0000-0000-0000000000c1',
-  '12mm Sintered Stones', 'sintered-stones-12mm',
+  -- Slug derived from the Drive folder, matching what the importer
+  -- produces. A hand written slug here split this category in two.
+  '12mm Sintered Stones', '12mm-sintered-stones',
   null,   -- real copy comes from Beco. A grid alone does not rank.
   true,
   '12MM SINTERED STONES'
-) on conflict (slug) do nothing;
+) on conflict (source_path) do nothing;
 
 -- The 24 real stones, with their real Drive folder names.
 --

@@ -1,3 +1,7 @@
+// Matchers like toBeInTheDocument and toHaveFocus. Without this import they
+// are missing and every assertion using one fails as "Invalid Chai property",
+// which reads like a typo rather than a missing setup.
+import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 

@@ -1,6 +1,7 @@
 import Image from 'next/image';
-import { ProductCard, EmptyState, Button } from '@beco/ui';
-import { getPublishedProducts, primaryImage } from '@/lib/products';
+import Link from 'next/link';
+import { ProductCard, EmptyState, buttonClasses } from '@beco/ui';
+import { getPublishedProducts, primaryImage, blurProps } from '@/lib/products';
 
 /**
  * The real catalogue, read from the database with the anon key.
@@ -40,7 +41,11 @@ export default async function CataloguePage() {
           title="This range is coming soon"
           description="We are photographing it now. In the meantime our team can advise on
                        specification and pricing directly."
-          action={<Button variant="primary">Request a quote</Button>}
+          action={
+            <Link href="/quote" className={buttonClasses({ variant: 'primary' })}>
+              Request a quote
+            </Link>
+          }
         />
       ) : (
         <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -66,8 +71,7 @@ export default async function CataloguePage() {
                       height={img.height}
                       // Explicit dimensions and a blur placeholder, so nothing
                       // reflows as the image arrives.
-                      placeholder={img.blur ? 'blur' : 'empty'}
-                      blurDataURL={img.blur}
+                      {...blurProps(img)}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       className="h-full w-full object-cover"
                     />

@@ -22,18 +22,29 @@ export interface ProductCardProps {
   unit?: string | null | undefined;
   availability?: 'in_stock' | 'pre_order' | 'poa' | undefined;
   badge?: 'hot' | 'new' | 'sale' | 'clearance' | null | undefined;
+  /**
+   * The frame's shape. `portrait` is the default 4:5 grid card. `wide` is for
+   * a lead tile spanning more than one column, where a 4:5 crop would be
+   * absurdly tall. The frame is fixed either way, so the grid never shifts.
+   */
+  frame?: 'portrait' | 'wide' | undefined;
   className?: string | undefined;
 }
+
+const FRAME = {
+  portrait: 'aspect-[4/5]',
+  wide: 'aspect-[4/5] sm:aspect-[16/11]',
+} as const;
 
 const BADGE_LABEL = { hot: 'Popular', new: 'New', sale: 'Sale', clearance: 'Clearance' } as const;
 
 export function ProductCard({
   name, href, image, priceDisplayMode, price, compareAtPrice, unit,
-  availability = 'poa', badge, className,
+  availability = 'poa', badge, frame = 'portrait', className,
 }: ProductCardProps) {
   return (
     <a href={href} className={cn('group block focus:outline-none', className)}>
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100">
+      <div className={cn('relative w-full overflow-hidden bg-neutral-100', FRAME[frame])}>
         <div className="h-full w-full transition-transform duration-[600ms] ease-brand group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">
           {image}
         </div>
@@ -45,7 +56,8 @@ export function ProductCard({
       </div>
 
       <div className="pt-4">
-        <h3 className="font-display text-xl leading-tight text-charcoal">
+        <h3 className={cn('font-display leading-tight text-charcoal',
+                          frame === 'wide' ? 'text-2xl' : 'text-xl')}>
           <span className="relative inline-block">
             {name}
             {/* The hover affordance: a hairline draws in, nothing moves. */}

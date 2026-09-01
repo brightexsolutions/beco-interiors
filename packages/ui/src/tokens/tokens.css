@@ -1,5 +1,29 @@
 @import 'tailwindcss';
 @import '../fonts/fonts.css';
+@import './motion.css';
+
+/* ============================================================
+   SOURCES
+
+   Tailwind 4 detects sources automatically, starting from the
+   directory the build runs in. That is `apps/storefront`, so
+   `packages/ui` was never scanned and EVERY class used only
+   inside the design system was silently dropped from the
+   output.
+
+   It failed loudly in exactly one place and invisibly
+   everywhere else: the primary button carries
+   `bg-warm-red-deep text-high-vis-white`, and with the
+   background missing it rendered white text on white. The
+   main "Request a quote" call to action was present in the
+   HTML, correctly classed, and impossible to see.
+
+   So the design system names itself as a source. Without this
+   line, a component can only use classes that some app
+   happens to use too, which defeats the point of having a
+   component package at all.
+   ============================================================ */
+@source "../";
 
 /* ============================================================
    BECO DESIGN TOKENS

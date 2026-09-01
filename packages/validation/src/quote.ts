@@ -36,3 +36,31 @@ export const quoteSubmissionSchema = z.object({
 });
 
 export type QuoteSubmission = z.infer<typeof quoteSubmissionSchema>;
+
+/**
+ * What the PUBLIC quote form is allowed to send.
+ *
+ * Deliberately narrower than `quoteSubmissionSchema`, which is the counter
+ * form used by staff. A web visitor sends a product SLUG and a quantity and
+ * nothing else about the product: the name, the price and the product id are
+ * all resolved on the server from the database.
+ *
+ * If the browser were trusted for the description or the price, a crafted
+ * request could put any text and any figure onto a document that goes out on
+ * Beco's letterhead.
+ */
+export const webQuoteSubmissionSchema = quoteSubmissionSchema
+  .omit({ items: true })
+  .extend({
+    items: z
+      .array(
+        z.object({
+          slug: z.string().trim().min(1).max(120),
+          quantity: z.number().int().positive().max(10000),
+        }),
+      )
+      .min(1, 'Add at least one product')
+      .max(60, 'That is more items than a quote can carry. Call us instead.'),
+  });
+
+export type WebQuoteSubmission = z.infer<typeof webQuoteSubmissionSchema>;

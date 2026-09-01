@@ -1,4 +1,4 @@
-export { Button, type ButtonProps } from './components/button';
+export { Button, buttonClasses, type ButtonProps } from './components/button';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
 export { PriceDisplay, formatPrice, type PriceDisplayProps } from './components/price-display';
 export { AvailabilityBadge, type AvailabilityBadgeProps } from './components/availability-badge';
@@ -8,6 +8,9 @@ export {
   type ProductGalleryProps, type GalleryImage, type GalleryRole,
 } from './components/product-gallery';
 export { EmptyState, LoadingState, ErrorState } from './components/states';
+export { Reveal, type RevealProps } from './components/reveal';
+export { CountUp, type CountUpProps } from './components/count-up';
+export { WordReveal, type WordRevealProps } from './components/word-reveal';
 export { cn } from './lib/cn';
 export { PALETTE } from './tokens/palette';
 export { contrastRatio, PAIRS } from './tokens/contrast-check';

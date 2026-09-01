@@ -29,6 +29,8 @@ export interface RunResult {
   bytesIn: number;
   bytesOut: number;
   warnings: string[];
+  /** Files that could not be processed. Recorded, never fatal. */
+  failures: string[];
 }
 
 export const executePlan = async (
@@ -55,15 +57,20 @@ export const executePlan = async (
   }
 
   // Category, from the folder name, so the taxonomy stays traceable.
-  const categorySlugs = [...new Set(plan.files.map((f) => f.categorySlug))];
-  for (const slug of categorySlugs) {
+  // A category is identified by the Drive folder it came from, never by its
+  // slug. The slug is derived, and it is editable in the dashboard, so keying
+  // on it means an edited slug reappears as a second category on the next run.
+  // That already happened once: the seeded row and an imported row described
+  // the same folder, and the empty one would have shipped as a real page.
+  const categories = new Map(plan.files.map((f) => [f.categoryPath, f.categorySlug]));
+  for (const [sourcePath, slug] of categories) {
     await sb.from('categories').upsert(
-      { slug, name: titleise(slug.replace(/-/g, ' ')), is_published: true, source_path: slug },
-      { onConflict: 'slug', ignoreDuplicates: true },
+      { slug, name: titleise(slug.replace(/-/g, ' ')), is_published: true, source_path: sourcePath },
+      { onConflict: 'source_path', ignoreDuplicates: true },
     );
   }
-  const { data: cats } = await sb.from('categories').select('id,slug');
-  const catId = new Map((cats ?? []).map((c) => [c.slug, c.id]));
+  const { data: cats } = await sb.from('categories').select('id,source_path');
+  const catId = new Map((cats ?? []).map((c) => [c.source_path, c.id]));
 
   // Group by product so each one is written once with its full gallery.
   const byProduct = new Map<string, PlannedFile[]>();
@@ -76,6 +83,7 @@ export const executePlan = async (
   const ROLE_ORDER = ['slab', 'on_stand', 'bookmatch', 'application', 'unknown'] as const;
   let downloaded = 0, uploaded = 0, bytesIn = 0, bytesOut = 0, cacheHits = 0;
   const warnings: string[] = [];
+  const failures: string[] = [];
 
   for (const [productSlug, files] of byProduct) {
     const first = files[0]!;
@@ -91,6 +99,12 @@ export const executePlan = async (
 
       if (!file.needsDownload) continue;
 
+      // One bad file must never kill a whole run. Sharp's prebuilt binary
+      // cannot decode iPhone HEIC, and a single such file was aborting the
+      // entire import after twenty minutes of downloading. Now it is recorded
+      // as an issue and the run continues, which is the same principle as
+      // never guessing a role: report and carry on.
+      try {
       // Cache hit means a db reset does not cost a re-download of 44MB.
       const cached = readCache(file.driveFileId, file.md5 ?? null);
       const bytes = cached ?? (await source.download(file.driveFileId));
@@ -133,7 +147,7 @@ export const executePlan = async (
       await sb.from('import_files').upsert({
         drive_file_id: file.driveFileId,
         path: file.path,
-        md5_checksum: null,
+        md5_checksum: file.md5,
         size_bytes: bytes.byteLength,
         product_id: null,
         role: file.role === 'unknown' ? null : file.role,
@@ -141,20 +155,60 @@ export const executePlan = async (
         last_seen_at: new Date().toISOString(),
         imported_at: new Date().toISOString(),
       }, { onConflict: 'drive_file_id' });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const heic = /heif|heic/i.test(message);
+        failures.push(file.path);
+        await sb.from('import_issues').insert({
+          run_id: runId,
+          path: file.path,
+          reason: heic
+            ? 'HEIC could not be decoded. iPhone photographs need converting to JPEG, or the ' +
+              'camera set to Settings, Camera, Formats, Most Compatible. Skipped, and the rest ' +
+              'of the run continued.'
+            : `Could not process: ${message}. Skipped, and the rest of the run continued.`,
+          detail: { error: message },
+        });
+        log(`  SKIPPED  ${file.path}  ${heic ? 'HEIC cannot be decoded' : message}`);
+      }
     }
 
     if (images.length) {
-      await sb.from('products').upsert({
+      // The importer owns photographs and provenance. It does NOT own
+      // commercial fields.
+      //
+      // A blind upsert rewrote price_display_mode, availability, unit and
+      // is_published on every run, so the first nightly import after Beco
+      // priced a product would have reset it to POA and republished anything
+      // they had deliberately hidden. Drive knows what a stone looks like; it
+      // does not know what it costs.
+      //
+      // So: defaults on first sight only, and thereafter only the fields Drive
+      // is actually the authority for.
+      const owned = {
         name: first.productName,
-        slug: productSlug,
-        category_id: catId.get(first.categorySlug) ?? null,
-        price_display_mode: 'poa',
-        availability: 'poa',
-        unit: 'per slab',
-        is_published: true,
+        category_id: catId.get(first.categoryPath) ?? null,
         images,
-        source_path: `${first.categorySlug}/${productSlug}`,
-      }, { onConflict: 'slug' });
+        source_path: first.productPath,
+      };
+
+      const { data: existing } = await sb
+        .from('products')
+        .select('id')
+        .eq('slug', productSlug)
+        .maybeSingle();
+
+      if (existing) {
+        await sb.from('products').update(owned).eq('id', existing.id);
+      } else {
+        await sb.from('products').insert({
+          ...owned,
+          slug: productSlug,
+          price_display_mode: 'poa',
+          availability: 'poa',
+          is_published: true,
+        });
+      }
     }
   }
 
@@ -165,5 +219,5 @@ export const executePlan = async (
   }).eq('id', runId);
 
   return { runId, downloaded, cacheHits, uploaded, productsTouched: byProduct.size,
-           bytesIn, bytesOut, warnings };
+           bytesIn, bytesOut, warnings, failures };
 };
