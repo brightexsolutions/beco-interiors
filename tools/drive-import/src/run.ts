@@ -6,6 +6,7 @@ import { assessQuality } from './quality';
 import { createStorage } from './storage';
 import { slugify, titleise } from './slug';
 import { readCache, writeCache } from './cache';
+import { toDecodable } from './decode';
 
 /**
  * Executes an import plan: downloads only what changed, generates derivatives,
@@ -117,10 +118,20 @@ export const executePlan = async (
       log(`  ${productSlug}  ${file.path.split('/').pop()}${cached ? '  (cached)' : ''}`);
       bytesIn += bytes.byteLength;
 
-      const quality = await assessQuality(bytes, file.path);
+      // HEIC is not an edge case here: it is every photograph taken on an
+      // iPhone with default settings, and all of Beco's hardware photography.
+      // Sharp's prebuilt binary cannot decode it, so it is transcoded ONCE,
+      // here, before anything else looks at the pixels.
+      //
+      // Decoding immediately before processImage was not enough: assessQuality
+      // reads the image too, and it ran first, so every HEIC still failed on
+      // the line above the fix.
+      const decoded = toDecodable(bytes, file.path);
+
+      const quality = await assessQuality(decoded, file.path);
       for (const w of quality.warnings) warnings.push(w);
 
-      const processed = await processImage(bytes);
+      const processed = await processImage(decoded);
       for (const d of processed.derivatives) {
         await storage.upload(`${keyBase}-${d.width}.${d.format}`, d.body, `image/${d.format}`);
         uploaded++;
@@ -131,7 +142,12 @@ export const executePlan = async (
       images.push({
         role: file.role,
         path: keyBase,
-        alt: `${titleise(productSlug.replace(/-/g, ' '))} sintered stone, ${file.role.replace('_', ' ')}`,
+        // The product's own category, never the flagship one. This said
+        // "sintered stone" for every product in the catalogue, so a brass
+        // handle was described as stone to a screen reader and to search.
+        alt: `${titleise(productSlug.replace(/-/g, ' '))}, ` +
+             `${titleise(first.categorySlug.replace(/-/g, ' '))}, ` +
+             `${file.role.replace('_', ' ')}`,
         width: processed.width,
         height: processed.height,
         blur: processed.blurDataUrl,

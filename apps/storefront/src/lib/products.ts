@@ -52,6 +52,14 @@ export const getPublishedProducts = async (): Promise<CatalogueProduct[]> => {
 /** The gallery order is the order a specifier reads a material in. */
 const ROLE_ORDER = ['slab', 'on_stand', 'bookmatch', 'application', 'unknown'] as const;
 
+/** Every image, in the order a specifier reads a material. */
+export const orderedImages = (p: CatalogueProduct): ProductImage[] =>
+  [...(p.images ?? [])].sort(
+    (a, b) =>
+      ROLE_ORDER.indexOf(a.role as (typeof ROLE_ORDER)[number]) -
+      ROLE_ORDER.indexOf(b.role as (typeof ROLE_ORDER)[number]),
+  );
+
 export const primaryImage = (p: CatalogueProduct): ProductImage | undefined =>
   [...(p.images ?? [])].sort(
     (a, b) =>

@@ -170,8 +170,21 @@ Irene supplied both missing pieces, which closes A9 and the largest content risk
       45MB file on a Nairobi mobile connection is unusable, so they need transcoding to MP4
       and WebM at roughly 2 to 5MB per loop with a poster frame extracted. **ffmpeg is not
       installed on this machine**, so that step cannot run here yet
-- [ ] Office accessories photography has landed in Drive. The category is already seeded, so
-      the next import run picks it up
+- [x] **HEIC is decodable now.** Sharp's prebuilt binary cannot read iPhone HEIC and was
+      skipping 124 photographs, which was all of Beco's hardware range. Converted through
+      macOS `sips` first, detected by MAGIC BYTES rather than by filename: extension matching
+      failed silently three runs in a row because the path carried through the pipeline is not
+      always the leaf file. Handles went from 2 products to 6. **Linux CI still needs a Sharp
+      build with libheif**
+- [ ] **Office accessories cannot import yet.** All 27 photographs sit loose in the category
+      folder with no product subfolders, so there is nothing to name a product after. The
+      pipeline reports rather than guesses, which is correct, but it needs Noel to create a
+      folder per product. This is what `docs/CONTENT-CONVENTIONS.md` exists for
+- [ ] **The handles price list is a supplier cost sheet, not a retail list.** Codes like
+      A7355-96(H52), Chinese colour names, pack quantities, and a second sheet of unit costs
+      that look like USD. Which column is the KES retail price is not stated, and the codes do
+      not match the photographed folder names. Loading it would put guessed prices on a live
+      site, so it needs Beco to confirm before anything is imported
 
 ## Found during this milestone, not planned
 

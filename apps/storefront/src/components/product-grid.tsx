@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { ProductCard, Reveal } from '@beco/ui';
-import { primaryImage, type CatalogueProduct, blurProps } from '@/lib/products';
+import { QuickAddToQuote } from './quick-add-to-quote';
+import { orderedImages, primaryImage, type CatalogueProduct, blurProps } from '@/lib/products';
 
 /**
  * The grid, in one place, because it is the same on the home page, on /shop
@@ -12,6 +13,9 @@ export function ProductGrid({ products }: { products: CatalogueProduct[] }) {
     <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((p, i) => {
         const img = primaryImage(p);
+        // Up to four frames, cycled on hover. More than that and the card
+        // becomes a slideshow nobody asked to watch.
+        const frames = orderedImages(p).slice(0, 4);
         return (
           <Reveal key={p.id} delay={(i % 4) * 60}>
             <ProductCard
@@ -23,6 +27,22 @@ export function ProductGrid({ products }: { products: CatalogueProduct[] }) {
               unit={p.unit}
               availability={p.availability}
               badge={p.badge}
+              action={
+                <QuickAddToQuote
+                  line={{ slug: p.slug, name: p.name, unit: p.unit, image: img?.path ?? null }}
+                />
+              }
+              images={frames.map((f) => (
+                <Image
+                  key={f.path}
+                  src={f.path}
+                  alt=""
+                  fill
+                  {...blurProps(f)}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-cover"
+                />
+              ))}
               image={
                 img ? (
                   <Image
