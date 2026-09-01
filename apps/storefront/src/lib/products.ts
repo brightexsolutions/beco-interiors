@@ -21,6 +21,8 @@ export interface CatalogueProduct {
   images: ProductImage[];
   /** The real category, so a card never has to guess what it is showing. */
   category?: { name: string; slug: string } | null;
+  /** Carried on the list query so the shop can facet on finish. */
+  specs?: Record<string, string> | null;
 }
 
 const anon = () =>
@@ -34,7 +36,7 @@ export const getPublishedProducts = async (): Promise<CatalogueProduct[]> => {
   const { data, error } = await anon()
     .from('products')
     .select(
-      'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,' +
+      'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,specs,' +
         'categories(name,slug)',
     )
     .order('name');

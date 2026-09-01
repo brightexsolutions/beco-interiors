@@ -14,7 +14,10 @@ Verification for this milestone was done against a running dev server on
 - [x] `/` home. Pinned split hero per D30, stat band, range grid, application showcase,
       numbered process list, category browse. **Verified:** 200, LocalBusiness JSON-LD parses,
       17 images, h1 present
-- [x] `/shop`. **Verified:** 200, renders all 27 products, category nav present
+- [x] `/shop`. Search, category and finish facets, and price sort, with the URL as the source
+      of truth so the grid stays server rendered and every filtered view is shareable.
+      **Verified:** 31 cards bare, 2 for `?q=calc`, 6 for `?category=handles`, 4 for
+      `?finish=Polished`, and price-desc orders 95,000 then 85,000 then 75,000
 - [x] `/shop/[category]`. **Verified:** 200 on `12mm-sintered-stones`, breadcrumb JSON-LD parses
 - [x] `/product/[slug]`. **Verified:** 200 on `amber-jade`, Product and BreadcrumbList JSON-LD
       both parse, 6 gallery images, all four image URLs return 200 with real bytes
@@ -91,7 +94,9 @@ Verification for this milestone was done against a running dev server on
 - [ ] Validate every block in Google's Rich Results Test
 - [x] `sitemap.xml` from the database, `robots.txt`. **Verified:** 33 URLs, only categories
       that hold products, `/quote` excluded from both
-- [ ] D29 filter canonicalisation. **No filters exist yet**, so this is not yet applicable
+- [x] D29 filter canonicalisation. Filters exist now, and every filtered view canonicalises to
+      `/shop` and carries `noindex`. **Verified:** `?category=handles` is noindex with
+      canonical `/shop`, while bare `/shop` has no noindex at all
 - [ ] `ItemList` on category grids
 - [ ] The 301 redirect map. **Blocked:** the old URL list has not arrived
 - [ ] Three blog articles seeded through a migration
