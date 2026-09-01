@@ -100,7 +100,12 @@ Verification for this milestone was done against a running dev server on
 - [x] Pin dropped entirely on mobile, replaced by a snap scroll sequence
 - [x] Reveal with 60ms stagger across grids
 - [x] Count up on the stat band
-- [ ] Category rail, pinned with horizontal translate
+- [x] Category rail, pinned with horizontal translate. Twelve stones cross in one screen,
+      on sticky plus a scroll driven transform, so the scrollbar still behaves and a fast
+      flick reaches the footer. Falls back to a hand scrollable snap row
+- [x] Motion dialled up on request, 1 Sep: reveal travel 28px to 52px, heading wipes from
+      the baseline, photographs settle out of a 1.16 crop, grid images drift against their
+      frames, scale and crop range widened
 - [ ] Cut out hardware parallax. **Content dependency**, nothing is background removed
 - [ ] Verify by hand: reduced motion, and no pinning on a real phone
 

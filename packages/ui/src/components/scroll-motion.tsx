@@ -21,7 +21,7 @@ import { useEffect } from 'react';
  * One observer for the document, not one per element, and each element is
  * unobserved once it has fired.
  */
-const SELECTOR = '.beco-reveal, .beco-rise, .beco-card-flip';
+const SELECTOR = '.beco-reveal, .beco-rise, .beco-card-flip, .beco-wipe, .beco-zoom';
 
 export function ScrollMotion() {
   useEffect(() => {

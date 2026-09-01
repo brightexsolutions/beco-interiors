@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ProductCard, Reveal, CountUp } from '@beco/ui';
 import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
+import { SlabRail } from '@/components/slab-rail';
 import {
   getPublishedProducts, getCategoriesWithProducts, primaryImage,
   type CatalogueProduct, blurProps,
@@ -73,7 +74,8 @@ export default async function HomePage() {
               direction, which rules out the even four across grid that treats
               the page as a container to fill. --- */}
       <section className="mx-auto max-w-[1380px] px-6 py-20 lg:py-28">
-        <div className="beco-rise">
+        <div className="beco-clip">
+          <div className="beco-wipe">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
@@ -90,6 +92,7 @@ export default async function HomePage() {
             >
               See all {products.length} colours
             </Link>
+          </div>
           </div>
         </div>
 
@@ -115,6 +118,7 @@ export default async function HomePage() {
                   availability={p.availability}
                   badge={p.badge}
                   frame={lead ? 'wide' : 'portrait'}
+                  imageClassName="beco-zoom beco-drift-slow"
                   image={
                     img ? (
                       <Image
@@ -181,16 +185,18 @@ export default async function HomePage() {
       {/* --- Process. A numbered editorial list on hairline rules, which is
               what goes where three icon-in-a-circle cards would have. --- */}
       <section className="mx-auto max-w-[1380px] px-6 py-20 lg:py-28">
-        <div className="beco-rise">
-          <div className="flex items-center gap-4">
-            <span aria-hidden className="h-px w-8 bg-warm-red" />
-            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              How it works
-            </p>
+        <div className="beco-clip">
+          <div className="beco-wipe">
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-px w-8 bg-warm-red" />
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                How it works
+              </p>
+            </div>
+            <h2 className="mt-4 max-w-[16ch] font-display text-4xl leading-[1.1] text-charcoal sm:text-5xl">
+              From a shortlist to a priced quote.
+            </h2>
           </div>
-          <h2 className="mt-4 max-w-[16ch] font-display text-4xl leading-[1.1] text-charcoal sm:text-5xl">
-            From a shortlist to a priced quote.
-          </h2>
         </div>
 
         <ol className="mt-14 border-t border-neutral-200">
@@ -218,28 +224,10 @@ export default async function HomePage() {
         </ol>
       </section>
 
-      {/* --- Categories, only those with something in them. Per D27 an empty
-              category is not a page worth linking to. --- */}
-      {categories.length > 1 ? (
-        <section className="mx-auto max-w-[1380px] px-6 pb-20 lg:pb-28">
-          <Reveal>
-            <h2 className="font-display text-3xl leading-tight text-charcoal">Browse by category</h2>
-          </Reveal>
-          <ul className="mt-8 flex flex-wrap gap-3">
-            {categories.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/shop/${c.slug}`}
-                  className="inline-flex min-h-11 items-center rounded-[2px] border border-neutral-300 px-5 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal transition-colors hover:border-charcoal"
-                >
-                  {c.name}
-                  <span className="ml-2 font-normal text-neutral-500">{c.product_count}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {/* --- The pinned rail: twelve stones crossing in one screen, which
+              a vertical grid cannot do without pushing the page down. Not
+              adjacent to the hero, which is the other pinned section. --- */}
+      <SlabRail products={products.slice(8, 20)} />
 
       <LocalBusinessSchema />
     </main>

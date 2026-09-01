@@ -28,6 +28,11 @@ export interface ProductCardProps {
    * absurdly tall. The frame is fixed either way, so the grid never shifts.
    */
   frame?: 'portrait' | 'wide' | undefined;
+  /**
+   * Applied to the frame that holds the image, so a page can add entrance or
+   * parallax motion without this component knowing what those are.
+   */
+  imageClassName?: string | undefined;
   className?: string | undefined;
 }
 
@@ -40,11 +45,11 @@ const BADGE_LABEL = { hot: 'Popular', new: 'New', sale: 'Sale', clearance: 'Clea
 
 export function ProductCard({
   name, href, image, priceDisplayMode, price, compareAtPrice, unit,
-  availability = 'poa', badge, frame = 'portrait', className,
+  availability = 'poa', badge, frame = 'portrait', imageClassName, className,
 }: ProductCardProps) {
   return (
     <a href={href} className={cn('group block focus:outline-none', className)}>
-      <div className={cn('relative w-full overflow-hidden bg-neutral-100', FRAME[frame])}>
+      <div className={cn('relative w-full overflow-hidden bg-neutral-100', FRAME[frame], imageClassName)}>
         <div className="h-full w-full transition-transform duration-[600ms] ease-brand group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">
           {image}
         </div>

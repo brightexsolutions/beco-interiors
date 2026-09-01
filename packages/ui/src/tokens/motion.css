@@ -35,12 +35,38 @@
          attribute is simply still, never blank. --- */
   .beco-reveal[data-inview],
   .beco-rise[data-inview] {
-    animation: beco-rise-in 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: beco-rise-in 950ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   @keyframes beco-rise-in {
-    from { opacity: 0; transform: translateY(28px); }
+    from { opacity: 0; transform: translateY(52px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Headings wipe up from behind their own baseline, which is the
+         same gesture as the hero's word reveal at section scale. The
+         parent must clip, so this pairs with .beco-clip. --- */
+  .beco-clip { overflow: hidden; }
+
+  .beco-wipe[data-inview] {
+    animation: beco-wipe-up 1000ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-wipe-up {
+    from { opacity: 0; transform: translateY(100%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Photographs settle out of an oversized crop rather than fading.
+         The frame never moves, so this costs no layout. --- */
+  .beco-zoom[data-inview] > img,
+  .beco-zoom[data-inview] > * > img {
+    animation: beco-zoom-out 1400ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-zoom-out {
+    from { transform: scale(1.16); }
+    to   { transform: scale(1); }
   }
 
   /* --- Slab cards turning toward the reader as they arrive, like a
@@ -77,8 +103,36 @@
     }
 
     @keyframes beco-drift {
-      from { transform: translateY(-4%) scale(1.09); }
-      to   { transform: translateY(4%)  scale(1.09); }
+      from { transform: translateY(-9%) scale(1.2); }
+      to   { transform: translateY(9%)  scale(1.2); }
+    }
+
+    /* --- Grid photographs drift against their frames as they pass, so a
+           wall of cards has depth rather than being a flat sheet. --- */
+    .beco-drift-slow > img {
+      animation: beco-drift-small linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    @keyframes beco-drift-small {
+      from { transform: translateY(-5%) scale(1.12); }
+      to   { transform: translateY(5%)  scale(1.12); }
+    }
+
+    /* --- The pinned rail. The section is tall, the frame inside it
+           sticks, and the track slides sideways across exactly the
+           distance it overflows by. The page scroll is never intercepted,
+           so a fast flick still reaches the footer. --- */
+    .beco-rail-track {
+      animation: beco-rail linear both;
+      animation-timeline: view(block);
+      animation-range: contain 0% contain 100%;
+    }
+
+    @keyframes beco-rail {
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(-100% + 100vw - 3rem)); }
     }
 
     /* --- Scale and crop. A full bleed photograph contracts into a
@@ -93,7 +147,7 @@
     }
 
     @keyframes beco-contract {
-      from { transform: scale(1.12); }
+      from { transform: scale(1.25); }
       to   { transform: scale(1); }
     }
 
