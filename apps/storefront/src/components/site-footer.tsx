@@ -1,7 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { buttonClasses, cn } from '@beco/ui';
-import { SITE, whatsappLink } from '@/lib/site';
+import { SITE, SOCIAL, whatsappLink } from '@/lib/site';
+import { SocialLinks } from './social-links';
+import { getCategoriesWithProducts } from '@/lib/products';
 
 /**
  * A genuine closing section, not grey link columns and a copyright line,
@@ -14,7 +16,10 @@ import { SITE, whatsappLink } from '@/lib/site';
  *
  * Warm Red appears once here, on the primary action.
  */
-export function SiteFooter() {
+export async function SiteFooter() {
+  // Real categories, so the column cannot list something that is not stocked.
+  const categories = await getCategoriesWithProducts();
+
   return (
     <footer className="bg-charcoal text-high-vis-white">
       <div className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
@@ -25,7 +30,7 @@ export function SiteFooter() {
               alt="Beco Interiors"
               width={420}
               height={506}
-              className="h-14 w-auto"
+              className="h-24 w-auto"
             />
             <p className="mt-8 max-w-[16ch] font-display text-4xl leading-[1.1] sm:text-5xl">
               Specify it once. We hold the stock.
@@ -64,7 +69,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-16 grid gap-10 border-t border-neutral-700 pt-10 sm:grid-cols-3 lg:mt-20">
+        <div className="mt-16 grid gap-10 border-t border-neutral-700 pt-12 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
           <div>
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
               Showroom
@@ -83,12 +88,36 @@ export function SiteFooter() {
 
           <div>
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              Browse
+              Products
+            </p>
+            {/* Read from the database, so this column can never list a range
+                that is not actually stocked. Per D27 a category with nothing
+                in it does not appear here any more than it appears in the
+                sitemap. */}
+            <ul className="mt-4 space-y-2.5 text-base text-neutral-300">
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link href={`/shop/${category.slug}`} className="hover:text-high-vis-white">
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link href="/shop" className="hover:text-high-vis-white">
+                  All products
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              Company
             </p>
             <ul className="mt-4 space-y-2.5 text-base text-neutral-300">
-              <li><Link href="/shop" className="hover:text-high-vis-white">All products</Link></li>
               <li><Link href="/about" className="hover:text-high-vis-white">About Beco</Link></li>
-              <li><Link href="/contact" className="hover:text-high-vis-white">Contact</Link></li>
+              <li><Link href="/contact" className="hover:text-high-vis-white">Contact and showroom</Link></li>
+              <li><Link href="/quote" className="hover:text-high-vis-white">Request a quote</Link></li>
             </ul>
           </div>
 
@@ -108,6 +137,11 @@ export function SiteFooter() {
                 </a>
               </li>
             </ul>
+
+            {/* Rendered only where a real profile URL exists. The prototype
+                shipped these as href="#", which is a control that advertises
+                an operation and does not perform it. See SOCIAL in lib/site. */}
+            <SocialLinks className="mt-6 flex gap-3" />
           </div>
         </div>
 

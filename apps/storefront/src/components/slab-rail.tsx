@@ -69,7 +69,7 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                 return (
                   <li
                     key={product.id}
-                    className={`w-[68vw] shrink-0 sm:w-[40vw] lg:w-[min(23vw,19rem)] ${STAGGER[i % STAGGER.length]}`}
+                    className={`beco-rail-card w-[68vw] shrink-0 will-change-transform sm:w-[40vw] lg:w-[min(23vw,19rem)] ${STAGGER[i % STAGGER.length]}`}
                   >
                     <Link href={`/product/${product.slug}`} className="group block">
                       {/* Fixed height rather than a fixed ratio, so the whole
