@@ -32,6 +32,8 @@ import { blurProps } from '@/lib/products';
 export interface HeroSlab {
   name: string;
   slug: string;
+  /** The product's real category, never assumed from the section it is in. */
+  category: string;
   src: string;
   alt: string;
   width: number;
@@ -73,8 +75,11 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
         <div className={`lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] ${GRID_INSET}`}>
           <div className="flex h-full flex-col justify-center pb-14 pr-6 pt-24 lg:py-10 lg:pr-20">
             <div className="flex items-center gap-4">
-              <span aria-hidden className="h-px w-8 bg-warm-red" />
-              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              <span aria-hidden className="beco-rule-draw h-px w-8 bg-warm-red" />
+              <p
+                className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500"
+                style={{ animationDelay: '120ms' }}
+              >
                 Sintered stone, stocked in Nairobi
               </p>
             </div>
@@ -83,12 +88,18 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               <WordReveal text="Surfaces that outlast the room." />
             </h1>
 
-            <p className="mt-6 max-w-[42ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+            <p
+              className="beco-enter mt-6 max-w-[42ch] text-base leading-[1.65] text-neutral-700 lg:text-lg"
+              style={{ animationDelay: '620ms' }}
+            >
               Large format slabs for kitchens, bathrooms, feature walls and flooring. Heat,
               scratch and stain resistant, and here in the showroom today.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div
+              className="beco-enter mt-8 flex flex-wrap items-center gap-3"
+              style={{ animationDelay: '760ms' }}
+            >
               <Link href="/quote" className={buttonClasses({ variant: 'primary' })}>
                 Request a quote
               </Link>
@@ -100,10 +111,18 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             {/* --- The slab indicator. Sits on a hairline at the foot of the
                     pinned column, so the type block above never moves as it
                     updates. Announced politely rather than interrupting. --- */}
-            <div className="mt-12 border-t border-neutral-200 pt-5">
+            <div
+              className="beco-enter mt-12 border-t border-neutral-200 pt-5"
+              style={{ animationDelay: '900ms' }}
+            >
               <div className="flex items-baseline justify-between gap-6">
                 <p aria-live="polite" className="flex items-baseline gap-3 font-ui text-sm">
-                  <span className="font-semibold uppercase tracking-[0.14em] text-charcoal">
+                  {/* Keyed on the active slab so the animation replays as
+                      the name changes, like a specimen label turning. */}
+                  <span
+                    key={current?.slug}
+                    className="beco-roll inline-block overflow-hidden font-semibold uppercase tracking-[0.14em] text-charcoal"
+                  >
                     {current?.name}
                   </span>
                   <span className="text-neutral-500">{thickness}</span>
@@ -126,6 +145,14 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                   </li>
                 ))}
               </ol>
+
+              <p className="mt-6 flex items-center gap-3 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                <span
+                  aria-hidden
+                  className="beco-scroll-cue inline-block h-6 w-px bg-neutral-300 motion-reduce:animate-none"
+                />
+                Scroll through the range
+              </p>
             </div>
           </div>
         </div>
@@ -140,7 +167,11 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             <div
               key={slab.slug}
               ref={(el) => { panels.current[i] = el; }}
-              className="beco-card-flip flex min-h-screen items-center py-8"
+              // The first card is the LCP element and is deliberately not
+              // animated on entry: animating the largest contentful paint is
+              // a direct way to delay it. It gets a slow ambient drift
+              // instead, which starts well after first paint.
+              className={`flex min-h-[92vh] items-center py-6 ${i === 0 ? '' : 'beco-card-flip'}`}
             >
               <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness} />
             </div>
@@ -186,7 +217,7 @@ function SlabCard({
 }) {
   return (
     <Link href={`/product/${slab.slug}`} className="group block w-full">
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
+      <div className="beco-ambient relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
         <Image
           src={slab.src}
           alt={slab.alt}
@@ -205,7 +236,7 @@ function SlabCard({
             {slab.name}
           </p>
           <p className="mt-1 font-ui text-sm text-neutral-500">
-            Sintered stone
+            {slab.category}
             <span aria-hidden className="px-2 text-neutral-700">/</span>
             {thickness}
           </p>

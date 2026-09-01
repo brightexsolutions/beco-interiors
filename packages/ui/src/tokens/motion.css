@@ -151,6 +151,77 @@
     100%     { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);                    opacity: 1; z-index: 40; }
   }
 
+  /* --- The entrance.
+         The hero assembles itself on load rather than arriving finished:
+         the rule draws out, the headline rises word by word, then the
+         supporting type and the actions follow it up. A first screen that
+         composes itself is the single biggest impression the site makes,
+         and it costs one keyframe each.
+
+         `backwards` fill means each element holds its starting state
+         until its delay elapses, so nothing flashes in before its turn.
+
+         NOT applied to the hero photograph. The LCP element is never
+         animated on entry, because animating the largest contentful paint
+         is a direct way to delay it. --- */
+  .beco-enter {
+    animation: beco-enter-up 900ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-enter-up {
+    from { opacity: 0; transform: translateY(26px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* The eyebrow rule draws out from nothing. */
+  .beco-rule-draw {
+    animation: beco-rule-out 800ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transform-origin: left center;
+  }
+
+  @keyframes beco-rule-out {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* --- Ambient drift on the hero slab. Very slow, and DELAYED past first
+         paint so it cannot affect the LCP measurement. Stone is the only
+         thing on the page with any colour in it, so it earns being alive
+         rather than perfectly still. --- */
+  .beco-ambient > img {
+    animation: beco-ambient-drift 28s ease-in-out 1600ms infinite alternate;
+  }
+
+  @keyframes beco-ambient-drift {
+    from { transform: scale(1.01); }
+    to   { transform: scale(1.07) translateY(-1.5%); }
+  }
+
+  /* --- The stone's name rolls over as the slab behind it changes, like a
+         specimen label being turned. Replayed by remounting on change. --- */
+  .beco-roll {
+    animation: beco-roll-in 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-roll-in {
+    from { opacity: 0; transform: translateY(0.7em); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* A slow travelling tick under the hero indicator. Says the page moves
+     without a bouncing chevron, which is the generic version of this. */
+  .beco-scroll-cue {
+    animation: beco-cue 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    transform-origin: top center;
+  }
+
+  @keyframes beco-cue {
+    0%        { transform: scaleY(0); opacity: 0; }
+    30%       { transform: scaleY(1); opacity: 1; }
+    70%       { transform: scaleY(1); opacity: 1; }
+    100%      { transform: scaleY(0) translateY(100%); opacity: 0; }
+  }
+
   .beco-word {
     animation: beco-word-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }

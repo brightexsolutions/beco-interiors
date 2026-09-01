@@ -20,8 +20,15 @@ Verification for this milestone was done against a running dev server on
       both parse, 6 gallery images, all four image URLs return 200 with real bytes
 - [x] `/quote`, the builder and submission. **Verified:** 200, renders the empty state
 - [ ] `/team`, sales agents only. **Directors are never flagged public**
-- [ ] `/about`, `/contact`, `/gallery`
-- [ ] Custom 404 and 500 routing back into the catalogue
+- [x] `/about`. **Verified:** 200. Claims no history Beco does not have: the prototype said
+      "10+ Years in Nairobi" while the client's own guideline says "a new entrant into the
+      market newly launched". The page leads on stock on the ground instead
+- [x] `/contact`. **Verified:** 200. NAP matches the footer and the JSON-LD exactly. No
+      response time promise, because the prototype claimed two hours in five places and
+      twenty four in a sixth and nobody has confirmed which is real
+- [ ] `/gallery`
+- [x] Custom 404 routing back into the catalogue. **Verified:** returns 404 and renders
+- [ ] Custom 500
 
 ## Brand assets
 
@@ -64,7 +71,8 @@ Verification for this milestone was done against a running dev server on
 - [x] JSON-LD: LocalBusiness, Product with Offer, BreadcrumbList. **Verified by parsing**
 - [x] D27 automatic index gating: `robots: noindex` when `product_count === 0`
 - [ ] Validate every block in Google's Rich Results Test
-- [ ] `sitemap.xml` from the database, `robots.txt`
+- [x] `sitemap.xml` from the database, `robots.txt`. **Verified:** 33 URLs, only categories
+      that hold products, `/quote` excluded from both
 - [ ] D29 filter canonicalisation. **No filters exist yet**, so this is not yet applicable
 - [ ] `ItemList` on category grids
 - [ ] The 301 redirect map. **Blocked:** the old URL list has not arrived
@@ -117,6 +125,14 @@ Verification for this milestone was done against a running dev server on
 - [ ] Verify by hand: reduced motion, and no pinning on a real phone
 
 ## Found during this milestone, not planned
+
+- [x] **Rail cards told a lie.** Every card read "Sintered stone, 12mm" because the line was
+      hardcoded, so a brass handle was labelled as stone. On a site aimed at specifiers who
+      check, that is a wrong spec rather than a typo. Products now carry their real category
+      and the hero card had the same hardcoded claim removed
+- [x] **The hero's LCP image was being animated on entry**, which the motion rules forbid
+      because animating the largest contentful paint is a direct way to delay it. The first
+      card no longer flips in; it gets a slow ambient drift that starts 1.6s after paint
 
 These were discovered while building and are recorded rather than remembered.
 

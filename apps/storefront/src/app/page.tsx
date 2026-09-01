@@ -47,6 +47,7 @@ export default async function HomePage() {
       const img = p.images.find((i) => i.role === 'slab')!;
       return {
         name: p.name, slug: p.slug, src: img.path, alt: img.alt,
+        category: p.category?.name ?? 'Sintered stone',
         width: img.width, height: img.height, blur: img.blur,
       };
     });

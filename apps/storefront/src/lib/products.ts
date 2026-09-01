@@ -19,6 +19,8 @@ export interface CatalogueProduct {
   unit: string | null;
   badge: 'hot' | 'new' | 'sale' | 'clearance' | null;
   images: ProductImage[];
+  /** The real category, so a card never has to guess what it is showing. */
+  category?: { name: string; slug: string } | null;
 }
 
 const anon = () =>
@@ -32,11 +34,19 @@ export const getPublishedProducts = async (): Promise<CatalogueProduct[]> => {
   const { data, error } = await anon()
     .from('products')
     .select(
-      'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images',
+      'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,' +
+        'categories(name,slug)',
     )
     .order('name');
   if (error) throw new Error(`could not load products: ${error.message}`);
-  return (data ?? []) as CatalogueProduct[];
+  // The generated types cannot narrow an embedded join in a select string,
+  // so the shape is asserted here and guaranteed by the query above.
+  return (data ?? []).map((row) => {
+    const { categories, ...rest } = row as unknown as Record<string, unknown> & {
+      categories: { name: string; slug: string } | null;
+    };
+    return { ...rest, category: categories } as unknown as CatalogueProduct;
+  });
 };
 
 /** The gallery order is the order a specifier reads a material in. */

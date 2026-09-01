@@ -24,7 +24,7 @@ import { blurProps, primaryImage, type CatalogueProduct } from '@/lib/products';
  */
 
 /** A repeating four step rhythm, so the row reads as composed, not aligned. */
-const STAGGER = ['lg:mt-0', 'lg:mt-14', 'lg:mt-5', 'lg:mt-20'] as const;
+const STAGGER = ['lg:mt-0', 'lg:mt-8', 'lg:mt-3', 'lg:mt-12'] as const;
 
 export function SlabRail({ products }: { products: CatalogueProduct[] }) {
   if (products.length === 0) return null;
@@ -37,7 +37,7 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
       <div className="beco-rail-stage lg:h-[190vh]">
         <div className="lg:sticky lg:top-20 lg:flex lg:h-[calc(100vh-5rem)] lg:flex-col lg:justify-center">
           <div className="mx-auto w-full max-w-[1380px] px-6">
-            <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-12 pt-16 lg:pt-0">
+            <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-8 pt-16 lg:pt-0">
               <div className="beco-clip">
                 <div className="beco-wipe">
                   <div className="flex items-center gap-4">
@@ -47,7 +47,7 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                     </p>
                   </div>
                   <h2 className="mt-4 max-w-[14ch] font-display text-4xl leading-[1.06] tracking-[-0.015em] text-charcoal sm:text-5xl">
-                    Every colour we hold.
+                    Everything on the floor.
                   </h2>
                 </div>
               </div>
@@ -55,7 +55,7 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                 href="/shop"
                 className="pb-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep underline-offset-4 hover:underline"
               >
-                Browse all colours
+                Browse the range
               </Link>
             </div>
           </div>
@@ -69,10 +69,13 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                 return (
                   <li
                     key={product.id}
-                    className={`w-[68vw] shrink-0 sm:w-[40vw] lg:w-[25vw] ${STAGGER[i % STAGGER.length]}`}
+                    className={`w-[68vw] shrink-0 sm:w-[40vw] lg:w-[min(23vw,19rem)] ${STAGGER[i % STAGGER.length]}`}
                   >
                     <Link href={`/product/${product.slug}`} className="group block">
-                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 shadow-[0_16px_44px_rgba(16,24,32,0.14)]">
+                      {/* Fixed height rather than a fixed ratio, so the whole
+                          card including its plate always fits the frame it is
+                          pinned inside. */}
+                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 shadow-[0_16px_44px_rgba(16,24,32,0.14)] lg:aspect-auto lg:h-[min(44vh,25rem)]">
                         {img ? (
                           <Image
                             src={img.path}
@@ -100,7 +103,14 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                           <p className="truncate font-ui text-sm font-semibold uppercase tracking-[0.14em]">
                             {product.name}
                           </p>
-                          <p className="mt-1 font-ui text-sm text-neutral-500">Sintered stone, 12mm</p>
+                          {/* The product's REAL category. This line read
+                              "Sintered stone, 12mm" on every card because it
+                              was hardcoded, so a brass handle was labelled as
+                              stone. On a site aimed at specifiers who will
+                              check, that is not a typo, it is a wrong spec. */}
+                          <p className="mt-1 truncate font-ui text-sm text-neutral-500">
+                            {product.category?.name ?? 'In stock'}
+                          </p>
                         </div>
                         <p className="shrink-0 font-ui text-sm font-semibold tabular-nums text-neutral-500">
                           {String(i + 1).padStart(2, '0')}
@@ -115,7 +125,7 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
 
           {/* How far through the pinned run we are. Without this the page
               simply stops moving and nothing says for how long. */}
-          <div className="mx-auto mt-10 hidden w-full max-w-[1380px] px-6 lg:block">
+          <div className="mx-auto mt-8 hidden w-full max-w-[1380px] px-6 lg:block">
             <div className="h-px w-full bg-neutral-200">
               <div className="beco-rail-progress h-full w-full origin-left scale-x-0 bg-charcoal" />
             </div>
