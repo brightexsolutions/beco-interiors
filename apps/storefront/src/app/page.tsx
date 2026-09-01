@@ -5,6 +5,7 @@ import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
 import { SlabRail } from '@/components/slab-rail';
 import { SlabToSurface } from '@/components/slab-to-surface';
 import { RoomStack } from '@/components/room-stack';
+import { CompletedInteriors } from '@/components/completed-interiors';
 import {
   getPublishedProducts, getCategoriesWithProducts, primaryImage,
   type CatalogueProduct, blurProps,
@@ -80,6 +81,11 @@ export default async function HomePage() {
           </dl>
         </div>
       </section>
+
+      {/* --- Completed interiors, at three depths. Sits between the count
+              and the range so the page answers "what does it look like in a
+              room" before it asks anyone to browse a grid. --- */}
+      <CompletedInteriors products={products} />
 
       {/* --- The range. One large tile against smaller ones, per the design
               direction, which rules out the even four across grid that treats
@@ -217,7 +223,10 @@ function Stat({ value, label, suffix }: { value: number; label: string; suffix: 
       </dt>
       {/* Tabular and tightened: Cormorant sets numerals loosely, and "12mm"
           was reading as "1 2mm" at display size. */}
-      <dd className="mt-3 font-display text-5xl leading-none tracking-[-0.02em] text-charcoal tabular-nums">
+      {/* No tabular-nums: Cormorant gives '1' a full width advance under it,
+          and "12mm" was reading as "1 2mm" at display size. The figures here
+          never need to align in a column. */}
+      <dd className="mt-3 font-display text-5xl leading-none tracking-[-0.01em] text-charcoal">
         <CountUp value={value} />
         {suffix}
       </dd>

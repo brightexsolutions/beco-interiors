@@ -101,6 +101,9 @@ Verification for this milestone was done against a running dev server on
       of the catalogue has only three. A deck is one card's worth of space whatever it holds
 - [x] Rail cards became specimens: charcoal plate, name, number in the set, shadow, and a four
       step vertical rhythm. They were bare images in a flat row, which read as a contact sheet
+- [x] Completed interiors section between the count and the range, built from the 71 real
+      installation photographs across 25 products. Answers "what does it look like in a room"
+      before the page asks anyone to browse a grid
 - [ ] `Field` and `Input` extracted from the quote form into `@beco/ui`
 - [ ] 16px floor lint rule
 - [ ] SVG logo derived from the vector PDF
@@ -121,6 +124,9 @@ Verification for this milestone was done against a running dev server on
 - [x] Motion dialled up on request, 1 Sep: reveal travel 28px to 52px, heading wipes from
       the baseline, photographs settle out of a 1.16 crop, grid images drift against their
       frames, scale and crop range widened
+- [x] Parallax at depth, per D31, on the completed interiors section. Three rates across an
+      offset grid, so the group sits at three distances rather than on one plane. This is the
+      section that earns the effect rather than the hero borrowing it
 - [ ] Cut out hardware parallax. **Content dependency**, nothing is background removed
 - [ ] Verify by hand: reduced motion, and no pinning on a real phone
 

@@ -242,6 +242,18 @@
       to   { transform: translateY(9%)  scale(1.2); }
     }
 
+    /* --- Parallax at depth, per D31.
+           Three rates, so a group of photographs sits at three distances
+           rather than on one flat plane. The frames never move, only the
+           images inside them, so none of this costs layout. --- */
+    .beco-depth-1 > img { animation: beco-depth-near linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    .beco-depth-2 > img { animation: beco-depth-mid  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    .beco-depth-3 > img { animation: beco-depth-far  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+
+    @keyframes beco-depth-near { from { transform: translateY(-11%) scale(1.26); } to { transform: translateY(11%) scale(1.26); } }
+    @keyframes beco-depth-mid  { from { transform: translateY(-7%)  scale(1.17); } to { transform: translateY(7%)  scale(1.17); } }
+    @keyframes beco-depth-far  { from { transform: translateY(-3.5%) scale(1.09); } to { transform: translateY(3.5%) scale(1.09); } }
+
     /* --- Grid photographs drift against their frames as they pass, so a
            wall of cards has depth rather than being a flat sheet. --- */
     .beco-drift-slow > img {
