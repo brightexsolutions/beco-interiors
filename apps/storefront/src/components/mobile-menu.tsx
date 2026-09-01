@@ -22,6 +22,12 @@ import { SITE, whatsappLink } from '@/lib/site';
  *
  * Escape closes it and returns focus to the trigger, focus is trapped while
  * it is open, the page behind cannot scroll, and it closes on navigation.
+ *
+ * The panel covers the WHOLE viewport and carries its own close button. It
+ * used to start at a fixed offset meant to clear the header, but the
+ * announcement bar sits above the header and pushes it down, so the panel
+ * covered the header and the only way out of it. A panel that owns the screen
+ * has to own its own exit.
  */
 const LINKS = [
   { href: '/', label: 'Home' },
@@ -100,9 +106,27 @@ export function MobileMenu() {
           role="dialog"
           aria-modal="true"
           aria-label="Menu"
-          className="fixed inset-x-0 bottom-0 top-20 z-40 flex flex-col overflow-y-auto bg-high-vis-white"
+          className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-high-vis-white"
         >
-          <nav aria-label="Main" className="border-t border-neutral-200">
+          {/* The panel's own bar. Never relies on the header underneath being
+              reachable, because it is not. */}
+          <div className="flex h-20 shrink-0 items-center justify-between border-b border-neutral-200 px-6">
+            <span className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              Menu
+            </span>
+            <button
+              type="button"
+              onClick={() => { setOpen(false); trigger.current?.focus(); }}
+              className="-mr-2 flex min-h-11 items-center gap-2 px-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-charcoal"
+            >
+              Close
+              <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 stroke-current" fill="none" strokeWidth="1.8">
+                <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          <nav aria-label="Main">
             <ul>
               {LINKS.map((link) => {
                 const current = pathname === link.href;

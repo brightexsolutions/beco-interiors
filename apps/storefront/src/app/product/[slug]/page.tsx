@@ -105,6 +105,7 @@ export default async function ProductPage({ params }: Params) {
               price={product.price}
               compareAtPrice={product.compare_at_price}
               unit={product.unit}
+              vatInclusive
             />
             <AvailabilityBadge
               availability={product.availability}

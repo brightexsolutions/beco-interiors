@@ -25,6 +25,13 @@ export interface PriceDisplayProps {
   unit?: string | null | undefined;
   currency?: string | undefined;
   size?: 'default' | 'large' | undefined;
+  /**
+   * Says the figure already includes VAT. Beco's prices do, which is the
+   * opposite of the usual trade assumption, so a buyer comparing against a
+   * supplier who quotes ex-VAT would otherwise read this as 16% cheaper than
+   * it is and be surprised at the invoice.
+   */
+  vatInclusive?: boolean | undefined;
   className?: string | undefined;
 }
 
@@ -39,6 +46,7 @@ export function PriceDisplay({
   unit,
   currency = 'KES',
   size = 'default',
+  vatInclusive = false,
   className,
 }: PriceDisplayProps) {
   const big = size === 'large';
@@ -66,6 +74,9 @@ export function PriceDisplay({
         </span>
       ) : null}
       {unit ? <span className="text-neutral-500 text-sm">{unit}</span> : null}
+      {vatInclusive ? (
+        <span className="text-neutral-500 text-sm">incl. VAT</span>
+      ) : null}
     </p>
   );
 }

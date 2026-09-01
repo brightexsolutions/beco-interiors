@@ -201,3 +201,37 @@ the call to action, which navigates.
 *Reverses if:* a long running announcement starts drawing complaints from repeat visitors, in
 which case the dismissal returns as a cookie rather than as localStorage, for the CLS reason
 recorded on the original implementation.
+
+## D50, 1 September 2026: prices include VAT, so quotes back it out
+
+Beco confirmed their prices are VAT inclusive. A3 assumed the opposite, that quote documents
+would show VAT at 16% as a line added to a net subtotal, which is the usual trade arrangement.
+
+The consequence is arithmetic, and it is the kind that is expensive to get wrong. On a 65,000
+slab the VAT inside the price is 8,965.52, not 10,400 on top. Adding it would overstate every
+quote by 16%, on a document that goes out on Beco's letterhead.
+
+`vat_rate` and `prices_include_vat` live in `settings`, not in code, because the quote
+document, the dashboard and the PDF all need the same answer and a rate change must not be a
+deploy. The storefront now says "incl. VAT" beside every price, because a buyer comparing
+against a supplier who quotes ex-VAT would otherwise read Beco as 16% cheaper than it is and
+be surprised by the invoice.
+
+## D51, 1 September 2026: the showroom section is built for portrait video
+
+All 52 clips in Beco's SITE VIDEOS folder are portrait phone footage. None are landscape.
+
+So the section is a tall frame beside the copy rather than the full bleed band it started as.
+Cropping 9:16 into 21:9 throws away most of the picture, and the material is the subject.
+
+The footage is Beco's own, transcoded from an 8 to 80MB QuickTime .MOV down to 1.7MB of MP4,
+which fits the page budget on a Nairobi mobile connection. Stock film was the alternative and
+it was the wrong one: a clip that reads as Beco's work without being it is a fabricated record,
+on the page a buyer uses to decide whether to drive there.
+
+The clip chosen is a finished vanity rather than one of the many showing an installation in
+progress, with exposed carcasses and packaging still in the drawers. Those are honest but they
+read as a building site.
+
+*Reverses if:* Beco shoots landscape footage, in which case the band returns. The transcode
+step is manual today and belongs in the import pipeline, which needs ffmpeg.

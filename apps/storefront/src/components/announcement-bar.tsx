@@ -42,11 +42,14 @@ export async function AnnouncementBar() {
       aria-label="Announcement"
       className={`relative z-[60] ${TONE[announcement.type] ?? TONE.notice}`}
     >
-      <div className="mx-auto max-w-[1380px] px-6 py-3">
+      <div className="mx-auto max-w-[1380px] px-6 py-2.5 sm:py-3">
         <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">
           <span className="font-semibold uppercase tracking-[0.12em]">{announcement.title}</span>
+          {/* The body is the first thing to go on a narrow screen. Three lines
+              of chrome above the logo is a banner that has taken over the
+              first screen rather than sitting above it. */}
           {announcement.body ? (
-            <span className="text-neutral-300">{announcement.body}</span>
+            <span className="hidden text-neutral-300 sm:inline">{announcement.body}</span>
           ) : null}
           {announcement.cta_label && announcement.cta_url ? (
             <Link

@@ -85,6 +85,7 @@ export function ProductCard({
             price={price}
             compareAtPrice={compareAtPrice}
             unit={unit}
+            vatInclusive
           />
           <AvailabilityBadge availability={availability} priceDisplayMode={priceDisplayMode} />
         </div>

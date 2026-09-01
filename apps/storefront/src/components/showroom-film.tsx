@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
-import type { ProductImage } from '@beco/types';
 import { SHOWROOM_FILM } from '@/lib/site';
 
 /**
@@ -15,12 +14,12 @@ import { SHOWROOM_FILM } from '@/lib/site';
  * while the file loads. Under prefers-reduced-motion it does not autoplay at
  * all and the controls are the only way to start it.
  *
- * The source is null until Beco supplies footage, so today this renders the
- * poster on its own. That is the honest placeholder: the photograph is real,
- * and a film that read as Beco's showroom without being it would be a
- * fabricated record of a place a buyer is deciding whether to drive to.
+ * The footage is Beco's own, pulled from Drive and transcoded. Stock film of
+ * someone else's kitchen was the alternative and it was the wrong one: a clip
+ * that reads as Beco's work without being it is a fabricated record, on the
+ * page a buyer uses to decide whether to drive there.
  */
-export function ShowroomFilm({ poster }: { poster: ProductImage }) {
+export function ShowroomFilm({ className }: { className?: string }) {
   const video = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -43,20 +42,7 @@ export function ShowroomFilm({ poster }: { poster: ProductImage }) {
     return () => io.disconnect();
   }, []);
 
-  if (!SHOWROOM_FILM) {
-    return (
-      <div className="beco-scale-crop relative h-full w-full">
-        <Image
-          src={poster.path}
-          alt={poster.alt}
-          fill
-          sizes="100vw"
-          {...(poster.blur ? { placeholder: 'blur' as const, blurDataURL: poster.blur } : {})}
-          className="object-cover"
-        />
-      </div>
-    );
-  }
+  if (!SHOWROOM_FILM) return null;
 
   return (
     <video
@@ -68,8 +54,8 @@ export function ShowroomFilm({ poster }: { poster: ProductImage }) {
       preload="metadata"
       // Always set, so the frame is never empty while the file loads and the
       // section reserves its height from first paint.
-      poster={poster.path}
-      className="h-full w-full object-cover"
+      poster={SHOWROOM_FILM.poster}
+      className={className}
     >
       <source src={SHOWROOM_FILM.src} type={SHOWROOM_FILM.type} />
     </video>

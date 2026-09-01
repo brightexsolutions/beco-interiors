@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ProductCard, Reveal, CountUp } from '@beco/ui';
+import { ProductCard, Reveal, CountUp, buttonClasses } from '@beco/ui';
 import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
 import { SlabRail } from '@/components/slab-rail';
 import { SlabToSurface } from '@/components/slab-to-surface';
@@ -206,39 +206,42 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* --- The showroom, full bleed. Video in view, the sixth effect in
-              D31's vocabulary, built in full and running on a real photograph
-              until Beco supplies footage. --- */}
-      {applicationImage ? (
-        <section aria-label="The showroom" className="relative">
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal sm:aspect-[16/9] lg:aspect-[21/9]">
-            <ShowroomFilm poster={applicationImage} />
-          </div>
-          <div className="mx-auto max-w-[1380px] px-6">
-            <div className="-mt-16 max-w-[32rem] bg-charcoal p-10 text-high-vis-white sm:-mt-24 sm:p-12">
-              <div className="flex items-center gap-4">
-                <span aria-hidden className="h-px w-8 bg-warm-red" />
-                <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  The showroom
-                </p>
-              </div>
-              <p className="mt-5 max-w-[16ch] font-display text-4xl leading-[1.1] sm:text-5xl">
-                Come and put a hand on it.
+      {/* --- The showroom. Beco's footage is all PORTRAIT phone video, all 52
+              clips of it, so this is a tall frame beside the copy rather than
+              a full bleed band: cropping 9:16 into 21:9 throws away most of
+              the picture. It also removes the card that used to hang below a
+              wide image with empty space beside it. --- */}
+      <section aria-label="The showroom" className="bg-charcoal text-high-vis-white">
+        <div className="mx-auto grid max-w-[1380px] items-center gap-12 px-6 py-16 sm:py-22 lg:grid-cols-[1fr_22rem] lg:gap-20 lg:py-30">
+          <div>
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-px w-8 bg-warm-red" />
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                The showroom
               </p>
-              <p className="mt-4 max-w-[42ch] text-base leading-[1.65] text-neutral-300">
-                Urban Square, Enterprise Road, six days a week. The full range is on the floor,
-                and a slab reads differently in person than it does on a screen.
-              </p>
-              <Link
-                href="/contact"
-                className="mt-7 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-8 hover:underline"
-              >
+            </div>
+            <h2 className="mt-5 max-w-[16ch] font-display text-4xl leading-[1.08] sm:text-5xl">
+              Come and put a hand on it.
+            </h2>
+            <p className="mt-5 max-w-[46ch] text-base leading-[1.65] text-neutral-300 lg:text-lg">
+              Urban Square, Enterprise Road, six days a week. The full range is on the floor,
+              and a slab reads differently in person than it does on a screen.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/contact" className={buttonClasses({ variant: 'primary' })}>
                 Directions and hours
+              </Link>
+              <Link href="/gallery" className={buttonClasses({ variant: 'outline' })}>
+                See finished projects
               </Link>
             </div>
           </div>
-        </section>
-      ) : null}
+
+          <div className="relative mx-auto w-full max-w-[20rem] overflow-hidden bg-neutral-950 lg:max-w-none">
+            <ShowroomFilm className="aspect-[9/16] w-full object-cover" />
+          </div>
+        </div>
+      </section>
 
       {/* --- The pinned rail. Eight stones rather than twelve: the track
               crosses roughly 150vw over 190vh of pin instead of 250vw, so the

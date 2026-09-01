@@ -49,19 +49,21 @@ export const SOCIAL: { name: string; url: string | null }[] = [
 /**
  * The showroom film.
  *
- * **Null until Beco supplies footage.** The SITE VIDEOS folder in Drive is
- * still empty, and no video has ever been shared, so there is nothing to play.
+ * Beco's own footage, from the SITE VIDEOS folder in Drive. All 52 clips there
+ * are PORTRAIT phone video, which is why the section is built around a tall
+ * frame rather than a full bleed band: cropping 9:16 into 21:9 throws away
+ * most of the picture.
  *
- * Deliberately not filled with stock footage or with something generated: a
- * film that reads as Beco's showroom but is not would be a fabricated record
- * of a real place, and it would be on the page a buyer uses to decide whether
- * to drive there.
- *
- * Until then the section runs on a real installation photograph, which is
- * true. Set this to a path under `public/` and it becomes a video with no
- * other change.
+ * The source arrives as QuickTime .MOV between 8 and 80MB, which no browser
+ * should be asked to download. This one is transcoded to MP4 at 1.7MB, which
+ * fits the page budget on a Nairobi mobile connection. That step is manual
+ * today; see docs/PLAN.md for folding it into the import pipeline.
  */
-export const SHOWROOM_FILM: { src: string; type: string } | null = null;
+export const SHOWROOM_FILM: { src: string; type: string; poster: string } | null = {
+  src: '/video/showroom.mp4',
+  type: 'video/mp4',
+  poster: '/video/showroom-poster.jpg',
+};
 
 /** Prefilled, so a buyer never has to explain what they are asking about. */
 export const whatsappLink = (context?: string) =>
