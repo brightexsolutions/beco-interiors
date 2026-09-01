@@ -6,6 +6,7 @@
 // page stays server rendered for SEO.
 import { useState, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
+import { CardDeck } from './card-deck';
 
 /**
  * Ordered by image role, which is the order a specifier reads a material in:
@@ -15,8 +16,13 @@ import { cn } from '../lib/cn';
  * **Must read correctly on three images as well as six.** Five real products
  * have no on-stand shot, and Pure White has only three images total, so a
  * layout that assumes six is a layout that breaks on a fifth of the catalogue.
- * Hence a single column of thumbnails that simply has fewer entries, rather
- * than a fixed grid with holes in it.
+ *
+ * The photographs are held as a DECK rather than as a single frame with a
+ * strip beside it. A deck occupies exactly one card's worth of space whatever
+ * it holds, so three images and six make the same shape, and the depth behind
+ * the front card is itself the count. The thumbnails stay, because a deck
+ * alone makes the fourth photograph three clicks away and is not reachable by
+ * a screen reader in any useful order.
  */
 export type GalleryRole = 'slab' | 'on_stand' | 'bookmatch' | 'application' | 'unknown';
 
@@ -62,15 +68,25 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
   }
 
   return (
-    <div className={cn('flex flex-col gap-4 sm:flex-row-reverse', className)}>
+    <div className={cn('flex flex-col gap-5 sm:flex-row-reverse sm:gap-6', className)}>
       <figure className="min-w-0 flex-1">
-        <div className="aspect-[4/5] w-full overflow-hidden bg-neutral-100">{current.node}</div>
-        <figcaption className="mt-2 font-ui text-sm text-neutral-500">
+        <CardDeck
+          cards={ordered.map((img, i) => ({
+            key: `${img.role}-${i}`,
+            node: img.node,
+            label: `${ROLE_LABEL[img.role]}, photograph ${i + 1} of ${ordered.length}`,
+          }))}
+          active={active}
+          onActiveChange={setActive}
+        />
+        <figcaption className="mt-4 font-ui text-sm text-neutral-500">
           {ROLE_LABEL[current.role]}
         </figcaption>
       </figure>
 
-      {/* One thumbnail per image. Three looks deliberate, six looks deliberate. */}
+      {/* One thumbnail per image. Three looks deliberate, six looks deliberate.
+          These are also the only way to reach a specific photograph directly,
+          which the deck on its own cannot offer. */}
       {ordered.length > 1 ? (
         <ul className="flex gap-3 sm:flex-col" role="tablist" aria-label="Product photographs">
           {ordered.map((img, i) => (

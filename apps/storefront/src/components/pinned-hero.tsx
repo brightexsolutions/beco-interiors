@@ -186,7 +186,7 @@ function SlabCard({
 }) {
   return (
     <Link href={`/product/${slab.slug}`} className="group block w-full">
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/10">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
         <Image
           src={slab.src}
           alt={slab.alt}

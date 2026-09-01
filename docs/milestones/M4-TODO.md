@@ -86,6 +86,13 @@ Verification for this milestone was done against a running dev server on
 - [x] `motion.css`: CSS scroll driven parallax, scale and crop, and rise. No scroll handler,
       so none of it costs INP
 - [x] `ProductCard` gains a `frame` variant, so a lead tile is not cropped to 4:5
+- [x] `CardDeck` in `@beco/ui`, extracted from the room stack so the same physical language
+      is available anywhere. Auto dealing on the home page, reader driven on the product page
+- [x] Product gallery rebuilt on the deck. A strip has to reserve room for every image, so a
+      three image gallery and a six image gallery look like different components, and a fifth
+      of the catalogue has only three. A deck is one card's worth of space whatever it holds
+- [x] Rail cards became specimens: charcoal plate, name, number in the set, shadow, and a four
+      step vertical rhythm. They were bare images in a flat row, which read as a contact sheet
 - [ ] `Field` and `Input` extracted from the quote form into `@beco/ui`
 - [ ] 16px floor lint rule
 - [ ] SVG logo derived from the vector PDF

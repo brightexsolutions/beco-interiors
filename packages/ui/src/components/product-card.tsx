@@ -54,7 +54,7 @@ export function ProductCard({
           image that failed to load. The card itself still carries no border. */}
       <div className={cn(
         'relative w-full overflow-hidden bg-neutral-100',
-        'after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/10',
+        'after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15',
         FRAME[frame], imageClassName,
       )}>
         <div className="h-full w-full transition-transform duration-[600ms] ease-brand group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">

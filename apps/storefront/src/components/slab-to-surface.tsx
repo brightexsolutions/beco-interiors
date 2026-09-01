@@ -35,11 +35,11 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
       className="beco-stage relative h-[200vh] lg:h-[240vh]"
     >
       <div className="sticky top-20 flex h-[calc(100vh-5rem)] items-center overflow-hidden bg-charcoal">
-        <div className="mx-auto grid w-full max-w-[1380px] items-center gap-8 px-6 lg:grid-cols-[1.55fr_1fr] lg:gap-14">
+        <div className="mx-auto grid w-full max-w-[1380px] items-center gap-8 px-6 lg:grid-cols-[1.75fr_1fr] lg:gap-16">
 
           {/* --- The frame. Fixed, so nothing reflows, and sized to sit
                   inside the viewport with the caption beside it. --- */}
-          <div className="relative h-[42vh] w-full overflow-hidden lg:h-[min(64vh,34rem)]">
+          <div className="relative h-[46vh] w-full overflow-hidden lg:h-[min(80vh,48rem)]">
             {/* The room, CONTAINED. A full bleed cover crop of an interior
                 shows a corner of a worktop and reads as an abstract, which
                 defeats the point of revealing a room at all. Contained on
@@ -90,9 +90,9 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
                   the opening, while the pair is still closed, and the caption
                   once the room is behind it. Stacked rather than sequential,
                   so neither shifts the layout as it hands over. --- */}
-          <div className="relative min-h-[22rem] text-high-vis-white lg:min-h-[26rem]">
+          <div className="relative flex min-h-[24rem] items-center text-high-vis-white lg:min-h-[30rem]">
 
-          <div className="beco-stage-intro absolute inset-x-0 top-0">
+          <div className="beco-stage-intro absolute inset-0 flex flex-col justify-center">
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />
               <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
@@ -114,7 +114,7 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
             </p>
           </div>
 
-          <div className="beco-stage-caption absolute inset-x-0 top-0">
+          <div className="beco-stage-caption absolute inset-0 flex flex-col justify-center">
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />
               <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
