@@ -102,6 +102,44 @@
     to   { transform: scale(1); }
   }
 
+  /* --- A single light sweep across a slab as its card settles.
+         Motivated, not decoration: sintered stone is a polished surface
+         and this is what a polished surface does when it turns under a
+         light. Once, on arrival, at low opacity, and never again. --- */
+  /* ::before, deliberately. The card frames carry their hairline edge on
+     ::after via Tailwind's `after:ring-*`, and an element has only one of
+     each, so claiming ::after here would silently delete the edge that makes
+     a white stone on a white page read as a photograph at all. */
+  .beco-sheen[data-inview]::before {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    pointer-events: none;
+    background: linear-gradient(
+      104deg,
+      transparent 34%,
+      rgba(255, 255, 255, 0.30) 47%,
+      transparent 60%
+    );
+    animation: beco-sheen-sweep 1500ms cubic-bezier(0.16, 1, 0.3, 1) 260ms backwards;
+  }
+
+  @keyframes beco-sheen-sweep {
+    from { transform: translateX(-115%); }
+    to   { transform: translateX(115%); }
+  }
+
+  /* --- The name plate rises out from under its photograph as the card
+         settles, so the card assembles rather than appearing whole. --- */
+  .beco-plate[data-inview] {
+    animation: beco-plate-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 420ms backwards;
+  }
+
+  @keyframes beco-plate-up {
+    from { opacity: 0; transform: translateY(-100%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   /* --- Rail cards arriving from the right as the track brings them in.
          The rail's own translate is the section's effect, but without
          this the cards themselves are inert: they slide past and nothing

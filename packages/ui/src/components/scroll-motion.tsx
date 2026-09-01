@@ -22,7 +22,8 @@ import { useEffect } from 'react';
  * unobserved once it has fired.
  */
 const SELECTOR =
-  '.beco-reveal, .beco-rise, .beco-card-flip, .beco-rail-card, .beco-wipe, .beco-zoom';
+  '.beco-reveal, .beco-rise, .beco-card-flip, .beco-rail-card, .beco-wipe, .beco-zoom,' +
+  ' .beco-sheen, .beco-plate';
 
 export function ScrollMotion() {
   useEffect(() => {

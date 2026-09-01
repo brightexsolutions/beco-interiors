@@ -79,11 +79,18 @@ export function CardDeck({
   if (cards.length === 0) return null;
 
   return (
-    // The outer box CLIPS. A card leaves to the right and must stop at the
-    // edge of its own column rather than travelling across whatever is beside
-    // it, which on the product page is the price and the quote button. The
-    // padding leaves room for the fan behind the front card.
-    <div className={cn('relative overflow-hidden pb-14', className)}>
+    // `isolate` creates a stacking context, so the card z-indices below are
+    // scoped to this deck. Without it they sit on the same scale as the page
+    // chrome, and a card at z-index 60 painted straight over the sticky
+    // header at z-50 while the product page was scrolled. That is the whole
+    // fix for the overlap.
+    //
+    // Deliberately NOT clipped. An earlier version added overflow-hidden for
+    // the same overlap and it cut off the fan behind the front card and most
+    // of the swipe with it, which removed the effect rather than containing
+    // it. The card is kept off its neighbours by leaving sooner instead: see
+    // the opacity ramp below.
+    <div className={cn('relative isolate pb-14', className)}>
       <div className={cn('relative', aspect)}>
       {cards.map((card, i) => {
         // Distance from the front, which is this card's slot in the fan.
@@ -97,15 +104,21 @@ export function CardDeck({
             aria-hidden={slot !== 0 || isLeaving ? true : undefined}
             style={{
               transform: isLeaving
-                ? 'translate3d(145%, -8%, 0) rotate(20deg) scale(1.02)'
+                // Shorter travel than the room stack's, because this deck sits
+                // beside the price and the quote button rather than in open
+                // space.
+                ? 'translate3d(112%, -7%, 0) rotate(16deg) scale(1.02)'
                 : `translate3d(${slot * -2.3}%, ${slot * 1.1}rem, 0) rotate(${slot * -3}deg) scale(${1 - slot * 0.03})`,
               // Invisible while leaving, and still invisible on the frame it
               // lands at the back. It fades in once transitions resume.
               opacity: isLeaving || isSnapping ? 0 : 1,
-              zIndex: isLeaving ? 60 : 50 - slot,
+              zIndex: isLeaving ? 10 : 9 - slot,
               transition: isSnapping
                 ? 'none'
-                : `transform ${SWIPE_MS}ms cubic-bezier(0.65,0,0.35,1), opacity 300ms ease-out`,
+                // Opacity finishes well before the transform does, so the card
+                // has faded out by the time it is over anything beside it and
+                // the slide still reads in full.
+                : `transform ${SWIPE_MS}ms cubic-bezier(0.65,0,0.35,1), opacity 220ms ease-out`,
               // Only the front three carry their weight; deeper cards are
               // decoration and should not cost paint.
               display: slot > 3 && !isLeaving ? 'none' : undefined,
@@ -129,7 +142,7 @@ export function CardDeck({
           type="button"
           onClick={advance}
           aria-label={`Show the next photograph, ${cards.length} in total`}
-          className="absolute inset-0 z-[70] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-warm-red"
+          className="absolute inset-0 z-20 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-warm-red"
         >
           <span className="sr-only">Next photograph</span>
           {/* The count is the affordance: it says the deck has more in it. */}

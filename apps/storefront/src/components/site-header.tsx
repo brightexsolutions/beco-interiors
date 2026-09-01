@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { buttonClasses, cn } from '@beco/ui';
+import { NavDropdown, type NavItem } from './nav-dropdown';
 import { QuoteCounter } from './quote-counter';
 import { SITE } from '@/lib/site';
 
@@ -21,10 +22,18 @@ import { SITE } from '@/lib/site';
  * placement, not hierarchy: the quote form is still the conversion being
  * optimised, but a buyer who wants to phone should never have to hunt.
  */
-const NAV = [
-  { href: '/shop', label: 'Shop' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
+/**
+ * About carries a menu rather than a single page, because the story a
+ * specifier wants is spread across three: who Beco are, what they have
+ * actually installed, and where to come and see it.
+ *
+ * Every destination here exists. A menu item pointing at a page that is not
+ * built is a control that advertises an operation and does not perform it.
+ */
+const ABOUT: NavItem[] = [
+  { href: '/about', label: 'About Beco', description: 'Who we are and what we stock' },
+  { href: '/gallery', label: 'Projects', description: 'Real interiors, photographed on site' },
+  { href: '/contact', label: 'The showroom', description: 'Urban Square, Industrial Area' },
 ];
 
 export function SiteHeader() {
@@ -74,16 +83,25 @@ export function SiteHeader() {
 
         <nav aria-label="Main" className="hidden md:block">
           <ul className="flex items-center gap-1">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link
+                href="/shop"
+                className="block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
+              >
+                Shop
+              </Link>
+            </li>
+            <li>
+              <NavDropdown label="About" items={ABOUT} />
+            </li>
+            <li>
+              <Link
+                href="/contact"
+                className="block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
+              >
+                Contact
+              </Link>
+            </li>
           </ul>
         </nav>
 

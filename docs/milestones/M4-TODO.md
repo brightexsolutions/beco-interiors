@@ -29,7 +29,8 @@ Verification for this milestone was done against a running dev server on
 - [x] **The full taxonomy seeded**, fifteen categories rather than the two that happened to
       have photography. Each empty one gets a designed page and stays noindex and out of the
       sitemap until it holds products, per D27. See D47
-- [ ] `/gallery`
+- [x] `/gallery`, the project gallery. All 71 real installation photographs, interleaved
+      across products so no single stone takes the first screen. Delfone alone has ten
 - [x] Custom 404 routing back into the catalogue. **Verified:** returns 404 and renders
 - [ ] Custom 500
 
@@ -59,7 +60,13 @@ Verification for this milestone was done against a running dev server on
       so a close control only let a visitor silence something still current. **Verified:** bar
       renders, no close control, and the call to action navigates
 - [x] Brightex credit in the footer, linking to www.brightexsolutions.co.ke
+- [x] About carries a dropdown: About Beco, Projects, The showroom. Opens on hover for a
+      pointer and on click or Enter for everything else, escape returns focus to the trigger,
+      arrows walk the items, click outside dismisses. Every destination exists
 - [ ] Mega menu with real slab thumbnails
+- [ ] **No mobile navigation at all.** The nav is `hidden md:block`, so on a phone there is no
+      way to reach Shop, About or Contact except the logo and the quote button. Found while
+      adding the dropdown
 
 ## The quote flow
 

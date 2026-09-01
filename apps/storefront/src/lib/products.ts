@@ -134,7 +134,7 @@ export interface ProductDetail extends CatalogueProduct {
   specs: Record<string, string> | null;
   meta_title: string | null;
   meta_description: string | null;
-  category: { name: string; slug: string } | null;
+  category: { name: string; slug: string; description: string | null } | null;
 }
 
 export const getProductBySlug = async (slug: string): Promise<ProductDetail | null> => {
@@ -142,7 +142,8 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
     .from('products')
     .select(
       'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,' +
-        'description,short_description,sku,specs,meta_title,meta_description,categories(name,slug)',
+        'description,short_description,sku,specs,meta_title,meta_description,' +
+        'categories(name,slug,description)',
     )
     .eq('slug', slug)
     .maybeSingle();
@@ -151,10 +152,69 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
   // The generated types cannot narrow an embedded join in a select string,
   // so the shape is asserted here and guaranteed by the query above.
   const row = data as unknown as Record<string, unknown> & {
-    categories: { name: string; slug: string } | null;
+    categories: { name: string; slug: string; description: string | null } | null;
   };
   const { categories, ...rest } = row;
   return { ...rest, category: categories } as unknown as ProductDetail;
+};
+
+export interface GalleryShot {
+  path: string;
+  alt: string;
+  width: number;
+  height: number;
+  blur?: string | undefined;
+  productName: string;
+  productSlug: string;
+}
+
+/**
+ * Every installation photograph in the catalogue, flattened.
+ *
+ * A gallery of real projects is one of the strongest local and trust signals
+ * available, and it is a genuine advantage here: the nearest competitor's
+ * equivalent rooms are AI generated.
+ *
+ * Interleaved by product rather than grouped, so ten photographs of one stone
+ * cannot take the whole first screen. Delfone alone has ten.
+ */
+export const getGalleryShots = async (): Promise<GalleryShot[]> => {
+  const products = await getPublishedProducts();
+
+  const byProduct = products.map((product) =>
+    (product.images ?? [])
+      .filter((image) => image.role === 'application')
+      .map((image) => ({
+        path: image.path,
+        alt: image.alt,
+        width: image.width,
+        height: image.height,
+        blur: image.blur,
+        productName: product.name,
+        productSlug: product.slug,
+      })),
+  );
+
+  // Round robin across products: one from each, then the next from each.
+  const shots: GalleryShot[] = [];
+  const deepest = Math.max(0, ...byProduct.map((list) => list.length));
+  for (let round = 0; round < deepest; round++) {
+    for (const list of byProduct) {
+      const shot = list[round];
+      if (shot) shots.push(shot);
+    }
+  }
+  return shots;
+};
+
+/** Other products in the same category, for the product page's related row. */
+export const getRelatedProducts = async (
+  categorySlug: string,
+  excludeSlug: string,
+  limit = 4,
+): Promise<CatalogueProduct[]> => {
+  const products = await getProductsByCategory(categorySlug);
+  return products.filter((p) => p.slug !== excludeSlug).slice(0, limit);
 };
 
 /** Published product slugs, for generateStaticParams. */

@@ -7,7 +7,10 @@ import {
   type GalleryImage, type GalleryRole,
 } from '@beco/ui';
 import { AddToQuote } from '@/components/add-to-quote';
-import { getProductBySlug, getProductSlugs, primaryImage, blurProps } from '@/lib/products';
+import { ProductGrid } from '@/components/product-grid';
+import {
+  getProductBySlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
+} from '@/lib/products';
 import { SITE, whatsappLink } from '@/lib/site';
 
 export const revalidate = 3600;
@@ -60,6 +63,9 @@ export default async function ProductPage({ params }: Params) {
     ),
   }));
 
+  const related = product.category
+    ? await getRelatedProducts(product.category.slug, product.slug)
+    : [];
   const hero = primaryImage(product);
   const context = `${product.name}${product.sku ? ` (${product.sku})` : ''}`;
 
@@ -161,6 +167,17 @@ export default async function ProductPage({ params }: Params) {
             ))}
           </dl>
 
+          {/* Said plainly. Beco has not supplied specification sheets yet, and
+              a page that simply stops after four rows reads as unfinished,
+              while inventing a slab size or a hardness rating would cost more
+              credibility than the gap does. */}
+          {Object.keys(product.specs ?? {}).length === 0 ? (
+            <p className="mt-4 max-w-[52ch] font-ui text-sm text-neutral-500">
+              Full specification, including slab dimensions and finish options, comes with your
+              quote. Ask and we will send it before you commit to anything.
+            </p>
+          ) : null}
+
           {product.description ? (
             <div className="mt-10 max-w-[68ch] space-y-4 text-base leading-[1.6] text-neutral-700">
               {product.description.split('\n\n').map((para) => <p key={para}>{para}</p>)}
@@ -168,6 +185,53 @@ export default async function ProductPage({ params }: Params) {
           ) : null}
         </div>
       </div>
+
+      {/* --- About the material. Written once against the category and reused
+              on every product in it, so a page that has no description of its
+              own is still a page worth reading and worth ranking. --- */}
+      {product.category?.description ? (
+        <section className="mt-24 border-t border-neutral-200 pt-14">
+          <div className="grid gap-10 lg:grid-cols-[22rem_1fr] lg:gap-20">
+            <div className="beco-clip">
+              <div className="beco-wipe">
+                <div className="flex items-center gap-4">
+                  <span aria-hidden className="h-px w-8 bg-warm-red" />
+                  <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                    About the material
+                  </p>
+                </div>
+                <h2 className="mt-4 max-w-[14ch] font-display text-3xl leading-[1.1] text-charcoal sm:text-4xl">
+                  {product.category.name}
+                </h2>
+              </div>
+            </div>
+            <div className="max-w-[68ch] space-y-5 text-base leading-[1.7] text-neutral-700 lg:text-lg">
+              {product.category.description.split('\n\n').map((para) => (
+                <p key={para}>{para}</p>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* --- Others in the range. Real internal linking, which spreads
+              authority across the long tail instead of pooling it. --- */}
+      {related.length > 0 ? (
+        <section className="mt-24 border-t border-neutral-200 pt-14">
+          <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+            <h2 className="font-display text-3xl leading-tight text-charcoal sm:text-4xl">
+              Others in {product.category?.name}
+            </h2>
+            <Link
+              href={`/shop/${product.category?.slug}`}
+              className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep underline-offset-4 hover:underline"
+            >
+              See the range
+            </Link>
+          </div>
+          <ProductGrid products={related} />
+        </section>
+      ) : null}
 
       <ProductSchema
         name={product.name}

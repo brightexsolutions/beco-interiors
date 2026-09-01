@@ -171,7 +171,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               // animated on entry: animating the largest contentful paint is
               // a direct way to delay it. It gets a slow ambient drift
               // instead, which starts well after first paint.
-              className={`flex min-h-[92vh] items-center py-6 ${i === 0 ? '' : 'beco-card-flip'}`}
+              className={`flex min-h-[78vh] items-center py-6 ${i === 0 ? '' : 'beco-card-flip'}`}
             >
               <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness} />
             </div>
@@ -217,7 +217,10 @@ function SlabCard({
 }) {
   return (
     <Link href={`/product/${slab.slug}`} className="group block w-full">
-      <div className="beco-ambient relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
+      {/* Height is driven by the space available, not by the card's own
+          ratio, so the photograph and its plate are on screen together. A 3:4
+          frame in this column came out taller than the viewport on its own. */}
+      <div className="beco-ambient beco-sheen relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 shadow-[0_24px_64px_rgba(16,24,32,0.18)] after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15 lg:aspect-auto lg:h-[min(58vh,32rem)]">
         <Image
           src={slab.src}
           alt={slab.alt}
@@ -230,7 +233,7 @@ function SlabCard({
         />
       </div>
 
-      <div className="flex items-baseline justify-between gap-4 bg-charcoal px-6 py-5 text-high-vis-white">
+      <div className="beco-plate flex items-baseline justify-between gap-4 bg-charcoal px-6 py-5 text-high-vis-white">
         <div>
           <p className="font-ui text-sm font-semibold uppercase tracking-[0.16em]">
             {slab.name}
