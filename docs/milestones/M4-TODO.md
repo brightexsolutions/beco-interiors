@@ -1,5 +1,9 @@
 # M4: Storefront
 
+> **Starting a new session? Read `docs/milestones/M4-HANDOVER.md` first.**
+> It is the short list of what is NOT done and why, including what is blocked
+> on Beco rather than on code.
+
 Per CLAUDE.md rule 8. **Ticked only when checked against reality, not when written.**
 
 Status key: `[x]` verified · `[~]` built but not yet verified · `[ ]` not started
