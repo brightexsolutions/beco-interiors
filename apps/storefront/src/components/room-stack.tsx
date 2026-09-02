@@ -34,7 +34,11 @@ export function RoomStack({ products }: { products: CatalogueProduct[] }) {
   return (
     // Padding on the right, because the fan leans that way and the swipe
     // leaves through that edge.
-    <div className="relative mx-auto aspect-[4/5] w-full max-w-[24rem] lg:sticky lg:top-32">
+    // Padded then clipped: the fan leans left and the swipe leaves right, so
+    // the box has to be bigger than the cards before it can clip them without
+    // cutting the effect off.
+    <div className="relative mx-auto w-full max-w-[26rem] overflow-hidden px-3 pb-6 lg:sticky lg:top-32">
+      <div className="relative aspect-[4/5] w-full">
       {cards.map((card, i) => (
         <figure
           key={card.slug}
@@ -66,6 +70,7 @@ export function RoomStack({ products }: { products: CatalogueProduct[] }) {
           </figcaption>
         </figure>
       ))}
+      </div>
     </div>
   );
 }

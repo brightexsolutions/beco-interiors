@@ -17,6 +17,11 @@ import { getLiveAnnouncement } from '@/lib/announcements';
  * A clearance inverts to Warm Red so it reads as genuinely different from the
  * site chrome. Everything else is charcoal, which keeps Warm Red rationed.
  *
+ * Sits BELOW the header in z-order. The header is `z-50` and therefore its own
+ * stacking context, so the mobile menu panel inside it cannot rise above a
+ * sibling with a higher z-index however large its own is. At z-60 this bar
+ * painted straight over the open menu and clipped its close button.
+ *
  * **Not dismissible**, which revises D36. The bar already retires on its own
  * when `ends_at` passes, so the case for a close button was only to let a
  * visitor silence something still current, and Beco would rather it stayed
@@ -40,7 +45,7 @@ export async function AnnouncementBar() {
   return (
     <aside
       aria-label="Announcement"
-      className={`relative z-[60] ${TONE[announcement.type] ?? TONE.notice}`}
+      className={`relative z-30 ${TONE[announcement.type] ?? TONE.notice}`}
     >
       <div className="mx-auto max-w-[1380px] px-6 py-2.5 sm:py-3">
         <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">

@@ -71,7 +71,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
     <div className={cn('relative', className)}>
       {/* --- The frame. Every image stays mounted and crossfades, so pressing
               a card never leaves an empty frame while a file decodes. --- */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 sm:aspect-[4/3]">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 sm:aspect-[5/4]">
         {ordered.map((img, i) => (
           <div
             key={`${img.role}-${i}`}

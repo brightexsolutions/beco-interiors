@@ -158,4 +158,38 @@ describe('submitQuote', () => {
     expect(items![0]!.description).not.toContain('Free marble');
     expect(Number(items![0]!.unit_price)).toBe(0);
   });
+
+  it('records installation and samples, which are how Beco actually sells', async () => {
+    const result = await submitQuote(
+      validSubmission({ wantsInstallation: true, wantsSamples: true, fulfilment: 'delivery' }),
+    );
+    expect(result.ok, JSON.stringify(result)).toBe(true);
+    if (!result.ok) return;
+
+    const { data } = await service()
+      .from('quotes')
+      .select('id,wants_installation,wants_samples,fulfilment')
+      .eq('reference_number', result.reference)
+      .single();
+    created.push(data!.id);
+    expect(data).toMatchObject({
+      wants_installation: true,
+      wants_samples: true,
+      fulfilment: 'delivery',
+    });
+  });
+
+  it('defaults both to false rather than null, so a report can count them', async () => {
+    const result = await submitQuote(validSubmission());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const { data } = await service()
+      .from('quotes')
+      .select('id,wants_installation,wants_samples')
+      .eq('reference_number', result.reference)
+      .single();
+    created.push(data!.id);
+    expect(data!.wants_installation).toBe(false);
+    expect(data!.wants_samples).toBe(false);
+  });
 });

@@ -463,7 +463,13 @@
     /* --- The pinned rail. The section is tall, the frame inside it
            sticks, and the track slides sideways across exactly the
            distance it overflows by. The page scroll is never intercepted,
-           so a fast flick still reaches the footer. --- */
+           so a fast flick still reaches the footer.
+
+           DESKTOP ONLY. Below this width the rail is not pinned and the
+           track is a plain swipe row, so translating it fought the
+           reader's own finger: the section could not be scrolled sideways
+           by hand because the animation kept putting it back. --- */
+    @media (min-width: 1024px) {
     .beco-rail-track {
       animation: beco-rail linear both;
       animation-timeline: view(block);
@@ -473,6 +479,7 @@
     @keyframes beco-rail {
       from { transform: translateX(0); }
       to   { transform: translateX(calc(-100% + 100vw - 3rem)); }
+    }
     }
 
     /* --- Scale and crop. A full bleed photograph contracts into a

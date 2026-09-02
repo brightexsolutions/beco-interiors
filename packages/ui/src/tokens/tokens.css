@@ -127,6 +127,19 @@
 }
 
 @layer base {
+  /* The page never scrolls sideways.
+     `clip` rather than `hidden`: hidden makes the element a scroll container,
+     which silently breaks every `position: sticky` on the page, and this site
+     is built on sticky. clip does not.
+
+     Needed because several effects deliberately move outside their own box:
+     the room stack fans and swipes a card to 145% of its width, and the rail
+     translates a track wider than the viewport. Those are contained here
+     rather than by hunting each one. */
+  html {
+    overflow-x: clip;
+  }
+
   button:not(:disabled),
   [role='button']:not(:disabled),
   summary,

@@ -91,7 +91,7 @@ export default async function ProductPage({ params }: Params) {
         </ol>
       </nav>
 
-      <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(21rem,0.85fr)] lg:gap-14">
         <ProductGallery images={images} />
 
         <div className="lg:pt-4">
@@ -139,7 +139,7 @@ export default async function ProductPage({ params }: Params) {
               international number each wrapped to two lines and left the pair
               ragged, which is a worse advertisement for care than no buttons
               at all. */}
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             <a
               href={whatsappLink(context)}
               data-analytics="whatsapp_click"
@@ -264,9 +264,9 @@ export default async function ProductPage({ params }: Params) {
 
 function Spec({ term, value }: { term: string; value: string }) {
   return (
-    <div className="flex justify-between gap-6 border-b border-neutral-200 py-3">
-      <dt className="text-neutral-500">{term}</dt>
-      <dd className="text-right font-semibold text-charcoal">{value}</dd>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-neutral-200 py-3">
+      <dt className="shrink-0 text-neutral-500">{term}</dt>
+      <dd className="min-w-0 text-right font-semibold text-charcoal">{value}</dd>
     </div>
   );
 }

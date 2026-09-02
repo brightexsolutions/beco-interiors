@@ -121,26 +121,40 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-5">
+        <div className="flex items-center gap-1 sm:gap-3">
+          {/* The business line, per D39: visible rather than merely findable.
+              Icon plus number where there is room, icon alone where there is
+              not, so it never wraps and never competes with the quote button
+              for width. */}
           <a
             href={SITE.phoneHref}
             data-analytics="call_click"
-            className="hidden font-ui text-sm font-semibold text-charcoal transition-colors hover:text-warm-red-deep sm:block"
+            aria-label={`Call Beco on ${SITE.phone}`}
+            className="flex min-h-11 items-center gap-2 px-2 font-ui text-sm font-semibold text-charcoal transition-colors hover:text-warm-red-deep"
           >
-            {SITE.phone}
+            <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current">
+              <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z" />
+            </svg>
+            <span className="hidden lg:inline">{SITE.phone}</span>
           </a>
+
+          {/* One word and a basket. "Request a quote" is the page's language,
+              not the chrome's: in a 80px bar beside a phone number it was the
+              widest thing in the header. */}
           <Link
             href="/quote"
+            aria-label="Your quote list"
             className={cn(
               buttonClasses({ variant: 'primary' }),
-              // Smaller than the page's primary buttons: in a 56px bar the
-              // full size control dominates the chrome. Still 44px tall, so
-              // the touch target rule holds.
-              'h-11 min-h-0 px-5 py-0 text-sm tracking-[0.08em]',
+              'h-11 min-h-0 gap-2 px-4 py-0 text-sm tracking-[0.08em]',
             )}
           >
-            <span className="hidden sm:inline">Request a quote</span>
-            <span className="sm:hidden">Quote</span>
+            <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-none stroke-current" strokeWidth="1.7">
+              <path d="M3 5h2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20 8H6.2" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="9.5" cy="20" r="1.3" />
+              <circle cx="17" cy="20" r="1.3" />
+            </svg>
+            Quote
             <QuoteCounter />
           </Link>
           <MobileMenu />

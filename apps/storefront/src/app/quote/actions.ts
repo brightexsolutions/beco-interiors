@@ -48,6 +48,8 @@ export async function submitQuote(input: unknown): Promise<SubmitResult> {
     p_timeline: data.timeline ?? null,
     p_budget_note: data.budgetNote ?? null,
     p_project_details: data.projectDetails ?? null,
+    p_wants_installation: data.wantsInstallation ?? false,
+    p_wants_samples: data.wantsSamples ?? false,
   });
 
   if (error || !reference) {

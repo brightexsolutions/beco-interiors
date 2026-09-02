@@ -24,6 +24,10 @@ export const quoteSubmissionSchema = z.object({
   timeline: z.string().trim().max(120).optional(),
   budgetNote: z.string().trim().max(120).optional(),
   projectDetails: z.string().trim().max(2000).optional(),
+  /** Beco installs, and charges for it. Captured as intent, priced by staff. */
+  wantsInstallation: z.boolean().optional(),
+  /** How developers and interior designers actually buy: samples first. */
+  wantsSamples: z.boolean().optional(),
   items: z
     .array(
       z.object({

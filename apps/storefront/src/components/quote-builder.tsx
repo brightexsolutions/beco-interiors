@@ -24,6 +24,7 @@ export function QuoteBuilder() {
   const [mounted, setMounted] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [fulfilment, setFulfilment] = useState<'pickup' | 'delivery' | ''>('');
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -90,10 +91,11 @@ export function QuoteBuilder() {
       customerEmail: String(form.get('customerEmail') ?? ''),
       company: String(form.get('company') ?? '') || undefined,
       projectType: String(form.get('projectType') ?? '') || undefined,
-      fulfilment: (String(form.get('fulfilment') ?? '') || undefined) as
-        | 'pickup' | 'delivery' | undefined,
+      fulfilment: fulfilment || undefined,
       deliveryAddress: String(form.get('deliveryAddress') ?? '') || undefined,
       projectDetails: String(form.get('projectDetails') ?? '') || undefined,
+      wantsInstallation: form.get('wantsInstallation') === 'on',
+      wantsSamples: form.get('wantsSamples') === 'on',
       items: lines.map((l) => ({ slug: l.slug, quantity: l.quantity })),
     };
     startTransition(async () => {
@@ -217,18 +219,74 @@ export function QuoteBuilder() {
             </legend>
             <div className="mt-2 flex gap-6">
               {[['pickup', 'I will collect'], ['delivery', 'Please deliver']].map(([value, label]) => (
-                <label key={value} className="flex min-h-11 items-center gap-2 font-ui text-base">
-                  <input type="radio" name="fulfilment" value={value} className="h-4 w-4 accent-[var(--color-warm-red-deep)]" />
+                <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 font-ui text-base">
+                  <input
+                    type="radio"
+                    name="fulfilment"
+                    value={value}
+                    checked={fulfilment === value}
+                    onChange={() => setFulfilment(value as 'pickup' | 'delivery')}
+                    className="h-4 w-4 accent-[var(--color-warm-red-deep)]"
+                  />
                   {label}
                 </label>
               ))}
             </div>
+
+            {/* Said at the moment of choosing, not in the small print. A slab
+                is 65,000 and a customer who reads that as the delivered price
+                is a customer surprised by the invoice. */}
+            {fulfilment === 'delivery' ? (
+              <p className="mt-3 border-l-2 border-warm-red bg-neutral-50 py-3 pl-4 pr-3 font-ui text-sm text-neutral-700">
+                Delivery is charged separately and depends on where the site is. We will put it
+                on the quote as its own line so you can see it.
+              </p>
+            ) : null}
           </fieldset>
 
-          <Field
-            label="Delivery address" name="deliveryAddress" hint="Optional"
-            error={fieldError('deliveryAddress')}
-          />
+          {fulfilment === 'delivery' ? (
+            <Field
+              label="Delivery address" name="deliveryAddress" hint="Where is the site?"
+              error={fieldError('deliveryAddress')}
+            />
+          ) : null}
+
+          {/* Two things people ring up to ask, asked here instead. */}
+          <fieldset>
+            <legend className="font-ui text-sm font-semibold text-charcoal">
+              Anything else you need?
+            </legend>
+            <div className="mt-3 space-y-3">
+              <label className="flex cursor-pointer gap-3 font-ui text-base">
+                <input
+                  type="checkbox"
+                  name="wantsInstallation"
+                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-warm-red-deep)]"
+                />
+                <span>
+                  Installation
+                  <span className="block font-ui text-sm text-neutral-500">
+                    We install as well as supply. Charged separately, and quoted with the
+                    materials.
+                  </span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer gap-3 font-ui text-base">
+                <input
+                  type="checkbox"
+                  name="wantsSamples"
+                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-warm-red-deep)]"
+                />
+                <span>
+                  Samples first
+                  <span className="block font-ui text-sm text-neutral-500">
+                    Sensible on a large specification. We will get pieces to you or to your
+                    client before you commit.
+                  </span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
 
           <div>
             <label htmlFor="projectDetails" className="block font-ui text-sm font-semibold text-charcoal">
