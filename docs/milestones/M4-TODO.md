@@ -340,6 +340,14 @@ These were discovered while building and are recorded rather than remembered.
       lifted and the rest dropped to 42%. Removes a Chromium only dependency rather than adding
       one. See D57
 
+- [x] **A whole section that is just the film**, on `/gallery`, framed to the footage's own
+      portrait shape rather than stretched wide. No stock clip stands in for a second one. See
+      D63
+- [x] **Gallery cards cycle through the same stone's other photographs on hover**, itself first
+      so nothing jumps at the start, capped at four. Fixed a live selector that would have gone
+      dead silently for hover-enabled cards, and a real bug in the extracted interleave helper
+      that dropped falsy array elements. **9 tests.** See D64
+
 ## Found on 3 September, not planned
 
 - [x] **`pnpm db:reset` was broken, and the database was not reproducible.** Two faults, both

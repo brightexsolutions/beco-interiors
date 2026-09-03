@@ -240,14 +240,31 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
   return { ...rest, category: categories } as unknown as ProductDetail;
 };
 
-export interface GalleryShot {
+export interface GalleryShotImage {
   path: string;
   alt: string;
   width: number;
   height: number;
   blur?: string | undefined;
+}
+
+export interface GalleryShot extends GalleryShotImage {
   productName: string;
   productSlug: string;
+  /**
+   * Other real installation shots of the SAME product, this one first, so
+   * hovering the card can cycle through the rest of that stone's projects
+   * rather than only ever showing the one photograph the grid happened to
+   * place there.
+   *
+   * Capped at four, matching the product card's own hover gallery: a card
+   * is not a slideshow, and Delfone alone has ten application shots, which
+   * is too many to cycle through on a single hover.
+   *
+   * Never a DIFFERENT product's photograph. The whole point is showing more
+   * of the same installation, not a stone the reader did not ask about.
+   */
+  siblings: GalleryShotImage[];
 }
 
 /**
@@ -260,11 +277,46 @@ export interface GalleryShot {
  * Interleaved by product rather than grouped, so ten photographs of one stone
  * cannot take the whole first screen. Delfone alone has ten.
  */
+/**
+ * One product's application shots, each carrying its own siblings, itself
+ * first. Pure, so the siblings rule (this shot first, capped at four, never
+ * another product's photograph) is testable without a database.
+ */
+export const shotsForProduct = (
+  applications: GalleryShotImage[],
+  productName: string,
+  productSlug: string,
+): GalleryShot[] =>
+  applications.map((image, i) => ({
+    ...image,
+    productName,
+    productSlug,
+    siblings: [image, ...applications.filter((_, j) => j !== i)].slice(0, 4),
+  }));
+
+/** Round robin interleave: one from each list, then the next from each. */
+export const interleave = <T>(lists: T[][]): T[] => {
+  const out: T[] = [];
+  const deepest = Math.max(0, ...lists.map((list) => list.length));
+  for (let round = 0; round < deepest; round++) {
+    for (const list of lists) {
+      // `round in list` rather than a truthy check on the value: this is a
+      // generic interleave and a falsy element, 0, an empty string, is a
+      // legitimate array member that a truthy check would silently drop.
+      // The only caller today always passes GalleryShot objects, which are
+      // never falsy, so this could not have shown up in the site itself, but
+      // an exported utility is a promise to whatever calls it next.
+      if (round in list) out.push(list[round] as T);
+    }
+  }
+  return out;
+};
+
 export const getGalleryShots = async (): Promise<GalleryShot[]> => {
   const products = await getPublishedProducts();
 
-  const byProduct = products.map((product) =>
-    (product.images ?? [])
+  const byProduct = products.map((product) => {
+    const applications: GalleryShotImage[] = (product.images ?? [])
       .filter((image) => image.role === 'application')
       .map((image) => ({
         path: image.path,
@@ -272,21 +324,14 @@ export const getGalleryShots = async (): Promise<GalleryShot[]> => {
         width: image.width,
         height: image.height,
         blur: image.blur,
-        productName: product.name,
-        productSlug: product.slug,
-      })),
-  );
+      }));
+    return shotsForProduct(applications, product.name, product.slug);
+  });
 
-  // Round robin across products: one from each, then the next from each.
-  const shots: GalleryShot[] = [];
-  const deepest = Math.max(0, ...byProduct.map((list) => list.length));
-  for (let round = 0; round < deepest; round++) {
-    for (const list of byProduct) {
-      const shot = list[round];
-      if (shot) shots.push(shot);
-    }
-  }
-  return shots;
+  // Interleaved by product rather than grouped, so ten photographs of one
+  // stone cannot take the whole first screen. Delfone alone had ten, before
+  // it was unpublished for reasons that have nothing to do with this.
+  return interleave(byProduct);
 };
 
 /** Other products in the same category, for the product page's related row. */

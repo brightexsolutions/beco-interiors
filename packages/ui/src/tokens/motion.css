@@ -426,9 +426,15 @@
            Three rates, so a group of photographs sits at three distances
            rather than on one flat plane. The frames never move, only the
            images inside them, so none of this costs layout. --- */
-    .beco-depth-1 > img { animation: beco-depth-near linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
-    .beco-depth-2 > img { animation: beco-depth-mid  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
-    .beco-depth-3 > img { animation: beco-depth-far  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    /* A DESCENDANT selector, not a direct child one: the gallery's hover
+       cycling cards nest their `img` two levels deeper, inside HoverGallery's
+       own per-frame wrapper, and `>` would have silently stopped matching for
+       exactly those cards. Widened rather than narrowed, so every existing
+       direct-child case, which is still most of them, keeps working exactly
+       as before. */
+    .beco-depth-1 img { animation: beco-depth-near linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    .beco-depth-2 img { animation: beco-depth-mid  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    .beco-depth-3 img { animation: beco-depth-far  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
 
     @keyframes beco-depth-near { from { transform: translateY(-11%) scale(1.26); } to { transform: translateY(11%) scale(1.26); } }
     @keyframes beco-depth-mid  { from { transform: translateY(-7%)  scale(1.17); } to { transform: translateY(7%)  scale(1.17); } }

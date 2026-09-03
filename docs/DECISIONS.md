@@ -533,3 +533,41 @@ The shop's filter bar is `sticky top-20 z-40` now, tucked under the header rathe
 away with the range tiles above it, because searching, filtering and sorting are exactly the
 controls a reader reaches for once they are past the tiles and into the grid, which is precisely
 when the bar used to disappear.
+
+## D63, 3 September 2026: a whole section that is just the film, on the gallery page
+
+Asked for a page carrying a section that is nothing but a continuous video. Built as
+`AmbientVideoSection`, a reusable component, and placed at the top of `/gallery`: the one page
+whose entire purpose is "here is what a finished room looks like", so a moving opening earns its
+place there more than anywhere else on the site.
+
+Framed to the footage's own shape rather than stretched to the viewport's. All of Beco's clips
+are portrait phone video, per D51, and a full bleed band would crop most of the picture away.
+The frame is height led instead, nearly the full viewport tall, width following from the 9:16
+ratio, centred on a charcoal ground either side.
+
+No second, borrowed clip stands in for a rotation. D51 already settled that question. When more
+of the 52 clips in Drive are transcoded, this is where a short rotation between real Beco films
+belongs.
+
+## D64, 3 September 2026: the gallery cards cycle through their own other photographs
+
+Asked for a hover slider on the project gallery, more of a stone's other installations, not a
+different stone's photograph.
+
+`getGalleryShots` now hands each shot a `siblings` array: the other application photographs of
+the SAME product, itself first so the hover cycle never jumps away from the picture already on
+screen, capped at four to match the product card's own hover gallery limit. `HoverGallery`,
+built earlier and unused until now, is what actually cycles them.
+
+The depth parallax selector, `.beco-depth-N > img`, was a direct child selector, and
+`HoverGallery` nests its `img` two levels deeper inside its own per-frame wrapper. Widened to a
+descendant selector so it keeps matching every existing direct-child case exactly as before and
+additionally reaches the new nested one, rather than the parallax silently going dead on every
+card that gained a hover slider.
+
+`interleave`, extracted from `getGalleryShots` for testing, carried a latent bug: it dropped any
+falsy array element, including `0`, because it used a truthy check rather than an existence
+check. The current caller only ever passes objects, so it could not have shown up on the site,
+but an exported utility is a promise to whatever calls it next, and the test written against it
+caught the bug before a second caller could have inherited it.
