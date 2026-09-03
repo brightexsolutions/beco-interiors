@@ -230,19 +230,20 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                 bleeding photographs, because a card can carry the stone's
                 name and its spec, which is what a specifier is actually
                 scrolling to find out. --- */}
-        <div className="hidden lg:block lg:py-16 lg:pr-[max(1.5rem,calc((100vw-1380px)/2))] lg:pl-10">
+        <div className="beco-orbit-stage hidden lg:block lg:py-16 lg:pr-[max(1.5rem,calc((100vw-1380px)/2))] lg:pl-10">
           {slabs.map((slab, i) => (
             <div
               key={slab.slug}
               ref={(el) => { panels.current[i] = el; }}
-              // The first card is the LCP element and is deliberately not
-              // animated on entry: animating the largest contentful paint is
-              // a direct way to delay it. It gets a slow ambient drift
-              // instead, which starts well after first paint.
-              className={`flex min-h-[78vh] items-center py-6 ${i === 0 ? '' : 'beco-card-flip'}`}
+              // The orbit is scroll POSITION, not an entry animation, so the
+              // LCP rule is satisfied by geometry rather than by an
+              // exception: this panel sits centred in the viewport at scroll
+              // zero, which is the middle of its own range, so the first slab
+              // paints square on and fully opaque. Nothing about it waits.
+              className="beco-orbit flex min-h-[78vh] items-center py-6"
             >
               <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness}
-                        priority={i === 0} />
+                        priority={i === 0} lean={false} />
             </div>
           ))}
         </div>
@@ -280,13 +281,20 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
  * The whole card is one link, so the target is the card and not a word in it.
  */
 function SlabCard({
-  slab, index, total, thickness, priority = false, sizes = '(min-width: 1024px) 42vw, 78vw',
+  slab, index, total, thickness, priority = false, lean = true,
+  sizes = '(min-width: 1024px) 42vw, 78vw',
 }: {
   slab: HeroSlab;
   index: number;
   total: number;
   thickness: string;
   priority?: boolean;
+  /**
+   * The static propped lean. Off in the desktop column, where the orbit owns
+   * the third dimension: two 3D transforms on nested elements do not read as
+   * one object, they read as a card wobbling inside a frame.
+   */
+  lean?: boolean;
   sizes?: string;
 }) {
   return (
@@ -295,7 +303,11 @@ function SlabCard({
     // stationary frame.
     <Link
       href={`/product/${slab.slug}`}
-      className="beco-lean group block w-full [transform-style:preserve-3d] motion-reduce:!transform-none motion-reduce:transition-none"
+      className={cn(
+        'group block w-full [transform-style:preserve-3d]',
+        'motion-reduce:!transform-none motion-reduce:transition-none',
+        lean && 'beco-lean',
+      )}
     >
       {/* Height is driven by the space available, not by the card's own
           ratio, so the photograph and its plate are on screen together. A 3:4

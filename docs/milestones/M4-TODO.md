@@ -318,6 +318,15 @@ These were discovered while building and are recorded rather than remembered.
       naming the wrong slab. See D55. **Verified:** markup renders, one 800px derivative shared
       between the background and the first card. **Still needs the real device walk to judge**
 
+- [x] **The hero slabs ride an orbit.** Raised by Brown: the effects were basic and the site
+      should feel like a designer made it. The cards travelled straight up a column, which is
+      what a browser gives you for free. They now swing in from below on the far side of an
+      axis standing off the right edge, turn to face the reader at the middle, and turn away as
+      they leave, with a deliberate dwell at focus so the range does not strobe. See D56.
+      **Verified:** stage and four orbit panels render, keyframes ship, guards intact.
+      **Not yet seen moving on a real machine**, and the still fallback on Safari is a real
+      device question
+
 ## Found on 3 September, not planned
 
 - [x] **`pnpm db:reset` was broken, and the database was not reproducible.** Two faults, both

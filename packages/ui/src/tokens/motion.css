@@ -307,6 +307,76 @@
 
   @supports (animation-timeline: view()) {
 
+    /* --- The hero slabs ride an ORBIT, not a scroll.
+
+           The cards used to travel straight up the right hand column, which
+           is a list that happens to contain photographs. They now move on a
+           circle whose axis stands off the right edge of the screen, so a
+           slab swings in from below on the far side of that axis, turns to
+           face the reader as it reaches the middle, and turns away again as
+           it leaves. Coverflow, driven by scroll position rather than by a
+           timer, so it is the reader moving the range past themselves.
+
+           The geometry, so the numbers are not arbitrary. A point orbiting a
+           vertical axis at distance R sits at x = R - R·cos(phi) and
+           z = R·sin(phi), and faces the reader rotated by phi. At the near
+           point, phi = 0, it is leftmost, closest and square on, which is why
+           the focused slab keeps exactly the position it has always had. At
+           the extremes it is pushed toward the axis on the right and turned
+           away, which is the arc.
+
+           One deliberate cheat: both ends recede rather than one swinging in
+           FRONT of the reader as the true circle would have it. A slab
+           looming over the type column on its way out is a distraction, and
+           things that leave should get smaller.
+
+           The dwell between 38% and 62% is the designed part. Without it the
+           card is fully lit for an instant at a single scroll position and
+           the range reads as a strobe. With it, each slab holds the middle
+           long enough to actually be looked at, and the fade either side is
+           what makes the ones below read as waiting their turn.
+
+           `perspective-origin` sits at the right edge, on the axis, so the
+           recession converges where the orbit is rather than at the middle
+           of the screen.
+
+           No blur anywhere: depth is carried by scale, opacity and real Z,
+           which stay on the compositor. Transform and opacity only. --- */
+    .beco-orbit-stage {
+      perspective: 1800px;
+      perspective-origin: 100% 50%;
+    }
+
+    .beco-orbit {
+      animation: beco-orbit linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      will-change: transform, opacity;
+    }
+
+    @keyframes beco-orbit {
+      from {
+        opacity: 0.12;
+        transform: translate3d(15%, 30%, -300px) rotateY(30deg) rotate(3.5deg);
+      }
+      38% {
+        opacity: 1;
+        transform: translate3d(2.5%, 6%, -50px) rotateY(6deg) rotate(0.6deg);
+      }
+      50% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotateY(0deg) rotate(0deg);
+      }
+      62% {
+        opacity: 1;
+        transform: translate3d(2.5%, -6%, -50px) rotateY(-6deg) rotate(-0.6deg);
+      }
+      to {
+        opacity: 0.12;
+        transform: translate3d(15%, -30%, -300px) rotateY(-30deg) rotate(-3.5deg);
+      }
+    }
+
     /* --- Parallax on the hero slabs. Capped at 8% travel, per the
            motion rules, so it reads as depth rather than as a trick.
            The image is oversized so the drift never exposes an edge. --- */

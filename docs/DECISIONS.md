@@ -367,3 +367,46 @@ request. Worth measuring when Lighthouse runs, against the 1.0MB home page budge
 *Reverses if:* Lighthouse shows the wasted preload costing more than the opening screen gains,
 in which case the desktop card column loses its preload rather than the mobile hero losing its
 photograph.
+
+## D56, 3 September 2026: the hero slabs ride an orbit, not a scroll
+
+The cards travelled straight up the right hand column, which is a list that happens to contain
+photographs. The brief was for the site to feel like a designer made it, and a column of images
+moving vertically is the default a browser gives you for free.
+
+They now move on a circle whose axis stands off the right edge of the screen. A slab swings in
+from below on the far side of that axis, turns to face the reader as it reaches the middle, and
+turns away again as it leaves. Coverflow, driven by scroll POSITION rather than by a timer, so
+it is the reader moving the range past themselves rather than a carousel playing at them.
+
+The geometry is not arbitrary. A point orbiting a vertical axis at distance R sits at
+x = R - R·cos(phi), z = R·sin(phi), and faces the reader rotated by phi. At the near point,
+phi = 0, it is leftmost, closest and square on, which is why the focused slab keeps exactly the
+position it had before: the change is what happens either side of focus, not at it.
+
+One deliberate cheat: both ends recede, where a true circle would swing one of them in FRONT of
+the reader. A slab looming over the type column on its way out is a distraction, and things
+that leave should get smaller.
+
+**The dwell is the designed part.** Between 38% and 62% of the range the card holds full
+opacity and near neutral position. Without it a slab is fully lit at a single scroll position
+and the range reads as a strobe. With it each one holds the middle long enough to be looked at,
+and the fade either side is what makes the slabs below read as waiting their turn rather than
+as decoration.
+
+The static propped lean is off in this column. Two 3D transforms on nested elements do not read
+as one object, they read as a card wobbling inside a frame. The mobile row keeps the lean,
+because there is no orbit there.
+
+The LCP rule is satisfied by geometry rather than by an exception. The first panel sits centred
+in the viewport at scroll zero, which is the middle of its own range, so the first slab paints
+square on and fully opaque. Nothing about it waits, and no card is excluded from the effect.
+
+No blur anywhere. Depth is carried by scale, opacity and real Z, all of which stay on the
+compositor, so this costs nothing in INP. Behind `@supports (animation-timeline: view())` and
+`prefers-reduced-motion: no-preference`, so Safari and Firefox get a still, complete column and
+a reduced motion reader gets no movement at all.
+
+*Reverses if:* the still fallback turns out to read as broken rather than as calm on the
+browsers without `animation-timeline`, which is most of iOS. That is a real device question and
+it is on the QA checklist.

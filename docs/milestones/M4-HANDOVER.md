@@ -91,7 +91,9 @@ finished one.
       are below 1600px wide so their largest rendition is upscaled. All reported rather than
       silently shipped. Likely wants reshooting. See D46
 - [ ] Scroll driven effects are Chromium only. Parallax, the pinned rail, the Bookmatch Open
-      reveal and the coverflow all use `animation-timeline`, absent in Safari and Firefox.
+      reveal, the hero orbit and the coverflow all use `animation-timeline`, absent in Safari
+      and Firefox. **The hero orbit is the one that matters most**, because it is now the first
+      thing a desktop visitor sees move, and on Safari it is a still column.
       Reveals, wipes, card flips and the hover gallery run everywhere because they go through
       `ScrollMotion`
 - [ ] **No accessibility assertion library is wired in.** The `component` skill asks for
@@ -137,7 +139,7 @@ Nothing in this section has been done, and the milestone cannot close without it
 Recorded in `docs/DECISIONS.md`: **D52** the taxonomy browses two levels deep, **D53** a folder
 holding several products is reported and never split, **D54** catalogue rows live in a
 migration rather than the seed, **D55** the mobile hero is image led rather than the desktop
-hero reflowed.
+hero reflowed, **D56** the hero slabs ride an orbit rather than a scroll.
 
 **D50 is still the one to remember**, from the previous session. Beco's prices INCLUDE VAT. On
 a 65,000 slab the VAT inside the price is 8,965.52, not 10,400 on top. The M5 quote document
