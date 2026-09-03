@@ -571,3 +571,17 @@ falsy array element, including `0`, because it used a truthy check rather than a
 check. The current caller only ever passes objects, so it could not have shown up on the site,
 but an exported utility is a promise to whatever calls it next, and the test written against it
 caught the bug before a second caller could have inherited it.
+
+## D65, 3 September 2026: the sticky filter bar is desktop only
+
+D62 pinned the shop's filter bar under the header. On a phone it made things worse rather than
+better: the four fields wrap onto two rows there, so the pinned bar, the fixed mobile action bar
+at the bottom, and the on screen keyboard together left almost nothing of the actual grid
+visible, sometimes a sliver of a single product image.
+
+`lg:sticky` now, not `sticky`. Desktop keeps the fix, one compact row, cheap to pin. Mobile goes
+back to the bar scrolling away the way it always did, which was never the reported problem there.
+
+*Reverses if:* the mobile filter bar is redesigned into something short enough to pin, most
+likely a single row behind a "Filters" toggle that opens a sheet rather than four fields stacked
+inline.

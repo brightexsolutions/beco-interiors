@@ -348,6 +348,10 @@ These were discovered while building and are recorded rather than remembered.
       dead silently for hover-enabled cards, and a real bug in the extracted interleave helper
       that dropped falsy array elements. **9 tests.** See D64
 
+- [x] **The sticky filter bar made mobile worse.** Pinning the whole four field bar under the
+      header meant it, the fixed action bar, and the keyboard together left almost nothing of
+      the grid visible. Scoped to `lg:sticky`, desktop only. See D65
+
 ## Found on 3 September, not planned
 
 - [x] **`pnpm db:reset` was broken, and the database was not reproducible.** Two faults, both

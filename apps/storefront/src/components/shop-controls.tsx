@@ -112,14 +112,14 @@ export function ShopControls({
   ].filter((c) => c !== null);
 
   return (
-    // Sticks under the header rather than scrolling away with the range
-    // tiles above it. `top-20` matches the header's own h-20 exactly, and
-    // z-40 keeps it a layer below the header's z-50 so the header's own
-    // shadow edge still reads as the topmost line when both are pinned.
-    // Filtering, searching and sorting are the controls a reader reaches for
-    // AFTER they have scrolled past the range tiles into the grid, which is
-    // exactly when the bar used to disappear.
-    <div className="sticky top-20 z-40 border-t-2 border-b border-t-charcoal border-b-neutral-200 bg-high-vis-white/95 py-5 backdrop-blur">
+    // Sticks under the header on DESKTOP ONLY. There the bar is one compact
+    // row and pinning it costs little. On mobile the four fields wrap onto
+    // two rows, and pinning that meant the bar, the fixed action bar at the
+    // bottom, and the on screen keyboard together left almost nothing of the
+    // actual grid visible, which is worse than the bar simply scrolling away
+    // the way it always did. `top-20` matches the header's own h-20, and z-40
+    // keeps it a layer below the header's z-50.
+    <div className="lg:sticky lg:top-20 lg:z-40 border-t-2 border-b border-t-charcoal border-b-neutral-200 bg-high-vis-white/95 py-5 backdrop-blur">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
           <Field label="Search" htmlFor="shop-search" className="min-w-0 flex-1 sm:min-w-[16rem]">
