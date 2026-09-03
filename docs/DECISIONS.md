@@ -462,3 +462,74 @@ shadows were sliced off.
 
 The dense variant states the count and says the strip scrolls, so nobody has to discover thirty
 more photographs by accident.
+
+## D59, 3 September 2026: the range rail's advance moved from CSS to a small script
+
+D57 made the rail drift on its own via a CSS `@keyframes` transform. Then arrow controls were
+asked for, and a `@keyframes` animation mid flight has nowhere for a button click to attach: a
+CSS transform is not a scroll position, so `scrollBy` has nothing to act on.
+
+`RailTrack`, a small client component, now drives the advance itself in a `requestAnimationFrame`
+loop over the row's real `scrollLeft`, ping ponging between the two ends at close to the pace the
+CSS version ran at. Two arrow buttons sit over the row, hidden until it is hovered or holds
+focus, each moving the row by roughly one screenful with `scrollBy({behavior: 'smooth'})` and
+holding the auto advance for a couple of seconds afterward so a press is not immediately
+undone by the row resuming underneath it.
+
+Split out of `SlabRail` specifically so the section heading and the "Browse the range" link stay
+server rendered: the interactive part is the row, not the section around it, and the component
+skill's own rule is to keep a client island as small as the interaction genuinely requires.
+
+Pausing on hover and on focus within is unchanged from D57. `prefers-reduced-motion: reduce`
+turns the auto advance off entirely; the arrows keep working, because reduced motion asks for no
+motion the reader did not choose, not a row that cannot be moved.
+
+## D60, 3 September 2026: the /about pillars carry photography, matched through the group tree
+
+The four pillar rows sat as text alone against a wide empty column, which read as unfinished the
+moment you noticed the whitespace.
+
+Each pillar now carries a photograph, chosen by walking `getCategoryTree()` for the pillar's
+group and taking the first published product's application shot found under it or any of its
+children. Lighting and Panels currently have no photography, so they get the same charcoal name
+plate the shop's range tiles use rather than an invented stock image, which is the same
+principle D53 and D58 both rest on: report what is real, never guess a specific claim.
+
+Each row is now a link to its range's `/shop/<group>` page. The four pillars already named the
+same four groups the taxonomy carries per D52, so this closes the gap between a description of
+the business and actual navigation into it.
+
+## D61, 3 September 2026: the rotating statement's photograph now changes with the word
+
+The section cycled through NAIROBI, KITCHENS, BATHROOMS, OFFICES and SHOWROOMS over one single
+static photograph, so every word in the sequence sat over the exact same picture, which read as
+unfinished once noticed.
+
+`RotatingStatement` now owns an optional set of photographs alongside its words and crossfades
+between them on the same interval and the same index, so the two never fall out of step.
+
+**What the photographs are NOT claimed to be:** a specific picture of the specific room named
+above them. Nothing in the catalogue tags an installation shot by room type, kitchen, bathroom
+or office, and inventing that label per photo is exactly the class of unverifiable claim this
+project checks before publishing rather than assumes, the same principle behind D53's Delfone
+finding and D58's honest counts. So the images are real Beco installations, one drawn per
+product for variety and cycled if there are fewer of them than words, shown as a set rather than
+captioned as depicting the word above them.
+
+## D62, 3 September 2026: no stock video, and the shop filter sticks under the header
+
+Two smaller calls worth recording together.
+
+Asked for "a continuous video of the interior" with a stock clip fetched from the internet in
+the meantime. Not done that way. D51 already rejected stock footage for the showroom section for
+exactly this reason: a clip that reads as Beco's work without being it is a fabricated record on
+a page a buyer uses to decide whether to drive there, and the brand's own positioning is that the
+nearest competitor's rooms are AI generated while Beco's are real. Sourcing and verifying a
+license for a random internet clip is also not something that can be done safely without a
+person checking terms, on a page that will carry a client's name. The existing real Beco showroom
+footage is the source for any expanded video section, not a stock substitute.
+
+The shop's filter bar is `sticky top-20 z-40` now, tucked under the header rather than scrolling
+away with the range tiles above it, because searching, filtering and sorting are exactly the
+controls a reader reaches for once they are past the tiles and into the grid, which is precisely
+when the bar used to disappear.

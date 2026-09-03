@@ -5,7 +5,9 @@ import { buttonClasses, Reveal } from '@beco/ui';
 import { PageHeader } from '@/components/page-header';
 import { RoomStack } from '@/components/room-stack';
 import { RotatingStatement } from '@/components/rotating-statement';
-import { getPublishedProducts, blurProps, primaryImage } from '@/lib/products';
+import {
+  getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages,
+} from '@/lib/products';
 import { SITE } from '@/lib/site';
 
 export const revalidate = 3600;
@@ -37,18 +39,79 @@ export const metadata: Metadata = {
  * is described as part of the range without a link to a category that would be
  * empty. That mismatch is recorded in docs/BRAND-GUIDELINE-NOTES.md as a
  * decision for Beco rather than something to paper over.
+ *
+ * Each pillar carries a photograph on the right now: a real installation
+ * shot where one exists, and Lighting and Panels, which have no photography
+ * yet, get the same charcoal name plate the shop's range tiles use rather
+ * than an invented stock image. The row used to be text alone against a wide
+ * empty column, which read as unfinished rather than as restraint.
  */
 const PILLARS = [
-  ['Sintered stone', 'Large format slabs for worktops, feature walls, vanities and flooring. Heat, scratch and stain resistant.'],
-  ['Lighting', 'Decorative and architectural fittings, specified alongside the surfaces they sit in.'],
-  ['Panels', 'Wall panelling and cladding systems for interiors that need to go up quickly and cleanly.'],
-  ['Accessories', 'Handles, hinges, legs and the hardware that finishes a piece of joinery properly.'],
-];
+  {
+    title: 'Sintered stone',
+    body: 'Large format slabs for worktops, feature walls, vanities and flooring. Heat, scratch and stain resistant.',
+    // Matches the range group's slug, per D52, so the row is real
+    // navigation rather than a list that happens to describe one.
+    href: '/shop/sintered-stone',
+    groupSlug: 'sintered-stone',
+  },
+  {
+    title: 'Lighting',
+    body: 'Decorative and architectural fittings, specified alongside the surfaces they sit in.',
+    href: '/shop/lighting',
+    groupSlug: 'lighting',
+  },
+  {
+    title: 'Panels',
+    body: 'Wall panelling and cladding systems for interiors that need to go up quickly and cleanly.',
+    href: '/shop/wall-panels',
+    groupSlug: 'wall-panels',
+  },
+  {
+    title: 'Accessories',
+    body: 'Handles, hinges, legs and the hardware that finishes a piece of joinery properly.',
+    href: '/shop/accessories',
+    groupSlug: 'accessories',
+  },
+] as const;
 
 export default async function AboutPage() {
-  const products = await getPublishedProducts();
+  const [products, groups] = await Promise.all([getPublishedProducts(), getCategoryTree()]);
   const hero = products.find((p) => p.images?.some((i) => i.role === 'application'));
   const heroImage = hero?.images.find((i) => i.role === 'application') ?? primaryImage(products[0]!);
+
+  // One real photograph per pillar, matched through the group tree rather
+  // than a hand maintained list of category slugs, so it stays correct if a
+  // range moves groups. A pillar with no photography yet, Lighting and
+  // Panels today, gets a charcoal plate in the markup below instead of a
+  // guessed stock image.
+  const shotForGroup = (slug: string) => {
+    const group = groups.find((g) => g.slug === slug);
+    if (!group) return undefined;
+    const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+    for (const p of products) {
+      if (!p.category || !inGroup.has(p.category.slug)) continue;
+      const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);
+      if (shot) return shot;
+    }
+    return undefined;
+  };
+
+  // The rotating statement's photographs. One real application shot per
+  // product, cycled if there are fewer products with one than there are
+  // words, so the array is always exactly the words' length and the two
+  // never fall out of step. See the component's own note on why these are
+  // NOT claimed to depict the specific room named above them: nothing in the
+  // catalogue tags a photograph by room type, and inventing that label per
+  // photo is the kind of claim this project checks before publishing rather
+  // than assumes.
+  const ROTATING_WORDS = ['NAIROBI', 'KITCHENS', 'BATHROOMS', 'OFFICES', 'SHOWROOMS'];
+  const applicationPool = products
+    .map((p) => orderedImages(p).find((img) => img.role === 'application'))
+    .filter((img): img is NonNullable<typeof img> => img !== undefined);
+  const rotatingImages = applicationPool.length > 0
+    ? ROTATING_WORDS.map((_, i) => applicationPool[i % applicationPool.length]!)
+    : undefined;
 
   return (
     <main>
@@ -102,41 +165,77 @@ export default async function AboutPage() {
         </div>
 
         <ol className="mt-14 border-t border-neutral-200">
-          {PILLARS.map(([title, body], i) => (
-            <Reveal as="li" key={title} delay={i * 60}>
-              <div className="grid gap-4 border-b border-neutral-200 py-8 sm:grid-cols-[6rem_1fr] sm:gap-10">
-                <span aria-hidden className="font-display text-4xl leading-none text-neutral-300 sm:text-5xl">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div>
-                  <h3 className="font-display text-2xl leading-tight text-charcoal">{title}</h3>
-                  <p className="mt-2 max-w-[58ch] text-base leading-[1.65] text-neutral-700">{body}</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
+          {PILLARS.map((pillar, i) => {
+            const shot = shotForGroup(pillar.groupSlug);
+            return (
+              <Reveal as="li" key={pillar.title} delay={i * 60}>
+                <Link
+                  href={pillar.href}
+                  className="group grid items-center gap-6 border-b border-neutral-200 py-8 sm:grid-cols-[6rem_1fr_11rem] sm:gap-10 lg:grid-cols-[6rem_1fr_15rem]"
+                >
+                  <span aria-hidden className="font-display text-4xl leading-none text-neutral-300 sm:text-5xl">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 className="font-display text-2xl leading-tight text-charcoal">
+                      {pillar.title}
+                      <span
+                        aria-hidden
+                        className="ml-3 inline-block h-px w-0 bg-warm-red align-middle transition-all duration-500 ease-brand group-hover:w-8"
+                      />
+                    </h3>
+                    <p className="mt-2 max-w-[58ch] text-base leading-[1.65] text-neutral-700">
+                      {pillar.body}
+                    </p>
+                  </div>
+                  {/* The photograph, or a charcoal plate naming the range if
+                      it has none yet. Filling the white space to the right of
+                      the copy with a real installation rather than leaving it
+                      as air, and giving the row somewhere for the eye to land
+                      per stone rather than only per line of text. */}
+                  <div className="relative hidden aspect-[4/3] w-full overflow-hidden bg-charcoal transition-transform duration-500 ease-brand group-hover:scale-[1.03] sm:block">
+                    {shot ? (
+                      <Image
+                        src={shot.path}
+                        alt=""
+                        fill
+                        sizes="(max-width: 1024px) 176px, 240px"
+                        {...blurProps(shot)}
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-end p-4">
+                        <p className="font-display text-xl leading-tight text-high-vis-white/70">
+                          {pillar.title}
+                        </p>
+                      </div>
+                    )}
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                    />
+                  </div>
+                </Link>
+              </Reveal>
+            );
+          })}
         </ol>
       </section>
 
       {/* --- Where the material goes. A photograph with the room type knocked
               out of it in outline, cycling through what Beco actually
-              supplies. The image is a real installation. --- */}
-      {heroImage ? (
+              supplies, and the PHOTOGRAPH now cycles with it rather than
+              sitting on one static image for the whole sequence: it used to
+              show the exact same picture behind "KITCHENS" and "OFFICES",
+              which reads as unfinished once you notice. RotatingStatement
+              owns the crossfade itself, see its own note on why these are
+              not captioned as literally being the room named above them. --- */}
+      {rotatingImages ? (
         <section aria-label="Where our materials go" className="relative overflow-hidden bg-charcoal">
           <div className="relative h-[46vh] min-h-[20rem] w-full sm:h-[58vh]">
-            <Image
-              src={heroImage.path}
-              alt=""
-              fill
-              sizes="100vw"
-              {...blurProps(heroImage)}
-              className="object-cover opacity-70"
-            />
             <div className="absolute inset-0 flex items-center justify-center px-6">
               <h2 className="w-full text-center font-display text-[15vw] leading-none tracking-[0.02em] text-high-vis-white sm:text-[12vw]">
-                <RotatingStatement
-                  words={['NAIROBI', 'KITCHENS', 'BATHROOMS', 'OFFICES', 'SHOWROOMS']}
-                />
+                <RotatingStatement words={ROTATING_WORDS} images={rotatingImages} />
               </h2>
             </div>
           </div>

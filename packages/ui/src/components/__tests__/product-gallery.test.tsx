@@ -112,3 +112,31 @@ describe('ProductGallery, at hardware density', () => {
     expect(tabs[0]!.getAttribute('aria-selected')).toBe('false');
   });
 });
+
+describe('ProductGallery, thumbnail containing block', () => {
+  const many = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      role: 'unknown' as const,
+      alt: `Photo ${i + 1}`,
+      node: <span data-testid={`frame-${i}`} />,
+    }));
+
+  // The dense variant does not rotate its buttons, so nothing else makes them
+  // a CSS containing block for the fill image inside. Without `relative` here
+  // explicitly, that image sizes itself to the whole scrollable strip instead
+  // of the small thumbnail box: on gold-handles this showed as an enormous,
+  // wrongly cropped photograph sitting under the frame, not a thumbnail row.
+  it('gives every dense thumbnail its own containing block, not just the fanned ones', () => {
+    const { container } = render(<ProductGallery images={many(33)} />);
+    for (const tab of container.querySelectorAll('[role="tab"]')) {
+      expect(tab.className).toContain('relative');
+    }
+  });
+
+  it('keeps the containing block on fanned thumbnails too', () => {
+    const { container } = render(<ProductGallery images={many(5)} />);
+    for (const tab of container.querySelectorAll('[role="tab"]')) {
+      expect(tab.className).toContain('relative');
+    }
+  });
+});

@@ -176,55 +176,17 @@
     }
   }
 
-  /* --- The range rail RUNS ITSELF.
+  /* --- The range rail's row.
 
-         It used to be a pinned section: the page stopped scrolling for
-         190vh while a scroll driven transform slid the track sideways.
-         That is a well behaved effect and it reads as a bug. A reader who
-         does not already know the trick sees the page seize, and the
-         progress bar added to explain it was a label on a problem rather
-         than a fix for it.
+         RailTrack drives the advance itself now, via `scrollLeft` in a
+         `requestAnimationFrame` loop rather than a CSS transform, because an
+         arrow button needs somewhere to attach a discrete "move by one
+         screen" action and a `@keyframes` animation mid flight has no such
+         hook. See D59.
 
-         So the pin is gone and the track drifts on its own. The section is
-         a normal height, the page never stops, and the rail is visibly
-         alive the moment it arrives rather than needing to be operated.
-
-         `alternate` rather than a duplicated loop, deliberately: a seamless
-         marquee needs the cards rendered twice, which means every product
-         link exists twice in the document, and a specifier tabbing through
-         hits all twelve stones and then hits them again. Travelling out and
-         back reaches every card with each one in the page once.
-
-         The easing is the part that makes it read as considered. With a
-         linear timing function the reversal is a visible snap at each end.
-         The curve slows the track into each turn and out of it, so the
-         direction change is something you notice only if you look for it.
-
-         PAUSES ON HOVER, and on focus within, so it is not a thing that
-         moves away from you as you reach for it. That single rule is what
-         separates a marquee from an advertisement.
-
-         The travel is `-100% + 100vw`, where the percentage is the track's
-         own width, so it is exactly the distance the row overflows by. No
-         measurement, no JavaScript, and correct at any number of cards.
-
-         Desktop only. Below lg the row is scrolled by hand, and translating
-         it there fought the reader's own finger. --- */
+         What is still pure CSS is the hover choreography below: reaching for
+         one card puts the rest behind it. --- */
   @media (min-width: 1024px) {
-    .beco-marquee {
-      animation: beco-marquee-pass 58s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
-    }
-
-    @keyframes beco-marquee-pass {
-      from { transform: translateX(0); }
-      to   { transform: translateX(calc(-100% + 100vw - 3rem)); }
-    }
-
-    .beco-marquee-viewport:hover .beco-marquee,
-    .beco-marquee-viewport:focus-within .beco-marquee {
-      animation-play-state: paused;
-    }
-
     /* --- Reaching for one card puts the rest behind it.
 
            The lift is small and the dim is not: the card barely moves while

@@ -154,7 +154,18 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
                       : undefined
                   }
                   className={cn(
-                    'block h-20 w-16 shrink-0 overflow-hidden bg-neutral-100 sm:h-24 sm:w-20',
+                    // `relative`, unconditionally, is load bearing: it is
+                    // what makes this button the CONTAINING BLOCK for the
+                    // `fill` image inside it. The fan variant's rotation
+                    // happened to do this as a side effect, because any
+                    // non-none transform creates a containing block too, so
+                    // when the dense variant stopped applying a transform the
+                    // images inside it lost their box and sized themselves to
+                    // the whole scrollable strip instead, showing an
+                    // enormous, wrongly cropped photograph under a handful of
+                    // pixels of visible thumbnail. Never rely on transform
+                    // alone for this again.
+                    'relative block h-20 w-16 shrink-0 overflow-hidden bg-neutral-100 sm:h-24 sm:w-20',
                     'shadow-[0_12px_30px_rgba(16,24,32,0.28)] ring-1 ring-inset',
                     'transition-transform duration-500 ease-brand hover:-translate-y-2',
                     'motion-reduce:transition-none motion-reduce:hover:translate-y-0',

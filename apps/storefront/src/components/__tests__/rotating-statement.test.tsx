@@ -58,3 +58,40 @@ describe('RotatingStatement', () => {
     expect(word('NAIROBI')).toHaveClass('opacity-100');
   });
 });
+
+/**
+ * The photograph behind the word used to be one static image for the whole
+ * section, so every word in the sequence sat over the exact same picture.
+ * `images`, when given, crossfades in step with the word.
+ */
+describe('RotatingStatement, with images', () => {
+  const image = (n: number) => ({
+    role: 'application' as const, path: `/img/${n}.webp`, alt: `Photo ${n}`,
+    width: 1600, height: 1200, sort: n,
+  });
+  const IMAGES = [image(1), image(2), image(3)];
+
+  it('shows the first photograph at full opacity before any timer has run', () => {
+    const { container } = render(<RotatingStatement words={WORDS} images={IMAGES} />);
+    const layers = container.querySelectorAll('img');
+    expect(layers[0]?.className).toContain('opacity-70');
+    expect(layers[1]?.className).toContain('opacity-0');
+  });
+
+  it('crossfades to the next photograph on the same interval as the word', () => {
+    const { container } = render(
+      <RotatingStatement words={WORDS} images={IMAGES} intervalMs={1000} />,
+    );
+    act(() => { vi.advanceTimersByTime(1000); });
+    const layers = container.querySelectorAll('img');
+    expect(layers[0]?.className).toContain('opacity-0');
+    expect(layers[1]?.className).toContain('opacity-70');
+    // And the word changed at the same moment, so the two never drift apart.
+    expect(word('KITCHENS')).toHaveClass('opacity-100');
+  });
+
+  it('renders no image layer at all when none are given, unchanged from before', () => {
+    const { container } = render(<RotatingStatement words={WORDS} />);
+    expect(container.querySelectorAll('img')).toHaveLength(0);
+  });
+});
