@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import {
   Button, ConfirmDialog, EmptyState, Input, Textarea, buttonClasses,
   Field as UiField,
@@ -30,12 +30,33 @@ export function QuoteBuilder() {
   const [fulfilment, setFulfilment] = useState<'pickup' | 'delivery' | ''>('');
   const [pending, startTransition] = useTransition();
 
+  const doneRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const update = () => setLines(readList());
     update();
     setMounted(true);
     return subscribe(update);
   }, []);
+
+  // The confirmation is a fraction of the height of the form and the list it
+  // replaces, so the page collapses under the reader. The browser keeps the
+  // scroll offset they already had, which on a list of any length lands them
+  // in the FOOTER, looking at nothing, having just been given a reference
+  // number they never saw.
+  //
+  // Brought into view instantly rather than smoothly, deliberately: the
+  // content underneath them has just been swapped, so animating the journey
+  // implies a continuity that is not there. Focus moves with it, so the
+  // outcome is announced to a screen reader instead of being silently
+  // exchanged, which is the same event either way.
+  useEffect(() => {
+    if (!result?.ok) return;
+    const el = doneRef.current;
+    if (!el) return;
+    el.scrollIntoView({ block: 'center' });
+    el.querySelector<HTMLElement>('[data-confirmation]')?.focus();
+  }, [result]);
 
   // The list is in localStorage, so the server cannot know it. Rendering
   // nothing until mounted avoids showing an empty state to someone who has a
@@ -44,11 +65,15 @@ export function QuoteBuilder() {
 
   if (result?.ok) {
     return (
-      <div className="max-w-[60ch] py-8">
+      <div ref={doneRef} className="max-w-[60ch] py-8">
         <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
           Request received
         </p>
-        <h2 className="mt-4 font-display text-4xl leading-tight text-charcoal">
+        <h2
+          data-confirmation
+          tabIndex={-1}
+          className="mt-4 font-display text-4xl leading-tight text-charcoal outline-none"
+        >
           We have it. Reference {result.reference}.
         </h2>
         <p className="mt-4 text-base text-neutral-700">

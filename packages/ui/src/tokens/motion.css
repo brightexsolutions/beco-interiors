@@ -27,11 +27,6 @@
        how far through the pinned run the reader is. A pinned section with
        no progress indicator is the one that feels stuck: the page stops
        moving and nothing says for how long. --- */
-.beco-rail-stage {
-  view-timeline-name: --beco-rail;
-  view-timeline-axis: block;
-}
-
 /* --- The signature stage declares a named view timeline, which its
        descendants inside the sticky frame reference. Declared outside the
        reduced-motion block because naming a timeline is not itself motion. --- */
@@ -178,6 +173,80 @@
     to {
       opacity: 1;
       transform: perspective(1300px) rotateY(0) translateX(0) scale(1);
+    }
+  }
+
+  /* --- The range rail RUNS ITSELF.
+
+         It used to be a pinned section: the page stopped scrolling for
+         190vh while a scroll driven transform slid the track sideways.
+         That is a well behaved effect and it reads as a bug. A reader who
+         does not already know the trick sees the page seize, and the
+         progress bar added to explain it was a label on a problem rather
+         than a fix for it.
+
+         So the pin is gone and the track drifts on its own. The section is
+         a normal height, the page never stops, and the rail is visibly
+         alive the moment it arrives rather than needing to be operated.
+
+         `alternate` rather than a duplicated loop, deliberately: a seamless
+         marquee needs the cards rendered twice, which means every product
+         link exists twice in the document, and a specifier tabbing through
+         hits all twelve stones and then hits them again. Travelling out and
+         back reaches every card with each one in the page once.
+
+         The easing is the part that makes it read as considered. With a
+         linear timing function the reversal is a visible snap at each end.
+         The curve slows the track into each turn and out of it, so the
+         direction change is something you notice only if you look for it.
+
+         PAUSES ON HOVER, and on focus within, so it is not a thing that
+         moves away from you as you reach for it. That single rule is what
+         separates a marquee from an advertisement.
+
+         The travel is `-100% + 100vw`, where the percentage is the track's
+         own width, so it is exactly the distance the row overflows by. No
+         measurement, no JavaScript, and correct at any number of cards.
+
+         Desktop only. Below lg the row is scrolled by hand, and translating
+         it there fought the reader's own finger. --- */
+  @media (min-width: 1024px) {
+    .beco-marquee {
+      animation: beco-marquee-pass 58s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+    }
+
+    @keyframes beco-marquee-pass {
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(-100% + 100vw - 3rem)); }
+    }
+
+    .beco-marquee-viewport:hover .beco-marquee,
+    .beco-marquee-viewport:focus-within .beco-marquee {
+      animation-play-state: paused;
+    }
+
+    /* --- Reaching for one card puts the rest behind it.
+
+           The lift is small and the dim is not: the card barely moves while
+           everything around it recedes, so attention lands on the stone
+           rather than on the animation. `z-index` so a raised card is not
+           clipped by the one after it in the row. --- */
+    .beco-marquee-item {
+      transition:
+        opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .beco-marquee-viewport:hover .beco-marquee-item,
+    .beco-marquee-viewport:focus-within .beco-marquee-item {
+      opacity: 0.42;
+    }
+
+    .beco-marquee-viewport .beco-marquee-item:hover,
+    .beco-marquee-viewport .beco-marquee-item:focus-within {
+      opacity: 1;
+      transform: translateY(-0.7rem) scale(1.035);
+      z-index: 1;
     }
   }
 
@@ -479,77 +548,6 @@
       animation: beco-rise-in linear both;
       animation-timeline: --beco-stage;
       animation-range: contain 45% contain 70%;
-    }
-
-    .beco-rail-stage .beco-rail-progress {
-      animation: beco-progress linear both;
-      animation-timeline: --beco-rail;
-      animation-range: contain 0% contain 100%;
-      transform-origin: left center;
-    }
-
-    @keyframes beco-progress {
-      from { transform: scaleX(0); }
-      to   { transform: scaleX(1); }
-    }
-
-    /* --- The rail's real effect: the cards pass THROUGH a centre.
-           Each one is angled and slightly small as it comes in, squares
-           up and reaches full size as it crosses the middle, then angles
-           away as it leaves. Continuous and tied to scroll position, so
-           it turns as fast as you scroll and holds still when you stop.
-
-           An entrance animation was not enough here. A card that animates
-           once on arrival and then sits inert for the rest of a three
-           screen pin makes the section feel like a static row that
-           happens to slide, which is what it looked like.
-
-           Each card takes its own slice of the rail's progress, passed in
-           as an inline animation-range, so one description drives twelve
-           cards. Overrides the entrance below, which stays as the
-           fallback where scroll timelines are unavailable. --- */
-    .beco-rail-stage .beco-rail-card,
-    .beco-rail-stage .beco-rail-card[data-inview] {
-      animation: beco-rail-pass linear both;
-      animation-timeline: --beco-rail;
-      transform-origin: center center;
-    }
-
-    @keyframes beco-rail-pass {
-      0% {
-        opacity: .45;
-        transform: perspective(1500px) rotateY(19deg) translateY(2.4rem) scale(.86);
-      }
-      50% {
-        opacity: 1;
-        transform: perspective(1500px) rotateY(0deg) translateY(0) scale(1);
-      }
-      100% {
-        opacity: .45;
-        transform: perspective(1500px) rotateY(-19deg) translateY(2.4rem) scale(.86);
-      }
-    }
-
-    /* --- The pinned rail. The section is tall, the frame inside it
-           sticks, and the track slides sideways across exactly the
-           distance it overflows by. The page scroll is never intercepted,
-           so a fast flick still reaches the footer.
-
-           DESKTOP ONLY. Below this width the rail is not pinned and the
-           track is a plain swipe row, so translating it fought the
-           reader's own finger: the section could not be scrolled sideways
-           by hand because the animation kept putting it back. --- */
-    @media (min-width: 1024px) {
-    .beco-rail-track {
-      animation: beco-rail linear both;
-      animation-timeline: view(block);
-      animation-range: contain 0% contain 100%;
-    }
-
-    @keyframes beco-rail {
-      from { transform: translateX(0); }
-      to   { transform: translateX(calc(-100% + 100vw - 3rem)); }
-    }
     }
 
     /* --- Scale and crop. A full bleed photograph contracts into a

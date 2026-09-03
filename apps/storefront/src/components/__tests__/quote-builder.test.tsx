@@ -75,3 +75,38 @@ describe('QuoteBuilder', () => {
     expect(readList()).toEqual([line]);
   });
 });
+
+describe('QuoteBuilder, on success', () => {
+  it('brings the reference into view and focuses it, rather than leaving the reader in the footer', async () => {
+    // The confirmation is much shorter than the form and list it replaces, so
+    // the page collapses and the browser keeps the old scroll offset. On a
+    // list of any length that lands the reader in the footer, having just
+    // been given a reference number they never saw. jsdom has no layout, so
+    // what is asserted is that the component asks to be scrolled to and takes
+    // focus, which is the behaviour that was missing.
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+
+    await user.type(await screen.findByLabelText(/Your name/), 'Wanjiru');
+    await user.type(screen.getByLabelText(/Phone number/), '0722000000');
+    await user.click(screen.getByRole('button', { name: /Send my request/ }));
+
+    const heading = await screen.findByRole('heading', { name: /Reference BQ-2026-0001/ });
+    expect(scrollIntoView).toHaveBeenCalled();
+    expect(heading).toBe(document.activeElement);
+  });
+
+  it('shows the reference the server minted, not one it made up', async () => {
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+
+    await user.type(await screen.findByLabelText(/Your name/), 'Wanjiru');
+    await user.type(screen.getByLabelText(/Phone number/), '0722000000');
+    await user.click(screen.getByRole('button', { name: /Send my request/ }));
+
+    expect(await screen.findByText(/BQ-2026-0001/)).toBeDefined();
+  });
+});

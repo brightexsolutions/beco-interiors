@@ -410,3 +410,55 @@ a reduced motion reader gets no movement at all.
 *Reverses if:* the still fallback turns out to read as broken rather than as calm on the
 browsers without `animation-timeline`, which is most of iOS. That is a real device question and
 it is on the QA checklist.
+
+## D57, 3 September 2026: the range rail runs itself, and the pin is gone
+
+The rail was pinned: a 190vh section, a sticky frame, and a scroll driven transform sliding the
+track sideways. Technically well behaved, and it read as a bug. A reader who does not already
+know the trick sees the page seize, and the progress bar that was added to say how long it
+lasts was a label on the problem rather than a fix for it.
+
+The pin is gone. The section is a normal height, the page never stops, and the track drifts on
+its own, so the rail is alive when it arrives rather than something that has to be operated. It
+also works in Safari and Firefox now, where the scroll driven version was a dead frame, which
+removes one of the browser limitations on the M4 list rather than adding to it.
+
+It travels out and back rather than looping. A seamless marquee needs the cards rendered twice,
+which puts every product link in the document twice, and a specifier tabbing through would meet
+all twelve stones and then meet them again. Out and back reaches every card with each one in
+the page once. The easing is what makes the reversal read as considered rather than as a snap:
+the track slows into each turn and out of it.
+
+**It pauses on hover and on focus within.** That single rule is what separates a catalogue from
+an advertisement: a row that keeps moving while you reach for a card is hostile. Hovering also
+drops every other card to 42%, and the lift on the hovered one is deliberately small, so
+attention lands on the stone rather than on the movement.
+
+Below lg nothing drifts. The row is scrolled by hand there, and translating it fought the
+reader's own finger, which is the same reason the original pinned version was desktop only.
+
+*Reverses if:* an always running animation turns out to cost more on a low end machine than the
+pin cost in comprehension. It is one compositor transform, so this is unlikely, and it is worth
+checking when Lighthouse runs.
+
+## D58, 3 September 2026: the photograph strip has two densities
+
+The product gallery's fanned strip was built for the stones, which carry three to six
+photographs each. HEIC decoding then brought in the hardware range: Black Handles has 36
+photographs, Knobs 35, Gold Handles 33.
+
+Thirty three overlapping cards in a flex row is about 1600px of strip with no scroller and no
+width constraint, so it ran off the side of the page, past the frame and past the viewport.
+
+Two densities, one idea. Up to eight photographs keep the fan, which is the signature
+treatment: cards resting on the picture at slight angles. Above that the strip becomes a
+scrollable snap row of square cards, because choosing between thirty six tiny overlapping
+rectangles is not a choice anyone can make, however good it looks. Either way the strip is now
+clipped to the frame's width and scrolls inside itself.
+
+The scroller carries its own vertical padding, because `overflow-x` forces `overflow-y` to
+match, and the cards rotate and lift: without room above and below, their tops and their
+shadows were sliced off.
+
+The dense variant states the count and says the strip scrolls, so nobody has to discover thirty
+more photographs by accident.

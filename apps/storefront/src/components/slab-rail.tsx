@@ -3,24 +3,35 @@ import Link from 'next/link';
 import { blurProps, primaryImage, type CatalogueProduct } from '@/lib/products';
 
 /**
- * The pinned rail, per D31.
+ * The range rail, which runs itself.
  *
- * The section is tall, the frame inside it sticks for the duration, and the
- * track slides sideways across exactly the distance it overflows by. That
- * shows a dozen stones in one screen, which a vertical grid cannot do without
- * pushing the rest of the page a long way down.
+ * It used to be PINNED: the section was 190vh tall, the frame inside it stuck
+ * for the duration, and a scroll driven transform slid the track sideways.
+ * That is a well behaved effect and it read as a bug. A reader who does not
+ * already know the trick sees the page seize, and the progress bar added to
+ * explain how long it lasts was a label on the problem rather than a fix.
+ *
+ * So the pin is gone. The section is a normal height, the page never stops,
+ * and the track drifts on its own: alive when it arrives rather than something
+ * that has to be operated. It also works in Safari and Firefox now, where the
+ * scroll driven version was a dead frame.
+ *
+ * It travels out and back rather than looping, because a seamless loop needs
+ * the cards rendered twice and a specifier tabbing through would meet all
+ * twelve stones and then meet them again.
+ *
+ * **It pauses on hover and on focus.** A row that keeps moving while you reach
+ * for a card is an advertisement, not a catalogue. Hovering also drops every
+ * other card back to 42%, so attention lands on the stone rather than on the
+ * motion. See D57.
  *
  * The cards are SPECIMENS, not thumbnails: each carries a charcoal plate with
  * the stone's name and its number in the set, a shadow that puts it above the
  * page, and a place in a staggered rhythm rather than a flat row. An earlier
- * version was a row of identical bare images, which read as a contact sheet
- * and made the whole pinned section feel like a grid that had been turned on
- * its side.
+ * version was a row of identical bare images, which read as a contact sheet.
  *
- * The page scroll is never intercepted: this is `position: sticky` and a CSS
- * scroll driven transform, so the scrollbar behaves normally and a fast flick
- * still reaches the footer. Where `animation-timeline` is unsupported the
- * track stays a hand scrollable snap row rather than a dead frame.
+ * Below lg there is no drift at all: the row is scrolled by hand, and
+ * translating it there fought the reader's own finger.
  */
 
 /** A repeating four step rhythm, so the row reads as composed, not aligned. */
@@ -29,21 +40,15 @@ const STAGGER = ['lg:mt-0', 'lg:mt-8', 'lg:mt-3', 'lg:mt-12'] as const;
 export function SlabRail({ products }: { products: CatalogueProduct[] }) {
   if (products.length === 0) return null;
 
-  // Each card takes its own slice of the rail's progress, so one animation
-  // description drives all of them. The slices overlap heavily, which is what
-  // makes several cards visibly in motion at once rather than one at a time.
-  const step = 74 / Math.max(1, products.length - 1);
-  const window = 40;
-
   return (
-    <section aria-label="The full range" className="border-y border-neutral-200 bg-neutral-50">
-      {/* Tall enough for the rail to cross, and no taller. D31 caps total
-          pinned distance: a section that pins for three screens with nothing
-          to say how long it lasts reads as the scroll being stuck. */}
-      <div className="beco-rail-stage lg:h-[190vh]">
-        <div className="lg:sticky lg:top-20 lg:flex lg:h-[calc(100vh-5rem)] lg:flex-col lg:justify-center">
+    <section
+      aria-label="The full range"
+      className="overflow-hidden border-y border-neutral-200 bg-neutral-50"
+    >
+      <div className="py-16 lg:py-20">
+        <div>
           <div className="mx-auto w-full max-w-[1380px] px-6">
-            <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-8 pt-16 lg:pt-0">
+            <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-10">
               <div className="beco-clip">
                 <div className="beco-wipe">
                   <div className="flex items-center gap-4">
@@ -66,20 +71,17 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
             </div>
           </div>
 
-          {/* overflow-x stays scrollable, so this is usable by hand wherever
-              the scroll driven transform does not run. */}
-          <div className="overflow-x-auto pb-16 lg:overflow-x-hidden lg:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <ul className="beco-rail-track flex w-max items-start gap-8 px-6 lg:gap-10">
+          {/* Hand scrollable below lg, where nothing drifts. The viewport is
+              also what the pause on hover hangs off, so it has to wrap the
+              track rather than be the track. */}
+          <div className="beco-marquee-viewport overflow-x-auto pb-4 lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <ul className="beco-marquee flex w-max items-start gap-8 px-6 lg:gap-10">
               {products.map((product, i) => {
                 const img = primaryImage(product);
                 return (
                   <li
                     key={product.id}
-                    className={`beco-rail-card w-[68vw] shrink-0 will-change-transform sm:w-[40vw] lg:w-[min(23vw,19rem)] ${STAGGER[i % STAGGER.length]}`}
-                    style={{
-                      animationRange:
-                        `contain ${(i * step).toFixed(2)}% contain ${(i * step + window).toFixed(2)}%`,
-                    }}
+                    className={`beco-marquee-item beco-rail-card w-[68vw] shrink-0 will-change-transform sm:w-[40vw] lg:w-[min(23vw,19rem)] ${STAGGER[i % STAGGER.length]}`}
                   >
                     <Link href={`/product/${product.slug}`} className="group block">
                       {/* Fixed height rather than a fixed ratio, so the whole
@@ -133,12 +135,13 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
             </ul>
           </div>
 
-          {/* How far through the pinned run we are. Without this the page
-              simply stops moving and nothing says for how long. */}
-          <div className="mx-auto mt-8 hidden w-full max-w-[1380px] px-6 lg:block">
-            <div className="h-px w-full bg-neutral-200">
-              <div className="beco-rail-progress h-full w-full origin-left scale-x-0 bg-charcoal" />
-            </div>
+          {/* The progress bar is gone with the pin it measured. What replaced
+              it is a plain instruction, because the row now moves on its own
+              and the useful thing to say is that you can stop it. */}
+          <div className="mx-auto mt-6 w-full max-w-[1380px] px-6">
+            <p className="hidden font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500 lg:block">
+              Hover to hold a stone still
+            </p>
           </div>
         </div>
       </div>

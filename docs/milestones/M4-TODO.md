@@ -327,6 +327,19 @@ These were discovered while building and are recorded rather than remembered.
       **Not yet seen moving on a real machine**, and the still fallback on Safari is a real
       device question
 
+- [x] **Submitting a quote landed the reader in the footer.** The confirmation is a fraction
+      of the height of the form and list it replaces, so the page collapsed under them and the
+      browser kept the old scroll offset. On a list of any length that means being given a
+      reference number you never see. It is brought into view and takes focus now, so it is
+      announced rather than silently swapped in. **2 tests**, on the flow that matters most
+- [x] **The photograph strip ran off the side of the product page.** Built for the stones at
+      three to six images, then the hardware arrived at 33 to 36. Two densities now: the fan up
+      to eight, a contained scrollable snap row above it. **6 tests.** See D58
+- [x] **The range rail was pinned and read as the page seizing.** Replaced with a track that
+      drifts on its own, out and back, pausing on hover and on focus, with the hovered card
+      lifted and the rest dropped to 42%. Removes a Chromium only dependency rather than adding
+      one. See D57
+
 ## Found on 3 September, not planned
 
 - [x] **`pnpm db:reset` was broken, and the database was not reproducible.** Two faults, both
