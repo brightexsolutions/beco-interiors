@@ -3,7 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
-import { Button, ConfirmDialog, EmptyState, buttonClasses } from '@beco/ui';
+import {
+  Button, ConfirmDialog, EmptyState, Input, Textarea, buttonClasses,
+  Field as UiField,
+} from '@beco/ui';
 import {
   clearList, lineCount, readList, removeLine, setQuantity, subscribe,
   type QuoteLine,
@@ -288,16 +291,13 @@ export function QuoteBuilder() {
             </div>
           </fieldset>
 
-          <div>
-            <label htmlFor="projectDetails" className="block font-ui text-sm font-semibold text-charcoal">
-              Anything else we should know?
-              <span className="ml-2 font-normal text-neutral-500">Optional</span>
-            </label>
-            <textarea
-              id="projectDetails" name="projectDetails" rows={4}
-              className="mt-2 block w-full rounded-[2px] border border-neutral-300 px-3 py-2.5 font-ui text-base text-charcoal focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red"
-            />
-          </div>
+          <UiField
+            label="Anything else we should know?"
+            htmlFor="projectDetails"
+            hint="Optional"
+          >
+            <Textarea id="projectDetails" name="projectDetails" />
+          </UiField>
 
           {result && !result.ok ? (
             <p role="alert" className="rounded-[2px] border border-error px-4 py-3 font-ui text-base text-error">
@@ -335,20 +335,22 @@ export function QuoteBuilder() {
   );
 }
 
+/**
+ * The form's own shorthand over the shared primitives.
+ *
+ * Every field here is a labelled text input wired to the same id, so the call
+ * sites stay one line each. The styling, the error wiring and the type floor
+ * now live in @beco/ui, per rule 5, rather than being written out again here.
+ */
 function Field({
   label, name, type = 'text', required, hint, error, placeholder, autoComplete,
 }: {
   label: string; name: string; type?: string; required?: boolean;
   hint?: string; error?: string | undefined; placeholder?: string; autoComplete?: string;
 }) {
-  const errorId = `${name}-error`;
   return (
-    <div>
-      <label htmlFor={name} className="block font-ui text-sm font-semibold text-charcoal">
-        {label}
-        {hint ? <span className="ml-2 font-normal text-neutral-500">{hint}</span> : null}
-      </label>
-      <input
+    <UiField label={label} htmlFor={name} hint={hint} error={error}>
+      <Input
         id={name}
         name={name}
         type={type}
@@ -356,12 +358,8 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        className="mt-2 block h-11 w-full rounded-[2px] border border-neutral-300 px-3 font-ui text-base text-charcoal focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red aria-invalid:border-error"
+        aria-describedby={error ? `${name}-error` : undefined}
       />
-      {error ? (
-        <p id={errorId} className="mt-1.5 font-ui text-sm text-error">{error}</p>
-      ) : null}
-    </div>
+    </UiField>
   );
 }

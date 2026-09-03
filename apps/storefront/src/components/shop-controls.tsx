@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { cn } from '@beco/ui';
+import { Field, Input, Select } from '@beco/ui';
 
 /**
  * Search, filter and sort, with the URL as the source of truth.
@@ -15,6 +15,13 @@ import { cn } from '@beco/ui';
  * Per D29 a filtered view canonicalises to /shop and carries noindex, so a
  * four facet grid cannot generate hundreds of thin duplicate URLs. That is
  * handled in the page's metadata, not here.
+ *
+ * The bar was two rows of loose text facets, which worked and looked like a
+ * debug view. It is now one aligned control row on a charcoal rule, with the
+ * range as a GROUPED select so fifteen categories fit in one control and their
+ * hierarchy is visible while choosing rather than only after. What is active
+ * is stated back as removable chips, so a reader who lands on a shared filtered
+ * URL can see why they are looking at six products instead of thirty one.
  */
 export interface Facet {
   value: string;
@@ -22,10 +29,18 @@ export interface Facet {
   count: number;
 }
 
+/** A range and the ranges beneath it, for the grouped select. */
+export interface FacetGroup {
+  value: string;
+  label: string;
+  count: number;
+  children: Facet[];
+}
+
 export function ShopControls({
-  categories, finishes, total, showing,
+  groups, finishes, total, showing,
 }: {
-  categories: Facet[];
+  groups: FacetGroup[];
   finishes: Facet[];
   total: number;
   showing: number;
@@ -61,115 +76,164 @@ export function ShopControls({
 
   useEffect(() => () => clearTimeout(debounce.current), []);
 
+  const range = params.get('range');
   const category = params.get('category');
   const finish = params.get('finish');
   const sort = params.get('sort') ?? 'name';
-  const filtered = Boolean(query || category || finish || params.get('sort'));
+  const filtered = Boolean(query || range || category || finish || params.get('sort'));
+
+  // The select carries both levels in one control, so its value is whichever
+  // is set. Choosing a group clears the narrower category, or the two disagree
+  // and the reader cannot tell which is winning.
+  const rangeValue = category ?? range ?? '';
+  const pickRange = (value: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.delete('range');
+    next.delete('category');
+    if (value.startsWith('group:')) next.set('range', value.slice(6));
+    else if (value) next.set('category', value);
+    startTransition(() => {
+      router.replace(next.toString() ? `${pathname}?${next}` : pathname, { scroll: false });
+    });
+  };
+
+  const activeGroup = groups.find((g) => g.value === range);
+  const activeCategory = groups
+    .flatMap((g) => g.children)
+    .find((c) => c.value === category);
+
+  const chips = [
+    query ? { key: 'q', label: `“${query}”`, clear: () => setQuery('') } : null,
+    activeGroup ? { key: 'range', label: activeGroup.label, clear: () => set('range', null) } : null,
+    activeCategory
+      ? { key: 'category', label: activeCategory.label, clear: () => set('category', null) }
+      : null,
+    finish ? { key: 'finish', label: finish, clear: () => set('finish', null) } : null,
+  ].filter((c) => c !== null);
 
   return (
-    <div className="border-y border-neutral-200 bg-high-vis-white/95 py-4 backdrop-blur">
+    <div className="border-t-2 border-b border-t-charcoal border-b-neutral-200 bg-high-vis-white/95 py-5 backdrop-blur">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="relative min-w-0 flex-1 sm:max-w-[22rem]">
-            <span className="sr-only">Search the range</span>
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 stroke-current text-neutral-500"
-              fill="none"
-              strokeWidth="1.8"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
-            </svg>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name"
-              className="h-11 w-full rounded-[2px] border border-neutral-300 pl-9 pr-3 font-ui text-base text-charcoal placeholder:text-neutral-500 focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red"
-            />
-          </label>
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
+          <Field label="Search" htmlFor="shop-search" className="min-w-0 flex-1 sm:min-w-[16rem]">
+            <span className="relative block">
+              <svg
+                aria-hidden
+                viewBox="0 0 24 24"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 stroke-current text-neutral-500"
+                fill="none"
+                strokeWidth="1.8"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+              </svg>
+              <Input
+                id="shop-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Name or colour"
+                className="pl-9"
+              />
+            </span>
+          </Field>
 
-          <label className="flex items-center gap-2">
-            <span className="font-ui text-sm text-neutral-500">Sort</span>
-            <select
+          <Field label="Range" htmlFor="shop-range">
+            <Select id="shop-range" value={rangeValue} onChange={(e) => pickRange(e.target.value)}>
+              <option value="">All ranges</option>
+              {groups.map((group) => {
+                // A range with nothing under it is still selectable: it is a
+                // real part of the business, and the page it leads to says so.
+                if (group.children.length === 0) {
+                  return (
+                    <option key={group.value} value={`group:${group.value}`}>
+                      {group.label} ({group.count})
+                    </option>
+                  );
+                }
+                return (
+                  <optgroup key={group.value} label={group.label}>
+                    <option value={`group:${group.value}`}>
+                      All {group.label.toLowerCase()} ({group.count})
+                    </option>
+                    {group.children.map((child) => (
+                      <option key={child.value} value={child.value}>
+                        {child.label} ({child.count})
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </Select>
+          </Field>
+
+          {finishes.length > 1 ? (
+            <Field label="Finish" htmlFor="shop-finish">
+              <Select id="shop-finish" value={finish ?? ''} onChange={(e) => set('finish', e.target.value || null)}>
+                <option value="">Any finish</option>
+                {finishes.map((f) => (
+                  <option key={f.value} value={f.value}>
+                    {f.label} ({f.count})
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
+
+          <Field label="Sort" htmlFor="shop-sort">
+            <Select
+              id="shop-sort"
               value={sort}
               onChange={(e) => set('sort', e.target.value === 'name' ? null : e.target.value)}
-              className="h-11 cursor-pointer rounded-[2px] border border-neutral-300 px-3 font-ui text-base text-charcoal focus:border-charcoal focus:outline-none"
             >
               <option value="name">Name</option>
               <option value="price-asc">Price, low to high</option>
               <option value="price-desc">Price, high to low</option>
-            </select>
-          </label>
+            </Select>
+          </Field>
 
-          <p aria-live="polite" className="ml-auto font-ui text-sm text-neutral-500">
+          <p
+            aria-live="polite"
+            className="ml-auto pb-3 font-ui text-sm tabular-nums text-neutral-500"
+          >
             {pending ? 'Filtering…' : `${showing} of ${total}`}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <Facets
-            label="Range"
-            options={categories}
-            active={category}
-            onPick={(v) => set('category', v)}
-          />
-          {finishes.length > 1 ? (
-            <Facets label="Finish" options={finishes} active={finish} onPick={(v) => set('finish', v)} />
-          ) : null}
-
-          {filtered ? (
-            <button
-              type="button"
-              onClick={() => startTransition(() => router.replace(pathname, { scroll: false }))}
-              className="cursor-pointer font-ui text-sm font-semibold text-warm-red-deep underline-offset-4 hover:underline"
-            >
-              Clear all
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Facets({
-  label, options, active, onPick,
-}: {
-  label: string;
-  options: Facet[];
-  active: string | null;
-  onPick: (value: string | null) => void;
-}) {
-  if (options.length === 0) return null;
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-        {label}
-      </span>
-      {options.map((option) => {
-        const on = active === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onPick(on ? null : option.value)}
-            className={cn(
-              'inline-flex min-h-11 cursor-pointer items-center gap-2 px-3 font-ui text-sm font-semibold',
-              'transition-colors duration-200',
-              on ? 'text-warm-red-deep' : 'text-charcoal hover:text-warm-red-deep',
-            )}
-          >
-            <span className={cn('border-b-2 pb-0.5', on ? 'border-warm-red' : 'border-transparent')}>
-              {option.label}
+        {chips.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-4">
+            <span className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              Filtered by
             </span>
-            <span className="font-normal text-neutral-500">{option.count}</span>
-          </button>
-        );
-      })}
+            {chips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={chip.clear}
+                className="group inline-flex min-h-9 cursor-pointer items-center gap-2 border border-neutral-300 px-3 font-ui text-sm font-semibold text-charcoal transition-colors hover:border-charcoal"
+              >
+                {chip.label}
+                <span aria-hidden className="text-neutral-500 group-hover:text-warm-red-deep">
+                  ✕
+                </span>
+                <span className="sr-only">, remove this filter</span>
+              </button>
+            ))}
+            {filtered ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  startTransition(() => router.replace(pathname, { scroll: false }));
+                }}
+                className="ml-1 min-h-9 cursor-pointer font-ui text-sm font-semibold text-warm-red-deep underline-offset-4 hover:underline"
+              >
+                Clear all
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

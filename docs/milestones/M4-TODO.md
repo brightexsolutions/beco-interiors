@@ -26,7 +26,11 @@ Verification for this milestone was done against a running dev server on
 - [x] `/product/[slug]`. **Verified:** 200 on `amber-jade`, Product and BreadcrumbList JSON-LD
       both parse, 6 gallery images, all four image URLs return 200 with real bytes
 - [x] `/quote`, the builder and submission. **Verified:** 200, renders the empty state
-- [ ] `/team`, sales agents only. **Directors are never flagged public**
+- [x] `/team`, sales agents only. **Directors are never flagged public**, held by the
+      `users_only_sales_are_public` constraint rather than by the query. **Verified:** 200,
+      renders the empty state because nobody is flagged public yet, and carries `noindex`
+      under the same gate as an empty category. It flips on its own when Beco publishes an
+      agent, and the sitemap entry appears with it
 - [x] `/about`. **Verified:** 200. Claims no history Beco does not have: the prototype said
       "10+ Years in Nairobi" while the client's own guideline says "a new entrant into the
       market newly launched". The page leads on stock on the ground instead
@@ -39,7 +43,11 @@ Verification for this milestone was done against a running dev server on
 - [x] `/gallery`, the project gallery. All 71 real installation photographs, interleaved
       across products so no single stone takes the first screen. Delfone alone has ten
 - [x] Custom 404 routing back into the catalogue. **Verified:** returns 404 and renders
-- [ ] Custom 500
+- [x] Custom 500. Two of them: `error.tsx` inside the layout, which keeps the header and
+      offers a real `reset()` retry plus WhatsApp and the business line, and
+      `global-error.tsx` for when the root layout itself throws, which brings its own html,
+      body and tokens and is deliberately plain because everything it depends on is another
+      thing that can be broken when it is needed
 
 ## Brand assets
 
@@ -70,7 +78,9 @@ Verification for this milestone was done against a running dev server on
 - [x] About carries a dropdown: About Beco, Projects, The showroom. Opens on hover for a
       pointer and on click or Enter for everything else, escape returns focus to the trigger,
       arrows walk the items, click outside dismisses. Every destination exists
-- [ ] Mega menu with real slab thumbnails
+- [ ] Mega menu with real slab thumbnails. **Deferred**, not cut: the range browse on /shop
+      now carries the hierarchy with real photography, so the mega menu is a second way to do
+      what the shop already does. Worth building after the header lockup is confirmed
 - [x] **Mobile navigation.** The nav was `hidden md:block`, so on a phone there was no way to
       reach Shop, Projects, About or Contact at all, and the only route home was knowing the
       logo is a link. Panel lists Home explicitly, traps focus, escape returns focus to the
@@ -101,7 +111,8 @@ Verification for this milestone was done against a running dev server on
 - [x] D29 filter canonicalisation. Filters exist now, and every filtered view canonicalises to
       `/shop` and carries `noindex`. **Verified:** `?category=handles` is noindex with
       canonical `/shop`, while bare `/shop` has no noindex at all
-- [ ] `ItemList` on category grids
+- [x] `ItemList` on category grids. **Verified:** emitted on `/shop/12mm-sintered-stones`
+      and on the group pages, with `numberOfItems` matching the rendered grid
 - [ ] The 301 redirect map. **Blocked:** the old URL list has not arrived
 - [ ] Three blog articles seeded through a migration
 
@@ -121,18 +132,34 @@ Verification for this milestone was done against a running dev server on
 - [x] `motion.css`: CSS scroll driven parallax, scale and crop, and rise. No scroll handler,
       so none of it costs INP
 - [x] `ProductCard` gains a `frame` variant, so a lead tile is not cropped to 4:5
-- [x] `CardDeck` in `@beco/ui`, extracted from the room stack so the same physical language
-      is available anywhere. Auto dealing on the home page, reader driven on the product page
-- [x] Product gallery rebuilt on the deck. A strip has to reserve room for every image, so a
-      three image gallery and a six image gallery look like different components, and a fifth
-      of the catalogue has only three. A deck is one card's worth of space whatever it holds
+- [~] **The deck was NOT extracted into `@beco/ui`.** Corrected on 3 September by walking the
+      list against the code rather than the notes: there is no `CardDeck` anywhere. What is
+      shared is the CSS, `.beco-stack-card` in `motion.css`. `RoomStack` lives in
+      `apps/storefront/src/components/` and is used on BOTH the home page and About, so rule 5
+      applies and is currently unmet. Extracting it means decoupling it from `next/image` and
+      the products type the way `ProductCard` already is, which is a real refactor on the two
+      pages that matter most, so it is recorded rather than rushed at the end of a session
+- [x] Product gallery holds one card's worth of space whatever it contains. A strip has to
+      reserve room for every image, so a three image gallery and a six image gallery look like
+      different components, and a fifth of the catalogue has only three. **Corrected on 3
+      September:** it is a crossfade in a fixed frame, not the card deck this line previously
+      claimed. The outcome is the one that was wanted; the mechanism was written down wrong
 - [x] Rail cards became specimens: charcoal plate, name, number in the set, shadow, and a four
       step vertical rhythm. They were bare images in a flat row, which read as a contact sheet
 - [x] Completed interiors section between the count and the range, built from the 71 real
       installation photographs across 25 products. Answers "what does it look like in a room"
       before the page asks anyone to browse a grid
-- [ ] `Field` and `Input` extracted from the quote form into `@beco/ui`
-- [ ] 16px floor lint rule
+- [x] `Field`, `Input`, `Select` and `Textarea` extracted into `@beco/ui`. The filter bar
+      rebuild made it a third copy, so rule 5 applied twice over. **10 tests**, and **5 more**
+      on the quote form proving the labels still reach their controls and the `name`
+      attributes the server action reads survived the refactor
+- [x] 16px floor lint rule, `pnpm check:type-floor`, in CI. **Writing it corrected a wrong
+      assumption:** the floor is not held by policing `text-xs` at call sites, it is held by
+      REDEFINING Tailwind's scale in `tokens.css`, where `--text-xs` is 14px rather than 12px
+      and `--text-sm` is 16px rather than 14px. The first version of the rule flagged seven
+      false positives before that was checked. So the guard watches the tokens, a token going
+      missing, arbitrary `text-[13px]` values and raw `font-size`. **Verified both ways:**
+      passes clean on 104 files, and fails with the right message when `--text-sm` is lowered
 - [ ] SVG logo derived from the vector PDF
 
 ## Motion, per D31 and D32
@@ -246,6 +273,95 @@ These were discovered while building and are recorded rather than remembered.
       and the PDF is not used
 - [ ] **Two slabs cannot meet the 1600px budget** even at the quality floor. Reported as import
       issues. Needs a look before launch, see D46
+
+## Raised by Brown, done on 3 September
+
+- [x] **The shop's top section reads as designed now.** It was an eyebrow, a heading and a lede
+      on white, which is a document rather than a shop front. Same construction as `/contact`:
+      a charcoal band with a real slab behind it at 30%, the display headline, and three facts
+      stated rather than counted up. **Verified:** 200, h1 present, hero image renders
+- [x] **The filter bar was rebuilt.** It was two rows of loose text facets that worked and
+      looked like a debug view. One aligned control row on a charcoal rule now, with the range
+      as a GROUPED select so fifteen categories fit in one control and the hierarchy is visible
+      while choosing rather than only after, and what is active stated back as removable chips
+      so a reader landing on a shared filtered URL can see why they are looking at six products
+      instead of thirty. **Verified:** bare 30, `?range=hardware` 6, `?category=handles` 6,
+      `?finish=Polished` 4, and every filtered view still noindex with canonical `/shop`
+- [x] **Category and subcategory browsing.** `categories.parent_id` is used at last: five
+      groups above the fifteen Drive folders, with Lighting staying top level by design. The
+      shop leads with a Browse by range section carrying real photography per group and its
+      child ranges as links, and `/shop/<group>` is a real page showing the ranges beneath it
+      and everything in them. **Verified:** `/shop/sintered-stone` 24, `/shop/hardware` 6,
+      `/shop/wall-panels` 0 and noindex, breadcrumbs carry the group level. **11 tests** on the
+      tree and the index gate, **9 pgTAP tests** on the depth trigger. See D52
+- [x] **`/shop/[category]` no longer has an empty right-hand column.** The description ran down
+      the left at a capped measure with nothing opposite it. A photograph and a facts list hold
+      the right column now, and on a range with no photography the facts hold it alone
+- [x] **The gallery has its own entrance.** Each item assembles rather than appearing: the
+      frame and its hairline edge are drawn first and stay put, the photograph wipes up into
+      that frame from behind its own bottom edge, and the caption plate rises out from under it
+      a beat later. The wipe sits on a wrapper, not on the image, because the image already
+      carries the depth parallax and two animations on one transform fight rather than compose.
+      All of it inside `prefers-reduced-motion: no-preference`, `.beco-clip` included
+- [x] **WhatsApp product enquiry re-checked after the layout fix.** **Verified:** the control
+      opens `wa.me/254722333730` prefilled with the product name, confirmed on two products.
+      The SKU half of the message is untested against real data because no product carries a
+      SKU yet, 0 of 31, so that branch has never rendered
+- [x] **`/product/delfone-12mm` looked wrong for a reason.** Not a layout problem at all: see
+      the Delfone finding below
+
+- [x] **The mobile opening screen was black text on white.** Raised by Brown from a real
+      phone: no material, no motion, nothing above the fold but a paragraph. The stone is the
+      background below lg now, the type sits over it in white, and the specimen cards follow.
+      Fixing it also removed a control that could never have worked: the slab indicator tracks
+      the desktop panel column, which is `display: none` on mobile, so it sat permanently on 01
+      naming the wrong slab. See D55. **Verified:** markup renders, one 800px derivative shared
+      between the background and the first card. **Still needs the real device walk to judge**
+
+## Found on 3 September, not planned
+
+- [x] **`pnpm db:reset` was broken, and the database was not reproducible.** Two faults, both
+      invisible because nobody had rebuilt from scratch. `seed.sql` referenced a hardcoded
+      category id that migration 13 had already claimed under a generated uuid, so every
+      product insert failed its foreign key and the seed aborted outright. And migrations run
+      BEFORE the seed, so migration 15, carrying every real price and description, updated
+      products that did not exist yet and applied to nothing. A fresh clone got twenty four
+      nameless POA rows. Catalogue rows moved into migration 20 with their commercial data
+      attached. **Verified:** a fresh reset now gives 24 products, 24 priced, 21 described,
+      where it previously gave 24, 0 and 0. See D54
+
+- [x] **"Delfone 12mm" was seven products in a trenchcoat.** Delfone is a SUPPLIER. The folder
+      holds Bosnia Grey, Bulgaria Black, Calacatta Macchia, Martha Brown, Statuario, Taj Mahal
+      and Verde Lepanto as loose files named after the stone, so the importer made one product
+      out of seven: nineteen photographs of black, white, green and brown stone in one gallery,
+      every one captioned with the wrong material. This is why Statuario and Taj Mahal read as
+      priced but unphotographed, their photography was in here. The pipeline now detects and
+      reports it, refuses to publish a flagged folder, and migration 22 unpublishes the
+      existing row. **Verified:** the detector fires on exactly one folder across the whole
+      Drive and names all nine subjects, `/product/delfone-12mm` now 404s. **10 tests**.
+      See D53. **Blocked on Beco** for the folder reorganisation
+
+- [x] **The importer silently fell back to FIXTURE mode with no credentials.** `tsx` loads no
+      env, so `pnpm drive:import --dry-run`, which `docs/SETUP.md` gives as the way to verify
+      Drive access, passed against fixtures on a machine that had never been near Drive. It
+      loads the root `.env.local` now and says out loud when it is falling back. `dotenv` was
+      also declared as a real dependency rather than resolved by hoisting accident, which is
+      the same bug `server-only` had
+
+- [x] **Two `submit_quote` functions were live at once.** `create or replace function` cannot
+      change a signature, so migration 18 added a second one rather than replacing the first,
+      and both stayed granted to anon: two public entrances to the quote system, one of which
+      discards the installation and samples the customer asked for. It also made any short call
+      ambiguous with 42725. Dropped in migration 21, with a test asserting exactly one exists
+
+- [x] **A pgTAP test had been failing since migration 12.** `02_anon_rls` still asserted the
+      direct insert policy that migration 12 deliberately dropped. Rewritten to prove both
+      halves: anon cannot insert a quote directly, and anon CAN go through `submit_quote`.
+      `pnpm db:test` is green again, 56 tests
+
+- [x] **The catalogue queries had drifted.** `/shop/[category]` selected neither `specs` nor
+      the category join, so the same ProductCard showed a finish and its range on `/shop` and
+      neither on a category page. One column list now serves every catalogue query
 
 ## Definition of done, per CLAUDE.md rule 8
 

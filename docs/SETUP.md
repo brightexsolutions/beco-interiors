@@ -30,7 +30,21 @@ supabase start
 # 5. Copy those three values into .env.local
 cp .env.example .env.local
 supabase status          # NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY
+
+# 6. Photographs. The migrations carry the catalogue, R2 carries the images.
+pnpm drive:import
 ```
+
+**A reset is two steps, not one.** `pnpm db:reset` rebuilds the catalogue complete, 24 products
+with their real prices, descriptions and specs, because those live in a migration rather than
+in the seed, see D54. It does NOT bring back the photographs: those are in R2 and reach the
+database as image records written by the importer. So a reset leaves a catalogue with no
+pictures until `pnpm drive:import` runs, which takes about twenty minutes on a cold cache.
+
+`pnpm drive:import --dry-run` changes nothing and is the fastest way to check Drive access.
+It needs `GOOGLE_SERVICE_ACCOUNT_KEY_PATH` set; without it the run falls back to fixtures and
+says so out loud. It used to fall back SILENTLY, which meant this verification step passed on a
+machine that had never been near Drive.
 
 `supabase status` prints local keys that are **identical on every machine**, so they are not
 secrets. They are still not committed, because muscle memory is how a real key eventually ends

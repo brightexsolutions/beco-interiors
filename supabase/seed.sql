@@ -18,9 +18,16 @@ on conflict (key) do update set value = excluded.value;
 
 -- The real category, named from the Drive folder so the taxonomy stays
 -- traceable to its source.
-insert into categories (id, name, slug, description, is_published, source_path)
+--
+-- Kept as a safety net rather than as the source of the id. Migration 13 seeds
+-- the whole taxonomy and runs first, so this insert always loses the conflict
+-- and the row that survives carries a GENERATED uuid. Referring to a hardcoded
+-- id below therefore pointed at a row that never existed, and every product
+-- insert failed the foreign key, which broke `supabase db reset` outright.
+-- The id is resolved from source_path instead, which is the category's
+-- identity per migration 11 and cannot drift.
+insert into categories (name, slug, description, is_published, source_path)
 values (
-  '00000000-0000-0000-0000-0000000000c1',
   -- Slug derived from the Drive folder, matching what the importer
   -- produces. A hand written slug here split this category in two.
   '12mm Sintered Stones', '12mm-sintered-stones',
@@ -29,46 +36,16 @@ values (
   '12MM SINTERED STONES'
 ) on conflict (source_path) do nothing;
 
--- The 24 real stones, with their real Drive folder names.
+-- The 24 real stones used to be inserted here, bare and POA.
 --
--- Everything launches POA, per A9: no price data exists anywhere yet, and
--- price_display_mode is separate from availability precisely so a card can
--- say this without ambiguity.
+-- They now live in migration 20, WITH their prices, descriptions and specs,
+-- because migrations run before this file: migration 15 was updating rows that
+-- did not exist yet, so a reset produced a catalogue with no prices at all.
+-- Catalogue rows are not fixtures, and this file is for fixtures.
 --
--- face_type is set from what Drive actually contains. Irene confirmed only
--- the slabs marked BOOK MATCH are bookmatched and the rest are One Face,
--- which is a manufacturing property rather than a missing photograph.
-insert into products (name, slug, category_id, price_display_mode, availability,
-                      face_type, unit, is_published, source_path)
-select r.name, r.slug, '00000000-0000-0000-0000-0000000000c1',
-       'poa', 'poa', r.face::face_type, 'per slab', true, r.source
-from (values
-  ('Amber Jade', 'amber-jade', 'one_face', '12MM SINTERED STONES/AMBER JADE'),
-  ('Beverly Gold', 'beverly-gold', 'book_match', '12MM SINTERED STONES/BEVERLY GOLD'),
-  ('Bianco Fendi', 'bianco-fendi', 'book_match', '12MM SINTERED STONES/BIANCO FENDI'),
-  ('Bvlgari', 'bvlgari', 'one_face', '12MM SINTERED STONES/BVLGARI'),
-  ('Calcatta Gold', 'calcatta-gold', 'book_match', '12MM SINTERED STONES/CALCATTA GOLD'),
-  ('Calcatta Oro', 'calcatta-oro', 'book_match', '12MM SINTERED STONES/CALCATTA ORO'),
-  ('Cyprus Light Grey', 'cyprus-light-grey', 'one_face', '12MM SINTERED STONES/CYPRUS LIGHT GREY'),
-  ('Etereo', 'etereo', 'one_face', '12MM SINTERED STONES/ETEREO'),
-  ('Galaxy Bianco', 'galaxy-bianco', 'one_face', '12MM SINTERED STONES/GALAXY BIANCO'),
-  ('Jatoba Brown', 'jatoba-brown', 'one_face', '12MM SINTERED STONES/JATOBA BROWN'),
-  ('Limestone Beige', 'limestone-beige', 'one_face', '12MM SINTERED STONES/LIMESTONE BEIGE'),
-  ('Limestone Creamy', 'limestone-creamy', 'one_face', '12MM SINTERED STONES/LIMESTONE CREAMY'),
-  ('Limestone Ivory', 'limestone-ivory', 'one_face', '12MM SINTERED STONES/LIMESTONE IVORY'),
-  ('Moire White', 'moire-white', 'one_face', '12MM SINTERED STONES/MOIRE WHITE'),
-  ('Precious Black', 'precious-black', 'one_face', '12MM SINTERED STONES/PRECIOUS BLACK'),
-  ('Pure White', 'pure-white', 'one_face', '12MM SINTERED STONES/PURE WHITE'),
-  ('Rome Phantom Ivory', 'rome-phantom-ivory', 'book_match', '12MM SINTERED STONES/ROME PHANTOM IVORY'),
-  ('Sabnis', 'sabnis', 'one_face', '12MM SINTERED STONES/SABNIS'),
-  ('Sandstone Beige', 'sandstone-beige', 'one_face', '12MM SINTERED STONES/SANDSTONE BEIGE'),
-  ('Sandstone Ivory', 'sandstone-ivory', 'one_face', '12MM SINTERED STONES/SANDSTONE IVORY'),
-  ('Statuario', 'statuario', 'book_match', '12MM SINTERED STONES/STATUARIO'),
-  ('Statuario Gold', 'statuario-gold', 'book_match', '12MM SINTERED STONES/STATUARIO GOLD'),
-  ('Taj Mahal', 'taj-mahal', 'one_face', '12MM SINTERED STONES/TAJ MAHAL'),
-  ('Travertine Beige', 'travertine-beige', 'one_face', '12MM SINTERED STONES/TRAVERTINE BEIGE')
-) as r(name, slug, face, source)
-on conflict (slug) do nothing;
+-- What stays here is what a seed is actually for: settings, a live
+-- announcement, and fictional customers. Never anything cloned from
+-- production, per rule 6.
 
 -- One live announcement, so the bar is exercised rather than only built.
 --

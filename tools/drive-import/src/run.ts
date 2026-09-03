@@ -73,6 +73,11 @@ export const executePlan = async (
   const { data: cats } = await sb.from('categories').select('id,source_path');
   const catId = new Map((cats ?? []).map((c) => [c.source_path, c.id]));
 
+  // Folders the plan says hold more than one product. Their rows are created
+  // for provenance, so the photographs and their source are recorded, but they
+  // stay unpublished until Drive is reorganised.
+  const mixedPaths = new Set(plan.mixed.map((m) => m.path));
+
   // Group by product so each one is written once with its full gallery.
   const byProduct = new Map<string, PlannedFile[]>();
   for (const f of plan.files) {
@@ -222,7 +227,17 @@ export const executePlan = async (
           slug: productSlug,
           price_display_mode: 'poa',
           availability: 'poa',
-          is_published: true,
+          // A folder the plan flagged as holding SEVERAL products must not go
+          // live. It imports as one product whose gallery mixes materials and
+          // whose every photograph carries the wrong name, which is a wrong
+          // specification rather than an untidy page.
+          //
+          // Refused here rather than by a migration, because a migration runs
+          // before the importer has created the row: on a fresh environment
+          // the unpublish would apply to nothing and the bad product would
+          // arrive published. The pipeline that raises the flag is the only
+          // thing that can hold it.
+          is_published: !mixedPaths.has(first.productPath),
         });
       }
     }

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { buttonClasses, cn } from '@beco/ui';
 import { SITE, SOCIAL, whatsappLink } from '@/lib/site';
 import { SocialLinks } from './social-links';
-import { getAllCategories } from '@/lib/products';
+import { getCategoryTree } from '@/lib/products';
 
 /**
  * A genuine closing section, not grey link columns and a copyright line,
@@ -17,16 +17,17 @@ import { getAllCategories } from '@/lib/products';
  * Warm Red appears once here, on the primary action.
  */
 export async function SiteFooter() {
-  const all = await getAllCategories();
-
-  // A footer column is navigation, not an index. Fifteen entries is a list
-  // nobody reads, so it shows a few and hands the rest to /shop.
+  // The six top level ranges, which is the whole business rather than a
+  // truncated list of it.
   //
-  // Stocked ranges lead, because those are the ones a visitor can act on
-  // today, and the remainder fill up to five in the taxonomy's own order.
-  const stocked = all.filter((c) => c.product_count > 0);
-  const rest = all.filter((c) => c.product_count === 0);
-  const categories = [...stocked, ...rest].slice(0, 5);
+  // This used to take five of the fifteen flat categories, stocked ones first,
+  // which meant the footer's picture of Beco changed depending on what had
+  // been photographed that week and always cut off mid taxonomy. Six groups
+  // fit, they are complete, and they are stable.
+  const categories = await getCategoryTree();
+  // Counted as RANGES, not as groups: a childless top level range still counts
+  // as one, so this says fifteen rather than six.
+  const rangeCount = categories.reduce((n, g) => n + Math.max(1, g.children.length), 0);
 
   return (
     <footer className="bg-charcoal text-high-vis-white">
@@ -113,7 +114,7 @@ export async function SiteFooter() {
                     {/* Said plainly rather than hidden. A range that is
                         genuinely coming is worth showing; implying it is
                         stocked when it is not is what loses a specifier. */}
-                    {category.product_count === 0 ? (
+                    {category.total_count === 0 ? (
                       <span className="font-ui text-sm text-neutral-500">soon</span>
                     ) : null}
                   </Link>
@@ -124,7 +125,7 @@ export async function SiteFooter() {
                   href="/shop"
                   className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-4 hover:underline"
                 >
-                  All {all.length} ranges
+                  All {rangeCount} ranges
                 </Link>
               </li>
             </ul>

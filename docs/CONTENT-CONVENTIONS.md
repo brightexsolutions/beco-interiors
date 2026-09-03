@@ -32,6 +32,42 @@ BECO PRODUCTS/
 - **Never put a product folder inside another product folder.** This has already happened:
   `CYPRUS LIGHT GREY` and `GALAXY BIANCO` are currently sitting inside `AMBER JADE`. The system
   catches it and skips them, but it means those products do not appear until it is fixed
+- **Never put several products' photographs loose in one folder.** A folder is ONE product. If
+  the photographs inside it are named after different materials, the folder is really several
+  products and needs splitting
+
+**This one has already cost us, and it is worth reading twice.** `DELFONE 12MM` is a supplier
+folder, not a stone. Inside it sat `BOSNIA GREY SLAB.jpg`, `BULGARIA BLACK SLAB.JPG`,
+`CALACATTA MACCHIA SLAB 1.jpg`, `MARTHA BROWN SLAB.jpg`, `STATUARIO`, `TAJ MAHAL` and
+`VERDE LEPANTO`, all loose.
+
+The website has no way to know Delfone is a supplier, so it did what the rule says and made one
+product called "Delfone 12mm" holding nineteen photographs of seven different stones: black,
+white, green and brown in the same gallery, every one labelled with the wrong name. Six real
+products never appeared on the site at all, and the missing photography for Statuario and Taj
+Mahal, which we had been asking about, was in here the whole time.
+
+The fix is a folder each:
+
+```
+12MM SINTERED STONES/
+    BOSNIA GREY/
+        SLAB.jpg
+        APP 1.jpg
+    BULGARIA BLACK/
+        SLAB.jpg
+        APP 1.jpg
+    CALACATTA MACCHIA/
+        SLAB 1.jpg
+        SLAB 2.jpg
+        APP 1.jpg
+```
+
+Put the supplier name in the product description if it matters commercially. It is not part of
+the folder structure. The system now reports this on every import run and refuses to publish a
+folder it has flagged, so nothing mislabelled can reach the site, but it cannot fix it for you:
+splitting it automatically would mean guessing where one product's name ends and the shot
+description begins, and a wrong guess puts a wrong specification in front of a specifier.
 
 **Renaming a folder after it is live changes the product's web address and loses its Google
 ranking.** If a name needs to change, tell us first and we will handle the redirect.

@@ -41,6 +41,20 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('');
   }
 
+  if (plan.mixed.length) {
+    L.push('FOLDERS HOLDING MORE THAN ONE PRODUCT');
+    L.push('-------------------------------------');
+    L.push('  Imported as ONE product, so every photograph carries the folder\'s name');
+    L.push('  instead of its own. Not split automatically: the split would have to be');
+    L.push('  guessed from filenames, and a wrong guess is a wrong specification.');
+    L.push('');
+    for (const m of plan.mixed) {
+      L.push(`  ${m.path}`);
+      L.push(`    ${m.subjects.length} products named inside it: ${m.subjects.join(', ')}`);
+    }
+    L.push('');
+  }
+
   if (plan.looseFolders.length) {
     L.push('CATEGORIES WITH NO PRODUCT FOLDERS');
     L.push('----------------------------------');

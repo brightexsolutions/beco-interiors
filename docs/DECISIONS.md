@@ -235,3 +235,135 @@ read as a building site.
 
 *Reverses if:* Beco shoots landscape footage, in which case the band returns. The transcode
 step is manual today and belongs in the import pipeline, which needs ffmpeg.
+
+## D52, 3 September 2026: the taxonomy browses two levels deep
+
+`categories.parent_id` has existed since migration 4 and was never used, so the shop offered
+fifteen flat facets in a single row. That asks a reader to already know that "Bamboo Veneer
+Wall Panels" is the thing they want. Nobody arrives thinking that. They arrive wanting panels.
+
+Five groups now sit above the Drive folders: Sintered Stone, Wall Panels, Flooring, Hardware
+and Accessories. Lighting stays top level with no children, because it is a pillar in the brand
+guideline and a single Drive folder, and wrapping it in a group of one would be structure for
+its own sake. The UI renders a childless top level category as itself, so there is no second
+code path for it.
+
+The groups are an EDITORIAL layer, not a Drive layer. There is no folder called "Hardware", so
+a group carries `source_path = null`, which is what keeps the importer from colliding with it:
+it upserts on `source_path`, and null is not a folder it will ever plan.
+
+`/shop/<group>` and `/shop/<category>` are one route that branches, so every existing link,
+breadcrumb and sitemap entry keeps the same URL shape. A group page shows the ranges beneath it
+and everything in them.
+
+Depth is fixed at two by a trigger rather than by convention, because the storefront's browse
+tree assumes it and a third level would render as a group with neither products nor children.
+
+D27's index gate is now asked of the SUBTREE. A group holds no products of its own, so counting
+its own row would have kept "Sintered Stone" out of the index while the twenty five slabs
+beneath it were indexed individually. The same rule in reverse: a group whose ranges are all
+still being photographed is exactly as thin as an empty leaf, whatever buying guidance it
+carries, so it stays out until one of them lands. One helper answers this for both the sitemap
+and the robots tag, so the two cannot disagree.
+
+*Reverses if:* the range grows a genuine third level, at which point the trigger and the tree
+builder both change together.
+
+## D53, 3 September 2026: a folder holding several products is reported, never split
+
+`12MM SINTERED STONES/DELFONE 12MM` is a supplier folder. It holds Bosnia Grey, Bulgaria Black,
+Calacatta Macchia, Martha Brown, Statuario, Taj Mahal and Verde Lepanto as loose files named
+after the stone, so the importer, which trusts a folder name to be a product name, made one
+product out of seven.
+
+Nothing errored. What shipped was a page called "Delfone 12mm" with nineteen photographs of
+black, white, green and brown stone in one gallery, every one captioned with the wrong
+material, and the same wrong name on every gallery card those photographs produced. Six real
+products never reached the catalogue, and two that did, Statuario and Taj Mahal, had their
+photography sitting in here instead, which is why they read as priced but unphotographed.
+
+The pipeline now detects it: among the files whose role resolved, strip the role words, the
+digits and the folder's own words, and see what is left. In a correct folder nothing is left,
+because the files are called SLAB, APP 1 and BOOK MATCH. More than one distinct subject means
+the folder is naming its contents.
+
+It is REPORTED, not split. "TAJ MAHAL POLISHED SLAB" could be a polished slab of Taj Mahal or a
+product called Taj Mahal Polished, and guessing wrong puts a wrong specification in front of
+the one reader who checks. This is the same principle as never guessing an image role.
+
+The product is still created, so its provenance and photographs are recorded, but the importer
+refuses to PUBLISH it. That refusal lives in the pipeline rather than in a migration on
+purpose: a migration runs before the importer has created the row, so on a fresh environment an
+unpublish would apply to nothing and the bad product would arrive live. Only the thing that
+raises the flag can hold it.
+
+*Reverses if:* Beco reorganises the folder, at which point the import creates the seven
+products properly and the flag stops firing on its own.
+
+## D54, 3 September 2026: catalogue rows live in a migration, not in the seed
+
+`supabase db reset` did not reproduce this project, and had not for some time.
+
+Two faults, both invisible because nobody had rebuilt from scratch. `seed.sql` referenced a
+hardcoded category id that migration 13 had already claimed under a generated uuid, so every
+product insert failed its foreign key and the seed aborted. And migrations run BEFORE the seed,
+so migration 15, which carries every real price, description and spec, was updating products
+that did not exist yet and silently applied to nothing.
+
+The state everyone had been developing against existed only because it had been built up
+incrementally over sessions. A fresh clone got twenty four nameless POA rows.
+
+Catalogue rows are therefore not fixtures and no longer live in `seed.sql`. They are inserted
+complete, with their commercial data attached, in a migration. The seed keeps what a seed is
+for: settings, a live announcement, and fictional customers.
+
+Migration 15 is left exactly as it was rather than corrected in place. On any database where
+products already existed it did its job, and rewriting an applied migration to fix a later
+discovery is how two environments stop agreeing. It is superseded, not repaired.
+
+Images are the exception and stay with the importer, because they live in R2 and a seed cannot
+honestly carry two hundred and fifty eight image records. A reset is therefore followed by
+`pnpm drive:import`, which is now written down in the runbook rather than assumed.
+
+*Reverses if:* the dashboard's product editor becomes the source of truth at M5, at which point
+this migration becomes historical too.
+
+## D55, 3 September 2026: the mobile hero is image led, not the desktop hero reflowed
+
+D30 said type first on mobile, then a swipeable sequence. Looked at on a real phone, that
+produced an opening screen of black text on white with no material on it at all: every slab sat
+below the fold, so the first thing a visitor saw of a materials company was a paragraph.
+
+Two things were making it worse than the layout intended. The top padding was 96px, which is
+desktop breathing room on a 390px screen. And the slab indicator, the counter and progress
+rules, was being rendered on mobile where it can never work: it tracks the desktop panel
+column, which is `display: none` below lg, and a hidden element never intersects. It sat
+permanently on 01, naming the first slab whichever card you had swiped to, while pushing the
+photographs further down. An indicator that advertises tracking and does not track is a
+decorative control under rule 3, so it is desktop only now.
+
+Below lg the stone is the background. The first slab fills the opening screen behind a charcoal
+ground at 40%, the type sits over it in white and settles to the bottom of the frame, and the
+swipeable specimen cards follow underneath on white. That is the same construction as the
+openings on /contact and /shop, so the three read as one site, and it keeps the brand rule that
+the shell is near monochrome and the stone is the only colour on the page.
+
+The desktop hero is unchanged: white, pinned type column, specimen cards passing on the right.
+Mobile is not the desktop component reflowed, and this is the clearest case of it on the site.
+
+`svh` rather than `vh` on the opening height, so the screen does not jump by the height of the
+address bar on the first scroll.
+
+The background is pinned to the 800px derivative rather than left to choose 1600px at 3x. It
+sits behind type at 40% opacity, where the extra detail buys nothing and would put the hero
+over its 150KB budget on a Nairobi mobile connection. The mobile card row asks for the same
+derivative, so the first card is a cache hit rather than a second download.
+
+**The honest cost:** both treatments are in the DOM and only CSS hides one, so each breakpoint
+preloads one image it will not use, about 40KB on mobile and about 150KB on desktop. Rendering
+one or the other would need a breakpoint decision on the server, which cannot be made from a
+request. Worth measuring when Lighthouse runs, against the 1.0MB home page budget.
+
+*Reverses if:* Lighthouse shows the wasted preload costing more than the opening screen gains,
+in which case the desktop card column loses its preload rather than the mobile hero losing its
+photograph.

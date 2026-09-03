@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import { config } from 'dotenv';
 import { buildPlan } from './plan';
 import { renderReport } from './report';
 import { createFixtureSource } from './fixture-source';
@@ -11,10 +12,29 @@ import { createClient } from '@supabase/supabase-js';
  * pnpm drive:import --fixture    run against fixtures, no network
  * pnpm drive:import              incremental import
  */
+
+// Next loads .env.local for the apps, but tsx loads nothing, so the importer
+// saw an empty environment and quietly fell back to FIXTURE mode. That made
+// the setup step "pnpm drive:import --dry-run lists the 24 stone folders"
+// pass against fixtures on a machine with no Drive credentials at all, which
+// is a verification that proves nothing. Loaded here so the fallback is a
+// choice rather than an accident.
+config({ path: new URL('../../../.env.local', import.meta.url).pathname, quiet: true });
+
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has('--dry-run');
 const force = args.has('--force');
-const useFixture = args.has('--fixture') || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
+const explicitFixture = args.has('--fixture');
+const useFixture = explicitFixture || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
+
+// Falling back is fine. Falling back SILENTLY is what cost a real run, so an
+// unasked for fixture run says why it happened rather than only that it did.
+if (useFixture && !explicitFixture) {
+  console.log(
+    '\nNo GOOGLE_SERVICE_ACCOUNT_KEY_PATH in the environment, so this is a FIXTURE run.\n' +
+      'Nothing touches Drive and nothing here reflects the real folder. See docs/SETUP.md 2.1.',
+  );
+}
 
 const main = async () => {
   const source = useFixture ? createFixtureSource() : createGoogleDriveSource();

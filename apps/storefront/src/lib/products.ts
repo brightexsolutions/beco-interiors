@@ -32,23 +32,30 @@ const anon = () =>
     { auth: { persistSession: false } },
   );
 
+/**
+ * One column list for every catalogue query.
+ *
+ * These drifted: the category grid's query omitted `specs` and the category
+ * join, so the same ProductCard showed a finish and its range on /shop and
+ * neither on /shop/[category]. A card should not depend on which page asked.
+ */
+const PRODUCT_COLUMNS =
+  'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,' +
+  'images,specs,categories(name,slug)';
+
+// The generated types cannot narrow an embedded join in a select string, so
+// the shape is asserted here and guaranteed by PRODUCT_COLUMNS above.
+const withCategory = (row: unknown): CatalogueProduct => {
+  const { categories, ...rest } = row as Record<string, unknown> & {
+    categories: { name: string; slug: string } | null;
+  };
+  return { ...rest, category: categories } as unknown as CatalogueProduct;
+};
+
 export const getPublishedProducts = async (): Promise<CatalogueProduct[]> => {
-  const { data, error } = await anon()
-    .from('products')
-    .select(
-      'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,specs,' +
-        'categories(name,slug)',
-    )
-    .order('name');
+  const { data, error } = await anon().from('products').select(PRODUCT_COLUMNS).order('name');
   if (error) throw new Error(`could not load products: ${error.message}`);
-  // The generated types cannot narrow an embedded join in a select string,
-  // so the shape is asserted here and guaranteed by the query above.
-  return (data ?? []).map((row) => {
-    const { categories, ...rest } = row as unknown as Record<string, unknown> & {
-      categories: { name: string; slug: string } | null;
-    };
-    return { ...rest, category: categories } as unknown as CatalogueProduct;
-  });
+  return (data ?? []).map(withCategory);
 };
 
 /** The gallery order is the order a specifier reads a material in. */
@@ -76,8 +83,24 @@ export interface Category {
   description: string | null;
   /** Drive folder of origin. The category's identity, not its slug. */
   source_path: string | null;
+  /** The group this sits under, or null for a group and for Lighting. */
+  parent_id: string | null;
   product_count: number;
 }
+
+/** A top level category with whatever sits under it. See migration 19. */
+export interface CategoryGroup extends Category {
+  children: Category[];
+  /** Products across the whole subtree, which is what the reader counts. */
+  total_count: number;
+}
+
+const CATEGORY_COLUMNS = 'id,name,slug,description,source_path,parent_id,products(count)';
+
+const withCount = <T extends { products?: { count: number }[] }>(row: T): Category => {
+  const { products, ...rest } = row;
+  return { ...rest, product_count: products?.[0]?.count ?? 0 } as unknown as Category;
+};
 
 /**
  * Categories that actually have something in them.
@@ -90,14 +113,11 @@ export interface Category {
 export const getCategoriesWithProducts = async (): Promise<Category[]> => {
   const { data, error } = await anon()
     .from('categories')
-    .select('id,name,slug,description,source_path,products(count)')
+    .select(CATEGORY_COLUMNS)
     .order('sort_order');
   if (error) throw new Error(`could not load categories: ${error.message}`);
   return (data ?? [])
-    .map((c) => {
-      const { products, ...rest } = c as typeof c & { products: { count: number }[] };
-      return { ...rest, product_count: products?.[0]?.count ?? 0 } as Category;
-    })
+    .map((c) => withCount(c as never))
     .filter((c) => c.product_count > 0);
 };
 
@@ -116,25 +136,77 @@ export const getCategoriesWithProducts = async (): Promise<Category[]> => {
 export const getAllCategories = async (): Promise<Category[]> => {
   const { data, error } = await anon()
     .from('categories')
-    .select('id,name,slug,description,source_path,products(count)')
+    .select(CATEGORY_COLUMNS)
     .order('sort_order');
   if (error) throw new Error(`could not load categories: ${error.message}`);
-  return (data ?? []).map((c) => {
-    const { products, ...rest } = c as typeof c & { products: { count: number }[] };
-    return { ...rest, product_count: products?.[0]?.count ?? 0 } as Category;
-  });
+  return (data ?? []).map((c) => withCount(c as never));
 };
+
+/**
+ * The taxonomy as two levels, which is how a specifier actually looks.
+ *
+ * Nobody arrives wanting "Bamboo Veneer Wall Panels". They arrive wanting
+ * panels, and only then care which kind. Fifteen flat facets in one row asked
+ * the reader to hold the whole range in their head to find anything.
+ *
+ * A top level category with no children is returned as a group of one with an
+ * empty `children`, so Lighting does not need a wrapper group invented for it
+ * and callers do not need a second code path. `total_count` is the subtree
+ * total, because that is the number a reader is counting.
+ *
+ * Depth is guaranteed to be two by a trigger, per migration 19, so this does
+ * not recurse.
+ */
+export const buildCategoryTree = (all: Category[]): CategoryGroup[] => {
+  const childrenOf = new Map<string, Category[]>();
+  for (const c of all) {
+    if (!c.parent_id) continue;
+    childrenOf.set(c.parent_id, [...(childrenOf.get(c.parent_id) ?? []), c]);
+  }
+
+  return all
+    .filter((c) => !c.parent_id)
+    .map((parent) => {
+      const children = childrenOf.get(parent.id) ?? [];
+      return {
+        ...parent,
+        children,
+        total_count:
+          parent.product_count + children.reduce((n, c) => n + c.product_count, 0),
+      };
+    });
+};
+
+export const getCategoryTree = async (): Promise<CategoryGroup[]> =>
+  buildCategoryTree(await getAllCategories());
 
 export const getProductsByCategory = async (slug: string): Promise<CatalogueProduct[]> => {
   const { data, error } = await anon()
     .from('products')
-    .select(
-      'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,categories!inner(slug)',
-    )
+    .select(PRODUCT_COLUMNS.replace('categories(', 'categories!inner('))
     .eq('categories.slug', slug)
     .order('name');
   if (error) throw new Error(`could not load products: ${error.message}`);
-  return (data ?? []) as unknown as CatalogueProduct[];
+  return (data ?? []).map(withCategory);
+};
+
+/**
+ * Everything under a set of categories, for a group page.
+ *
+ * A group holds no products of its own, so /shop/hardware is only worth
+ * opening if it shows what is in the ranges beneath it. Called with the
+ * group's id alongside its children's, so a category that later grows
+ * children keeps working without a second query path.
+ */
+export const getProductsInCategories = async (ids: string[]): Promise<CatalogueProduct[]> => {
+  if (ids.length === 0) return [];
+  const { data, error } = await anon()
+    .from('products')
+    .select(PRODUCT_COLUMNS)
+    .in('category_id', ids)
+    .order('name');
+  if (error) throw new Error(`could not load products: ${error.message}`);
+  return (data ?? []).map(withCategory);
 };
 
 export interface ProductDetail extends CatalogueProduct {
@@ -245,13 +317,40 @@ export const getProductSlugs = async (): Promise<string[]> => {
 export const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
   const { data, error } = await anon()
     .from('categories')
-    .select('id,name,slug,description,source_path,products(count)')
+    .select(CATEGORY_COLUMNS)
     .eq('slug', slug)
     .maybeSingle();
   if (error) throw new Error(`could not load category: ${error.message}`);
   if (!data) return null;
-  const { products, ...rest } = data as typeof data & { products: { count: number }[] };
-  return { ...rest, product_count: products?.[0]?.count ?? 0 } as Category;
+  return withCount(data as never);
+};
+
+/**
+ * A category with its place in the tree, for `/shop/[category]`.
+ *
+ * That one route serves both levels, so it has to know which it is looking at
+ * before it can decide whether to render products or the ranges underneath.
+ * `parent` is carried for the breadcrumb, which otherwise skips a level and
+ * tells search engines the tree is flatter than it is.
+ */
+export const getCategoryWithTree = async (
+  slug: string,
+): Promise<{ category: Category; parent: Category | null; children: Category[] } | null> => {
+  const category = await getCategoryBySlug(slug);
+  if (!category) return null;
+
+  const { data, error } = await anon()
+    .from('categories')
+    .select(CATEGORY_COLUMNS)
+    .eq('parent_id', category.id)
+    .order('sort_order');
+  if (error) throw new Error(`could not load child categories: ${error.message}`);
+
+  let parent: Category | null = null;
+  if (category.parent_id) parent = (await getAllCategories())
+    .find((c) => c.id === category.parent_id) ?? null;
+
+  return { category, parent, children: (data ?? []).map((c) => withCount(c as never)) };
 };
 
 export const getCategorySlugs = async (): Promise<string[]> => {
@@ -269,3 +368,61 @@ export const getCategorySlugs = async (): Promise<string[]> => {
  */
 export const blurProps = (img: { blur?: string | undefined }) =>
   img.blur ? ({ placeholder: 'blur', blurDataURL: img.blur } as const) : ({} as const);
+
+export interface TeamMember {
+  id: string;
+  full_name: string;
+  public_title: string | null;
+  public_phone: string | null;
+  public_photo: { path: string; alt: string; width: number; height: number; blur?: string } | null;
+}
+
+/**
+ * The sales team, as the public may see it.
+ *
+ * Read with the ANON key, so the `users_read_public_team` policy is what
+ * decides who appears. Beco's requirement is specifically that DIRECTORS never
+ * appear, and that is held by a check constraint on the row rather than by
+ * this query remembering to filter, so there is no way for this to leak one.
+ *
+ * Only the public columns are selected. An email or a role would be refused by
+ * the policy anyway, but asking for them at all would be a mistake waiting to
+ * be copied into the next query.
+ */
+export const getPublicTeam = async (): Promise<TeamMember[]> => {
+  const { data, error } = await anon()
+    .from('users')
+    .select('id,full_name,public_title,public_phone,public_photo')
+    .order('sort_order');
+  if (error) throw new Error(`could not load the team: ${error.message}`);
+  return (data ?? []) as unknown as TeamMember[];
+};
+
+/**
+ * Categories worth putting in front of a search engine.
+ *
+ * D27 gates on whether a category has anything to say. With a two level
+ * taxonomy that question has to be asked of the SUBTREE, not the row: a group
+ * holds no products of its own, so counting only its own would have kept
+ * "Sintered Stone" out of the index while the twenty five slabs beneath it
+ * were indexed individually.
+ *
+ * The same rule the other way: a group whose ranges are all still being
+ * photographed is exactly as thin as an empty leaf, whatever buying guidance
+ * it carries, so it stays out until one of them lands.
+ *
+ * Used by the sitemap and by the category page's robots tag, so the two can
+ * never disagree about which pages exist for search.
+ */
+export const indexableCategories = (tree: CategoryGroup[]): Category[] =>
+  tree.flatMap((group) => [
+    ...(group.total_count > 0 ? [group as Category] : []),
+    ...group.children.filter((child) => child.product_count > 0),
+  ]);
+
+export const getIndexableCategories = async (): Promise<Category[]> =>
+  indexableCategories(buildCategoryTree(await getAllCategories()));
+
+/** Whether one category is indexable, without loading the whole tree twice. */
+export const categoryIsIndexable = async (slug: string): Promise<boolean> =>
+  (await getIndexableCategories()).some((c) => c.slug === slug);

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Reveal, buttonClasses } from '@beco/ui';
+import { buttonClasses } from '@beco/ui';
 import { PageHeader } from '@/components/page-header';
 import { getGalleryShots, blurProps } from '@/lib/products';
 
@@ -27,6 +27,25 @@ export const metadata: Metadata = {
  * The rhythm is a repeating four step grid rather than an even four across,
  * and each frame drifts at one of three depths, so a long page of rooms has
  * some structure to it instead of being a contact sheet.
+ *
+ * MOTION, dialled up here on request: the gallery gets a stronger entrance
+ * than the site's default reveal, because it is the one page whose entire
+ * content is photographs and a plain fade underplays them.
+ *
+ * Each item ASSEMBLES rather than appearing. The frame and its hairline edge
+ * are drawn first and stay put, the photograph wipes up into that frame from
+ * behind its own bottom edge, and the caption plate rises out from under it a
+ * beat later. It is the same physical language as the rail cards, which is
+ * why it does not read as a new effect bolted onto this page.
+ *
+ * The wipe sits on a WRAPPER, not on the image. The image already carries the
+ * depth parallax, and two animations on one element's transform fight rather
+ * than compose, so the entrance and the drift are deliberately kept on
+ * separate elements.
+ *
+ * All of it lives inside `prefers-reduced-motion: no-preference` in motion.css,
+ * including `.beco-clip`, so a reduced-motion reader gets the finished grid
+ * with nothing hidden and nothing clipped.
  */
 const SPAN = [
   'lg:col-span-7',
@@ -62,29 +81,35 @@ export default async function GalleryPage() {
       ) : (
         <div className="grid gap-x-8 gap-y-12 lg:grid-cols-12 lg:gap-x-10">
           {shots.map((shot, i) => (
-            <Reveal
-              key={`${shot.productSlug}-${shot.path}`}
-              delay={(i % 2) * 80}
-              className={SPAN[i % SPAN.length]}
-            >
+            <div key={`${shot.productSlug}-${shot.path}`} className={SPAN[i % SPAN.length]}>
               <Link href={`/product/${shot.productSlug}`} className="group block">
+                {/* The frame is drawn first and never moves, so nothing here
+                    can shift layout. beco-clip is what the wipe rises from
+                    behind. */}
                 <div
-                  className={`relative w-full overflow-hidden bg-neutral-100 ${FRAME[i % FRAME.length]} ${DEPTH[i % DEPTH.length]}`}
+                  className={`beco-clip relative w-full bg-neutral-100 ${FRAME[i % FRAME.length]}`}
                 >
-                  <Image
-                    src={shot.path}
-                    alt={shot.alt}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 55vw"
-                    {...blurProps(shot)}
-                    className="object-cover"
-                  />
+                  <div
+                    className={`beco-wipe absolute inset-0 ${DEPTH[i % DEPTH.length]}`}
+                    // Staggered across the row, so a pair arriving together
+                    // assembles one after the other rather than in lockstep.
+                    style={{ animationDelay: `${(i % 2) * 110}ms` }}
+                  >
+                    <Image
+                      src={shot.path}
+                      alt={shot.alt}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 55vw"
+                      {...blurProps(shot)}
+                      className="object-cover"
+                    />
+                  </div>
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
                   />
                 </div>
-                <p className="mt-4 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-charcoal">
+                <p className="beco-plate mt-4 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-charcoal">
                   {shot.productName}
                   <span
                     aria-hidden
@@ -92,7 +117,7 @@ export default async function GalleryPage() {
                   />
                 </p>
               </Link>
-            </Reveal>
+            </div>
           ))}
         </div>
       )}

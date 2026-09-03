@@ -1,6 +1,6 @@
 -- Anonymous access. Proving the NEGATIVE is the point of this file.
 begin;
-select plan(8);
+select plan(10);
 
 -- Seed as the owner, before dropping to anon.
 insert into categories (id, name, slug, is_published)
@@ -41,11 +41,40 @@ select is_empty($$select * from orders$$,  'anon cannot read any order');
 select is_empty($$select * from users$$,   'anon cannot read any user');
 select is_empty($$select * from audit_log$$,'anon cannot read the audit log');
 
--- The storefront genuinely needs this one, through a rate limited action.
-select lives_ok(
+-- The way in is submit_quote, not a direct insert.
+--
+-- Migration 12 dropped quotes_insert_anon on purpose: PostgREST adds RETURNING
+-- when the caller asks for the new row, and anon cannot SELECT a quote, so the
+-- direct insert failed as a whole and the public form could never have worked.
+-- This file kept asserting the dropped policy, so it has been failing since.
+--
+-- Both halves are proven, because the negative is the point of the file: the
+-- door is shut, and the one controlled entrance is open.
+select throws_ok(
   $$insert into quotes (customer_name, customer_phone)
     values ('Web Visitor', '0722333444')$$,
-  'anon CAN submit a quote, which the storefront requires'
+  '42501',
+  null,
+  'anon cannot insert a quote directly, so nothing can bypass submit_quote'
+);
+
+select lives_ok(
+  $$select submit_quote(
+      'ZZ Test Visitor',
+      '0722333444',
+      '[{"slug": "amber-jade", "quantity": 2}]'::jsonb
+    )$$,
+  'anon CAN submit a quote through submit_quote, which the storefront requires'
+);
+
+-- And there is exactly ONE of it. Migration 18 could not replace the original
+-- signature, so it created a second function and left both granted to anon.
+-- Two live entrances to the quote system, one of which drops the services the
+-- customer asked for, is the kind of thing that is only ever found on purpose.
+select results_eq(
+  $$select count(*)::int from pg_proc where proname = 'submit_quote'$$,
+  ARRAY[1],
+  'only one submit_quote exists, so a short call cannot be ambiguous'
 );
 
 select * from finish();

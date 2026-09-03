@@ -3,6 +3,7 @@ import { detectMisnests, misnestedPaths, type FolderNode, type Misnest } from '.
 import { resolveRole } from './roles';
 import { slugify, titleise } from './slug';
 import type { ImageRole } from '@beco/types';
+import { detectMixedFolders, type MixedFolder } from './mixed';
 
 /**
  * Turns a Drive listing into a plan: what to import, what to skip, and why.
@@ -42,6 +43,8 @@ export interface ImportPlan {
   files: PlannedFile[];
   issues: Issue[];
   misnests: Misnest[];
+  /** Product folders that are naming several products inside themselves. */
+  mixed: MixedFolder[];
   /** Category folders whose files have no product folder to belong to. */
   looseFolders: Array<{ folder: string; count: number }>;
   /** Gallery and brand files, correctly loose, handled elsewhere. */
@@ -95,6 +98,8 @@ export const buildPlan = (
   const unknownByProduct = new Map<string, boolean>();
   /** Category folders holding files directly, with no product folder. */
   const looseByFolder = new Map<string, number>();
+  /** Role bearing filenames per product folder, for the mixed folder check. */
+  const namedByFolder = new Map<string, { folderName: string; filenames: string[] }>();
 
   for (const c of classified) {
     if (c.outcome === 'missing') {
@@ -133,6 +138,15 @@ export const buildPlan = (
     if (role === 'slab') slabByProduct.set(productSlug, true);
     if (!slabByProduct.has(productSlug)) slabByProduct.set(productSlug, false);
 
+    if (role !== 'unknown') {
+      // Only files whose role resolved. An unreadable camera filename is a
+      // naming problem reported on its own, not evidence of a second product.
+      const key = `${categoryFolder}/${productFolder}`;
+      const entry = namedByFolder.get(key) ?? { folderName: productFolder, filenames: [] };
+      entry.filenames.push(filename);
+      namedByFolder.set(key, entry);
+    }
+
     if (role === 'unknown') {
       unknownByProduct.set(productSlug, true);
       issues.push({
@@ -164,6 +178,18 @@ export const buildPlan = (
     });
   }
 
+  // A product folder that is actually naming several products inside itself.
+  // Reported, never split: the split would have to be guessed from filenames,
+  // and a wrong guess puts a wrong specification on a live page.
+  const mixed: MixedFolder[] = detectMixedFolders(
+    [...namedByFolder].map(([folderPath, v]) => ({
+      folderPath,
+      folderName: v.folderName,
+      filenames: v.filenames,
+    })),
+  );
+  for (const m of mixed) issues.push({ path: m.path, reason: m.reason });
+
   // One issue per folder, not per file.
   for (const [folder, count] of looseByFolder) {
     if (NON_PRODUCT_FOLDERS.has(folder.toUpperCase())) continue;
@@ -180,6 +206,7 @@ export const buildPlan = (
   return {
     files,
     issues,
+    mixed,
     misnests,
     looseFolders: [...looseByFolder]
       .filter(([f]) => !NON_PRODUCT_FOLDERS.has(f.toUpperCase()))

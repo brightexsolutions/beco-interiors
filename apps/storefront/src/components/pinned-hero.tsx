@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { buttonClasses, WordReveal } from '@beco/ui';
+import { buttonClasses, cn, WordReveal } from '@beco/ui';
 import { blurProps } from '@/lib/products';
 
 /**
@@ -25,6 +25,37 @@ import { blurProps } from '@/lib/products';
  * sequence. D31 was later revised to keep pinning on mobile, so which of the
  * two wins here is settled on a real device during M4, not by argument. See
  * docs/DECISIONS.md.
+ *
+ * MOBILE IS NOT THE DESKTOP HERO REFLOWED, changed 3 September after looking at
+ * a real phone. The opening screen was white with black type on it and nothing
+ * else: every slab sat below the fold, so the first thing a visitor saw of a
+ * materials company was a paragraph.
+ *
+ * Below lg the stone itself is the background. The first slab fills the
+ * opening screen behind a charcoal ground, the type sits over it in white and
+ * settles to the bottom of the frame, and the swipeable row of specimen cards
+ * follows underneath on white. Same construction as the openings on /contact
+ * and /shop, so the three read as one site.
+ *
+ * It is the SAME photograph as the first card in the row, and the row asks for
+ * the same 800px derivative, so mobile downloads it once and the card is a
+ * cache hit.
+ *
+ * The honest cost, since both treatments are in the DOM and only CSS hides
+ * one: each breakpoint preloads one image it will not use. Mobile pays about
+ * 40KB for the desktop card's 400px derivative, desktop pays about 150KB for
+ * this 800px background. Rendering one or the other would need a breakpoint
+ * decision on the server, which cannot be made from a request. Worth measuring
+ * when Lighthouse finally runs, against the 1.0MB home page budget.
+ *
+ * Two things were removed rather than restyled. The top padding was 96px,
+ * which is desktop breathing room on a 390px screen. And the slab indicator
+ * was rendered on mobile where it can NEVER work: it tracks the desktop panel
+ * column, which is `display: none` below lg, and a hidden element never
+ * intersects, so it sat permanently on 01 naming the first slab whichever card
+ * you had swiped to. An indicator that advertises tracking and does not track
+ * is a decorative control under rule 3. It is desktop only now, and the mobile
+ * cards already carry their own position on their plates.
  *
  * The first slab is the LCP element. It is never animated on entry, and it is
  * the only image here marked priority.
@@ -67,29 +98,57 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
   }, [slabs.length]);
 
   const current = slabs[active] ?? slabs[0];
+  /** The mobile background, and the first card in the row: one fetch, used twice. */
+  const lead = slabs[0];
 
   return (
     <section aria-label="Sintered stone" className="relative border-b border-neutral-200">
       <div className="lg:grid lg:grid-cols-2">
-        {/* --- Type. Pinned on desktop, static on mobile. --- */}
-        <div className={`lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] ${GRID_INSET}`}>
-          <div className="flex h-full flex-col justify-center pb-14 pr-6 pt-24 lg:py-10 lg:pr-20">
+        {/* --- Type. Pinned on desktop. On mobile it sits over the stone. --- */}
+        <div
+          className={cn(
+            'relative min-h-[70svh] bg-charcoal',
+            'lg:min-h-0 lg:bg-transparent lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)]',
+            GRID_INSET,
+          )}
+        >
+          {/* Mobile only. `svh` rather than `vh`, so the opening screen does
+              not jump by the height of the address bar on first scroll. */}
+          {lead ? (
+            <div aria-hidden className="beco-ambient absolute inset-0 overflow-hidden lg:hidden">
+              <Image
+                src={lead.src}
+                alt=""
+                fill
+                priority
+                // Pinned to the 800px derivative rather than left to pick the
+                // 1600px one at 3x. This sits behind type at 40%, where extra
+                // detail buys nothing and would put the hero over its 150KB
+                // budget on a Nairobi mobile connection.
+                sizes="800px"
+                {...blurProps(lead)}
+                className="object-cover opacity-40"
+              />
+            </div>
+          ) : null}
+
+          <div className="relative flex h-full flex-col justify-end pb-10 pr-6 pt-16 lg:justify-center lg:py-10 lg:pb-14 lg:pr-20">
             <div className="flex items-center gap-4">
               <span aria-hidden className="beco-rule-draw h-px w-8 bg-warm-red" />
               <p
-                className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500"
+                className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300 lg:text-neutral-500"
                 style={{ animationDelay: '120ms' }}
               >
                 Sintered stone, stocked in Nairobi
               </p>
             </div>
 
-            <h1 className="mt-6 max-w-[12ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-charcoal sm:text-6xl xl:text-7xl">
+            <h1 className="mt-6 max-w-[12ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-high-vis-white sm:text-6xl lg:text-charcoal xl:text-7xl">
               <WordReveal text="Surfaces that outlast the room." />
             </h1>
 
             <p
-              className="beco-enter mt-6 max-w-[42ch] text-base leading-[1.65] text-neutral-700 lg:text-lg"
+              className="beco-enter mt-6 max-w-[42ch] text-base leading-[1.65] text-neutral-300 lg:text-lg lg:text-neutral-700"
               style={{ animationDelay: '620ms' }}
             >
               Large format slabs for kitchens, bathrooms, feature walls and flooring. Heat,
@@ -103,7 +162,16 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               <Link href="/quote" className={buttonClasses({ variant: 'primary' })}>
                 Request a quote
               </Link>
-              <Link href="/shop" className={buttonClasses({ variant: 'outline' })}>
+              <Link
+                href="/shop"
+                className={cn(
+                  buttonClasses({ variant: 'outline' }),
+                  // Charcoal on charcoal is invisible, so it inverts over the
+                  // stone and returns to the standard outline on desktop.
+                  'border-high-vis-white text-high-vis-white hover:bg-high-vis-white hover:text-charcoal',
+                  'lg:border-charcoal lg:text-charcoal lg:hover:bg-charcoal lg:hover:text-high-vis-white',
+                )}
+              >
                 See the range
               </Link>
             </div>
@@ -112,7 +180,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                     pinned column, so the type block above never moves as it
                     updates. Announced politely rather than interrupting. --- */}
             <div
-              className="beco-enter mt-12 border-t border-neutral-200 pt-5"
+              className="beco-enter mt-12 hidden border-t border-neutral-200 pt-5 lg:block"
               style={{ animationDelay: '900ms' }}
             >
               <div className="flex items-baseline justify-between gap-6">
@@ -173,7 +241,8 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               // instead, which starts well after first paint.
               className={`flex min-h-[78vh] items-center py-6 ${i === 0 ? '' : 'beco-card-flip'}`}
             >
-              <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness} />
+              <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness}
+                        priority={i === 0} />
             </div>
           ))}
         </div>
@@ -181,11 +250,16 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
         {/* --- Mobile: no pin. A snap sequence, so a four slab and a six slab
                 hero occupy the same vertical space. --- */}
         <div className="lg:hidden">
-          <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-16 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-16 pt-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {slabs.map((slab, i) => (
               <li key={slab.slug} className="w-[78vw] shrink-0 snap-center">
+                {/* `800px` rather than `78vw`, deliberately: it is the same
+                    derivative the opening screen's background already asked
+                    for, so the first card costs a cache hit instead of a
+                    second download. No `priority` here, the background is the
+                    mobile LCP and it is the same photograph. */}
                 <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness}
-                          priority={i === 0} sizes="78vw" />
+                          sizes="800px" />
               </li>
             ))}
           </ul>
@@ -231,8 +305,10 @@ function SlabCard({
           src={slab.src}
           alt={slab.alt}
           fill
-          // The first slab is the LCP element, so it is eager and unanimated.
-          priority={priority || index === 0}
+          // Stated by the caller, never inferred from the index. Inferring it
+          // meant the mobile row's first card also claimed priority, which
+          // preloaded a second copy of the photograph already behind the hero.
+          priority={priority}
           sizes={sizes}
           {...blurProps(slab)}
           className="object-cover transition-transform duration-[900ms] ease-brand group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"

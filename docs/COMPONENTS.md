@@ -13,11 +13,11 @@ Status: **B** built, **S** stubbed, **P** planned.
 | Component | Status | Notes |
 |---|---|---|
 | `Button` | **B** | Reference component. Primary uses `warm-red-deep`, never pure warm red, which fails AA with white text |
-| `ConfirmDialog` | **S** | **Replaces `window.confirm` entirely.** See below |
+| `ConfirmDialog` | **B** | **Replaces `window.confirm` entirely.** Rewritten from the M3 scaffold, which rendered unconditionally and had a Cancel button wired to nothing. **9 tests** covering escape, backdrop, focus placement and the trap |
 | `Dialog` / `Sheet` | P | Radix. Sheet on mobile, dialog on desktop |
 | `toast()` | P | **Replaces `window.alert`.** Announced to screen readers |
-| `Field` | P | Label, hint, error, and the input, wired together. Errors announced, not just coloured |
-| `Input` `Textarea` `Select` | P | Radix Select. 44px minimum, 16px text so iOS does not zoom on focus |
+| `Field` | **B** | Label, hint, error. The CONTROL is passed in, so one wrapper serves an input, a select, a textarea or a radio group without a variant for each. Errors carry `role="alert"`, so they are announced rather than only coloured. Written twice before this, in the quote form and the shop filter bar |
+| `Input` `Textarea` `Select` | **B** | 44px minimum, `text-base` so iOS does not zoom on focus. `Select` is NATIVE with `appearance-none` and a drawn chevron, not Radix: it needs `optgroup` to carry the two level taxonomy, and a native menu is better on a phone than a rebuilt one. All three forward refs. **10 tests** |
 | `QuantityStepper` | P | **The 12 tap budget depends on this.** Big targets, no keyboard needed |
 
 ## Domain
@@ -26,13 +26,25 @@ These carry business rules, so they exist once and are tested once.
 
 | Component | Status | Notes |
 |---|---|---|
-| `PriceDisplay` | P | **The most important component on the storefront.** Renders fixed price, POA, or a sale with a struck through `compare_at_price`. `price_display_mode` is separate from `availability` precisely so this can never be ambiguous, and ambiguity here costs sales |
-| `AvailabilityBadge` | P | In Stock, Pre-Order, POA. Warm Red only for genuine attention |
-| `ProductCard` | P | No border, no shadow. Fixed 4:5 frame, image scales on hover, red hairline draws under the name. A shadow lift is the generic move |
-| `ProductGallery` | P | Ordered by image role: slab, on_stand, bookmatch, application. **Must read correctly on three images as well as six**, since five products have no on stand shot |
+| `PriceDisplay` | **B** | **The most important component on the storefront.** Renders fixed price, POA, or a sale with a struck through `compare_at_price`. `price_display_mode` is separate from `availability` precisely so this can never be ambiguous, and ambiguity here costs sales |
+| `AvailabilityBadge` | **B** | In Stock, Pre-Order, POA. Warm Red only for genuine attention |
+| `ProductCard` | **B** | No border, no shadow. Fixed 4:5 frame, image scales on hover, red hairline draws under the name. A shadow lift is the generic move |
+| `ProductGallery` | **B** | Ordered by image role: slab, on_stand, bookmatch, application. **Must read correctly on three images as well as six**, since five products have no on stand shot |
 | `QuoteActions` | P | The three actions, ranked identically everywhere: Request a quote, WhatsApp, Call |
-| `StickyActionBar` | P | Mobile. **Never sits under the on screen keyboard.** Verified on real iOS and Android |
-| `AnnouncementBar` | P | Server rendered with reserved height. Dismissal is a **cookie, not localStorage**, so the server knows and the bar never flashes then vanishes |
+| `MobileActionBar` | **B** | Storefront. | Mobile. **Never sits under the on screen keyboard.** Verified on real iOS and Android |
+| `AnnouncementBar` | **B** | Lives in the storefront, not `@beco/ui`, because only one surface has one. | Server rendered with reserved height. Dismissal is a **cookie, not localStorage**, so the server knows and the bar never flashes then vanishes |
+
+## Storefront only
+
+Not in `@beco/ui`, because a second surface has no use for them yet. Moved the moment one does.
+
+| Component | Status | Notes |
+|---|---|---|
+| `RangeBrowse` | **B** | The taxonomy made visible: six top level ranges with a real photograph each and their child ranges as links. A range with no photography gets a charcoal plate with its name on it rather than a grey box with an icon, which is honest about the stock being real and the picture not being taken |
+| `ShopControls` | **B** | Search, a grouped range select, finish and sort, with the URL as the source of truth so the grid stays server rendered. Active filters stated back as removable chips |
+| `ProductGrid` | **B** | One grid for the home page, `/shop` and every category, so a card cannot quietly differ between them |
+| `RoomStack` | **B** | A self dealing stack of installations. **Used on two pages, so rule 5 says it belongs in `@beco/ui`**, and it does not yet. Extraction means decoupling it from `next/image` and the products type the way `ProductCard` already is |
+| `PageHeader` | **B** | Red rule, eyebrow, Cormorant title, lede. The site's one section opening |
 
 ## Dashboard
 

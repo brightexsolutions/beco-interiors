@@ -12,6 +12,10 @@ export { Reveal, type RevealProps } from './components/reveal';
 export { ScrollMotion } from './components/scroll-motion';
 export { HoverGallery } from './components/hover-gallery';
 export { CountUp, type CountUpProps } from './components/count-up';
+export {
+  Field, Input, Select, Textarea,
+  type FieldProps, type InputProps, type SelectProps, type TextareaProps,
+} from './components/field';
 export { WordReveal, type WordRevealProps } from './components/word-reveal';
 export { cn } from './lib/cn';
 export { PALETTE } from './tokens/palette';

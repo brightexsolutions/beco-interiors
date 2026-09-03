@@ -61,17 +61,28 @@ and writes all. Nobody may change their own `role`, enforced by policy not by UI
 
 Self referential, so subcategories need no second table.
 
+**Exactly two levels, enforced by a trigger** rather than by convention, because the
+storefront's browse tree assumes it and a third level would render as a group with neither
+products nor children. `enforce_category_depth` refuses a grandchild on insert and on update, a
+category made its own parent, and a category with children being given a parent. See migration
+19 and D52.
+
+Five GROUPS sit above the Drive folders: Sintered Stone, Wall Panels, Flooring, Hardware and
+Accessories. Lighting stays top level with no children by design. A group is an editorial row,
+so `source_path` is null on it, which is what keeps the importer, which upserts on
+`source_path`, from ever colliding with one.
+
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid PK | |
 | `name`, `slug` | text, slug unique | Slug derives from the Drive folder name |
-| `parent_id` | uuid FK categories | |
+| `parent_id` | uuid FK categories | Null on a group and on Lighting. Depth capped at two by trigger |
 | `description` | text | 150 to 400 words. **A grid alone does not rank** |
 | `meta_title`, `meta_description` | text | SEO overrides, editable without a deploy |
 | `hero_image` | jsonb | |
 | `sort_order` | int | |
 | `is_published` | boolean | |
-| `source_path` | text | Drive folder path, keeps taxonomy traceable |
+| `source_path` | text unique | Drive folder path, keeps taxonomy traceable. **The category's identity, not its slug**, see migration 11. Null on an editorial group, and a unique constraint permits many nulls |
 
 `published_product_count` is a view or generated value. **Zero means `noindex` and no sitemap
 entry**, flipping automatically on first import. See D27.

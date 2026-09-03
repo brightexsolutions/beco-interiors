@@ -23,7 +23,8 @@
     "db:types": "supabase gen types typescript --local > packages/types/src/database.ts",
     "drive:import": "tsx tools/drive-import/src/cli.ts",
     "backup:verify": "tsx tools/backup/src/verify.ts",
-    "check:secrets": "tsx tools/backup/src/secret-scan.ts"
+    "check:secrets": "tsx tools/backup/src/secret-scan.ts",
+    "check:type-floor": "node tools/setup/assert-type-floor.mjs"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
