@@ -724,3 +724,29 @@ clears that backlog item for Beco's own footage transcoding going forward.
 *Reverses if:* Beco supplies real landscape footage, at which point `GALLERY_FILM` points at
 that instead and nothing else in the component changes, since nothing but this one page depends
 on the constant.
+
+## D70, 4 September 2026: the hero's lede crossfades with the active slab
+
+Asked for directly: as the slabs transition on the right, the copy on the left should also say
+something different, not sit static the whole scroll.
+
+The H1 does not change. `WordReveal`'s own stated rule is that it is used once, on this
+headline, nowhere else on the site, and that holds regardless of what moves beside it:
+"Surfaces that outlast the room." stays the one fixed thing the hero says while everything
+around it moves.
+
+The lede does. It is Beco's own first sentence for whichever stone is active, from the same
+descriptions document migration 15 loaded, trimmed to one sentence because the site's own copy
+rule is short copy and a hero lede is not the paragraph. A slab with no description yet, Cyprus
+Grey and a few others, falls back to the original generic sentence rather than showing nothing.
+
+Built on the exact technique `RotatingStatement` uses, stacked absolutely, one opacity source
+per layer, height reserved by an invisible copy of the longest real lede in normal flow. Worth
+being direct about why: this is the SAME crossfade shape that froze under D67's bug, a hardcoded
+base opacity alongside a conditional one, so the fix's lesson is applied here from the start
+rather than rediscovered. A test asserts exactly one opacity class per layer for this reason.
+
+`CatalogueProduct` gained `short_description`, added to `PRODUCT_COLUMNS`, since the list query
+that feeds the home page's hero previously stopped at `specs`. `specs['Recommended for']` was
+considered and rejected as the source: it is the identical sentence on every stone in the
+catalogue, so using it would not have varied at all.

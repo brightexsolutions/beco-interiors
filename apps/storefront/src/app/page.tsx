@@ -51,6 +51,9 @@ export default async function HomePage() {
         name: p.name, slug: p.slug, src: img.path, alt: img.alt,
         category: p.category?.name ?? 'Sintered stone',
         width: img.width, height: img.height, blur: img.blur,
+        // Beco's own first sentence for this stone, so the hero's lede can
+        // change with the slab instead of one generic sentence for all four.
+        blurb: p.short_description ?? null,
       };
     });
 

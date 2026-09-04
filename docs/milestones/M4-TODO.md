@@ -363,6 +363,11 @@ These were discovered while building and are recorded rather than remembered.
       whose whole job is proving the range looks considered once installed. Now frame, wipe,
       plate, same physical language as the gallery, depth parallax kept intact
 
+- [x] **The hero's lede now crossfades with the active slab**, Beco's own first sentence per
+      stone rather than one static paragraph for the whole scroll. The headline stays fixed,
+      respecting WordReveal's own single-use rule. **5 tests**, including one proving exactly
+      one opacity class per layer, learned directly from D67. See D70
+
 ## Found later on 4 September, not planned
 
 - [x] **The splash froze forever on every first load in dev.** Real bug, root caused: React 18

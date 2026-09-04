@@ -59,6 +59,30 @@ import { blurProps } from '@/lib/products';
  *
  * The first slab is the LCP element. It is never animated on entry, and it is
  * the only image here marked priority.
+ *
+ * THE LEDE CROSSFADES WITH THE ACTIVE SLAB, added 4 September. It used to be
+ * one fixed sentence for the whole scroll, so the type column stayed static
+ * while photographs turned beside it, which reads as two unrelated things
+ * sharing a screen rather than one hero responding to itself.
+ *
+ * The H1 does NOT change. `WordReveal`'s own rule is that it is used once,
+ * on this headline, nowhere else, and that holds regardless of what the copy
+ * beside it does: "Surfaces that outlast the room." is the sentence the hero
+ * opens on and the one it keeps, so the site still has one fixed thing to
+ * say when everything else around it is moving.
+ *
+ * The lede is Beco's own first sentence for that stone, not written for this
+ * hero, the same real-copy discipline `blurb` states on `HeroSlab`. A slab
+ * with no description falls back to the original generic sentence rather
+ * than showing nothing.
+ *
+ * Every lede is rendered at once, absolutely stacked, and only the active
+ * one is opacity 100: the SAME technique `RotatingStatement` uses, and the
+ * same lesson from fixing it applies here. Opacity has exactly one source,
+ * the ternary. A hardcoded base opacity alongside a conditional one is
+ * EXACTLY the bug that froze that component's photograph while its word kept
+ * cycling: two classes for the same property, Tailwind's stylesheet order
+ * decides the winner once for everyone, and the index stops mattering.
  */
 export interface HeroSlab {
   name: string;
@@ -70,6 +94,13 @@ export interface HeroSlab {
   width: number;
   height: number;
   blur?: string | undefined;
+  /**
+   * The stone's own first sentence, from Beco's descriptions document, not
+   * written for this hero. Null for a slab with no description yet, Cyprus
+   * Grey and a few others: the fallback sentence covers those rather than
+   * leaving a blank.
+   */
+  blurb?: string | null;
 }
 
 /** Aligns the type column with the 1380px grid while the image bleeds right. */
@@ -100,6 +131,19 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
   const current = slabs[active] ?? slabs[0];
   /** The mobile background, and the first card in the row: one fetch, used twice. */
   const lead = slabs[0];
+
+  // Beco's own first sentence per stone, trimmed to one sentence: the site's
+  // own copy rule is short copy, and a hero lede is not the place for the
+  // three sentence version. A slab with no description falls back to the
+  // original generic sentence rather than showing nothing.
+  const FALLBACK_LEDE =
+    'Large format slabs for kitchens, bathrooms, feature walls and flooring. Heat, scratch and stain resistant, and here in the showroom today.';
+  const ledes = slabs.map((slab) => {
+    if (!slab.blurb) return FALLBACK_LEDE;
+    const firstSentence = slab.blurb.split(/(?<=[.!?])\s/)[0];
+    return firstSentence || FALLBACK_LEDE;
+  });
+  const longestLede = [...ledes].sort((a, b) => b.length - a.length)[0];
 
   return (
     <section aria-label="Sintered stone" className="relative border-b border-neutral-200">
@@ -147,13 +191,34 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               <WordReveal text="Surfaces that outlast the room." />
             </h1>
 
-            <p
-              className="beco-enter mt-6 max-w-[42ch] text-base leading-[1.65] text-neutral-300 lg:text-lg lg:text-neutral-700"
+            <div
+              className="beco-enter relative mt-6 max-w-[42ch]"
               style={{ animationDelay: '620ms' }}
             >
-              Large format slabs for kitchens, bathrooms, feature walls and flooring. Heat,
-              scratch and stain resistant, and here in the showroom today.
-            </p>
+              {/* Invisible, in normal flow, sized to the longest of the real
+                  ledes: what actually reserves this box's height so the
+                  stacked, absolutely positioned ones below cannot shift the
+                  buttons and the indicator beneath them as the slab changes. */}
+              <p aria-hidden className="invisible text-base leading-[1.65] lg:text-lg">
+                {longestLede}
+              </p>
+              {ledes.map((lede, i) => (
+                <p
+                  key={lede}
+                  aria-hidden={i !== active}
+                  className={[
+                    'absolute inset-0 text-base leading-[1.65] text-neutral-300 lg:text-lg lg:text-neutral-700',
+                    'transition-opacity duration-[700ms] ease-brand motion-reduce:transition-none',
+                    i === active ? 'opacity-100' : 'opacity-0',
+                  ].join(' ')}
+                >
+                  {lede}
+                </p>
+              ))}
+              <p aria-live="polite" className="sr-only">
+                {ledes[active]}
+              </p>
+            </div>
 
             <div
               className="beco-enter mt-8 flex flex-wrap items-center gap-3"

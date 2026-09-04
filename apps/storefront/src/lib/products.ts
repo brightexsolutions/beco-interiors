@@ -23,6 +23,12 @@ export interface CatalogueProduct {
   category?: { name: string; slug: string } | null;
   /** Carried on the list query so the shop can facet on finish. */
   specs?: Record<string, string> | null;
+  /**
+   * Genuinely unique per stone, unlike `specs['Recommended for']`, which is
+   * the same sentence on every product and therefore useless as hero copy
+   * that is meant to change per slab. Written by Beco, not generated.
+   */
+  short_description?: string | null;
 }
 
 const anon = () =>
@@ -41,7 +47,7 @@ const anon = () =>
  */
 const PRODUCT_COLUMNS =
   'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,' +
-  'images,specs,categories(name,slug)';
+  'images,specs,short_description,categories(name,slug)';
 
 // The generated types cannot narrow an embedded join in a select string, so
 // the shape is asserted here and guaranteed by PRODUCT_COLUMNS above.
