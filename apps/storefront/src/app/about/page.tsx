@@ -122,10 +122,9 @@ export default async function AboutPage() {
           title="New here. Stocked already."
           lede={
             <>
-              Beco Interiors is a new supplier in the East African market, and we would rather
-              say so than pretend otherwise. What matters to a project is not how long we have
-              been trading. It is whether the material is in Nairobi when you need it, and
-              whether someone can price it today.
+              Beco Interiors is new to the East African market. What matters to a project is
+              not how long we have been trading. It is whether the material is in Nairobi when
+              you need it, and whether someone can price it today.
             </>
           }
         />

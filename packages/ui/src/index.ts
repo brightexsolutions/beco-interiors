@@ -17,6 +17,9 @@ export {
   type FieldProps, type InputProps, type SelectProps, type TextareaProps,
 } from './components/field';
 export { WordReveal, type WordRevealProps } from './components/word-reveal';
+export {
+  CutoutReveal, type CutoutRevealProps, type CutoutRevealStat,
+} from './components/cutout-reveal';
 export { cn } from './lib/cn';
 export { PALETTE } from './tokens/palette';
 export { contrastRatio, PAIRS } from './tokens/contrast-check';

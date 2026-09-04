@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { EmptyState, Reveal, buttonClasses } from '@beco/ui';
+import { EmptyState, Reveal, CutoutReveal, buttonClasses } from '@beco/ui';
 import { ProductGrid } from '@/components/product-grid';
 import {
   getCategoryWithTree, getCategorySlugs, getProductsByCategory, getProductsInCategories,
@@ -61,7 +61,15 @@ export default async function CategoryPage({ params }: Params) {
   const cover = products.map(primaryImage).find((img) => img !== undefined);
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
+    <main>
+      {/* Split into two padded halves rather than one wrapper, so the cutout
+          section below, which is full bleed with its own background, can sit
+          BETWEEN them as a true edge to edge break instead of nesting inside
+          a container that already caps the width and pads the sides, which
+          would apply both twice. When nothing sits between them the two
+          halves are plain stacked siblings and the page reads exactly as it
+          did as one wrapper, per normal margin collapse. */}
+      <div className="mx-auto max-w-[1380px] px-6 pt-16 sm:pt-20 lg:pt-24">
       <nav aria-label="Breadcrumb" className="mb-10">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
@@ -154,7 +162,38 @@ export default async function CategoryPage({ params }: Params) {
       </header>
 
       {isGroup ? <ChildRanges parent={category} children={children} products={products} /> : null}
+      </div>
 
+      {/* The same cutout treatment as the home page's teaser for this range,
+          added 4 September, but its own copy and no repeated stat: the fact
+          block above already states the finish count, and stacking the same
+          number under it a few hundred pixels later would read as filler
+          rather than as new information. See D73. Gated on the slug, not on
+          being a leaf: this is the one range with a cutout photograph today,
+          not a treatment every range gets by default. Full bleed, a sibling
+          of the two padded halves rather than nested in either. */}
+      {category.slug === 'handles' ? (
+        <CutoutReveal
+          eyebrow="On the floor"
+          title="Match it to the room."
+          body="Bring a cabinet door or a paint chip and hold it against the finish in person. Matte black reads differently under a kitchen's own light than it does on a screen."
+          image={
+            <Image
+              src="/cutouts/black-handle.webp"
+              alt="A matte black cabinet handle"
+              width={1257}
+              height={1400}
+              sizes="(max-width: 1024px) 70vw, 22rem"
+              className="h-auto w-full"
+            />
+          }
+          stats={[]}
+          cta={{ label: 'Visit the showroom', href: '/contact' }}
+          reverse
+        />
+      ) : null}
+
+      <div className="mx-auto max-w-[1380px] px-6 pb-16 sm:pb-20 lg:pb-24">
       <div className="mt-16">
         {products.length === 0 ? (
           <EmptyState
@@ -227,6 +266,7 @@ export default async function CategoryPage({ params }: Params) {
           }}
         />
       ) : null}
+      </div>
     </main>
   );
 }

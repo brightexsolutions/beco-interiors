@@ -58,6 +58,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Range grid cards | Navigate to the product | Server, 29 product links present |
 | Room stack | Auto dealing, decorative, not interactive | n/a |
 | Process list | Static | n/a |
+| Cutout section, "Shop handles" | Navigates to `/shop/handles` | Server: anchor confirmed in the rendered HTML |
 
 LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN.**
 
@@ -94,6 +95,7 @@ Every filtered view carries `noindex` with canonical `/shop`, per D29. **Server 
 | Child range cards, group pages only | Navigate to the range | Server |
 | Product cards | Navigate to the product | Server |
 | Quick add to quote | Writes to the list | Test |
+| Cutout section, "Visit the showroom", Handles range only | Navigates to `/contact` | Server: anchor confirmed in the rendered HTML |
 
 `ItemList` and `BreadcrumbList` JSON-LD both emitted. **Server confirmed by parsing.**
 Index gating asked of the subtree: `/shop/wall-panels` noindex, `/shop/hardware` indexable.

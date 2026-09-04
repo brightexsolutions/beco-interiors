@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ProductCard, Reveal, CountUp, buttonClasses } from '@beco/ui';
+import { ProductCard, Reveal, CountUp, CutoutReveal, buttonClasses } from '@beco/ui';
 import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
 import { SlabRail } from '@/components/slab-rail';
 import { SlabToSurface } from '@/components/slab-to-surface';
@@ -245,6 +245,34 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* --- The hardware cutout, added 4 September on request: a real Beco
+              photograph with its background removed, resting beside copy
+              that assembles as the section arrives rather than a photograph
+              in a frame like everywhere else on the page. Straight after the
+              dark showroom section on purpose, so the two sit in the
+              alternation of tone the rest of the page already uses instead
+              of two light sections running together. See D73. --- */}
+      <CutoutReveal
+        eyebrow="Hardware"
+        title="Down to the handle."
+        body="Cabinetry reads differently once the hardware is chosen. Six finishes are already on the floor at Urban Square, ready to match against a worktop or a run of doors."
+        image={
+          <Image
+            src="/cutouts/gold-handle.webp"
+            alt="A gold cabinet handle"
+            width={1400}
+            height={1106}
+            sizes="(max-width: 1024px) 70vw, 22rem"
+            className="h-auto w-full"
+          />
+        }
+        stats={[
+          { value: 6, label: 'Finishes in stock' },
+          { value: 4, label: 'Hardware ranges' },
+        ]}
+        cta={{ label: 'Shop handles', href: '/shop/handles' }}
+      />
 
       {/* --- The pinned rail. Eight stones rather than twelve: the track
               crosses roughly 150vw over 190vh of pin instead of 250vw, so the

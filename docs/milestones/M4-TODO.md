@@ -423,6 +423,16 @@ These were discovered while building and are recorded rather than remembered.
       footage**, not new footage: a slow continuous drift, a vignette at both edges, an
       assembled entrance on the caption. The video's own arrival is never delayed, since it is
       very likely the LCP element on the page that carries it
+- [x] **`CutoutReveal`, a background removed photograph beside copy and stats that reveal on
+      scroll**, asked for directly. Built in `@beco/ui` per rule 5, own motion class rather than
+      a reuse of the grid's parallax, `filter: drop-shadow` rather than a box shadow so nothing
+      rectangular appears behind the object. Two real handle photographs, gold and matte black,
+      background removed with ImageMagick, on the home page and on `/shop/handles`. Every stat
+      is a real count from the database, and the second placement ships no stats at all rather
+      than repeat or invent one. **5 new tests.** See D73
+- [x] **The About page's "new supplier" sentence rewritten**, reported directly as reading
+      defensively. The fact stays, "new to the East African market", the guideline's own framing;
+      only the sentence explaining why it says so was cut. See D74
 
 ## Found on 3 September, not planned
 

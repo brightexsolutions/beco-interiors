@@ -480,6 +480,20 @@
     @keyframes beco-depth-mid  { from { transform: translateY(-7%)  scale(1.17); } to { transform: translateY(7%)  scale(1.17); } }
     @keyframes beco-depth-far  { from { transform: translateY(-3.5%) scale(1.09); } to { transform: translateY(3.5%) scale(1.09); } }
 
+    /* --- A cutout drifts on its own, no frame to clip against.
+           `beco-depth-N` needs a clipping frame to hide the overscan a
+           scaled photograph produces, because a photograph is a rectangle
+           with edges to hide. A cutout has none: its background is already
+           transparent, so there is nothing to reveal by moving inside its
+           own box, and no frame is needed to hide it either. Same range as
+           beco-depth-2, its own name so CutoutReveal does not depend on an
+           unrelated component's class staying the same shape. --- */
+    .beco-cutout-drift {
+      animation: beco-depth-mid linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
     /* --- Grid photographs drift against their frames as they pass, so a
            wall of cards has depth rather than being a flat sheet. --- */
     .beco-drift-slow > img {

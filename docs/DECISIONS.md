@@ -786,3 +786,70 @@ chrome exceeded one screen, pushing the caption and the new scroll cue below the
 anyone had scrolled. `calc(100svh - 8rem)` now, accounting for the header's own 5rem plus the
 announcement bar's rendered height. The scroll cue that prompted the fix, D71, would otherwise
 never have been seen until after the scroll it exists to request.
+
+## D73, 4 September 2026: a cutout treatment, `CutoutReveal`, added to `@beco/ui`
+
+Asked for directly: a photograph with its background removed, resting beside copy that reveals
+further detail, stats among it, as the reader scrolls, with the object itself continuing to
+move rather than sitting still once it has arrived.
+
+Built in `@beco/ui`, not the storefront app, per rule 5: the request named two places for it
+from the start, the home page and whichever other page fits, so it was never going to be a one
+page component. Takes its image as a `ReactNode`, the same convention `ProductCard` and
+`HoverGallery` already use, so the package stays free of `next/image`.
+
+The photograph carries no frame and no background plate, unlike every other image in the design
+system. `ProductCard`, `HoverGallery` and the gallery grid all put a photograph inside a bounded,
+filled box on purpose, because they are showing a rectangle of the world. A cutout is showing one
+object, so a box behind it would put back the background that was just removed from it. The
+shadow is `filter: drop-shadow`, not `box-shadow`, for the same reason: a box shadow draws a
+rectangle under the image regardless of what is transparent in it, and only a drop shadow follows
+the alpha channel.
+
+Motion: a new class, `beco-cutout-drift`, not a reuse of the grid's own `beco-depth-N`.
+`beco-depth-N` exists to hide a scaled photograph's overscanned edges behind a clipping frame, a
+problem a cutout does not have, since its background is already transparent and there is nothing
+outside its own box left to hide. Reusing it anyway would have made `CutoutReveal` depend on an
+unrelated component's class keeping the same shape. Same numeric range as `beco-depth-2`, a
+gentle drift, under its own name.
+
+The copy and its stats use `Reveal`, the site's default entrance, staggered by 90ms per element,
+so the eyebrow, the heading, the body and each stat arrive as a sequence. Stats are `CountUp`
+values, the same component the home page's own stat band already uses, which means a stat here
+can never show a number nobody can find in the database.
+
+**Two real photographs, not stock.** A person or object with its background removed was the
+brief, and a stock person cutout would have raised the same authenticity question a stock video
+already had, D69. Two Beco handle photographs, gold and matte black, both already imported and
+already real, background removed with ImageMagick's flood fill from five seed points and saved to
+`public/cutouts/`. Neither is a product shot standing in for one; both are genuinely
+background-removed versions of photographs already in the catalogue.
+
+**Content is honest on both placements, which means the two are not symmetric.** The home page
+teaser carries two real counts, six handle finishes on the floor and four hardware ranges in the
+category, because a reader arriving from the home page has neither number yet. The Handles range
+page itself, `/shop/handles`, repeats neither: its own header states the finish count a few
+hundred pixels above where the cutout section sits, and a second stat there would have had to be
+invented, since no handle product carries specs yet. That instance ships with `stats={[]}`, which
+the component supports directly, rather than filling the slot with a number that does not exist.
+Its copy argues for the showroom instead, that a finish reads differently under real light than
+on a screen, the same honest reasoning the showroom sections elsewhere on the site already make.
+
+`/shop/[category]/page.tsx` had one wrapping `<main>` for its entire content, padding and max
+width included, which does not compose with a full bleed section dropped into the middle of it.
+Split into two padded halves, top and bottom, with the cutout section as a sibling between them
+rather than nested in either. With no cutout to insert, which is every category except Handles,
+the two halves sit flush against each other and the page renders exactly as it did as one
+wrapper, ordinary margin collapse rather than a new code path per category.
+
+## D74, 4 September 2026: the About page's "new supplier" sentence, rewritten on direct feedback
+
+"Beco Interiors is a new supplier in the East African market, and we would rather say so than
+pretend otherwise" was flagged directly: the second half talks about the act of saying the
+sentence rather than just saying it, which reads as defensive on a page whose whole job is to
+state the same fact plainly and move on.
+
+Rewritten to "Beco Interiors is new to the East African market", the fact stated once and left
+alone. The fact itself is unchanged, and stays load bearing: it is still the guideline's own
+"new entrant" framing over the prototype's "10+ years" claim, `docs/CONTENT-AUDIT.md`, and the
+title above it, "New here. Stocked already.", still sets up exactly this sentence.
