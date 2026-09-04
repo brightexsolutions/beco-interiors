@@ -585,3 +585,38 @@ back to the bar scrolling away the way it always did, which was never the report
 *Reverses if:* the mobile filter bar is redesigned into something short enough to pin, most
 likely a single row behind a "Filters" toggle that opens a sheet rather than four fields stacked
 inline.
+
+## D66, 4 September 2026: a splash screen, engineered around the performance budget rather than against it
+
+Asked for a splash screen: the mark and a tagline, animated, on arrival. Worth stating the
+tension plainly rather than building past it silently. A splash screen is, by definition,
+something between a reader and the page they came for, and this project's LCP budget is under
+2.0s and its whole quote flow exists to be faster than writing an order on paper. Those two
+things are in real conflict with the usual way a splash screen is built.
+
+Three constraints keep this one from actually costing either.
+
+**Client only.** `SiteSplash` renders nothing during server side rendering and mounts only after
+the real page has already painted. It is confirmed to have zero footprint in the served HTML.
+That matters specifically because it means the browser's LCP candidate is recorded from the
+actual hero content that was already there, before this overlay exists at all. Nothing about the
+real page waits for it, and nothing the reader is actually here for is delayed by a millisecond.
+
+**Once per session, not once per page.** `sessionStorage`, checked and set on mount, not a
+render on every navigation. A salesperson moving from the shop to a product to the quote form
+during one visit must never see this a second time, or the site's own "faster than paper" promise
+breaks on the very next click.
+
+**Under a second and unskippable only because it is short.** No button, no click required,
+because the moment a splash becomes something to get past it has stopped being a brand moment and
+started being friction. It is on screen for 900ms and fully gone by 1300ms, comfortably inside
+the LCP budget with margin to spare. `prefers-reduced-motion` skips it outright: nothing renders,
+and it does not consume the session's one showing either, so a later visit with reduced motion off
+still gets the real thing rather than silence forever.
+
+`position: fixed`, removed from flow entirely once done, so it cannot shift the layout underneath
+it arriving or leaving. CLS is unaffected either way.
+
+*Reverses if:* Lighthouse, once it finally runs, shows any measurable cost from this. The
+architecture is built to make that impossible, but D46 and D58 are both reminders that a
+device number should confirm a decision like this, not just the reasoning behind it.

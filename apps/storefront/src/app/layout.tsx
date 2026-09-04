@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '@beco/ui/src/tokens/tokens.css';
 import { ScrollMotion } from '@beco/ui';
 import { AnnouncementBar } from '@/components/announcement-bar';
+import { SiteSplash } from '@/components/site-splash';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { MobileActionBar } from '@/components/mobile-action-bar';
@@ -35,6 +36,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
+        {/* Client only, renders nothing during SSR, so it cannot be the LCP
+            candidate and nothing below it waits on it. See its own file for
+            the full reasoning against the site's performance budget. */}
+        <SiteSplash />
         <AnnouncementBar />
         <SiteHeader />
         <div id="main">{children}</div>

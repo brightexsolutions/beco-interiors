@@ -352,6 +352,17 @@ These were discovered while building and are recorded rather than remembered.
       header meant it, the fixed action bar, and the keyboard together left almost nothing of
       the grid visible. Scoped to `lg:sticky`, desktop only. See D65
 
+- [x] **A splash screen, on request.** Real tension flagged rather than built past silently: a
+      splash sits directly against the LCP budget and the site's own "faster than paper" quote
+      promise. Built client only so it has zero footprint in the served HTML and cannot be the
+      LCP candidate, once per session rather than once per page, gone in 1300ms unprompted, off
+      entirely under reduced motion. **Verified:** confirmed zero occurrences of the splash
+      image in the raw SSR HTML. **5 tests.** See D66
+- [x] **Completed interiors got the assembled treatment.** Was `Reveal` alone, a plain fade and
+      rise, which read as basic beside the gallery's wipe and the hero's orbit for the section
+      whose whole job is proving the range looks considered once installed. Now frame, wipe,
+      plate, same physical language as the gallery, depth parallax kept intact
+
 ## Found on 3 September, not planned
 
 - [x] **`pnpm db:reset` was broken, and the database was not reproducible.** Two faults, both

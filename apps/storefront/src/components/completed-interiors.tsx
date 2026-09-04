@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Reveal } from '@beco/ui';
+// No Reveal import: this section's cards assemble via beco-wipe/beco-plate, the
+// same physical language as the gallery, rather than the site's default fade.
 import { blurProps, type CatalogueProduct } from '@/lib/products';
 import type { ProductImage } from '@beco/types';
 
@@ -16,6 +17,14 @@ import type { ProductImage } from '@beco/types';
  * rates, so the group reads as sitting at three distances rather than on one
  * flat plane. The frames never move and only the images inside them do, so
  * none of it costs layout.
+ *
+ * Each card ASSEMBLES on entry, the same physical language as the gallery
+ * rather than the site's default fade and rise: the frame is drawn first and
+ * stays put, the photograph wipes up into it from behind its own bottom edge,
+ * and the caption rises out from under it a beat later. This section used to
+ * lean on `Reveal` alone, which reads as basic beside the gallery's wipe and
+ * the hero's orbit, for a section whose whole job is proving the range looks
+ * considered once it is installed.
  *
  * Every room here is a real Beco installation. The competitor's equivalent
  * rooms are AI generated, which makes real projects the more valuable asset
@@ -68,25 +77,38 @@ export function CompletedInteriors({ products }: { products: CatalogueProduct[] 
         {shots.map((shot, i) => {
           const { span, frame, depth, offset } = LAYOUT[i]!;
           return (
-            <Reveal key={shot.slug} delay={(i % 2) * 80} className={`${span} ${offset}`}>
+            <div key={shot.slug} className={`${span} ${offset}`}>
               <Link href={`/product/${shot.slug}`} className="group block">
+                {/* The frame is drawn first and never moves, so nothing here
+                    can shift layout. beco-clip is what the wipe rises from
+                    behind, and the depth class stays on this same element so
+                    the parallax still reads the photograph as a direct
+                    descendant. */}
                 <div
-                  className={`relative w-full overflow-hidden bg-neutral-100 ${frame} ${depth}`}
+                  className={`beco-clip relative w-full overflow-hidden bg-neutral-100 ${frame}`}
                 >
-                  <Image
-                    src={shot.image.path}
-                    alt={shot.image.alt}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 55vw"
-                    {...blurProps(shot.image)}
-                    className="object-cover"
-                  />
+                  <div
+                    className={`beco-wipe absolute inset-0 ${depth}`}
+                    // Staggered by column rather than by index, so a wide
+                    // card and the narrower one beside it settle a beat apart
+                    // instead of in lockstep.
+                    style={{ animationDelay: `${(i % 2) * 130}ms` }}
+                  >
+                    <Image
+                      src={shot.image.path}
+                      alt={shot.image.alt}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 55vw"
+                      {...blurProps(shot.image)}
+                      className="object-cover"
+                    />
+                  </div>
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
                   />
                 </div>
-                <div className="mt-4 flex items-baseline justify-between gap-4">
+                <div className="beco-plate mt-4 flex items-baseline justify-between gap-4">
                   <p className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-charcoal">
                     {shot.name}
                     <span
@@ -99,7 +121,7 @@ export function CompletedInteriors({ products }: { products: CatalogueProduct[] 
                   </p>
                 </div>
               </Link>
-            </Reveal>
+            </div>
           );
         })}
       </div>
