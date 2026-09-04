@@ -73,7 +73,7 @@ export default async function ContactPage() {
           </h1>
           <p className="mt-6 max-w-[52ch] text-base leading-[1.65] text-neutral-300 lg:text-lg">
             Materials are hard to choose from a screen. The showroom is open six days a week,
-            the stock is on the floor, and someone can price your list the same day.
+            and the stock you see is the stock we quote from.
           </p>
         </div>
       </section>

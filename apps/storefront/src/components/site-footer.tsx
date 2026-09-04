@@ -45,8 +45,8 @@ export async function SiteFooter() {
               Specify it once. We hold the stock.
             </p>
             <p className="mt-5 max-w-[50ch] text-base leading-[1.65] text-neutral-300">
-              Tell us what the project needs and we will price it. Most quotes come back the
-              same day, and everything you see is stocked in Nairobi.
+              Tell us what the project needs and we will price the whole list at once.
+              Everything you see is stocked in Nairobi.
             </p>
           </div>
 

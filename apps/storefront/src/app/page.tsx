@@ -184,7 +184,7 @@ export default async function HomePage() {
           {[
             ['Build a list', 'Add every material the project needs. The list survives a refresh, and no account is required.'],
             ['Send it over', 'Your name and phone number are the only things we genuinely need. Everything else helps us price it faster.'],
-            ['We price it', 'A written quote, itemised, with delivery or collection set out. Most come back the same day.'],
+            ['We price it', 'A written quote, itemised, with delivery or collection set out.'],
             ['Collect or deliver', 'Pick it up at Urban Square, or tell us where the site is.'],
           ].map(([title, body], i) => (
             <Reveal as="li" key={title} delay={i * 60}>

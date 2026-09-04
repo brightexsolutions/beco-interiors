@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: '%s | Beco Interiors',
   },
   description:
-    'Sintered stone slabs, wall panels, lighting and interior accessories, stocked in Nairobi. Request a quote and we price it the same day.',
+    'Sintered stone slabs, wall panels, lighting and interior accessories, stocked in Nairobi. Request a quote for the whole list at once.',
   openGraph: {
     type: 'website',
     locale: 'en_KE',
