@@ -42,11 +42,19 @@ export default async function HomePage() {
 
   // Four slabs for the hero, taken from products that actually have a slab
   // shot, so the hero can never fall back to a photograph of a stand.
+  //
+  // Application over slab, per D79: the hero sells a finished room now, not
+  // a material sample, so it needs a stone actually installed somewhere,
+  // not a close crop of the sheet it was cut from. Falls back to the slab
+  // shot for a stone with no application photography yet, rather than
+  // dropping it from the hero entirely.
   const slabs: HeroSlab[] = products
-    .filter((p) => p.images?.some((i) => i.role === 'slab'))
+    .filter((p) => p.images?.some((i) => i.role === 'application' || i.role === 'slab'))
     .slice(0, 4)
     .map((p) => {
-      const img = p.images.find((i) => i.role === 'slab')!;
+      const img =
+        p.images.find((i) => i.role === 'application') ??
+        p.images.find((i) => i.role === 'slab')!;
       return {
         name: p.name, slug: p.slug, src: img.path, alt: img.alt,
         category: p.category?.name ?? 'Sintered stone',

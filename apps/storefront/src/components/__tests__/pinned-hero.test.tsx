@@ -98,3 +98,60 @@ describe('PinnedHero, the lede', () => {
     expect(container).toBeInTheDocument();
   });
 });
+
+/**
+ * Per D79: the desktop hero went back to a full bleed, crossfading
+ * photograph, married with the rest of the current hero rather than a
+ * plain revert. Same crossfade technique RotatingStatement and StoneSlider
+ * already use, and the same bug class this file already guards the lede
+ * against: opacity has to have exactly one source per photograph layer.
+ */
+describe('PinnedHero, the full bleed photograph', () => {
+  // The desktop crossfade wrapper is the FIRST .beco-ambient block in the
+  // document: mobile's own single background photograph and every
+  // SlabCard's frame also carry the class, so this scopes to the one this
+  // describe block is actually about rather than matching all three.
+  const desktopLayers = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('.beco-ambient')[0]!.querySelectorAll('img'));
+
+  it('renders one photograph layer per slab, the first fully opaque', () => {
+    const { container } = render(
+      <PinnedHero
+        thickness="12mm"
+        slabs={[
+          slab({ slug: 'a', name: 'A', src: '/a.webp' }),
+          slab({ slug: 'b', name: 'B', src: '/b.webp' }),
+          slab({ slug: 'c', name: 'C', src: '/c.webp' }),
+        ]}
+      />,
+    );
+    const layers = desktopLayers(container);
+    expect(layers).toHaveLength(3);
+    expect(layers[0]).toHaveClass('opacity-100');
+    expect(layers[0]).not.toHaveClass('opacity-0');
+    expect(layers[1]).toHaveClass('opacity-0');
+    expect(layers[1]).not.toHaveClass('opacity-100');
+  });
+
+  it('never renders two opacity values on the same photograph layer', () => {
+    const { container } = render(
+      <PinnedHero
+        thickness="12mm"
+        slabs={[slab({ slug: 'a', name: 'A' }), slab({ slug: 'b', name: 'B' })]}
+      />,
+    );
+    for (const layer of desktopLayers(container)) {
+      const opacityClasses = layer.className.split(' ').filter((c) => /^opacity-\d+$/.test(c));
+      expect(opacityClasses).toHaveLength(1);
+    }
+  });
+
+  it('the first photograph is never marked lazy, since it is the LCP element', () => {
+    const { container } = render(
+      <PinnedHero thickness="12mm" slabs={[slab({ slug: 'a', name: 'A' })]} />,
+    );
+    // next/image drops the loading attribute entirely for a priority image
+    // rather than setting it to "eager", so its absence IS the assertion.
+    expect(desktopLayers(container)[0]).not.toHaveAttribute('loading', 'lazy');
+  });
+});

@@ -965,3 +965,62 @@ back too.
 `aria-hidden` and `tabIndex={-1}` while off screen, so a keyboard reader tabbing through the page
 skips straight past two links nobody can see yet rather than landing on them blind. **4 new
 tests.**
+
+## D79, 4 September 2026: the hero goes back to a full bleed photograph, reversing D30 and D56
+
+Reported directly, relayed from Irene during an evening session: the hero should feel closer to
+the approved prototype, a full bleed photograph with the type over it, with the prototype's own
+left side gradient reduced, and the photography should be room finishes selling what a stone
+looks like installed rather than a material sample. A separate note in the same thread asked for
+the hero images to auto advance without requiring a scroll, and for something on the right side
+of the hero carrying the other stones with a real transition, addressed here and in the commit
+that follows it.
+
+**This is a real reversal, not a small styling pass, and it is made on Brown's explicit
+instruction after being shown the conflict, not on guesswork.** `prototype/README.md` names the
+exact pattern being brought back: "Centered text over a darkened full bleed photograph is the
+pattern the brief explicitly rules out. Replaced by the pinned split scroll, D30." That reasoning
+does not stop being true. It is overridden by a specific, informed decision made with it in view,
+which is a different thing from it never having been raised.
+
+What actually changed: the desktop hero's separate turning specimen cards, D56's orbit, are gone.
+In their place, one full bleed photograph crossfades behind the pinned type, sourced from each
+stone's real APPLICATION photograph rather than its slab shot, so the hero now sells a finished
+room rather than a material close up. The gradient making the type legible uses the site's own
+charcoal token, `#101820`, left heavy but nowhere near the prototype's 0.97 opacity peak on the
+left edge, and carries none of the prototype's gold or red radial glow: gold is retired per D2,
+and a second red accent in the hero would spend most of the page's own Warm Red budget before the
+reader leaves it.
+
+What did not change, married into the new structure rather than discarded: the real headline,
+used once, per WordReveal's own rule. The lede crossfading with the active stone, Beco's own
+first sentence per slab. The specimen indicator and its progress rail, restyled for white text
+over a photograph rather than charcoal over a transparent column. Native `position: sticky`, no
+scroll hijacking library, the same technique as before, just re-pointed at a photograph filling
+the whole section rather than one column of it. Pin dropped entirely on mobile, which now also
+crossfades its own single background photograph rather than showing one static image.
+
+**The images now auto advance on a timer, 4.2s, the prototype's own cadence, independent of
+scroll.** Previously the crossfade only moved as the reader scrolled the pinned column's own
+invisible chapters, so a visitor who never scrolled the hero saw exactly one stone the entire
+visit. The interval and the scroll driven `IntersectionObserver` write to the same `active`
+state without conflicting: scrolling still jumps to whichever chapter is centred, the timer just
+keeps it moving the rest of the time. Guarded by `prefers-reduced-motion` and never armed for a
+single slab, the same pattern `RotatingStatement` and `StoneSlider` already use.
+
+Two implementation notes worth keeping. First, a real near miss: the mobile crossfade was
+initially written with a hardcoded base `opacity-50` alongside a conditional `opacity-0`, the
+exact shape that caused D67's frozen photograph. `cn`'s own `tailwind-merge` actually resolves
+that correctly, confirmed directly rather than assumed, with a new test on `cn` itself, but the
+code was still rewritten to the same single ternary every other crossfade in this codebase uses,
+since relying on a merge library to save an ambiguous pattern is worse than not writing the
+ambiguous pattern. Second, the transparent-over-hero header carried hardcoded dark text and a
+dark logo mark, correct when it sat over the old hero's mostly light background and nearly
+invisible once the background became a full bleed dark photograph. `SiteHeader`, `NavLink`,
+`NavDropdown` and `MobileMenu` all take a `light` prop now, true only when `overHero` and not yet
+scrolled, which is only ever the case on `/`, where no nav item is the active page either, so the
+active and light colour rules never have to be resolved against one another.
+
+**Known cleanup, not done here:** `.beco-orbit` and `.beco-orbit-stage` in `motion.css`, D56's
+turning card keyframes, are unused now that the desktop cards are gone. Left in place rather than
+deleted in the same pass as a structural rewrite, recorded here so it is not silently forgotten.
