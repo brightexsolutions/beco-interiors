@@ -363,6 +363,25 @@ These were discovered while building and are recorded rather than remembered.
       whose whole job is proving the range looks considered once installed. Now frame, wipe,
       plate, same physical language as the gallery, depth parallax kept intact
 
+## Found later on 4 September, not planned
+
+- [x] **The splash froze forever on every first load in dev.** Real bug, root caused: React 18
+      Strict Mode double invokes this effect synchronously (mount, cleanup, mount again) before
+      any timer fires. Writing "seen" to sessionStorage immediately meant the SECOND invocation
+      read it as already true and returned early without scheduling anything, leaving phase
+      stuck at 'in' with nothing left to move it. The fully opaque full screen overlay explains
+      the separately reported "no animations, no About dropdown" over the shareable link too:
+      nothing was broken there, the page was simply hidden behind a splash that never cleared.
+      Fixed by moving the sessionStorage write to the completion callback, so neither invocation
+      can see the other's write. Verified by simulating the exact double invoke and watching the
+      test fail before the fix and pass after. Splash also given a richer entrance: the mark
+      comes into focus rather than fades, the site's own red rule draws under it, the strapline
+      steps in as its four pillars rather than as one block. **7 tests**
+- [x] **The gallery's video section now carries licensed stock, full width and landscape**, on
+      direct instruction reversing D51 and D62 for this one section. `ffmpeg` installed to
+      transcode it down to 2.3MB, matching the size discipline Beco's own footage already held
+      to. See D69
+
 ## Found on 4 September, not planned
 
 - [x] **A slab can now be ordered in half units.** `quote_items.quantity` was always numeric

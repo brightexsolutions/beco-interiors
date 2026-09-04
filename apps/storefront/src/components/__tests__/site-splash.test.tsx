@@ -21,10 +21,13 @@ afterEach(() => {
 });
 
 /**
- * The three constraints that keep this from costing what a splash screen
+ * The four constraints that keep this from costing what a splash screen
  * usually costs: it shows once per session rather than once per page, it
- * disappears on its own well under the site's LCP budget, and reduced motion
- * turns it off outright rather than just skipping the animation.
+ * disappears on its own well under the site's LCP budget, reduced motion
+ * turns it off outright rather than just skipping the animation, and it
+ * survives React 18 Strict Mode's dev-only double invoke rather than
+ * freezing on the very first load, which is what it actually did before
+ * the fix below.
  */
 describe('SiteSplash', () => {
   it('shows on the first mount of a session', () => {
@@ -33,9 +36,13 @@ describe('SiteSplash', () => {
     expect(screen.getByText(/Sintered Stone/)).toBeDefined();
   });
 
-  it('records that it has been shown, so a second mount in the same session stays quiet', () => {
+  it('records that it has been shown only once the sequence completes, so a second mount in the same session then stays quiet', () => {
     const { unmount } = render(<SiteSplash />);
     act(() => { vi.advanceTimersByTime(0); });
+    // Not yet: recording early is exactly what caused the freeze below.
+    expect(sessionStorage.getItem(SEEN_KEY)).toBeNull();
+
+    act(() => { vi.advanceTimersByTime(1550); });
     expect(sessionStorage.getItem(SEEN_KEY)).toBe('1');
     unmount();
 
@@ -49,13 +56,13 @@ describe('SiteSplash', () => {
     act(() => { vi.advanceTimersByTime(0); });
     expect(screen.getByText(/Sintered Stone/)).toBeDefined();
 
-    // Still present but fading at 900ms.
-    act(() => { vi.advanceTimersByTime(900); });
+    // Still present but fading.
+    act(() => { vi.advanceTimersByTime(1100); });
     expect(screen.queryByText(/Sintered Stone/)).toBeDefined();
 
-    // Gone entirely by 1300ms, under the site's 2.0s LCP budget with room to
-    // spare, and with no click or interaction required to dismiss it.
-    act(() => { vi.advanceTimersByTime(400); });
+    // Gone entirely under the site's 2.0s LCP budget, with no click or
+    // interaction required to dismiss it.
+    act(() => { vi.advanceTimersByTime(450); });
     expect(screen.queryByText(/Sintered Stone/)).toBeNull();
   });
 
@@ -73,5 +80,45 @@ describe('SiteSplash', () => {
     const { container } = render(<SiteSplash />);
     act(() => { vi.advanceTimersByTime(0); });
     expect(container.querySelector('[aria-hidden]')).not.toBeNull();
+  });
+
+  it('never intercepts a scroll, a click or a touch, at any point in its lifecycle', () => {
+    // A real bug: pointer-events-none was scoped to only the fade-out phase,
+    // so for the full time the splash sat fully visible it was also a full
+    // viewport element with default pointer-events, silently swallowing
+    // every scroll and touch gesture made in that window. Checked at both
+    // phases, not only one, since the earlier version would have passed a
+    // check on the 'out' phase alone.
+    const { container } = render(<SiteSplash />);
+    act(() => { vi.advanceTimersByTime(0); });
+    const overlay = container.firstElementChild;
+    expect(overlay).toHaveClass('pointer-events-none');
+
+    act(() => { vi.advanceTimersByTime(1100); });
+    expect(container.firstElementChild).toHaveClass('pointer-events-none');
+  });
+
+  it('reaches hidden even under a React 18 Strict Mode style double invoke, which previously froze it forever', () => {
+    // Strict Mode runs an effect, its cleanup, then the effect again, all
+    // synchronously, before any timer fires. Simulated here directly: mount,
+    // unmount without ever advancing time (so no timer has fired and nothing
+    // has been written to sessionStorage yet, exactly what cleanup running
+    // first looks like), then mount again as the "real" instance.
+    //
+    // Before the fix, the FIRST mount wrote "seen" immediately on scheduling
+    // its timers. Unmounting cancelled those timers in cleanup. The SECOND
+    // mount then read "seen" as already true and returned early without
+    // scheduling anything to replace them, so phase stayed 'in' forever: a
+    // fully opaque splash that never reached 'out' or 'hidden' on any first
+    // load in development, since Strict Mode runs there by default.
+    const first = render(<SiteSplash />);
+    first.unmount();
+
+    render(<SiteSplash />);
+    act(() => { vi.advanceTimersByTime(0); });
+    expect(screen.getByText(/Sintered Stone/)).toBeDefined();
+
+    act(() => { vi.advanceTimersByTime(1550); });
+    expect(screen.queryByText(/Sintered Stone/)).toBeNull();
   });
 });

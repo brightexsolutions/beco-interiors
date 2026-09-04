@@ -689,3 +689,38 @@ no UI yet. Kept here so the requirement is not re-derived from scratch when M5 s
 because it changes the M5 stock model directly: a slab's stock must be tracked in the same half
 unit granularity its quotes are now written in, or a sale of 1.5 slabs cannot be deducted
 correctly from what is left.
+
+## D69, 4 September 2026: the gallery's video section carries licensed stock, on direct instruction
+
+D51 and D62 both rejected stock footage, for the same reason: a clip that reads as Beco's work
+without being it is a fabricated record on a page a buyer uses to decide whether to drive there.
+An internal, disclosed reference page was built instead, so Beco could react to the proposed
+cinematic TREATMENT (the drift, the vignette, the framing) without the site claiming a room that
+was not theirs.
+
+Reviewed, and reversed for this one section by direct instruction: use the clip that was found,
+remove the disclosure, use it as real content. Recorded here rather than silently implemented,
+because it is a genuine reversal of a written project position, not a stylistic call.
+
+**What changed:** the gallery's `AmbientVideoSection` now plays a licensed Pexels clip,
+`GALLERY_FILM` in `lib/site.ts`, full source and licence recorded there. The section is rebuilt
+landscape and full width to match the footage's own shape, the opposite of the tall portrait
+frame D51 established, because this section no longer carries Beco's portrait phone footage.
+
+**What did not change:** `SHOWROOM_FILM`, the split section on home and contact, is still Beco's
+own footage, untouched. D51's reasoning still holds everywhere that clip is used. This is a
+carve out for one section, not a reversal of the whole policy, and the two constants are kept
+deliberately separate in `lib/site.ts` so the difference cannot blur by accident later.
+
+The clip itself: "Modern Luxury Interiors with Spacious Design" by Ethan Raven, Pexels video id
+31617692, Pexels License, free for commercial use, no attribution legally required. Verified as
+a real, resolvable file via the actual download redirect rather than a guessed URL, downloaded
+from `videos.pexels.com/video-files/31617692/13470975_1920_1080_24fps.mp4`. Transcoded from
+1920x1080 with audio, 7.6MB, down to 1280 wide, silent, 2.3MB, holding it to the same size
+discipline `SHOWROOM_FILM` was already transcoded to. `ffmpeg`, previously not installed on this
+machine and a standing item on the M4 backlog, was installed via Homebrew to do this, which also
+clears that backlog item for Beco's own footage transcoding going forward.
+
+*Reverses if:* Beco supplies real landscape footage, at which point `GALLERY_FILM` points at
+that instead and nothing else in the component changes, since nothing but this one page depends
+on the constant.

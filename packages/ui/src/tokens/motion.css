@@ -283,25 +283,43 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* --- The splash mark and its strapline. No `[data-inview]` gate: this
-         overlay is fixed and full screen the instant it mounts, so mounting
-         IS the trigger, not scrolling into view. The mark scales up out of a
-         slight recess rather than just fading, because it is the one moment
-         on the whole site where the logo itself is the entire content of the
-         screen and earns a gesture of its own. The line follows a beat after,
-         the same stagger the hero headline and lede use. See site-splash.tsx
-         for why this exists at all and what keeps it from costing LCP. --- */
+  /* --- The splash: mark, rule, strapline, each a beat apart. No
+         `[data-inview]` gate anywhere in this sequence: this overlay is
+         fixed and full screen the instant it mounts, so mounting IS the
+         trigger, not scrolling into view. See site-splash.tsx for why this
+         exists at all and what keeps it from costing LCP.
+
+         The mark comes into FOCUS rather than just fading or scaling: it
+         starts soft and slightly large, blurred, and settles sharp. Nothing
+         else on the site uses a blur transition, which is deliberate. This
+         is the one moment where the logo is the entire content of the
+         screen, and it gets a gesture nothing else on the site borrows,
+         the same reasoning that keeps WordReveal to the hero alone.
+
+         The rule draws under it, the same `beco-rule-draw` every page
+         opening uses, so the splash reads as the FIRST instance of the
+         site's own pattern rather than a one-off. Then the strapline's four
+         pillars step in one after another rather than as one block, tied to
+         the brand's own four part strapline instead of to individual words,
+         which is what keeps this visually distinct from WordReveal. --- */
   .beco-splash-mark {
-    animation: beco-splash-mark-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: beco-splash-focus 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  @keyframes beco-splash-mark-in {
-    from { opacity: 0; transform: scale(0.86); }
-    to   { opacity: 1; transform: scale(1); }
+  @keyframes beco-splash-focus {
+    from { opacity: 0; transform: scale(1.14); filter: blur(10px); }
+    60%  { opacity: 1; filter: blur(0); }
+    to   { opacity: 1; transform: scale(1); filter: blur(0); }
   }
 
-  .beco-splash-line {
-    animation: beco-enter-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 220ms backwards;
+  .beco-splash-rule {
+    animation: beco-rule-out 600ms cubic-bezier(0.16, 1, 0.3, 1) 620ms backwards;
+    transform-origin: center;
+  }
+
+  .beco-splash-pillar {
+    display: inline-block;
+    animation: beco-enter-up 500ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   /* The eyebrow rule draws out from nothing. */

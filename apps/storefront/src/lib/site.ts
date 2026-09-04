@@ -65,6 +65,37 @@ export const SHOWROOM_FILM: { src: string; type: string; poster: string } | null
   poster: '/video/showroom-poster.jpg',
 };
 
+/**
+ * The gallery's ambient video, full width, landscape.
+ *
+ * NOT Beco's own footage. Licensed stock, per D69: a deliberate reversal of
+ * D51 and D62 for this one section specifically, made on direct instruction
+ * after seeing an internal reference build of the treatment. D51 stands
+ * everywhere else: `SHOWROOM_FILM` above is unchanged and is still Beco's
+ * own portrait footage.
+ *
+ * Source: Pexels, "Modern Luxury Interiors with Spacious Design" by Ethan
+ * Raven (pexels.com/@ravenpiks), video id 31617692. Pexels License: free for
+ * commercial use, no attribution legally required, credited here anyway for
+ * traceability. Downloaded via the verified redirect at
+ * pexels.com/download/video/31617692/, which resolved to
+ * videos.pexels.com/video-files/31617692/13470975_1920_1080_24fps.mp4, so
+ * this is a real, licensed file rather than a guessed URL.
+ *
+ * Transcoded from the original 1920x1080, 7.6MB with audio, to 1280 wide,
+ * silent, 2.3MB, matching the size discipline `SHOWROOM_FILM` was already
+ * held to: a large muted background clip is not worth the weight, and a
+ * Nairobi mobile connection is what this budget is set against.
+ *
+ * Replace this the moment Beco has real landscape footage. Nothing else on
+ * the site depends on this constant, so retiring it is a one file change.
+ */
+export const GALLERY_FILM: { src: string; type: string; poster: string } | null = {
+  src: '/video/gallery-ambient.mp4',
+  type: 'video/mp4',
+  poster: '/video/gallery-ambient-poster.jpg',
+};
+
 /** Prefilled, so a buyer never has to explain what they are asking about. */
 export const whatsappLink = (context?: string) =>
   `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(

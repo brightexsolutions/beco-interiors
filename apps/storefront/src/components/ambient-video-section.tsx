@@ -1,29 +1,23 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { SHOWROOM_FILM } from '@/lib/site';
+import { GALLERY_FILM } from '@/lib/site';
 
 /**
- * A whole section that is just the film, running.
+ * A whole section that is just the film, running, full width, landscape.
  *
- * Every other use of the showroom footage sits beside copy in a split layout,
- * `aspect-[9/16]` inside a column. This one gives the video the section to
- * itself: nearly the full viewport height, nothing sharing the frame with it,
- * so it reads as a considered cinematic moment rather than as an illustration
- * next to a paragraph.
+ * Every other use of Beco's own footage sits beside copy in a split layout,
+ * a tall portrait frame inside a column, because all 52 of Beco's own clips
+ * are portrait phone video, per D51. This section is deliberately different:
+ * a full bleed landscape band, because it does not carry Beco's own footage.
  *
- * **Still framed to the footage's own shape, not stretched to fill the
- * viewport's.** All of Beco's clips are portrait phone video, per D51.
- * Cropping 9:16 into a wide full bleed band would throw away most of the
- * picture, so the frame stays tall and centred, on a charcoal ground either
- * side, rather than pretending the source is something it is not.
- *
- * No stock footage stands in for a second clip. D51 already rejected that:
- * a clip that reads as Beco's work without being it is a fabricated record on
- * a page a buyer uses to decide whether to drive there. When more of the 52
- * clips in Drive are transcoded, per the M4 handover, this section is where a
- * short rotation between them belongs. Today it is one film, looping, because
- * one real film is worth more than several borrowed ones.
+ * **This is licensed stock, not Beco's work, per D69.** A reversal of D51 and
+ * D62 for this one section, made on direct instruction after an internal
+ * reference build of the treatment was reviewed. See `GALLERY_FILM` in
+ * `lib/site.ts` for the licence and the source, and D69 in
+ * `docs/DECISIONS.md` for the full reasoning and what stays unchanged
+ * elsewhere: the showroom split section, home and contact, is still Beco's
+ * own portrait footage, untouched.
  *
  * Same battery and bandwidth discipline as `ShowroomFilm`: it plays only
  * while at least half of it is actually on screen, and stops the moment it
@@ -31,12 +25,12 @@ import { SHOWROOM_FILM } from '@/lib/site';
  * of content to operate, and reduced motion gets the poster frame, static,
  * with nothing autoplaying at all.
  *
- * CINEMATIC TREATMENT, on the same real footage rather than new footage:
- * the frame carries a slow continuous drift, `.beco-ambient`, the same
- * class the hero's lead card uses, so the picture is gently alive rather
- * than a still photograph that happens to loop. A vignette sits at both
- * edges, not only the bottom the caption reads against, so the frame reads
- * as graded rather than as a raw clip dropped into a box.
+ * CINEMATIC TREATMENT: the frame carries a slow continuous drift,
+ * `.beco-ambient`, the same class the hero's lead card uses, so the picture
+ * is gently alive rather than a still photograph that happens to loop. A
+ * vignette sits at both edges, not only the bottom the caption reads
+ * against, so the frame reads as graded rather than as a raw clip dropped
+ * into a box.
  *
  * The VIDEO ITSELF is never delayed on arrival, the same rule that keeps a
  * hero photograph off an entrance animation: this section opens the page and
@@ -72,7 +66,7 @@ export function AmbientVideoSection({
     return () => io.disconnect();
   }, []);
 
-  if (!SHOWROOM_FILM) return null;
+  if (!GALLERY_FILM) return null;
 
   return (
     <section
@@ -81,7 +75,7 @@ export function AmbientVideoSection({
       // which is exactly what the selector needs, and the section's own
       // overflow-hidden is what clips the drift's scale without an extra
       // element existing only to crop it.
-      className="beco-ambient relative flex min-h-[85vh] items-center justify-center overflow-hidden bg-charcoal py-16"
+      className="beco-ambient relative flex h-[min(78vh,44rem)] min-h-[26rem] w-full items-center justify-center overflow-hidden bg-charcoal"
     >
       <video
         ref={video}
@@ -89,22 +83,21 @@ export function AmbientVideoSection({
         loop
         playsInline
         preload="metadata"
-        poster={SHOWROOM_FILM.poster}
+        poster={GALLERY_FILM.poster}
         aria-hidden
-        // Height led rather than width led: at min(88vh, ...) the frame is
-        // driven by how tall the section is, and the 9:16 ratio derives the
-        // width from that, which is what keeps a portrait clip looking
-        // intentional on a wide desktop viewport instead of stretched.
-        className="h-[min(88vh,54rem)] w-auto max-w-full object-cover shadow-[0_40px_120px_rgba(0,0,0,0.5)]"
+        // Width led: the band's own height is what the section sets, and the
+        // video fills the full width of it, object-cover taking whatever
+        // crop keeps the frame full rather than letterboxed either side.
+        className="h-full w-full object-cover"
       >
-        <source src={SHOWROOM_FILM.src} type={SHOWROOM_FILM.type} />
+        <source src={GALLERY_FILM.src} type={GALLERY_FILM.type} />
       </video>
 
       {/* The top vignette. Purely tonal: nothing reads against it, it just
           keeps the frame from looking like a raw clip pasted into a box. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-charcoal/70 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-charcoal/60 to-transparent"
       />
 
       {/* A caption, not a wall of copy: the film is the content here, and the
@@ -113,7 +106,7 @@ export function AmbientVideoSection({
           beco-clip/beco-wipe, not the video: the video is very likely the LCP
           element on this page, so ITS entrance is never delayed, only the
           type over it assembles on arrival. */}
-      <div className="beco-clip pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/90 via-charcoal/20 to-transparent px-6 pb-10 pt-24 text-center">
+      <div className="beco-clip pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/90 via-charcoal/25 to-transparent px-6 pb-10 pt-24 text-center">
         <div className="beco-wipe">
           <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
             {eyebrow}
