@@ -62,8 +62,12 @@ export default async function GalleryPage() {
 
   return (
     <main>
+      {/* No eyebrow: the original, "Filmed in the showroom", was true when
+          this section played Beco's own footage and became a false claim of
+          location the moment D69 put licensed stock behind it instead.
+          Removed rather than replaced with something vaguer that dances
+          around the same lie. */}
       <AmbientVideoSection
-        eyebrow="Filmed in the showroom"
         title="What a finished room looks like."
         cta={{ label: 'Visit the showroom', href: '/contact' }}
       />

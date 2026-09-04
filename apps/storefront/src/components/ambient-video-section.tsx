@@ -39,11 +39,30 @@ import { GALLERY_FILM } from '@/lib/site';
  * starts 1.6s after mount, well after first paint, and only the CAPTION
  * beneath it, which is not the LCP candidate, gets a scroll triggered
  * entrance.
+ *
+ * FULL VIEWPORT HEIGHT, changed 4 September on request. `100svh`, not `100vh`:
+ * the small viewport unit excludes the browser chrome that can appear and
+ * disappear as a reader scrolls on mobile Safari and Chrome, so the section
+ * does not jump taller the moment the address bar hides. The same reasoning
+ * the mobile hero already uses.
+ *
+ * Filling the whole opening screen this way means nothing below it, the
+ * gallery grid, is visible without scrolling, which is exactly why it now
+ * carries its own scroll cue: the SAME travelling tick the hero uses, not a
+ * bouncing chevron, so the two moments on the site that ask a reader to
+ * scroll past a full screen photograph agree with each other.
  */
 export function AmbientVideoSection({
   eyebrow, title, cta,
 }: {
-  eyebrow: string;
+  /**
+   * Optional on purpose. This section carries licensed stock, per D69, so an
+   * eyebrow claiming a location or provenance ("Filmed in the showroom", the
+   * original copy here) would be false the moment the footage is not Beco's
+   * own. Say nothing rather than say something untrue: pass a real eyebrow
+   * once real footage is behind this, not before.
+   */
+  eyebrow?: string;
   title: string;
   cta?: { label: string; href: string };
 }) {
@@ -75,7 +94,16 @@ export function AmbientVideoSection({
       // which is exactly what the selector needs, and the section's own
       // overflow-hidden is what clips the drift's scale without an extra
       // element existing only to crop it.
-      className="beco-ambient relative flex h-[min(78vh,44rem)] min-h-[26rem] w-full items-center justify-center overflow-hidden bg-charcoal"
+      // 100svh minus the chrome ABOVE this section, not 100svh alone. This
+      // is not the first thing on the page: the announcement bar and the
+      // sticky header both sit above it and both take real space on first
+      // paint, so a section literally the height of the viewport pushed its
+      // own caption and scroll cue below the fold before anyone had
+      // scrolled at all, which defeats the point of a cue that says to
+      // scroll. 8rem covers the header's own h-20 (5rem) plus the
+      // announcement bar's rendered height (roughly 2.75 to 3rem, one line
+      // of text plus its padding).
+      className="beco-ambient relative flex h-[calc(100svh-8rem)] min-h-[32rem] w-full items-center justify-center overflow-hidden bg-charcoal"
     >
       <video
         ref={video}
@@ -108,9 +136,11 @@ export function AmbientVideoSection({
           type over it assembles on arrival. */}
       <div className="beco-clip pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/90 via-charcoal/25 to-transparent px-6 pb-10 pt-24 text-center">
         <div className="beco-wipe">
-          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
-            {eyebrow}
-          </p>
+          {eyebrow ? (
+            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
+              {eyebrow}
+            </p>
+          ) : null}
           <h2 className="mt-3 font-display text-3xl leading-tight text-high-vis-white sm:text-4xl">
             {title}
           </h2>
@@ -122,6 +152,18 @@ export function AmbientVideoSection({
               {cta.label}
             </a>
           ) : null}
+
+          {/* The same travelling tick the hero uses, not a bouncing chevron:
+              filling the whole opening screen means the gallery grid below
+              is not visible without scrolling, so this section needs to say
+              so the way the hero already does. */}
+          <p
+            aria-hidden
+            className="mt-10 flex flex-col items-center gap-2 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300"
+          >
+            <span className="beco-scroll-cue inline-block h-8 w-0.5 bg-warm-red-deep motion-reduce:animate-none" />
+            Scroll
+          </p>
         </div>
       </div>
     </section>

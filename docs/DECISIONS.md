@@ -770,3 +770,19 @@ The hero's scroll cue, asked to be more noticeable, got taller, a hair thicker, 
 instead of neutral, since "you can move this" is exactly the moment worth spending one of the
 page's few red touches on. Counted deliberately rather than added freely: the palette rule caps
 Warm Red at three or four uses per page, and this is one of them, not an exception to it.
+
+## D72, 4 September 2026: two corrections on the gallery video, both reported directly
+
+**The eyebrow was a false claim.** "Filmed in the showroom" was written when this section still
+played Beco's own footage, and stayed after D69 put licensed stock behind it instead, at which
+point it became untrue: the clip was not filmed in Beco's showroom at all. `eyebrow` is optional
+on `AmbientVideoSection` now, and the gallery page passes none, rather than replacing one
+unverifiable claim with a vaguer one.
+
+**The section overflowed the viewport it was meant to fill.** Sized to `100svh`, which is correct
+only for the first element on a page. This section sits under the announcement bar and the
+sticky header, both of which take real space on first paint, so `100svh` of section plus that
+chrome exceeded one screen, pushing the caption and the new scroll cue below the fold before
+anyone had scrolled. `calc(100svh - 8rem)` now, accounting for the header's own 5rem plus the
+announcement bar's rendered height. The scroll cue that prompted the fix, D71, would otherwise
+never have been seen until after the scroll it exists to request.

@@ -375,6 +375,14 @@ These were discovered while building and are recorded rather than remembered.
       Warm Red rather than neutral, counted deliberately against the page's red budget rather
       than added freely. See D71
 
+- [x] **The gallery video made full height with a scroll cue, then two corrections both
+      reported directly.** The eyebrow "Filmed in the showroom" was a false claim once the
+      section carried licensed stock rather than Beco's own footage, removed rather than
+      replaced with something vaguer. The section itself overflowed the actual viewport: sized
+      to 100svh while sitting under the announcement bar and the sticky header, which pushed the
+      caption and cue below the fold before any scroll happened. `calc(100svh - 8rem)` now. See
+      D72
+
 ## Found later on 4 September, not planned
 
 - [x] **The splash froze forever on every first load in dev.** Real bug, root caused: React 18
