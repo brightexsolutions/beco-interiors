@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { Field, Input, Select } from '@beco/ui';
+import { Input, Select } from '@beco/ui';
 
 /**
  * Search, filter and sort, with the URL as the source of truth.
@@ -22,6 +22,14 @@ import { Field, Input, Select } from '@beco/ui';
  * hierarchy is visible while choosing rather than only after. What is active
  * is stated back as removable chips, so a reader who lands on a shared filtered
  * URL can see why they are looking at six products instead of thirty one.
+ *
+ * A second pass, reported directly, cut it further: each control used to sit
+ * under its own visible label from @beco/ui's Field, a shape built for a
+ * form where the label is part of what is being read, not a toolbar someone
+ * wants to clear in one glance on the way to the grid. The labels are now
+ * sr-only, tied to their control the same way, and the bar is one slim row.
+ * Controls stay 44px, the touch target floor, so what shrank is the padding
+ * and the label line around them, never the thing a finger has to hit.
  */
 export interface Facet {
   value: string;
@@ -119,64 +127,72 @@ export function ShopControls({
     // actual grid visible, which is worse than the bar simply scrolling away
     // the way it always did. `top-20` matches the header's own h-20, and z-40
     // keeps it a layer below the header's z-50.
-    <div className="lg:sticky lg:top-20 lg:z-40 border-t-2 border-b border-t-charcoal border-b-neutral-200 bg-high-vis-white/95 py-5 backdrop-blur">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
-          <Field label="Search" htmlFor="shop-search" className="min-w-0 flex-1 sm:min-w-[16rem]">
-            <span className="relative block">
-              <svg
-                aria-hidden
-                viewBox="0 0 24 24"
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 stroke-current text-neutral-500"
-                fill="none"
-                strokeWidth="1.8"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
-              </svg>
-              <Input
-                id="shop-search"
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Name or colour"
-                className="pl-9"
-              />
-            </span>
-          </Field>
+    <div className="lg:sticky lg:top-20 lg:z-40 border-t-2 border-b border-t-charcoal border-b-neutral-200 bg-high-vis-white/95 py-3 backdrop-blur">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Full width of its own row below sm: at 390px there is not room
+              beside the range select for anything wider than the icon, which
+              is what shrinking it as a flex-1 sibling actually did. Fixed
+              and compact from sm up, where it sits inline with the rest. */}
+          <span className="relative block w-full sm:w-auto sm:min-w-[14rem]">
+            <label htmlFor="shop-search" className="sr-only">Search</label>
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 stroke-current text-neutral-500"
+              fill="none"
+              strokeWidth="1.8"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+            </svg>
+            <Input
+              id="shop-search"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search name or colour"
+              className="w-full pl-9 sm:w-56"
+            />
+          </span>
 
-          <Field label="Range" htmlFor="shop-range">
-            <Select id="shop-range" value={rangeValue} onChange={(e) => pickRange(e.target.value)}>
-              <option value="">All ranges</option>
-              {groups.map((group) => {
-                // A range with nothing under it is still selectable: it is a
-                // real part of the business, and the page it leads to says so.
-                if (group.children.length === 0) {
-                  return (
-                    <option key={group.value} value={`group:${group.value}`}>
-                      {group.label} ({group.count})
-                    </option>
-                  );
-                }
+          <label htmlFor="shop-range" className="sr-only">Range</label>
+          <Select id="shop-range" value={rangeValue} onChange={(e) => pickRange(e.target.value)} className="w-auto">
+            <option value="">All ranges</option>
+            {groups.map((group) => {
+              // A range with nothing under it is still selectable: it is a
+              // real part of the business, and the page it leads to says so.
+              if (group.children.length === 0) {
                 return (
-                  <optgroup key={group.value} label={group.label}>
-                    <option value={`group:${group.value}`}>
-                      All {group.label.toLowerCase()} ({group.count})
-                    </option>
-                    {group.children.map((child) => (
-                      <option key={child.value} value={child.value}>
-                        {child.label} ({child.count})
-                      </option>
-                    ))}
-                  </optgroup>
+                  <option key={group.value} value={`group:${group.value}`}>
+                    {group.label} ({group.count})
+                  </option>
                 );
-              })}
-            </Select>
-          </Field>
+              }
+              return (
+                <optgroup key={group.value} label={group.label}>
+                  <option value={`group:${group.value}`}>
+                    All {group.label.toLowerCase()} ({group.count})
+                  </option>
+                  {group.children.map((child) => (
+                    <option key={child.value} value={child.value}>
+                      {child.label} ({child.count})
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
+          </Select>
 
           {finishes.length > 1 ? (
-            <Field label="Finish" htmlFor="shop-finish">
-              <Select id="shop-finish" value={finish ?? ''} onChange={(e) => set('finish', e.target.value || null)}>
+            <>
+              <label htmlFor="shop-finish" className="sr-only">Finish</label>
+              <Select
+                id="shop-finish"
+                value={finish ?? ''}
+                onChange={(e) => set('finish', e.target.value || null)}
+                className="w-auto"
+              >
                 <option value="">Any finish</option>
                 {finishes.map((f) => (
                   <option key={f.value} value={f.value}>
@@ -184,31 +200,31 @@ export function ShopControls({
                   </option>
                 ))}
               </Select>
-            </Field>
+            </>
           ) : null}
 
-          <Field label="Sort" htmlFor="shop-sort">
-            <Select
-              id="shop-sort"
-              value={sort}
-              onChange={(e) => set('sort', e.target.value === 'name' ? null : e.target.value)}
-            >
-              <option value="name">Name</option>
-              <option value="price-asc">Price, low to high</option>
-              <option value="price-desc">Price, high to low</option>
-            </Select>
-          </Field>
+          <label htmlFor="shop-sort" className="sr-only">Sort</label>
+          <Select
+            id="shop-sort"
+            value={sort}
+            onChange={(e) => set('sort', e.target.value === 'name' ? null : e.target.value)}
+            className="w-auto"
+          >
+            <option value="name">Sort: name</option>
+            <option value="price-asc">Price, low to high</option>
+            <option value="price-desc">Price, high to low</option>
+          </Select>
 
           <p
             aria-live="polite"
-            className="ml-auto pb-3 font-ui text-sm tabular-nums text-neutral-500"
+            className="ml-auto font-ui text-sm tabular-nums text-neutral-500"
           >
             {pending ? 'Filtering…' : `${showing} of ${total}`}
           </p>
         </div>
 
         {chips.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-4">
+          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-3">
             <span className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
               Filtered by
             </span>

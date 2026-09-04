@@ -105,10 +105,14 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
   return (
     <main>
-      {/* --- A real opening, against a real slab. This was an eyebrow, a
-              heading and a lede on white, which is a document rather than a
-              shop front. Same construction as /contact so the two read as one
-              site. --- */}
+      {/* --- A slim banner, not an opening scene. This used to be a full
+              screen eyebrow, heading, lede and stat band, which reads well on
+              a page selling the idea of Beco but works against a reader who
+              already knows they want the shop and is here to find items,
+              reported directly. One line of identity, the facts folded into
+              the same row instead of their own block, and no lede: the value
+              proposition belongs to / and /about, not to a page whose whole
+              job is getting out of the way of the grid. --- */}
       <section className="relative border-b border-neutral-200 bg-charcoal">
         {hero ? (
           <div className="absolute inset-0">
@@ -119,32 +123,28 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               priority
               sizes="100vw"
               {...blurProps(hero)}
-              className="object-cover opacity-30"
+              className="object-cover opacity-25"
             />
           </div>
         ) : null}
 
-        <div className="relative mx-auto max-w-[1380px] px-6 py-20 sm:py-24 lg:py-28">
-          <div className="flex items-center gap-4">
-            <span aria-hidden className="h-px w-8 bg-warm-red" />
-            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
-              Everything in stock
-            </p>
+        <div className="relative mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-8 sm:py-9">
+          <div>
+            <div className="flex items-center gap-2">
+              <span aria-hidden className="h-px w-5 bg-warm-red" />
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                Everything in stock
+              </p>
+            </div>
+            <h1 className="mt-1.5 font-display text-2xl leading-tight text-high-vis-white sm:text-3xl">
+              Interior finishing materials.
+            </h1>
           </div>
-          <h1 className="mt-6 max-w-[16ch] font-display text-5xl leading-[1.04] tracking-[-0.015em] text-high-vis-white sm:text-6xl lg:text-7xl">
-            Interior finishing materials.
-          </h1>
-          <p className="mt-6 max-w-[54ch] text-base leading-[1.65] text-neutral-300 lg:text-lg">
-            Held in Nairobi, priced per slab, and quoted as a whole list rather than one line at
-            a time. Add what the project needs and we price it together.
-          </p>
 
-          {/* Three facts, not a stat band with counters. The shop does not
-              need the home page's choreography to feel considered. */}
-          <dl className="mt-10 flex flex-wrap gap-x-12 gap-y-6 border-t border-high-vis-white/15 pt-8">
-            <Fact term="Products" value={String(all.length)} />
-            <Fact term="Ranges" value={String(ranges)} />
-            <Fact term="Collection" value="Urban Square" />
+          <dl className="flex flex-wrap gap-x-6 gap-y-1 font-ui text-sm text-neutral-300">
+            <CompactFact term="Products" value={String(all.length)} />
+            <CompactFact term="Ranges" value={String(ranges)} />
+            <CompactFact term="Collection" value="Urban Square" />
           </dl>
         </div>
       </section>
@@ -188,13 +188,13 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   );
 }
 
-function Fact({ term, value }: { term: string; value: string }) {
+/** One line each, not the display-scale numerals the old stat band counted
+    up: this banner's whole job now is staying out of the way of the grid. */
+function CompactFact({ term, value }: { term: string; value: string }) {
   return (
     <div>
-      <dt className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
-        {term}
-      </dt>
-      <dd className="mt-2 font-display text-3xl leading-none text-high-vis-white">{value}</dd>
+      <dt className="inline text-neutral-400">{term}</dt>{' '}
+      <dd className="inline font-semibold text-high-vis-white">{value}</dd>
     </div>
   );
 }
