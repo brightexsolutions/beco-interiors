@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { getBlogPostSlugs } from '@/lib/blog';
 import { getIndexableCategories, getProductSlugs, getPublicTeam } from '@/lib/products';
 
 const BASE = 'https://www.beco.co.ke';
@@ -23,10 +24,11 @@ const BASE = 'https://www.beco.co.ke';
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [categories, slugs, team] = await Promise.all([
+  const [categories, slugs, team, blogSlugs] = await Promise.all([
     getIndexableCategories(),
     getProductSlugs(),
     getPublicTeam(),
+    getBlogPostSlugs(),
   ]);
 
   return [
@@ -35,6 +37,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/about`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/contact`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/gallery`, changeFrequency: 'monthly', priority: 0.7 },
+    ...(blogSlugs.length > 0
+      ? [{ url: `${BASE}/blog`, changeFrequency: 'monthly' as const, priority: 0.6 }]
+      : []),
     ...(team.length > 0
       ? [{ url: `${BASE}/team`, changeFrequency: 'monthly' as const, priority: 0.5 }]
       : []),
@@ -47,6 +52,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${BASE}/product/${slug}`,
       changeFrequency: 'monthly' as const,
       priority: 0.7,
+    })),
+    ...blogSlugs.map((slug) => ({
+      url: `${BASE}/blog/${slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
     })),
   ];
 }

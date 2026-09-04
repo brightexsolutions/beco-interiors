@@ -75,6 +75,23 @@ export const orderedImages = (p: CatalogueProduct): ProductImage[] =>
       ROLE_ORDER.indexOf(b.role as (typeof ROLE_ORDER)[number]),
   );
 
+export interface StoneSlide {
+  image: ProductImage;
+  name: string;
+}
+
+/** Real slab shots, one per product, for a page's own StoneSlider. Pulled
+    here rather than built inline on each page, since both About and the
+    blog fill the same reported blank column with the same real stock. */
+export const stoneSlidesFrom = (products: CatalogueProduct[], limit = 5): StoneSlide[] =>
+  products
+    .map((p): StoneSlide | undefined => {
+      const slab = orderedImages(p).find((img) => img.role === 'slab');
+      return slab ? { image: slab, name: p.name } : undefined;
+    })
+    .filter((s): s is StoneSlide => s !== undefined)
+    .slice(0, limit);
+
 export const primaryImage = (p: CatalogueProduct): ProductImage | undefined =>
   [...(p.images ?? [])].sort(
     (a, b) =>

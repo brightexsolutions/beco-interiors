@@ -18,7 +18,7 @@ describe('SiteHeader desktop nav active state', () => {
   it('lights nothing on the home page, which is not itself a nav item', () => {
     mockPathname.mockReturnValue('/');
     render(<SiteHeader />);
-    for (const name of ['Shop', 'Projects', 'Contact']) {
+    for (const name of ['Shop', 'Projects', 'Blog', 'Contact']) {
       expect(desktopLink(name)).not.toHaveAttribute('aria-current');
     }
     expect(screen.getByRole('button', { name: /about/i })).not.toHaveAttribute('aria-current');
@@ -61,6 +61,13 @@ describe('SiteHeader desktop nav active state', () => {
     mockPathname.mockReturnValue('/gallery');
     render(<SiteHeader />);
     expect(desktopLink('Projects')).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('lights Blog on a post page, not just the index', () => {
+    mockPathname.mockReturnValue('/blog/sintered-stone-buying-guide');
+    render(<SiteHeader />);
+    expect(desktopLink('Blog')).toHaveAttribute('aria-current', 'page');
+    expect(desktopLink('Shop')).not.toHaveAttribute('aria-current');
   });
 
   it('has no accessibility violations', async () => {

@@ -34,6 +34,7 @@ const LINKS = [
   { href: '/', label: 'Home' },
   { href: '/shop', label: 'Shop' },
   { href: '/gallery', label: 'Projects' },
+  { href: '/blog', label: 'Blog' },
   { href: '/about', label: 'About Beco' },
   { href: '/contact', label: 'Contact and showroom' },
 ];

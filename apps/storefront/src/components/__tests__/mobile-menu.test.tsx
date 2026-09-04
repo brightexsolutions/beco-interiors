@@ -30,7 +30,7 @@ describe('MobileMenu', () => {
     const user = userEvent.setup();
     render(<MobileMenu />);
     await user.click(screen.getByRole('button', { name: 'Open the menu' }));
-    for (const href of ['/', '/shop', '/gallery', '/about', '/contact']) {
+    for (const href of ['/', '/shop', '/gallery', '/blog', '/about', '/contact']) {
       expect(document.querySelector(`a[href="${href}"]`)).not.toBeNull();
     }
   });

@@ -101,6 +101,9 @@ export function SiteHeader() {
               <NavLink href="/gallery">Projects</NavLink>
             </li>
             <li>
+              <NavLink href="/blog">Blog</NavLink>
+            </li>
+            <li>
               {/* About's own active state is /about alone, not derived from
                   every item it links to: Sintered stone and The showroom are
                   each already Shop's and Contact's own page, and lighting
