@@ -6,6 +6,39 @@ import { SITE } from '@/lib/site';
 
 const SEEN_KEY = 'beco_splash_seen_v1';
 
+// Computed once at module scope, not per render, and read by both the JSX
+// below and the timing math in the effect, so the two cannot see a
+// different pillar count from one another.
+const PILLARS = SITE.strapline.split(' · ');
+
+// These four numbers have to describe the SAME sequence
+// packages/ui/src/tokens/motion.css draws. The pillar stagger base and gap
+// are here because each pillar's delay is an inline style computed per
+// pillar below; PILLAR_DURATION mirrors .beco-splash-pillar's own animation
+// duration in that file, and FADE_DURATION mirrors the duration-400 class
+// on the overlay itself, further down.
+//
+// This drifted once already: the strapline entrance was extended from one
+// block of text to four pillars stepping in one after another, and the
+// setTimeout schedule below was never moved to match, so the overlay
+// started fading, and then unmounted outright, while the last pillar or two
+// were still animating in. Reported directly as "disappears before the
+// animation is done." There is no single source of truth across a .css file
+// and this .tsx file, so a future change to either side's numbers has to
+// change this block too, or it drifts again the same way.
+const PILLAR_BASE_DELAY = 820; // ms, the FIRST pillar's animationDelay below
+const PILLAR_STAGGER = 110; // ms added per pillar after the first
+const PILLAR_DURATION = 500; // ms, .beco-splash-pillar in motion.css
+const FADE_DURATION = 400; // ms, the duration-400 class below
+const HOLD_AFTER_ENTRANCE = 250; // ms the finished splash sits still before fading
+// Exported so the regression test for the bug these describe reads these
+// numbers rather than hardcoding its own parallel copy, which is exactly
+// how the bug happened the first time.
+export const LAST_PILLAR_ENDS =
+  PILLAR_BASE_DELAY + (PILLARS.length - 1) * PILLAR_STAGGER + PILLAR_DURATION;
+export const FADE_STARTS_AT = LAST_PILLAR_ENDS + HOLD_AFTER_ENTRANCE;
+export const HIDDEN_AT = FADE_STARTS_AT + FADE_DURATION;
+
 /**
  * The brand moment on arrival: the mark comes into focus, the rule draws,
  * the four pillars of the strapline step in, held for a beat over charcoal,
@@ -28,9 +61,10 @@ const SEEN_KEY = 'beco_splash_seen_v1';
  *    a render on every navigation: a salesperson moving between the shop,
  *    a product and the quote form must never see this twice, or the "faster
  *    than paper" promise breaks on the second click.
- * 3. UNDER A SECOND AND UNSKIPPABLE ONLY BECAUSE IT IS SHORT. No button, no
- *    wait for a click, because the moment it becomes something to get past
- *    it has become friction rather than a moment. `prefers-reduced-motion`
+ * 3. BRIEF, AND UNSKIPPABLE ONLY BECAUSE IT IS BRIEF: `HIDDEN_AT` below,
+ *    roughly 2.3s from mark to gone. No button, no wait for a click, because
+ *    the moment it becomes something to get past it has become friction
+ *    rather than a moment. `prefers-reduced-motion`
  *    skips it outright, immediately, with nothing rendered. `pointer-events`
  *    is `none` for the entire lifecycle, not only while fading, so it can
  *    never swallow a scroll, a tap or a click underneath it either.
@@ -55,7 +89,7 @@ export function SiteSplash() {
     if (seen) return;
 
     setPhase('in');
-    const toOut = setTimeout(() => setPhase('out'), 1100);
+    const toOut = setTimeout(() => setPhase('out'), FADE_STARTS_AT);
     const toHidden = setTimeout(() => {
       setPhase('hidden');
       // Marked as seen only once the sequence has actually finished, not at
@@ -75,7 +109,7 @@ export function SiteSplash() {
       } catch {
         /* see above */
       }
-    }, 1550);
+    }, HIDDEN_AT);
     return () => {
       clearTimeout(toOut);
       clearTimeout(toHidden);
@@ -83,8 +117,6 @@ export function SiteSplash() {
   }, []);
 
   if (phase === 'hidden') return null;
-
-  const pillars = SITE.strapline.split(' · ');
 
   return (
     <div
@@ -109,14 +141,14 @@ export function SiteSplash() {
       <span aria-hidden className="beco-splash-rule h-px w-10 bg-warm-red" />
 
       <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-6 text-center font-ui text-xs font-semibold uppercase tracking-[0.22em] text-neutral-300">
-        {pillars.map((pillar, i) => (
+        {PILLARS.map((pillar, i) => (
           <span
             key={pillar}
             className="beco-splash-pillar"
-            style={{ animationDelay: `${820 + i * 110}ms` }}
+            style={{ animationDelay: `${PILLAR_BASE_DELAY + i * PILLAR_STAGGER}ms` }}
           >
             {pillar}
-            {i < pillars.length - 1 ? (
+            {i < PILLARS.length - 1 ? (
               <span aria-hidden className="ml-3 text-warm-red">
                 ·
               </span>

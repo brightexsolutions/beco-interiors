@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { act } from 'react';
-import { SiteSplash } from '../site-splash';
+import { FADE_STARTS_AT, HIDDEN_AT, LAST_PILLAR_ENDS, SiteSplash } from '../site-splash';
 
 const SEEN_KEY = 'beco_splash_seen_v1';
 
@@ -42,7 +42,7 @@ describe('SiteSplash', () => {
     // Not yet: recording early is exactly what caused the freeze below.
     expect(sessionStorage.getItem(SEEN_KEY)).toBeNull();
 
-    act(() => { vi.advanceTimersByTime(1550); });
+    act(() => { vi.advanceTimersByTime(HIDDEN_AT); });
     expect(sessionStorage.getItem(SEEN_KEY)).toBe('1');
     unmount();
 
@@ -51,25 +51,55 @@ describe('SiteSplash', () => {
     expect(screen.queryByText(/Sintered Stone/)).toBeNull();
   });
 
-  it('fades out and removes itself well inside the LCP budget, unprompted', () => {
+  it('fades out and removes itself unprompted, never blocking the LCP measurement itself', () => {
+    // Not "well inside the 2.0s LCP budget": this overlay is never the LCP
+    // candidate regardless of its own length, since it is client only and
+    // mounts after the real page has already painted, per the component's
+    // own doc comment. What matters here is that it still ends on its own.
     render(<SiteSplash />);
     act(() => { vi.advanceTimersByTime(0); });
     expect(screen.getByText(/Sintered Stone/)).toBeDefined();
 
     // Still present but fading.
-    act(() => { vi.advanceTimersByTime(1100); });
+    act(() => { vi.advanceTimersByTime(FADE_STARTS_AT); });
     expect(screen.queryByText(/Sintered Stone/)).toBeDefined();
 
-    // Gone entirely under the site's 2.0s LCP budget, with no click or
-    // interaction required to dismiss it.
-    act(() => { vi.advanceTimersByTime(450); });
+    // Gone entirely, with no click or interaction required to dismiss it.
+    act(() => { vi.advanceTimersByTime(HIDDEN_AT - FADE_STARTS_AT); });
     expect(screen.queryByText(/Sintered Stone/)).toBeNull();
+  });
+
+  it('does not start fading until every pillar has had time to finish stepping in', () => {
+    // Regression, reported directly as "disappears before the animation is
+    // done": the fade-out and unmount timers were tuned before the strapline
+    // became four staggered pillars instead of one block, and were never
+    // moved to match, so the overlay started fading, then vanished outright,
+    // while the last pillar or two were still animating in. jsdom does not
+    // run real CSS animations, so what is asserted is the actual constraint
+    // that failed: the fade cannot start before the last pillar's own
+    // animation-delay-plus-duration has elapsed.
+    expect(FADE_STARTS_AT).toBeGreaterThanOrEqual(LAST_PILLAR_ENDS);
+
+    render(<SiteSplash />);
+    act(() => { vi.advanceTimersByTime(0); });
+    // All four pillars are in the document THROUGHOUT: they are laid out
+    // immediately and animate via CSS, so if the fade or removal ever ran
+    // ahead of LAST_PILLAR_ENDS this would still pass, which is exactly why
+    // the numeric assertion above is the one that actually catches it.
+    expect(screen.getByText('Sintered Stone')).toBeDefined();
+    expect(screen.getByText('Accessories')).toBeDefined();
+
+    act(() => { vi.advanceTimersByTime(LAST_PILLAR_ENDS); });
+    // The last pillar has finished animating in, and the overlay must still
+    // be fully opaque at this instant, not already fading or gone.
+    const overlay = screen.getByText('Sintered Stone').closest('[aria-hidden]');
+    expect(overlay).toHaveClass('opacity-100');
   });
 
   it('never renders at all under prefers-reduced-motion', () => {
     reducedMotion(true);
     render(<SiteSplash />);
-    act(() => { vi.advanceTimersByTime(2000); });
+    act(() => { vi.advanceTimersByTime(HIDDEN_AT + 500); });
     expect(screen.queryByText(/Sintered Stone/)).toBeNull();
     // And it must not have consumed the "seen" slot either, so a later visit
     // with reduced motion off still behaves like a first visit.
@@ -94,7 +124,7 @@ describe('SiteSplash', () => {
     const overlay = container.firstElementChild;
     expect(overlay).toHaveClass('pointer-events-none');
 
-    act(() => { vi.advanceTimersByTime(1100); });
+    act(() => { vi.advanceTimersByTime(FADE_STARTS_AT + 50); });
     expect(container.firstElementChild).toHaveClass('pointer-events-none');
   });
 
@@ -118,7 +148,7 @@ describe('SiteSplash', () => {
     act(() => { vi.advanceTimersByTime(0); });
     expect(screen.getByText(/Sintered Stone/)).toBeDefined();
 
-    act(() => { vi.advanceTimersByTime(1550); });
+    act(() => { vi.advanceTimersByTime(HIDDEN_AT); });
     expect(screen.queryByText(/Sintered Stone/)).toBeNull();
   });
 });
