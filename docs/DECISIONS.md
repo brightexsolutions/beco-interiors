@@ -853,3 +853,30 @@ Rewritten to "Beco Interiors is new to the East African market", the fact stated
 alone. The fact itself is unchanged, and stays load bearing: it is still the guideline's own
 "new entrant" framing over the prototype's "10+ years" claim, `docs/CONTENT-AUDIT.md`, and the
 title above it, "New here. Stocked already.", still sets up exactly this sentence.
+
+## D75, 4 September 2026: the showroom poster was the wrong frame, not the wrong clip
+
+Reported directly, with two screenshots: the showroom section on both home and contact showed
+a blank wall over a bare slab corner, on both pages at once. Both pages render the same
+`ShowroomFilm`, reading the same `SHOWROOM_FILM` constant and the same `showroom-poster.jpg`,
+so one bad poster explained both screenshots without two bugs.
+
+Checked before assuming a wrong clip needed sourcing: `ffmpeg`, sampling `showroom.mp4` every
+0.5 seconds across its 6.5 seconds, showed the clip pans from that same awkward wall corner at
+its start to a fully composed vanity, black tapware against a veined stone backsplash, by
+around the 6 second mark. The footage was already right. Only the poster, the frame shown
+before autoplay starts and the ONLY frame a reduced motion reader or a `controls`-only click
+ever sees, per `ShowroomFilm`'s own doc comment, had been extracted from near the start of the
+pan rather than from where it settles.
+
+Re-extracted at 6.0s from the same file already in `public/video/`, same 360x640, a similar
+9.7KB. No new Drive lookup and no re-transcode: this was a five second `ffmpeg` fix once the
+real cause was checked rather than assumed, not a resourcing gap.
+
+**Checked and left alone:** Beco's SITE VIDEOS folder in Drive, all 52 raw clips, is genuinely
+reachable, confirmed by listing it directly, in case the fix had turned out to need a different
+source clip. It did not, this time. If a poster ever needs picking from a clip not already
+transcoded into the repo, downloading and previewing raw phone video through the tools this
+session has is impractically large for a chat turn, tens of megabytes each, so that would need
+either a specific file named directly or a clip dropped locally to transcode from, the same way
+`SHOWROOM_FILM` and `GALLERY_FILM` both already were.

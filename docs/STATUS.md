@@ -21,7 +21,7 @@ built. Rewritten against the actual repository rather than carried forward from 
 tables, 53 RLS policies, 246 Vitest tests across 32 files, 63 pgTAP tests across 7 files, 9
 packages typechecking. 31 products, 30 published, one held back deliberately by the pipeline
 itself (`DELFONE 12MM`, see D53), 24 priced, 21 described, 258 real images. Decisions recorded
-through D74, `docs/DECISIONS.md`.
+through D75, `docs/DECISIONS.md`.
 
 ---
 
@@ -155,12 +155,12 @@ with no Drive folder, see D47 and D52).
 
 ## Decisions
 
-Recorded through D74. D1 to roughly D45 are architectural, made before the build started, and
+Recorded through D75. D1 to roughly D45 are architectural, made before the build started, and
 live in `files/BUILD-PLAN.md`, gitignored internal Brightex material. From D46 on, every decision
 discovered or made DURING the build is recorded in the committed `docs/DECISIONS.md`, which is
 the one to read for anything from 1 September onward: D50 is the VAT arithmetic every quote
 document depends on, D52 through D65 are the M4 storefront's taxonomy and motion decisions,
-D66 through D74 are from this week specifically, including two real bugs, D67 and the splash
+D66 through D75 are from this week specifically, including two real bugs, D67 and the splash
 freeze under D66's own entry, found and fixed with a regression test proving each one, and D73,
 the cutout reveal treatment new this session.
 

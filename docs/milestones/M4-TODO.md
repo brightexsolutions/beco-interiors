@@ -433,6 +433,11 @@ These were discovered while building and are recorded rather than remembered.
 - [x] **The About page's "new supplier" sentence rewritten**, reported directly as reading
       defensively. The fact stays, "new to the East African market", the guideline's own framing;
       only the sentence explaining why it says so was cut. See D74
+- [x] **The showroom poster, on home and contact both, reported directly by screenshot.** The
+      clip was fine, sampled with `ffmpeg` to check before assuming otherwise: it pans from a
+      blank wall to a fully composed vanity by six seconds in. Only the poster, the one frame a
+      reduced motion reader ever sees, was extracted from the wrong end of that pan. Re-extracted
+      at 6.0s, same file, no re-transcode. See D75
 
 ## Found on 3 September, not planned
 
