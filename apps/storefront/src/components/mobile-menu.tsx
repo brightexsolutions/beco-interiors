@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@beco/ui';
+import { isNavItemActive } from '@/lib/nav';
 import { SITE, whatsappLink } from '@/lib/site';
 
 /**
@@ -129,7 +130,10 @@ export function MobileMenu() {
           <nav aria-label="Main">
             <ul>
               {LINKS.map((link) => {
-                const current = pathname === link.href;
+                // Shared with the desktop nav, per rule 5: a prefix match, so
+                // Shop stays lit on /shop/handles rather than going dark the
+                // moment a reader opens a category.
+                const current = isNavItemActive(pathname, link.href);
                 return (
                   <li key={link.href} className="border-b border-neutral-200">
                     <Link

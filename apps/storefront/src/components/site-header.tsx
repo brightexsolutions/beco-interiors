@@ -7,7 +7,9 @@ import { useEffect, useState } from 'react';
 import { buttonClasses, cn } from '@beco/ui';
 import { MobileMenu } from './mobile-menu';
 import { NavDropdown, type NavItem } from './nav-dropdown';
+import { NavLink } from './nav-link';
 import { QuoteCounter } from './quote-counter';
+import { isNavItemActive } from '@/lib/nav';
 import { SITE } from '@/lib/site';
 
 /**
@@ -43,10 +45,11 @@ const ABOUT: NavItem[] = [
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
   // Transparent belongs to the HOME hero and nowhere else. Every other page
   // starts with content directly beneath the bar, so a transparent header let
   // a product gallery show through it and read as broken layout.
-  const overHero = usePathname() === '/';
+  const overHero = pathname === '/';
 
   useEffect(() => {
     // Passive, and it only ever flips a boolean, so it cannot become a
@@ -89,34 +92,24 @@ export function SiteHeader() {
         <nav aria-label="Main" className="hidden md:block">
           <ul className="flex items-center gap-1">
             <li>
-              <Link
-                href="/shop"
-                className="block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
-              >
-                Shop
-              </Link>
+              <NavLink href="/shop">Shop</NavLink>
             </li>
             <li>
               {/* Projects is top level rather than buried in the menu: real
                   installations are the strongest trust content on the site
                   and the thing a specifier looks for first. */}
-              <Link
-                href="/gallery"
-                className="block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
-              >
-                Projects
-              </Link>
+              <NavLink href="/gallery">Projects</NavLink>
             </li>
             <li>
-              <NavDropdown label="About" items={ABOUT} />
+              {/* About's own active state is /about alone, not derived from
+                  every item it links to: Sintered stone and The showroom are
+                  each already Shop's and Contact's own page, and lighting
+                  About too would put two "you are here" claims on the bar
+                  for the same route. */}
+              <NavDropdown label="About" items={ABOUT} active={isNavItemActive(pathname, '/about')} />
             </li>
             <li>
-              <Link
-                href="/contact"
-                className="block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
-              >
-                Contact
-              </Link>
+              <NavLink href="/contact">Contact</NavLink>
             </li>
           </ul>
         </nav>

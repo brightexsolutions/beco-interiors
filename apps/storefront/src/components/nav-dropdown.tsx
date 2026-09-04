@@ -27,12 +27,38 @@ export interface NavItem {
   description?: string;
 }
 
-export function NavDropdown({ label, items }: { label: string; items: NavItem[] }) {
+export function NavDropdown({
+  label,
+  items,
+  active = false,
+}: {
+  label: string;
+  items: NavItem[];
+  /**
+   * Whether the TRIGGER itself should read as the current section, decided
+   * by the caller rather than derived from `items` here. Two of About's
+   * three destinations, Sintered stone and The showroom, are also each a
+   * sibling top level link's own page (`/shop/...` and `/contact`), so
+   * deriving "active" from every item href would light About at the same
+   * time as Shop or Contact already do, two "you are here" claims on the
+   * bar at once. The caller decides which trigger owns which page.
+   */
+  active?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // A mouse moving onto the trigger fires mouseenter before the click that
+  // follows it, the same gesture arriving as two events. Toggling blindly on
+  // click meant hover opened the menu and the click that finished the same
+  // motion immediately closed it again, so a mouse user who actually clicked
+  // the trigger, rather than only ever hovering, could never open it. Tracked
+  // so a click finishing a hover-open confirms it instead of undoing it; a
+  // second, real click still closes it, and keyboard toggling is untouched
+  // because Tab never fires mouseenter.
+  const openedByHover = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -74,10 +100,30 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
 
   // A short grace period, so crossing the gap between trigger and panel does
   // not close the menu under the pointer.
-  const openNow = () => { clearTimeout(closeTimer.current); setOpen(true); };
+  const openNow = () => {
+    clearTimeout(closeTimer.current);
+    openedByHover.current = true;
+    setOpen(true);
+  };
   const closeSoon = () => {
     clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setOpen(false), 140);
+    closeTimer.current = setTimeout(() => {
+      setOpen(false);
+      openedByHover.current = false;
+    }, 140);
+  };
+
+  const onTriggerClick = () => {
+    if (open && !openedByHover.current) {
+      setOpen(false);
+      return;
+    }
+    // Closed, so a real click or Enter opens it. Or open only because the
+    // pointer just hovered on: this click is the same gesture finishing, not
+    // a second, deliberate one, so it confirms the open state rather than
+    // reversing it. Either way the next click is a real toggle.
+    openedByHover.current = false;
+    setOpen(true);
   };
 
   return (
@@ -93,8 +139,11 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
         aria-expanded={open}
         aria-haspopup="true"
         aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 items-center gap-2 px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:text-warm-red-deep"
+        onClick={onTriggerClick}
+        className={cn(
+          'flex min-h-11 items-center gap-2 px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] transition-colors',
+          active ? 'text-warm-red-deep' : 'text-neutral-700 hover:text-warm-red-deep',
+        )}
       >
         {label}
         <svg
@@ -120,9 +169,14 @@ export function NavDropdown({ label, items }: { label: string; items: NavItem[] 
           {/* A red hairline across the top, the same eyebrow mark the sections
               use, so the menu belongs to the site rather than to a framework. */}
           <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-warm-red" />
-          <ul className="py-2">
+          {/* role="none" on both: a menu's accessible children must be
+              menuitem elements directly. ul and li each carry an implicit
+              list role that breaks that relationship even though nothing
+              about how they LOOK changes, caught by the axe check the
+              component skill asks every component to carry. */}
+          <ul role="none" className="py-2">
             {items.map((item) => (
-              <li key={item.href}>
+              <li key={item.href} role="none">
                 <Link
                   href={item.href}
                   role="menuitem"
