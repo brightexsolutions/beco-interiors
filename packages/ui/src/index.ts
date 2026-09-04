@@ -20,6 +20,7 @@ export { WordReveal, type WordRevealProps } from './components/word-reveal';
 export {
   CutoutReveal, type CutoutRevealProps, type CutoutRevealStat,
 } from './components/cutout-reveal';
+export { RoomStack, type RoomStackCard } from './components/room-stack';
 export { cn } from './lib/cn';
 export { PALETTE } from './tokens/palette';
 export { contrastRatio, PAIRS } from './tokens/contrast-check';

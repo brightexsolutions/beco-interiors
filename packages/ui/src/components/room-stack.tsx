@@ -1,0 +1,78 @@
+import type { ReactNode } from 'react';
+import { cn } from '../lib/cn';
+
+export interface RoomStackCard {
+  /** Used as both the React key and to keep the fan's animation slots stable. */
+  key: string;
+  name: string;
+  /** Rendered by the caller, so this package stays free of next/image. */
+  image: ReactNode;
+}
+
+/**
+ * A stack of real installations that deals itself.
+ *
+ * The front card swipes away and returns to the back, so the deck cycles
+ * without a control to press and without anyone having to notice it. It sits
+ * opposite the process list, which was a column of type against an empty half
+ * of the page.
+ *
+ * Every card also carries a STATIC stacked transform of its own, so before the
+ * animation runs, and for anyone who has asked for reduced motion, it is a
+ * tidy stack rather than four photographs piled exactly on top of each other.
+ * `.beco-stack-card`'s own keyframes only apply under
+ * `prefers-reduced-motion: no-preference`, in `motion.css`, so this static
+ * transform IS the reduced motion state, not a fallback bolted on beside it.
+ *
+ * These are Beco's own installations. That is the whole point of showing them:
+ * a competitor's equivalent rooms can be generated, and real projects in
+ * Nairobi are the more valuable asset.
+ *
+ * Renders nothing under two cards: a stack of one is not a stack, and a
+ * single photograph deserves its own placement rather than this component's
+ * fan and caption plate.
+ */
+export function RoomStack({ cards, className }: { cards: RoomStackCard[]; className?: string }) {
+  if (cards.length < 2) return null;
+
+  const CYCLE = 14;
+
+  return (
+    // Padded then clipped: the fan leans left and the swipe leaves right, so
+    // the box has to be bigger than the cards before it can clip them without
+    // cutting the effect off.
+    <div
+      className={cn(
+        'relative mx-auto w-full max-w-[26rem] overflow-hidden px-3 pb-6 lg:sticky lg:top-32',
+        className,
+      )}
+    >
+      <div className="relative aspect-[4/5] w-full">
+        {cards.map((card, i) => (
+          <figure
+            key={card.key}
+            className="beco-stack-card absolute inset-0 origin-bottom overflow-hidden bg-neutral-100 shadow-[0_22px_60px_rgba(16,24,32,0.22)] will-change-transform"
+            style={{
+              // The static fan, matching slot `i` of the cycle exactly, so the
+              // deck is a tidy hand of cards before the animation starts and
+              // for anyone who has asked for reduced motion.
+              transform:
+                `translate3d(${i * -2.3}%, ${i * 1.1}rem, 0) rotate(${i * -3}deg) scale(${1 - i * 0.03})`,
+              zIndex: 40 - i * 10,
+              ['--stack-cycle' as string]: `${CYCLE}s`,
+              ['--stack-delay' as string]: `-${(i * CYCLE) / cards.length}s`,
+            }}
+          >
+            {card.image}
+            <figcaption className="absolute inset-x-0 bottom-0 flex items-baseline justify-between gap-4 bg-charcoal px-6 py-4 text-high-vis-white">
+              <span className="font-ui text-sm font-semibold uppercase tracking-[0.14em]">
+                {card.name}
+              </span>
+              <span className="font-ui text-sm text-neutral-500">Installed</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  );
+}
