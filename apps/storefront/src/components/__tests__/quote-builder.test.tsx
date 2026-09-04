@@ -109,6 +109,28 @@ describe('QuoteBuilder, on success', () => {
 
     expect(await screen.findByText(/BQ-2026-0001/)).toBeDefined();
   });
+
+  it('fills the second column with real information instead of leaving it blank', async () => {
+    // Regression: the confirmation used to be a single narrow block dropped
+    // into the page's full width grid, reported directly as extreme empty
+    // space on a wide screen. It now keeps the same two column shape the
+    // form uses, with hours, the phone line and the showroom address on the
+    // right rather than nothing.
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+
+    await user.type(await screen.findByLabelText(/Your name/), 'Wanjiru');
+    await user.type(screen.getByLabelText(/Phone number/), '0722000000');
+    await user.click(screen.getByRole('button', { name: /Send my request/ }));
+
+    await screen.findByText(/BQ-2026-0001/);
+    expect(screen.getByText('Mon to Sat, 8am to 6pm')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '+254 722 333 730' })).toHaveAttribute(
+      'href',
+      'tel:+254722333730',
+    );
+    expect(screen.getByText(/Urban Square/)).toBeInTheDocument();
+  });
 });
 
 describe('QuoteBuilder, the per-line quantity stepper', () => {

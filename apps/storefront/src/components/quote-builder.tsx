@@ -65,32 +65,73 @@ export function QuoteBuilder() {
 
   if (result?.ok) {
     return (
-      <div ref={doneRef} className="max-w-[60ch] py-8">
-        <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-          Request received
-        </p>
-        <h2
-          data-confirmation
-          tabIndex={-1}
-          className="mt-4 font-display text-4xl leading-tight text-charcoal outline-none"
-        >
-          We have it. Reference {result.reference}.
-        </h2>
-        <p className="mt-4 text-base text-neutral-700">
-          Our team is pricing it now and will come back to you on the number you gave us. If it
-          is urgent, send us the reference on WhatsApp and we will pick it up straight away.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <a
-            href={whatsappLink(`my quote ${result.reference}`)}
-            data-analytics="whatsapp_click"
-            className={buttonClasses({ variant: 'primary' })}
+      // Same two column shape the form uses below, rather than a single
+      // narrow block dropped into the full width page: that read as a
+      // document with most of a 1380px page left blank beside it. The right
+      // column states real information, hours and the line, not a photo
+      // standing in for content, so the space is used rather than merely
+      // balanced.
+      <div ref={doneRef} className="grid gap-12 py-8 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+        <div>
+          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+            Request received
+          </p>
+          <h2
+            data-confirmation
+            tabIndex={-1}
+            className="mt-4 font-display text-4xl leading-tight text-charcoal outline-none"
           >
-            Send the reference on WhatsApp
-          </a>
-          <Link href="/shop" className={buttonClasses({ variant: 'outline' })}>
-            Keep browsing
-          </Link>
+            We have it. Reference {result.reference}.
+          </h2>
+          <p className="mt-4 max-w-[52ch] text-base text-neutral-700">
+            Our team is pricing it now and will come back to you on the number you gave us. If it
+            is urgent, send us the reference on WhatsApp and we will pick it up straight away.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href={whatsappLink(`my quote ${result.reference}`)}
+              data-analytics="whatsapp_click"
+              className={buttonClasses({ variant: 'primary' })}
+            >
+              Send the reference on WhatsApp
+            </a>
+            <Link href="/shop" className={buttonClasses({ variant: 'outline' })}>
+              Keep browsing
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-charcoal p-8 text-high-vis-white lg:p-10">
+          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            While you wait
+          </p>
+          <p className="mt-4 max-w-[36ch] font-display text-2xl leading-snug">
+            Keep the reference. Everything else is on us.
+          </p>
+          <dl className="mt-8 space-y-5 border-t border-white/15 pt-6">
+            <div>
+              <dt className="font-ui text-sm text-neutral-400">Opening hours</dt>
+              <dd className="mt-1 font-ui text-base">{SITE.hours}</dd>
+            </div>
+            <div>
+              <dt className="font-ui text-sm text-neutral-400">Prefer to call</dt>
+              <dd className="mt-1">
+                <a
+                  href={SITE.phoneHref}
+                  data-analytics="call_click"
+                  className="font-ui text-base font-semibold underline-offset-4 hover:underline"
+                >
+                  {SITE.phone}
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt className="font-ui text-sm text-neutral-400">Showroom</dt>
+              <dd className="mt-1 font-ui text-base">
+                {SITE.address.line1}, {SITE.address.line2}, {SITE.address.city}
+              </dd>
+            </div>
+          </dl>
         </div>
       </div>
     );
