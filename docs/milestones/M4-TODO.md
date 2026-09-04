@@ -443,6 +443,13 @@ These were discovered while building and are recorded rather than remembered.
       handles, both background removed the same way as the first two, so the home page cycles
       four real finishes rather than showing gold alone. Built on `RotatingStatement`'s own
       crossfade shape from the start. **5 new tests.** See D76
+- [x] **The crossfade given a scale, reported as too basic**, and a real cause found for the
+      shared cloudflared link behaving differently from localhost: Next's own dev server blocks
+      cross-origin asset requests by default, trusting only localhost, so React never hydrated
+      over the tunnel and every client side behaviour, the nav's scroll state, the About menu,
+      every reveal, looked broken at once with nothing actually wrong in any of them.
+      `allowedDevOrigins` set, dev only, and the long running dev server restarted for the config
+      to take effect. See D77
 
 ## Found on 3 September, not planned
 

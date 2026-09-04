@@ -105,8 +105,8 @@ describe('CutoutReveal, with more than one image', () => {
 
   it('shows the first photograph at full opacity before any timer has run', () => {
     render(<CutoutReveal {...props} images={IMAGES} />);
-    const gold = screen.getByAltText('Gold cabinet handle').parentElement;
-    const black = screen.getByAltText('Matte black cabinet handle').parentElement;
+    const gold = screen.getByAltText('Gold cabinet handle').parentElement?.parentElement;
+    const black = screen.getByAltText('Matte black cabinet handle').parentElement?.parentElement;
     expect(gold).toHaveClass('opacity-100');
     expect(gold).not.toHaveClass('opacity-0');
     expect(black).toHaveClass('opacity-0');
@@ -116,8 +116,8 @@ describe('CutoutReveal, with more than one image', () => {
   it('crossfades to the next photograph on the interval', () => {
     render(<CutoutReveal {...props} images={IMAGES} intervalMs={1000} />);
     act(() => { vi.advanceTimersByTime(1000); });
-    const gold = screen.getByAltText('Gold cabinet handle').parentElement;
-    const black = screen.getByAltText('Matte black cabinet handle').parentElement;
+    const gold = screen.getByAltText('Gold cabinet handle').parentElement?.parentElement;
+    const black = screen.getByAltText('Matte black cabinet handle').parentElement?.parentElement;
     expect(gold).toHaveClass('opacity-0');
     expect(gold).not.toHaveClass('opacity-100');
     expect(black).toHaveClass('opacity-100');
@@ -127,7 +127,7 @@ describe('CutoutReveal, with more than one image', () => {
   it('wraps round rather than stopping at the last photograph', () => {
     render(<CutoutReveal {...props} images={IMAGES} intervalMs={1000} />);
     act(() => { vi.advanceTimersByTime(3000); });
-    const gold = screen.getByAltText('Gold cabinet handle').parentElement;
+    const gold = screen.getByAltText('Gold cabinet handle').parentElement?.parentElement;
     expect(gold).toHaveClass('opacity-100');
   });
 
@@ -135,7 +135,7 @@ describe('CutoutReveal, with more than one image', () => {
     reducedMotion(true);
     render(<CutoutReveal {...props} images={IMAGES} intervalMs={1000} />);
     act(() => { vi.advanceTimersByTime(10_000); });
-    const gold = screen.getByAltText('Gold cabinet handle').parentElement;
+    const gold = screen.getByAltText('Gold cabinet handle').parentElement?.parentElement;
     expect(gold).toHaveClass('opacity-100');
   });
 
@@ -147,7 +147,7 @@ describe('CutoutReveal, with more than one image', () => {
       />,
     );
     act(() => { vi.advanceTimersByTime(10_000); });
-    const gold = screen.getByAltText('Gold cabinet handle').parentElement;
+    const gold = screen.getByAltText('Gold cabinet handle').parentElement?.parentElement;
     expect(gold).toHaveClass('opacity-100');
   });
 });

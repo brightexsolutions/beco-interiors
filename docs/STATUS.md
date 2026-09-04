@@ -21,7 +21,7 @@ built. Rewritten against the actual repository rather than carried forward from 
 tables, 53 RLS policies, 251 Vitest tests across 32 files, 63 pgTAP tests across 7 files, 9
 packages typechecking. 31 products, 30 published, one held back deliberately by the pipeline
 itself (`DELFONE 12MM`, see D53), 24 priced, 21 described, 258 real images. Decisions recorded
-through D76, `docs/DECISIONS.md`.
+through D77, `docs/DECISIONS.md`.
 
 ---
 
@@ -33,7 +33,7 @@ through D76, `docs/DECISIONS.md`.
 | M1 | Foundation and infrastructure | 3.5 | **DONE**, schema and RLS complete. DNS on Beco and the Vercel Pro upgrade on Brightex are the two items still open, both blocking M6 rather than M1 itself |
 | M2 | Drive import pipeline | 3.5 | **DONE**, live against real Drive and R2, incremental, reports rather than guesses |
 | M3 | Design system | 2.0 | **DONE**, tokens, contrast verified, `@beco/ui` built out through M4 |
-| M4 | Storefront, SEO, conversion, motion | 8.5 | **WIP.** 111 items ticked, 24 open. Code is mostly ahead of Beco's content now: most of what remains is blocked on Drive folders, files and confirmations, not on build work. Full detail in `docs/milestones/M4-TODO.md` and `docs/milestones/M4-HANDOVER.md` |
+| M4 | Storefront, SEO, conversion, motion | 8.5 | **WIP.** 112 items ticked, 24 open. Code is mostly ahead of Beco's content now: most of what remains is blocked on Drive folders, files and confirmations, not on build work. Full detail in `docs/milestones/M4-TODO.md` and `docs/milestones/M4-HANDOVER.md` |
 | M5 | Operations dashboard | 6.5 | **TODO.** `apps/dashboard` is a bare scaffold: a layout, a page, a robots file, nothing else. Two requirements already captured ahead of scoping: stock tracking in half slab units, and per agent quote ownership against admin assignment, see D68 |
 | M6 | Launch | 3.5 | TODO. Depends on M4, M5, and the old URL list, still not received and the largest ranking risk in the project |
 | M7 | Studio, inside the dashboard | 3.5 | After launch, unbilled |
@@ -155,12 +155,12 @@ with no Drive folder, see D47 and D52).
 
 ## Decisions
 
-Recorded through D76. D1 to roughly D45 are architectural, made before the build started, and
+Recorded through D77. D1 to roughly D45 are architectural, made before the build started, and
 live in `files/BUILD-PLAN.md`, gitignored internal Brightex material. From D46 on, every decision
 discovered or made DURING the build is recorded in the committed `docs/DECISIONS.md`, which is
 the one to read for anything from 1 September onward: D50 is the VAT arithmetic every quote
 document depends on, D52 through D65 are the M4 storefront's taxonomy and motion decisions,
-D66 through D76 are from this week specifically, including two real bugs, D67 and the splash
+D66 through D77 are from this week specifically, including two real bugs, D67 and the splash
 freeze under D66's own entry, found and fixed with a regression test proving each one, and D73,
 the cutout reveal treatment new this session.
 

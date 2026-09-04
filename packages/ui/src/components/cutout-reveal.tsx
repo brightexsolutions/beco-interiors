@@ -45,18 +45,29 @@ export interface CutoutRevealProps {
  * reason: a box shadow draws a rectangle under the image regardless of what
  * is transparent in it, and a drop shadow follows the alpha channel.
  *
- * `beco-cutout-drift` is the only motion the object needs. `beco-depth-N`,
- * the grid's own parallax, exists to hide a photograph's scaled overscan
- * behind a clipping frame, a problem this component does not have, so it
- * gets its own, simpler class rather than borrowing one built for something
- * else. See the comment beside `beco-cutout-drift` in `motion.css`.
+ * `beco-cutout-drift` is the continuous motion the object needs while it
+ * sits still. `beco-depth-N`, the grid's own parallax, exists to hide a
+ * photograph's scaled overscan behind a clipping frame, a problem this
+ * component does not have, so it gets its own, simpler class rather than
+ * borrowing one built for something else. See the comment beside
+ * `beco-cutout-drift` in `motion.css`.
+ *
+ * Swapping photographs is its own, separate motion: a scale as well as a
+ * fade, an incoming object growing into place rather than a flat opacity
+ * crossfade, `scale and crop` from the site's own six effect vocabulary
+ * rather than a plainer effect invented just for this. It lives on a
+ * DIFFERENT element than the drift on purpose. A CSS animation and a CSS
+ * transition both reaching for `transform` on the very same element do not
+ * blend, the animation's own keyframes simply win outright, which would
+ * have made the scale invisible the instant it shared a div with
+ * `beco-cutout-drift`. Two nested layers avoid that outright rather than
+ * fighting it.
  *
  * A CLIENT component because cycling genuinely needs state, the same reason
- * `RotatingStatement` is one. Built on the exact crossfade `RotatingStatement`
- * uses, opacity carried by ONE source, the ternary, never also hardcoded into
- * the base class string: that duplication was a real bug there, D67, and
- * this component exists to be the safe version of the same shape from the
- * start.
+ * `RotatingStatement` is one. Opacity and scale both carried by ONE ternary,
+ * never also hardcoded into the base class string: that duplication was a
+ * real bug in `RotatingStatement`, D67, and this component exists to be the
+ * safe version of the same shape from the start.
  *
  * `images.length < 2` skips the interval entirely, so a single photograph
  * behaves exactly as a static one always did, and reduced motion freezes on
@@ -84,18 +95,31 @@ export function CutoutReveal({
         <div className={cn('flex justify-center', reverse ? 'lg:order-2' : undefined)}>
           <div className="relative aspect-square w-full max-w-[22rem]">
             {images.map((img, i) => (
+              // Two nested layers, not one, because the crossfade and the
+              // continuous drift both need `transform` and a CSS animation
+              // beats a CSS transition on the same property of the same
+              // element outright, which would have made the scale below
+              // invisible, silently overridden by beco-cutout-drift's own
+              // keyframes the instant both landed on one div. The crossfade
+              // owns this outer layer: opacity AND a scale, an incoming
+              // object growing into place rather than a flat fade, `scale
+              // and crop` from the site's own six effect vocabulary rather
+              // than a seventh invented for this one component. The inner
+              // layer owns the drift, filter and object untouched by any of
+              // it.
               <div
                 key={i}
                 aria-hidden={i !== index}
                 className={[
-                  'beco-cutout-drift absolute inset-0',
-                  'transition-opacity duration-[1400ms] ease-brand motion-reduce:transition-none',
-                  'motion-reduce:animate-none',
-                  i === index ? 'opacity-100' : 'opacity-0',
+                  'absolute inset-0 transition-[opacity,transform] duration-[1000ms] ease-brand',
+                  'motion-reduce:transition-none',
+                  i === index ? 'opacity-100 scale-100' : 'opacity-0 scale-90',
                 ].join(' ')}
                 style={{ filter: 'drop-shadow(0 28px 34px rgb(0 0 0 / 0.22))' }}
               >
-                {img}
+                <div className="beco-cutout-drift h-full w-full motion-reduce:animate-none">
+                  {img}
+                </div>
               </div>
             ))}
           </div>

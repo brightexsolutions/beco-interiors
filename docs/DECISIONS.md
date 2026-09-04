@@ -912,3 +912,37 @@ removed with the identical ImageMagick flood fill. Four finishes now cycle where
 already claims six are on the floor: a representative sample of what exists, not a claim that
 these four are the only four, which the stat beside them already states honestly as a count
 rather than a list.
+
+## D77, 4 September 2026: the crossfade got a scale, and a real cause found for the shared link
+
+**The crossfade.** Reported directly as too basic. A flat opacity fade was true to the word
+"crossfade" but not to the standing rule that this site should not read as default effects: an
+incoming photograph now grows into place, `scale-90` to `scale-100`, rather than only fading,
+`scale and crop` from the site's own six effect vocabulary rather than a plainer effect invented
+for this one component. It lives on ITS OWN layer, wrapping the drift rather than sharing a div
+with it: `beco-cutout-drift` is a CSS animation, the scale is a CSS transition, and a transition
+loses outright to an animation reaching for the same `transform` on the same element, which would
+have made the new scale invisible, silently overridden the instant the two shared a div. Two
+nested layers avoid that outright rather than discovering it.
+
+**The shared link.** Reported as not operating the same as localhost: the nav stayed transparent
+past the point it should have turned solid, the About menu never opened on hover, and motion in
+general looked frozen. All three are exactly what happens when React never hydrates: the SSR'd
+HTML paints, so the page LOOKS right, but no `useEffect` ever ran, so no scroll listener attached,
+no hover state could change, no `IntersectionObserver` ever fired. Confirmed directly: a JS chunk
+fetched through the tunnel with the browser's real `Origin` and `Referer` headers came back `403
+Unauthorized`, the exact request a real page load makes and the exact one `curl` without those
+headers does not, which is why every earlier check of the tunnel from this session looked fine.
+
+The cause is Next 16's own dev server cross-origin protection, `allowedDevOrigins`, on by default
+and trusting only `localhost`. It has nothing to do with any component built this session,
+including the splash screen's Strict Mode race fixed earlier under D66, which explained the
+identical symptom the first time it was reported and was the real bug that day. This time the
+components were never at fault: nothing client side can run without hydration regardless of what
+it contains.
+
+`next.config.ts` now sets `allowedDevOrigins: ['*.trycloudflare.com']`, dev only, so it is never
+read once `next build` runs a real production server that has no such restriction to relax.
+Required restarting the long running dev server: Next does not hot reload its own config file,
+so the fix could not take effect on the process that had been running since this session opened.
+Confirmed by repeating the exact failing request after the restart: `200`, not `403`.

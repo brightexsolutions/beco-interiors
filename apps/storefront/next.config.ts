@@ -38,6 +38,15 @@ const csp = [
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // Next blocks cross-origin requests to dev-only assets by default, trusting
+  // only localhost. That is what silently broke the shared cloudflared link:
+  // the page's own HTML loaded fine, but the browser's real Origin header on
+  // every JS chunk and HMR request did not match localhost, so React never
+  // hydrated. Nothing ran: no scroll listener, no hover state, no observer,
+  // which is why the nav stayed transparent and the About menu never opened,
+  // not a bug in either of those. Dev only, and scoped to the one origin this
+  // is actually shared through rather than a broad allowance.
+  ...(isDev ? { allowedDevOrigins: ['*.trycloudflare.com'] } : {}),
   images: {
     // Custom loader points at R2, so Vercel image optimization is never invoked
     // and its quota is never spent. See D16.
