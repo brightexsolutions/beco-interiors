@@ -87,18 +87,26 @@ Last updated: 31 August 2026, evening.
 
 ## Waiting on Beco
 
+**This table drifted out of date and was resynced 3 September against the live
+`import_issues` table rather than memory.** `docs/milestones/M4-HANDOVER.md` section 3 is the
+fuller, maintained version with reasons and detail; this is the short form.
+
+Resolved since 31 August, removed from the table below: product prices and descriptions
+(Irene's sheet landed 1 Sept), "10+ years" vs "new entrant" (the About page was rewritten to
+lead on stock rather than history), does Lighting stay a category (yes, confirmed top level
+with no Drive folder, see D47 and D52).
+
 | Item | Asked | Blocks |
 |---|---|---|
-| Product prices, sizes, finishes, descriptions | Sheet is in the Drive folder, Irene filling it | M4 being a catalogue rather than a gallery |
-| `SLAB ON STAND` for Moire White, Pure White, Sandstone Ivory | 31 Aug | M2 completeness |
-| Rename `DSC02078` and the Sandstone Beige supplier files | 31 Aug | M2 |
-| Images for the 15 empty categories | Irene, uploading | M4 breadth |
-| Old beco.co.ke URL list | Not yet | M6 redirect map, **the largest ranking risk** |
+| Old beco.co.ke URL list | Not yet | M6 redirect map, **the largest ranking risk in the project** |
+| Six categories still stuck at zero products, photos loose with no product subfolder: Door Locks, Furniture Legs, Kitchen Accessories, Hinges, Floating Shelf Accessories, Office Accessories | Not yet | M4 breadth |
+| `DELFONE 12MM` and `HEIXIN 12MM` need splitting into their real products, 9 and 7 respectively | Not yet | M4 catalogue accuracy, and it is why Statuario and Taj Mahal read as unphotographed |
+| ~130 handle photographs named with supplier codes rather than shot type | Not yet | M4 catalogue accuracy across the Handles range |
+| `FLUTED WALL PANELS`, a Drive folder matching nothing in the taxonomy | Not yet | Confirm before it imports as an ungrouped top level category |
 | WPC or SPC, which does Beco actually sell | Not yet | M4 category names and URLs |
-| "10+ years" vs the guideline's "new entrant" | Not yet | M4 About page |
-| Is the 2 hour quote promise real | Not yet | M5 dashboard, the site states it |
-| Does Lighting stay a category | Not yet | M4 navigation |
-| Brand guideline pages 20 to 21, images | Not yet | M3 |
+| Is the 2 hour quote promise real | Not yet | M5 dashboard, the site currently states no promise |
+| Handles price list and prices PDF, columns unconfirmed | Not yet | Cannot load without guessing a price |
+| Brand guideline pages 20 to 21, images | Not yet | Low priority, M3 already shipped without them |
 
 ---
 

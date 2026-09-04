@@ -38,28 +38,50 @@ example", turned out not to be a layout problem at all. See section 3.
 ## 3. Blocked on Beco, not on code
 
 None of these are build tasks. They are the difference between a finished site and a nearly
-finished one.
+finished one. Pulled fresh from `import_issues` on the most recent run rather than from memory,
+3 September, because the previous version of this list undercounted the loose folder problem by
+five categories.
 
-- [ ] **`DELFONE 12MM` needs splitting into seven folders.** Delfone is a SUPPLIER, not a
-      stone. The folder holds Bosnia Grey, Bulgaria Black, Calacatta Macchia, Martha Brown,
-      Statuario, Taj Mahal and Verde Lepanto as loose files named after the stone, so the
-      importer made one product out of seven: nineteen photographs of black, white, green and
-      brown stone in one gallery, every one captioned with the wrong material.
-      **This is also why Statuario and Taj Mahal read as priced but unphotographed.** Their
-      photography has been sitting in this folder the whole time. The pipeline now reports it
-      on every run and refuses to publish a flagged folder, and migration 22 unpublished the
-      existing row, so nothing mislabelled is live. `docs/CONTENT-CONVENTIONS.md` section 1 now
-      shows Beco exactly what to do. See D53
-- [ ] **Office accessories cannot import.** All 27 photographs sit LOOSE in the category folder
-      with no product subfolders, so there is nothing to name a product after. Same class of
-      problem as Delfone, approached from the other direction
+- [ ] **The old beco.co.ke URL list, for the 301 redirect map.** Still the largest ranking risk
+      in the project, and still not received
+- [ ] **Six categories are stuck at zero products**, photographs sitting loose with no product
+      subfolder underneath them: Door Locks, Furniture Legs, Kitchen Accessories, Hinges,
+      Floating Shelf Accessories, and Office Accessories (27 photos). Each needs one folder per
+      product, named exactly as it should appear on the site
+- [ ] **`DELFONE 12MM` needs splitting into its real products.** Delfone is a SUPPLIER, not a
+      stone. Nine products are named inside it as loose files: Bosnia Grey, Bulgaria Black,
+      Calacatta Macchia, Martha Brown, Statuario, Taj Mahal, Verde Lepanto, Verde and Statuario
+      again under a misspelling. **This is also why Statuario and Taj Mahal read as priced but
+      unphotographed:** their photography has been sitting in this folder the whole time. The
+      pipeline reports it on every run and refuses to publish a flagged folder, and migration 22
+      unpublished the existing row, so nothing mislabelled is live. `docs/CONTENT-CONVENTIONS.md`
+      section 1 shows Beco exactly what to do. See D53
+- [ ] **`HEIXIN 12MM` has the same problem, nested one level too deep.** Seven products sit
+      inside it as their own subfolders, correctly named, just one level below where the
+      importer expects a product folder: Prada Green, Ink White, Hanting Jade, Apricot, Hermes
+      Gold, Black Sandstone, Anakin. These just need moving up one level, not renaming
+- [ ] **About 130 handle photographs are named with supplier codes, not shot type**, for
+      example `537 160 BLACK` or `6832 64 BLACK`. Affects nearly the whole Handles range: Black
+      Handles (36), Knobs (35), Gold Handles (33), Grey Handles (19), White and Leather Handles.
+      Each needs renaming to `SLAB`, `SLAB ON STAND`, or `APP 1`, `APP 2`
+- [ ] **A Drive folder called `FLUTED WALL PANELS` does not match anything in the taxonomy.**
+      Worth confirming with Beco whether it is real and distinct from Acoustic, Bamboo or SPC
+      panels before it is organised, because once it holds a product it will import as a new
+      top level category with no group assigned. That needs a follow up migration on our side
+      once Beco confirms what it is
 - [ ] **The handles price list is a supplier cost sheet, not a retail list.**
       `BECO HANDLES 2 PRICELIST-1 (3).xlsx` has codes like `A7355-96（H52）`, Chinese colour
       names, pack quantities, and a second sheet of unit costs that look like USD. Which column
       is the KES retail price is not stated, and the codes do not match the photographed folder
       names. **Do not load it without Beco confirming**, or the site ships guessed prices
-- [ ] `BECO Product Prices-1 (1).pdf` also unprocessed
+- [ ] `BECO Product Prices-1 (1).pdf` also unprocessed, same reason
 - [ ] Cyprus Grey has a description but no product row and no photography
+- [ ] **WPC or SPC.** The brand guideline says "WPC Wall Panels" throughout; Drive only has an
+      SPC folder. Wood Plastic Composite and Stone Plastic Composite are different materials,
+      so this is a factual product error either way it resolves
+- [ ] **Is the "2 hour quote" claim real?** The prototype stated it in five places and stated
+      24 hours in a sixth. The site currently states no response time promise at all, on
+      purpose, until this is confirmed
 - [ ] **No product carries a SKU**, 0 of 31. The product page's WhatsApp message is built to
       include one and that branch has therefore never rendered
 - [ ] **Client names for the projects page.** Brown mentioned Art Caffe and Hass Consult from
@@ -71,9 +93,10 @@ finished one.
       `users_only_sales_are_public` constraint
 - [ ] Social handles. `SOCIAL` in `apps/storefront/src/lib/site.ts` has five platforms drawn
       and all five URLs null, so they render as unclickable placeholders. One line each
-- [ ] The old beco.co.ke URL list, for the 301 redirect map. **The largest ranking risk in the
-      project** and still not received
-- [ ] Confirm the header may use the logo MARK alone with INTERIORS set beside it
+- [ ] Confirm the header may use the logo mark alone with INTERIORS set beside it
+- [ ] Brand guideline PDF pages 20 and 21 are device mockup images with no extractable text.
+      Low priority: the design system already shipped without them, so this is a confirmation
+      that nothing was missed, not a blocker
 
 ## 4. Technical debt and known limits
 
