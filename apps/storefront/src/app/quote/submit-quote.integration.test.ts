@@ -20,6 +20,7 @@ const service = () =>
 const created: string[] = [];
 let productSlug: string;
 let productName: string;
+let slabSlug: string;
 
 beforeAll(async () => {
   expect(process.env.NEXT_PUBLIC_SUPABASE_URL, 'local Supabase must be running').toContain(
@@ -35,6 +36,18 @@ beforeAll(async () => {
     .single();
   productSlug = data!.slug;
   productName = data!.name;
+
+  // A product actually sold "per slab", for the fractional quantity tests.
+  // Picked rather than assumed, so this does not silently stop covering
+  // anything if the catalogue changes shape.
+  const { data: slab } = await service()
+    .from('products')
+    .select('slug')
+    .eq('unit', 'per slab')
+    .eq('is_published', true)
+    .limit(1)
+    .single();
+  slabSlug = slab!.slug;
 });
 
 afterAll(async () => {
@@ -191,5 +204,40 @@ describe('submitQuote', () => {
     created.push(data!.id);
     expect(data!.wants_installation).toBe(false);
     expect(data!.wants_samples).toBe(false);
+  });
+});
+
+describe('fractional slab quantities, end to end through the real form path', () => {
+  // Migration 23 and its pgTAP tests cover submit_quote directly. This proves
+  // the FULL path a browser actually uses still reaches that behaviour:
+  // webQuoteSubmissionSchema must accept a half slab rather than reject it
+  // before the database is ever asked.
+  it('carries a half slab quantity through validation and into the row', async () => {
+    const result = await submitQuote(
+      validSubmission({ items: [{ slug: slabSlug, quantity: 1.5 }] }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const sb = service();
+    const { data: quote } = await sb
+      .from('quotes')
+      .select('id')
+      .eq('reference_number', result.reference)
+      .single();
+    created.push(quote!.id);
+
+    const { data: items } = await sb
+      .from('quote_items')
+      .select('quantity')
+      .eq('quote_id', quote!.id);
+    expect(Number(items![0]!.quantity)).toBe(1.5);
+  });
+
+  it('rejects an arbitrary fraction before it ever reaches the database', async () => {
+    const result = await submitQuote(
+      validSubmission({ items: [{ slug: slabSlug, quantity: 1.37 }] }),
+    );
+    expect(result.ok).toBe(false);
   });
 });

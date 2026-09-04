@@ -319,7 +319,8 @@
          paint so it cannot affect the LCP measurement. Stone is the only
          thing on the page with any colour in it, so it earns being alive
          rather than perfectly still. --- */
-  .beco-ambient > img {
+  .beco-ambient > img,
+  .beco-ambient > video {
     animation: beco-ambient-drift 28s ease-in-out 1600ms infinite alternate;
   }
 

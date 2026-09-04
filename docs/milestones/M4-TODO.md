@@ -363,6 +363,28 @@ These were discovered while building and are recorded rather than remembered.
       whose whole job is proving the range looks considered once installed. Now frame, wipe,
       plate, same physical language as the gallery, depth parallax kept intact
 
+## Found on 4 September, not planned
+
+- [x] **A slab can now be ordered in half units.** `quote_items.quantity` was always numeric
+      and always correct; only `submit_quote`'s floor treated every line the same regardless of
+      what it was. The floor is now read from `unit`: half a slab minimum for anything sold
+      "per slab", a whole unit for everything else, enforced in the database because it is a
+      public RPC surface and cannot trust the form alone. Both storefront steppers, and the
+      public schema, updated to match. **9 new tests plus 7 pgTAP tests.** See D68
+- [x] **The rotating statement's photograph was frozen, reported directly.** A real bug: the
+      image layer's base class string hardcoded `opacity-70` unconditionally, so an inactive
+      layer carried both `opacity-70` and `opacity-0` at once, and Tailwind's stylesheet order,
+      not the index, decided which one every layer showed. The two tests written for this at
+      the time both still passed, because they checked a class was PRESENT rather than that the
+      conflicting one was ABSENT. Fixed, and the tests rewritten to assert both, verified by
+      reverting the fix and watching them fail first. See D67
+- [x] **Completed interiors, on the home page, given the assembled treatment**, matching the
+      gallery: frame drawn, photograph wipes up, plate rises after, replacing a plain fade
+- [x] **The gallery's ambient video section given real cinematic treatment on the same real
+      footage**, not new footage: a slow continuous drift, a vignette at both edges, an
+      assembled entrance on the caption. The video's own arrival is never delayed, since it is
+      very likely the LCP element on the page that carries it
+
 ## Found on 3 September, not planned
 
 - [x] **`pnpm db:reset` was broken, and the database was not reproducible.** Two faults, both

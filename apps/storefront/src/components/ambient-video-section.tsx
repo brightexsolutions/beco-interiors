@@ -30,6 +30,21 @@ import { SHOWROOM_FILM } from '@/lib/site';
  * leaves. No `controls`, because this section is ambient rather than a piece
  * of content to operate, and reduced motion gets the poster frame, static,
  * with nothing autoplaying at all.
+ *
+ * CINEMATIC TREATMENT, on the same real footage rather than new footage:
+ * the frame carries a slow continuous drift, `.beco-ambient`, the same
+ * class the hero's lead card uses, so the picture is gently alive rather
+ * than a still photograph that happens to loop. A vignette sits at both
+ * edges, not only the bottom the caption reads against, so the frame reads
+ * as graded rather than as a raw clip dropped into a box.
+ *
+ * The VIDEO ITSELF is never delayed on arrival, the same rule that keeps a
+ * hero photograph off an entrance animation: this section opens the page and
+ * the poster is very likely the LCP element here, so animating its entrance
+ * would be animating the thing the budget is measuring. The drift only
+ * starts 1.6s after mount, well after first paint, and only the CAPTION
+ * beneath it, which is not the LCP candidate, gets a scroll triggered
+ * entrance.
  */
 export function AmbientVideoSection({
   eyebrow, title, cta,
@@ -62,7 +77,11 @@ export function AmbientVideoSection({
   return (
     <section
       aria-label={title}
-      className="relative flex min-h-[85vh] items-center justify-center overflow-hidden bg-charcoal py-16"
+      // beco-ambient here, not on a wrapper: the video is a direct child,
+      // which is exactly what the selector needs, and the section's own
+      // overflow-hidden is what clips the drift's scale without an extra
+      // element existing only to crop it.
+      className="beco-ambient relative flex min-h-[85vh] items-center justify-center overflow-hidden bg-charcoal py-16"
     >
       <video
         ref={video}
@@ -81,24 +100,36 @@ export function AmbientVideoSection({
         <source src={SHOWROOM_FILM.src} type={SHOWROOM_FILM.type} />
       </video>
 
+      {/* The top vignette. Purely tonal: nothing reads against it, it just
+          keeps the frame from looking like a raw clip pasted into a box. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-charcoal/70 to-transparent"
+      />
+
       {/* A caption, not a wall of copy: the film is the content here, and the
           type exists only to say where it was shot and offer a way further
-          in, set low so it never competes with the picture for attention. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/90 via-charcoal/20 to-transparent px-6 pb-10 pt-24 text-center">
-        <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
-          {eyebrow}
-        </p>
-        <h2 className="mt-3 font-display text-3xl leading-tight text-high-vis-white sm:text-4xl">
-          {title}
-        </h2>
-        {cta ? (
-          <a
-            href={cta.href}
-            className="pointer-events-auto mt-6 inline-block font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-4 hover:underline"
-          >
-            {cta.label}
-          </a>
-        ) : null}
+          in, set low so it never competes with the picture for attention.
+          beco-clip/beco-wipe, not the video: the video is very likely the LCP
+          element on this page, so ITS entrance is never delayed, only the
+          type over it assembles on arrival. */}
+      <div className="beco-clip pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/90 via-charcoal/20 to-transparent px-6 pb-10 pt-24 text-center">
+        <div className="beco-wipe">
+          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
+            {eyebrow}
+          </p>
+          <h2 className="mt-3 font-display text-3xl leading-tight text-high-vis-white sm:text-4xl">
+            {title}
+          </h2>
+          {cta ? (
+            <a
+              href={cta.href}
+              className="pointer-events-auto mt-6 inline-block font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-4 hover:underline"
+            >
+              {cta.label}
+            </a>
+          ) : null}
+        </div>
       </div>
     </section>
   );

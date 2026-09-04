@@ -60,7 +60,18 @@ export const webQuoteSubmissionSchema = quoteSubmissionSchema
       .array(
         z.object({
           slug: z.string().trim().min(1).max(120),
-          quantity: z.number().int().positive().max(10000),
+          // A slab is cut to order, so half a slab is a real quantity. A
+          // handle is not. Which rule applies is a property of the PRODUCT,
+          // not of the request, so it cannot be decided here: this only
+          // proves the shape is a sane number, and `submit_quote` is the one
+          // place that actually knows a product's `unit` and enforces
+          // whole-versus-half accordingly. See migration 23.
+          //
+          // `.multipleOf(0.5)` still catches the obviously wrong case, an
+          // arbitrary fraction like 1.37, before it ever reaches the server
+          // action, which is a UX improvement, not the enforcement: the
+          // database is what a crafted request cannot get past.
+          quantity: z.number().positive().max(10000).multipleOf(0.5),
         }),
       )
       .min(1, 'Add at least one product')

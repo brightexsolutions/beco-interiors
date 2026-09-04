@@ -179,10 +179,13 @@ export function QuoteBuilder() {
                   </button>
                 </div>
                 <div className="flex items-center gap-3">
+                  {/* Half slab steps for anything sold "per slab", since a
+                      slab is cut to order. Whole steps otherwise: "2.5
+                      handles" is not a thing Beco can price. */}
                   <div className="flex items-stretch rounded-[2px] border border-neutral-300">
                     <button
                       type="button"
-                      onClick={() => setQuantity(line.slug, line.quantity - 1)}
+                      onClick={() => setQuantity(line.slug, line.quantity - (line.unit === 'per slab' ? 0.5 : 1))}
                       aria-label={`Decrease quantity of ${line.name}`}
                       className="flex h-11 w-11 items-center justify-center text-xl text-charcoal"
                     >
@@ -193,7 +196,7 @@ export function QuoteBuilder() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => setQuantity(line.slug, line.quantity + 1)}
+                      onClick={() => setQuantity(line.slug, line.quantity + (line.unit === 'per slab' ? 0.5 : 1))}
                       aria-label={`Increase quantity of ${line.name}`}
                       className="flex h-11 w-11 items-center justify-center text-xl text-charcoal"
                     >

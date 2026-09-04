@@ -620,3 +620,72 @@ it arriving or leaving. CLS is unaffected either way.
 *Reverses if:* Lighthouse, once it finally runs, shows any measurable cost from this. The
 architecture is built to make that impossible, but D46 and D58 are both reminders that a
 device number should confirm a decision like this, not just the reasoning behind it.
+
+## D67, 4 September 2026: two conflicting opacity classes froze the rotating statement's photograph
+
+Reported directly: the word cycled correctly, the photograph behind it did not. Real bug, found
+in the code that shipped it. `RotatingStatement`'s image layers built their className as a base
+string that hardcoded `opacity-70` unconditionally, then appended a ternary that added EITHER
+`opacity-70` OR `opacity-0` depending on which layer was active. An inactive layer therefore
+carried both `opacity-70` and `opacity-0` in its class list at once.
+
+Tailwind resolves two utilities that set the same CSS property by their order in the COMPILED
+STYLESHEET, not by where they sit in a given element's class string. So which one won was a tie
+decided once, globally, for every layer, regardless of which photograph the index actually
+pointed at, and the loser never changed with it. The word cycled correctly because its own
+className construction had no such duplicate: only the ternary set its opacity, nothing else
+did.
+
+The two tests written for this at the time both still passed with the bug present, because both
+used `toContain`, a substring check, on only ONE class per assertion. `toContain('opacity-70')`
+on the active layer does not notice that the SAME element also contains `opacity-0`. Rewritten
+to assert the negative as well as the positive, `toHaveClass` paired with `not.toHaveClass` on
+both values, which is what actually proves a layer has exactly one opacity rather than two
+competing for it. Confirmed by reverting the fix and watching the strengthened test fail before
+restoring it.
+
+The lesson generalises past this one component: a conditional class belongs entirely inside the
+condition, never partly in a shared base string, whenever another branch of the same condition
+sets the same property. A test asserting a class is present is a weaker claim than a test
+asserting the conflicting one is absent, and only the second actually catches this shape of bug.
+
+## D68, 4 September 2026: a slab can be ordered in halves, a handle cannot
+
+Asked for directly: a slab is cut to order, and a client may want 1.5 of one. Confirmed by
+Beco's own steer that a slab is sold WHOLE by default, and the half is the exception a specific
+quote makes, not the norm.
+
+The database was already ready for this. `quote_items.quantity` has been `numeric(12,2)` since
+migration 5, and `line_total` was already `quantity * unit_price`, generated and correct for any
+fraction. The only place actually enforcing whole numbers was `submit_quote`'s floor,
+`greatest(1, ...)`, applied identically to every line regardless of what it was.
+
+The floor is now a property of the product, read from `unit`, which the schema already carries
+and the storefront already displays. A `per slab` line floors at half a slab and rounds to the
+nearest half. Everything else keeps the exact previous behaviour: floors at one whole unit,
+rounds to the nearest whole number, because a fractional handle or hinge means nothing and
+letting one through would be a quote a salesperson cannot actually fulfil.
+
+Enforced twice, deliberately. `webQuoteSubmissionSchema` gates the public form with
+`.multipleOf(0.5)`, which is a UX improvement: a customer typing 1.37 is told so immediately
+rather than finding out later. `submit_quote` enforces the real rule, whole-versus-half per
+PRODUCT, because that distinction cannot be made from the request alone and because the
+function is itself a public RPC surface a crafted call could reach directly, per rule 2: a
+client check is for UX, the server is the authority.
+
+The two storefront steppers, the product page and the quote list, now step by half a slab for a
+`per slab` line and by one for everything else, reading the same `unit` field. A stepper that
+still moved by whole numbers while the database silently rounded whatever arrived would have
+been a UI lying about what a click does, which rule 3 exists to catch.
+
+*Reverses if:* Beco specifies finer cuts than half a slab, at which point the increment moves
+from a hardcoded 0.5 to a value carried on the product row, the same way `unit` already is.
+
+**Recorded for M5, not built now, per Beco's own steer:** stock tracking, so the dashboard shows
+what is left of a range as sales are made, and each sales agent's own view of quotes they are
+preparing versus quotes an admin has assigned them, with the admin able to see both. Both are
+staff and inventory management, which is M5 scope, and both depend on the order model that has
+no UI yet. Kept here so the requirement is not re-derived from scratch when M5 starts, and
+because it changes the M5 stock model directly: a slab's stock must be tracked in the same half
+unit granularity its quotes are now written in, or a sale of 1.5 slabs cannot be deducted
+correctly from what is left.

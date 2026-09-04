@@ -62,8 +62,17 @@ export function RotatingStatement({ words, images, intervalMs = 2600 }: {
               priority={i === 0}
               sizes="100vw"
               {...blurProps(img)}
+              // Opacity has exactly ONE source here, the ternary. It was
+              // previously also hardcoded into the base string as
+              // `opacity-70`, so an inactive layer carried BOTH `opacity-70`
+              // and `opacity-0` at once. Tailwind resolves two utilities for
+              // the same property by their order in the compiled stylesheet,
+              // not by where they sit in this string, so every layer froze
+              // at whichever value happened to win that tie, and the
+              // photograph never visibly changed even though the index was
+              // updating correctly underneath it.
               className={[
-                'object-cover opacity-70 transition-opacity duration-[1400ms] ease-brand',
+                'object-cover transition-opacity duration-[1400ms] ease-brand',
                 'motion-reduce:transition-none',
                 i === index ? 'opacity-70' : 'opacity-0',
               ].join(' ')}

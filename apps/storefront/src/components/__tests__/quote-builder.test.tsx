@@ -110,3 +110,28 @@ describe('QuoteBuilder, on success', () => {
     expect(await screen.findByText(/BQ-2026-0001/)).toBeDefined();
   });
 });
+
+describe('QuoteBuilder, the per-line quantity stepper', () => {
+  const handleLine = {
+    slug: 'gold-bar-handle', name: 'Gold Bar Handle', unit: 'per piece',
+    image: '/img/h.webp', quantity: 2,
+  };
+
+  it('steps a slab line in halves, because it is cut to order', async () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([line]));
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+
+    await user.click(await screen.findByRole('button', { name: `Increase quantity of ${line.name}` }));
+    expect(readList()[0]?.quantity).toBe(2.5);
+  });
+
+  it('steps a discrete line by one whole unit, not by half', async () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([handleLine]));
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+
+    await user.click(await screen.findByRole('button', { name: `Increase quantity of ${handleLine.name}` }));
+    expect(readList()[0]?.quantity).toBe(3);
+  });
+});

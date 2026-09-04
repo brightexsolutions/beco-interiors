@@ -74,8 +74,15 @@ describe('RotatingStatement, with images', () => {
   it('shows the first photograph at full opacity before any timer has run', () => {
     const { container } = render(<RotatingStatement words={WORDS} images={IMAGES} />);
     const layers = container.querySelectorAll('img');
-    expect(layers[0]?.className).toContain('opacity-70');
-    expect(layers[1]?.className).toContain('opacity-0');
+    // toHaveClass, not toContain: a real bug here shipped an inactive layer
+    // carrying BOTH opacity-70 AND opacity-0 at once, from a hardcoded base
+    // class that a substring check on the active layer alone could not have
+    // caught. Asserting the absence of the other value is what proves the
+    // layer has exactly one opacity, not two competing for it.
+    expect(layers[0]).toHaveClass('opacity-70');
+    expect(layers[0]).not.toHaveClass('opacity-0');
+    expect(layers[1]).toHaveClass('opacity-0');
+    expect(layers[1]).not.toHaveClass('opacity-70');
   });
 
   it('crossfades to the next photograph on the same interval as the word', () => {
@@ -84,8 +91,10 @@ describe('RotatingStatement, with images', () => {
     );
     act(() => { vi.advanceTimersByTime(1000); });
     const layers = container.querySelectorAll('img');
-    expect(layers[0]?.className).toContain('opacity-0');
-    expect(layers[1]?.className).toContain('opacity-70');
+    expect(layers[0]).toHaveClass('opacity-0');
+    expect(layers[0]).not.toHaveClass('opacity-70');
+    expect(layers[1]).toHaveClass('opacity-70');
+    expect(layers[1]).not.toHaveClass('opacity-0');
     // And the word changed at the same moment, so the two never drift apart.
     expect(word('KITCHENS')).toHaveClass('opacity-100');
   });
