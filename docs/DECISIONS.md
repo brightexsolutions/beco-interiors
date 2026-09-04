@@ -880,3 +880,35 @@ transcoded into the repo, downloading and previewing raw phone video through the
 session has is impractically large for a chat turn, tens of megabytes each, so that would need
 either a specific file named directly or a clip dropped locally to transcode from, the same way
 `SHOWROOM_FILM` and `GALLERY_FILM` both already were.
+
+## D76, 4 September 2026: `CutoutReveal` crossfades through more than one photograph
+
+Asked for directly, pointed at the home page's new hardware section: one still handle was a
+thin argument for "six finishes are already on the floor" when the section could show more than
+one of them taking turns.
+
+`image: ReactNode` became `images: ReactNode[]`. Built on the exact crossfade
+`RotatingStatement` already uses, and for the same reason that one is a client component: opacity
+carried by ONE source, the ternary, never also hardcoded into the base class string, which is the
+bug that shipped there, D67. `images.length < 2` skips the interval entirely, so the Handles range
+page's single black handle, which has no reason to cycle against anything, behaves exactly as a
+static photograph always did, and reduced motion freezes on whichever image is first everywhere.
+
+Crossfading more than one photograph in the same box means the box has to hold its own size
+rather than take it from whichever image happens to be on screen, or switching would jump the
+layout. The wrapper is `aspect-square` now, and every image a caller passes must be `fill` with
+`object-contain`, never cropped: the objects are different real shapes, a handle far wider than
+tall and a knob close to square, and cropping any of them to fill a frame would cut a real
+product off rather than show it whole. The previous intrinsic width and height contract, correct
+for a single photograph setting its own box, could not extend to more than one without either
+constraint. The decorative ground line under the object, a hairline reprising the eyebrow's own
+rule, was dropped in the same change: it read as attached to the object in a fixed-height photo,
+and a set of differently proportioned objects letterboxed inside one square would each sit a
+different visual distance above it, which looked like a mistake rather than a rest line.
+
+**Two more real cutouts, not two more of the same.** Grey and white handles, both flagged
+`uniformBackground: true` by the importer, the same signal that picked the first two, background
+removed with the identical ImageMagick flood fill. Four finishes now cycle where the section
+already claims six are on the floor: a representative sample of what exists, not a claim that
+these four are the only four, which the stat beside them already states honestly as a count
+rather than a list.

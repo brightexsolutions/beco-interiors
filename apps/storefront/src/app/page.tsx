@@ -252,21 +252,34 @@ export default async function HomePage() {
               in a frame like everywhere else on the page. Straight after the
               dark showroom section on purpose, so the two sit in the
               alternation of tone the rest of the page already uses instead
-              of two light sections running together. See D73. --- */}
+              of two light sections running together. See D73.
+
+              Cycles through four real finishes, added 4 September on a
+              second request, rather than showing gold alone: the copy
+              already claims six finishes, and one static photograph was
+              a thinner argument for that than four real ones taking
+              turns. `fill`, not intrinsic sizing, because crossfading
+              needs every layer in the same box. See D76. --- */}
       <CutoutReveal
         eyebrow="Hardware"
         title="Down to the handle."
         body="Cabinetry reads differently once the hardware is chosen. Six finishes are already on the floor at Urban Square, ready to match against a worktop or a run of doors."
-        image={
+        images={[
+          { src: '/cutouts/gold-handle.webp', alt: 'A gold cabinet handle' },
+          { src: '/cutouts/black-handle.webp', alt: 'A matte black cabinet handle' },
+          { src: '/cutouts/grey-handle.webp', alt: 'A brushed grey cabinet handle' },
+          { src: '/cutouts/white-handle.webp', alt: 'A white cabinet handle' },
+        ].map((cutout, i) => (
           <Image
-            src="/cutouts/gold-handle.webp"
-            alt="A gold cabinet handle"
-            width={1400}
-            height={1106}
+            key={cutout.src}
+            src={cutout.src}
+            alt={cutout.alt}
+            fill
+            priority={i === 0}
             sizes="(max-width: 1024px) 70vw, 22rem"
-            className="h-auto w-full"
+            className="object-contain"
           />
-        }
+        ))}
         stats={[
           { value: 6, label: 'Finishes in stock' },
           { value: 4, label: 'Hardware ranges' },

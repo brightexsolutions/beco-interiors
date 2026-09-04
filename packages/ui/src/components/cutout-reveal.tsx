@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import { useEffect, useState, type ReactNode } from 'react';
 import { CountUp } from './count-up';
 import { Reveal } from './reveal';
 import { cn } from '../lib/cn';
@@ -14,22 +16,25 @@ export interface CutoutRevealProps {
   title: string;
   body: string;
   /**
-   * A photograph with its background already removed, alpha edges and all.
-   * Not `fill`: the object sets its own aspect ratio and the drift below
-   * moves it inside that box, so a caller passes ordinary intrinsic width
-   * and height, the same as any other image outside a cropped frame.
+   * One or more photographs, each with its background already removed. Every
+   * `next/image` here must be `fill`, not intrinsic width and height: with
+   * more than one image the objects crossfade in the SAME box, so the box
+   * has to hold its own size rather than take it from whichever image is on
+   * screen, or switching photographs would jump the layout.
    */
-  image: ReactNode;
+  images: ReactNode[];
   /** Two or three real facts. Never a number invented to fill the space. */
   stats: CutoutRevealStat[];
   cta?: { label: string; href: string } | undefined;
   /** Puts the object on the right and the copy on the left. */
   reverse?: boolean | undefined;
+  intervalMs?: number | undefined;
 }
 
 /**
  * A cutout object beside copy that assembles as the section arrives, the
- * object itself drifting slowly for as long as the section is in view.
+ * object itself drifting slowly for as long as it stays in view, and
+ * crossfading to the next real photograph when more than one is given.
  *
  * The photograph carries no frame and no background plate, unlike every
  * other image in the design system. `ProductCard`, `HoverGallery` and the
@@ -46,30 +51,53 @@ export interface CutoutRevealProps {
  * gets its own, simpler class rather than borrowing one built for something
  * else. See the comment beside `beco-cutout-drift` in `motion.css`.
  *
+ * A CLIENT component because cycling genuinely needs state, the same reason
+ * `RotatingStatement` is one. Built on the exact crossfade `RotatingStatement`
+ * uses, opacity carried by ONE source, the ternary, never also hardcoded into
+ * the base class string: that duplication was a real bug there, D67, and
+ * this component exists to be the safe version of the same shape from the
+ * start.
+ *
+ * `images.length < 2` skips the interval entirely, so a single photograph
+ * behaves exactly as a static one always did, and reduced motion freezes on
+ * whichever is first.
+ *
  * The copy and its stats use `Reveal`, the same entrance as everywhere else
  * on the site, staggered by 90ms so the eyebrow, the heading, the body and
  * each stat arrive as a sequence rather than as one block.
  */
-export function CutoutReveal({ eyebrow, title, body, image, stats, cta, reverse }: CutoutRevealProps) {
+export function CutoutReveal({
+  eyebrow, title, body, images, stats, cta, reverse, intervalMs = 3200,
+}: CutoutRevealProps) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (images.length < 2) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % images.length), intervalMs);
+    return () => clearInterval(id);
+  }, [images.length, intervalMs]);
+
   return (
     <section className="bg-high-vis-white text-charcoal">
       <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-6 py-16 sm:py-20 lg:grid-cols-2 lg:gap-20 lg:py-28">
         <div className={cn('flex justify-center', reverse ? 'lg:order-2' : undefined)}>
-          <div className="w-full max-w-[22rem]">
-            <div
-              aria-hidden={false}
-              className="beco-cutout-drift motion-reduce:animate-none"
-              style={{ filter: 'drop-shadow(0 28px 34px rgb(0 0 0 / 0.22))' }}
-            >
-              {image}
-            </div>
-            {/* The object's own ground line, not a shadow ellipse: a hairline
-                is the site's own motif for "this is where something ends",
-                already used under every eyebrow, so the object reads as
-                resting on the page rather than floating with nothing under
-                it, without drawing a new shape the rest of the site does not
-                use. */}
-            <span aria-hidden className="mx-auto mt-6 block h-px w-20 bg-charcoal/15" />
+          <div className="relative aspect-square w-full max-w-[22rem]">
+            {images.map((img, i) => (
+              <div
+                key={i}
+                aria-hidden={i !== index}
+                className={[
+                  'beco-cutout-drift absolute inset-0',
+                  'transition-opacity duration-[1400ms] ease-brand motion-reduce:transition-none',
+                  'motion-reduce:animate-none',
+                  i === index ? 'opacity-100' : 'opacity-0',
+                ].join(' ')}
+                style={{ filter: 'drop-shadow(0 28px 34px rgb(0 0 0 / 0.22))' }}
+              >
+                {img}
+              </div>
+            ))}
           </div>
         </div>
 

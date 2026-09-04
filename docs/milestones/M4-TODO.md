@@ -438,6 +438,11 @@ These were discovered while building and are recorded rather than remembered.
       blank wall to a fully composed vanity by six seconds in. Only the poster, the one frame a
       reduced motion reader ever sees, was extracted from the wrong end of that pan. Re-extracted
       at 6.0s, same file, no re-transcode. See D75
+- [x] **`CutoutReveal` now crossfades through more than one photograph**, asked for directly
+      against the home page's hardware section. Two more real cutouts made, grey and white
+      handles, both background removed the same way as the first two, so the home page cycles
+      four real finishes rather than showing gold alone. Built on `RotatingStatement`'s own
+      crossfade shape from the start. **5 new tests.** See D76
 
 ## Found on 3 September, not planned
 

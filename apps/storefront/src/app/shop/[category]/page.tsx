@@ -177,16 +177,17 @@ export default async function CategoryPage({ params }: Params) {
           eyebrow="On the floor"
           title="Match it to the room."
           body="Bring a cabinet door or a paint chip and hold it against the finish in person. Matte black reads differently under a kitchen's own light than it does on a screen."
-          image={
+          images={[
             <Image
+              key="black-handle"
               src="/cutouts/black-handle.webp"
               alt="A matte black cabinet handle"
-              width={1257}
-              height={1400}
+              fill
+              priority
               sizes="(max-width: 1024px) 70vw, 22rem"
-              className="h-auto w-full"
-            />
-          }
+              className="object-contain"
+            />,
+          ]}
           stats={[]}
           cta={{ label: 'Visit the showroom', href: '/contact' }}
           reverse
