@@ -5,8 +5,10 @@ import { buttonClasses, Reveal } from '@beco/ui';
 import { PageHeader } from '@/components/page-header';
 import { RoomStack } from '@/components/room-stack';
 import { RotatingStatement } from '@/components/rotating-statement';
+import { StoneSlider } from '@/components/stone-slider';
 import {
   getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages,
+  stoneSlidesFrom,
 } from '@/lib/products';
 import { SITE } from '@/lib/site';
 
@@ -113,21 +115,38 @@ export default async function AboutPage() {
     ? ROTATING_WORDS.map((_, i) => applicationPool[i % applicationPool.length]!)
     : undefined;
 
+  // The opening header's own companion image, reported directly against the
+  // blank column beside the title on a wide screen. Real slab photographs,
+  // not application shots: this sits beside "New here. Stocked already."
+  // and the slab itself, not a room built from it, is what backs that up.
+  const stoneSlides = stoneSlidesFrom(products);
+
   return (
     <main>
       <div className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
-        <PageHeader
-          className="mb-16"
-          eyebrow="About Beco Interiors"
-          title="New here. Stocked already."
-          lede={
-            <>
-              Beco Interiors is new to the East African market. What matters to a project is
-              not how long we have been trading. It is whether the material is in Nairobi when
-              you need it, and whether someone can price it today.
-            </>
-          }
-        />
+        {/* Grid rather than PageHeader's own built-in aside slot: that slot
+            bottom-aligns a short caption against the heading, which is the
+            right call for the one-line stat the gallery and team pages put
+            there, but pushed the heading itself down to match a 360px tall
+            image instead. Top aligned here, so the slider actually fills the
+            blank column reported directly beside the title on a wide screen,
+            rather than shifting the text to chase it. */}
+        <div className="mb-16 grid gap-x-12 gap-y-10 lg:grid-cols-[1fr_18rem] lg:items-start">
+          <PageHeader
+            eyebrow="About Beco Interiors"
+            title="New here. Stocked already."
+            lede={
+              <>
+                Beco Interiors is new to the East African market. What matters to a project is
+                not how long we have been trading. It is whether the material is in Nairobi when
+                you need it, and whether someone can price it today.
+              </>
+            }
+          />
+          {stoneSlides.length > 1 ? (
+            <StoneSlider slides={stoneSlides} className="hidden lg:block" />
+          ) : null}
+        </div>
 
         {heroImage ? (
           <Reveal className="beco-zoom">
