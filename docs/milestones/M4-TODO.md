@@ -450,6 +450,10 @@ These were discovered while building and are recorded rather than remembered.
       every reveal, looked broken at once with nothing actually wrong in any of them.
       `allowedDevOrigins` set, dev only, and the long running dev server restarted for the config
       to take effect. See D77
+- [x] **The mobile action bar now waits for a scroll**, reported directly by screenshot: it was
+      covering the gallery's opening video, scroll cue included, before anyone had scrolled at
+      all. Same `window.scrollY > 8` threshold `SiteHeader` already uses, a slide via transform
+      rather than a mount, and out of the tab order while off screen. **4 new tests.** See D78
 
 ## Found on 3 September, not planned
 

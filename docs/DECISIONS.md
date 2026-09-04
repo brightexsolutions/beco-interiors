@@ -946,3 +946,22 @@ read once `next build` runs a real production server that has no such restrictio
 Required restarting the long running dev server: Next does not hot reload its own config file,
 so the fix could not take effect on the process that had been running since this session opened.
 Confirmed by repeating the exact failing request after the restart: `200`, not `403`.
+
+## D78, 4 September 2026: the mobile action bar waits for the reader to scroll
+
+Reported directly by screenshot: fixed over the very first screen of every page on mobile,
+`MobileActionBar` covered the gallery's opening video, its scroll cue included, before anyone
+had done anything at all. A bar for WhatsApp and the phone line earns its place once someone is
+reading, not before they have seen what the page is.
+
+Promoted to a client component and given the exact scroll threshold `SiteHeader` already uses
+for its own scrolled state, `window.scrollY > 8`, rather than inventing a second number nobody
+chose on purpose. `translate-y-full` to `translate-y-0`, not a mount or unmount: the bar stays in
+the layout and only its position moves, transform only, so it costs nothing toward CLS and needs
+no reduced motion fallback beyond turning the transition itself off. A live toggle, not a once
+seen flag: scrolling back to the very top hides it again, since the screen it was covering is
+back too.
+
+`aria-hidden` and `tabIndex={-1}` while off screen, so a keyboard reader tabbing through the page
+skips straight past two links nobody can see yet rather than landing on them blind. **4 new
+tests.**

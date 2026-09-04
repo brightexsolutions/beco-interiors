@@ -1,5 +1,8 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { SITE, whatsappLink } from '@/lib/site';
-import { buttonClasses, cn } from '@beco/ui';
+import { cn } from '@beco/ui';
 
 /**
  * The two conversation actions: WhatsApp and the business line.
@@ -13,17 +16,48 @@ import { buttonClasses, cn } from '@beco/ui';
  * two that a phone is uniquely good at. It is the one place tapping is faster
  * than typing.
  *
+ * Hidden until the reader scrolls, reported directly by screenshot: sitting
+ * fixed over the very first screen of every page, it covered the gallery's
+ * opening video, its scroll cue included, before anyone had done anything.
+ * The same `window.scrollY > 8` threshold `SiteHeader` already uses for its
+ * own scrolled state, so "has this reader scrolled" means one thing across
+ * the site rather than two thresholds nobody chose on purpose. A live
+ * toggle, not a once seen flag: scrolling back to the very top hides it
+ * again, since the opening screen it was covering is back too.
+ *
  * Fixed to the bottom with safe area inset, so it clears the iOS home
  * indicator. Whether it clears the on screen keyboard is a real device check,
  * and it is in docs/QA-CHECKLIST.md rather than assumed here.
  */
 export function MobileActionBar() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    // Passive, and it only ever flips a boolean, so it cannot become a
+    // scroll handler that costs INP.
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-200 bg-high-vis-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)] md:hidden">
+    <div
+      aria-hidden={!scrolled}
+      className={cn(
+        'fixed inset-x-0 bottom-0 z-50 border-t border-neutral-200 bg-high-vis-white/95 backdrop-blur',
+        'pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ease-brand md:hidden',
+        'motion-reduce:transition-none',
+        scrolled ? 'translate-y-0' : 'translate-y-full',
+      )}
+    >
       <div className="grid grid-cols-2 items-stretch gap-2 p-2">
         <a
           href={whatsappLink()}
           data-analytics="whatsapp_click"
+          // Off screen until scrolled, so keyboard focus skips straight past
+          // it rather than landing on a link nobody can see yet.
+          tabIndex={scrolled ? undefined : -1}
           className="flex min-h-11 items-center justify-center gap-2 rounded-[2px] bg-charcoal px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white"
         >
           <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current">
@@ -34,6 +68,7 @@ export function MobileActionBar() {
         <a
           href={SITE.phoneHref}
           data-analytics="call_click"
+          tabIndex={scrolled ? undefined : -1}
           className="flex min-h-11 items-center justify-center gap-2 rounded-[2px] border border-neutral-300 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal"
         >
           <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current">
