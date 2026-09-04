@@ -123,12 +123,22 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               priority
               sizes="100vw"
               {...blurProps(hero)}
-              className="object-cover opacity-25"
+              className="object-cover opacity-20"
             />
           </div>
         ) : null}
 
-        <div className="relative mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-8 sm:py-9">
+        {/* Verified against the charcoal blend rather than assumed, per the
+            design rules: even a near white source photo at this opacity
+            over #101820 still leaves white text at 8+:1, well past the 4.5
+            AA floor. The shadow is a second, independent guarantee, a
+            physical dark halo behind the text that holds regardless of
+            what any given photo or browser does with the blend. text-shadow
+            is inherited, so it is set once here rather than on every child. */}
+        <div
+          className="relative mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-8 sm:py-9"
+          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+        >
           <div>
             <div className="flex items-center gap-2">
               <span aria-hidden className="h-px w-5 bg-warm-red" />
