@@ -31,6 +31,7 @@ export function NavDropdown({
   label,
   items,
   active = false,
+  light = false,
 }: {
   label: string;
   items: NavItem[];
@@ -44,6 +45,8 @@ export function NavDropdown({
    * bar at once. The caller decides which trigger owns which page.
    */
   active?: boolean;
+  /** See NavLink's own note: only ever true on `/`, where `active` never is. */
+  light?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
@@ -142,7 +145,9 @@ export function NavDropdown({
         onClick={onTriggerClick}
         className={cn(
           'flex min-h-11 items-center gap-2 px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] transition-colors',
-          active ? 'text-warm-red-deep' : 'text-neutral-700 hover:text-warm-red-deep',
+          active && 'text-warm-red-deep',
+          !active && light && 'text-neutral-200 hover:text-high-vis-white',
+          !active && !light && 'text-neutral-700 hover:text-warm-red-deep',
         )}
       >
         {label}

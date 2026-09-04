@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import { SiteHeader } from '../site-header';
 
@@ -74,5 +74,41 @@ describe('SiteHeader desktop nav active state', () => {
     mockPathname.mockReturnValue('/shop');
     const { container } = render(<SiteHeader />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+/**
+ * Per D79: the transparent state now sits over a full bleed dark
+ * photograph rather than the page's own light background, so it needs
+ * light chrome, the wordmark, the nav, the phone line and the mobile
+ * trigger, to stay legible. Only reachable on `/`, before any scroll.
+ */
+describe('SiteHeader, light chrome over the hero', () => {
+  afterEach(() => { Object.defineProperty(window, 'scrollY', { value: 0, configurable: true }); });
+
+  it('uses the white logo and light nav on / before any scroll', () => {
+    mockPathname.mockReturnValue('/');
+    render(<SiteHeader />);
+    expect(screen.getByAltText('').getAttribute('src')).toContain(encodeURIComponent('/logo-mark-white.png'));
+    expect(desktopLink('Shop').className.split(' ')).toContain('text-neutral-200');
+  });
+
+  it('reverts to the dark logo and nav once scrolled', () => {
+    mockPathname.mockReturnValue('/');
+    render(<SiteHeader />);
+    Object.defineProperty(window, 'scrollY', { value: 40, configurable: true });
+    fireEvent.scroll(window);
+    expect(screen.getByAltText('').getAttribute('src')).toContain(encodeURIComponent('/logo-mark.png'));
+    expect(desktopLink('Shop').className.split(' ')).toContain('text-neutral-700');
+  });
+
+  it('never goes light on any other page, transparent or not', () => {
+    mockPathname.mockReturnValue('/shop');
+    render(<SiteHeader />);
+    expect(screen.getByAltText('').getAttribute('src')).toContain(encodeURIComponent('/logo-mark.png'));
+    // Contact, not Shop: Shop is the active page here and carries Warm Red
+    // regardless of light or dark mode, which this describe block already
+    // covers elsewhere. This checks an INACTIVE link stays dark.
+    expect(desktopLink('Contact').className.split(' ')).toContain('text-neutral-700');
   });
 });

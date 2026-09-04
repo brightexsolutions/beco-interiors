@@ -39,4 +39,22 @@ describe('NavLink', () => {
     const { container } = render(<NavLink href="/shop">Shop</NavLink>);
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('switches to light chrome over the hero, per D79', () => {
+    // The transparent header now sits over a full bleed dark photograph, so
+    // the usual dark-on-transparent styling is nearly invisible there.
+    mockPathname.mockReturnValue('/gallery');
+    render(<NavLink href="/shop" light>Shop</NavLink>);
+    const classes = screen.getByRole('link', { name: 'Shop' }).className.split(' ');
+    expect(classes).toContain('text-neutral-200');
+    expect(classes).not.toContain('text-neutral-700');
+  });
+
+  it('stays Warm Red when active even in light mode, since the two never actually coincide', () => {
+    mockPathname.mockReturnValue('/shop');
+    render(<NavLink href="/shop" light>Shop</NavLink>);
+    const link = screen.getByRole('link', { name: 'Shop' });
+    expect(link.className.split(' ')).toContain('text-warm-red-deep');
+    expect(link).toHaveAttribute('aria-current', 'page');
+  });
 });

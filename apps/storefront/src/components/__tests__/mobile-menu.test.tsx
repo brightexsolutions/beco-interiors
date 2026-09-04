@@ -69,4 +69,16 @@ describe('MobileMenu', () => {
     await user.click(screen.getByRole('button', { name: 'Open the menu' }));
     expect(document.querySelector('a[href^="tel:"]')).not.toBeNull();
   });
+
+  it('switches the closed trigger to a light icon over the hero, per D79', () => {
+    render(<MobileMenu light />);
+    expect(screen.getByRole('button', { name: 'Open the menu' })).toHaveClass('text-high-vis-white');
+  });
+
+  it('keeps the OPEN trigger dark, since the panel behind it is always opaque white', async () => {
+    const user = userEvent.setup();
+    render(<MobileMenu light />);
+    await user.click(screen.getByRole('button', { name: 'Open the menu' }));
+    expect(screen.getByRole('button', { name: 'Close the menu' })).toHaveClass('text-charcoal');
+  });
 });

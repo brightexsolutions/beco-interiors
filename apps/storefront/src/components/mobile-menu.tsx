@@ -39,7 +39,7 @@ const LINKS = [
   { href: '/contact', label: 'Contact and showroom' },
 ];
 
-export function MobileMenu() {
+export function MobileMenu({ light = false }: { light?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panel = useRef<HTMLDivElement>(null);
@@ -91,7 +91,14 @@ export function MobileMenu() {
         aria-expanded={open}
         aria-label={open ? 'Close the menu' : 'Open the menu'}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 w-11 items-center justify-center text-charcoal"
+        className={cn(
+          'flex h-11 w-11 items-center justify-center',
+          // The trigger sits over the transparent header, which needs a
+          // light icon over the new dark full bleed hero, per D79. The
+          // OPEN panel is always opaque white regardless, so only the
+          // closed trigger needs to switch.
+          light && !open ? 'text-high-vis-white' : 'text-charcoal',
+        )}
       >
         <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 stroke-current" fill="none" strokeWidth="1.8">
           {open ? (

@@ -90,4 +90,11 @@ describe('NavDropdown', () => {
     await user.click(screen.getByRole('button', { name: /about/i }));
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('switches to light chrome over the hero, per D79', () => {
+    render(<NavDropdown label="About" items={ITEMS} light />);
+    const classes = screen.getByRole('button', { name: /about/i }).className.split(' ');
+    expect(classes).toContain('text-neutral-200');
+    expect(classes).not.toContain('text-neutral-700');
+  });
 });

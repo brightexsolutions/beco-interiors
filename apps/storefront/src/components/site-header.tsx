@@ -50,6 +50,11 @@ export function SiteHeader() {
   // starts with content directly beneath the bar, so a transparent header let
   // a product gallery show through it and read as broken layout.
   const overHero = pathname === '/';
+  // The transparent state now sits over a full bleed dark photograph, per
+  // D79, rather than the page's own light background, so it needs light
+  // chrome to stay legible: the wordmark, the nav and the phone line all
+  // read this rather than each recomputing overHero && !scrolled.
+  const light = overHero && !scrolled;
 
   useEffect(() => {
     // Passive, and it only ever flips a boolean, so it cannot become a
@@ -77,14 +82,19 @@ export function SiteHeader() {
             carries the header and the word is set beside it. */}
         <Link href="/" className="flex items-center gap-3" aria-label="Beco Interiors, home">
           <Image
-            src="/logo-mark.png"
+            src={light ? '/logo-mark-white.png' : '/logo-mark.png'}
             alt=""
             width={400}
             height={390}
             priority
             className="h-9 w-auto"
           />
-          <span className="hidden font-ui text-sm font-semibold uppercase tracking-[0.26em] text-charcoal sm:block">
+          <span
+            className={cn(
+              'hidden font-ui text-sm font-semibold uppercase tracking-[0.26em] sm:block',
+              light ? 'text-high-vis-white' : 'text-charcoal',
+            )}
+          >
             Interiors
           </span>
         </Link>
@@ -92,16 +102,16 @@ export function SiteHeader() {
         <nav aria-label="Main" className="hidden md:block">
           <ul className="flex items-center gap-1">
             <li>
-              <NavLink href="/shop">Shop</NavLink>
+              <NavLink href="/shop" light={light}>Shop</NavLink>
             </li>
             <li>
               {/* Projects is top level rather than buried in the menu: real
                   installations are the strongest trust content on the site
                   and the thing a specifier looks for first. */}
-              <NavLink href="/gallery">Projects</NavLink>
+              <NavLink href="/gallery" light={light}>Projects</NavLink>
             </li>
             <li>
-              <NavLink href="/blog">Blog</NavLink>
+              <NavLink href="/blog" light={light}>Blog</NavLink>
             </li>
             <li>
               {/* About's own active state is /about alone, not derived from
@@ -109,10 +119,13 @@ export function SiteHeader() {
                   each already Shop's and Contact's own page, and lighting
                   About too would put two "you are here" claims on the bar
                   for the same route. */}
-              <NavDropdown label="About" items={ABOUT} active={isNavItemActive(pathname, '/about')} />
+              <NavDropdown
+                label="About" items={ABOUT} light={light}
+                active={isNavItemActive(pathname, '/about')}
+              />
             </li>
             <li>
-              <NavLink href="/contact">Contact</NavLink>
+              <NavLink href="/contact" light={light}>Contact</NavLink>
             </li>
           </ul>
         </nav>
@@ -126,7 +139,10 @@ export function SiteHeader() {
             href={SITE.phoneHref}
             data-analytics="call_click"
             aria-label={`Call Beco on ${SITE.phone}`}
-            className="flex min-h-11 items-center gap-2 px-2 font-ui text-sm font-semibold text-charcoal transition-colors hover:text-warm-red-deep"
+            className={cn(
+              'flex min-h-11 items-center gap-2 px-2 font-ui text-sm font-semibold transition-colors hover:text-warm-red-deep',
+              light ? 'text-high-vis-white' : 'text-charcoal',
+            )}
           >
             <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current">
               <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z" />
@@ -153,7 +169,7 @@ export function SiteHeader() {
             Quote
             <QuoteCounter />
           </Link>
-          <MobileMenu />
+          <MobileMenu light={light} />
         </div>
       </div>
     </header>
