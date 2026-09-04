@@ -47,6 +47,9 @@ importers:
       vitest:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@22.20.1)(jsdom@25.0.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))
+      vitest-axe:
+        specifier: ^0.1.0
+        version: 0.1.0(vitest@4.1.11(@types/node@22.20.1)(jsdom@25.0.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))
 
   apps/dashboard:
     dependencies:
@@ -1664,6 +1667,10 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
+  axe-core@4.13.0:
+    resolution: {integrity: sha512-UzGt8zg7Ny8djbYMhxl2zuEevVa7r2gJjYY5Lwr1xM7+XU2nd6CkIWFTVcCIbAP63vSz71NaVyyuSk9lHKcy0A==}
+    engines: {node: '>=4'}
+
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
@@ -1711,6 +1718,10 @@ packages:
   chai@6.2.2:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
     engines: {node: '>=18'}
+
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   class-variance-authority@0.7.1:
     resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
@@ -2227,6 +2238,9 @@ packages:
   linebreak@1.1.0:
     resolution: {integrity: sha512-MHp03UImeVhB7XZtjd0E4n6+3xr5Dq/9xI/5FptGk5FrbDR3zagPa2DS6U8ks/3HjbKWG9Q1M2ufOzxV2qLYSQ==}
 
+  lodash-es@4.18.1:
+    resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
+
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
@@ -2727,6 +2741,11 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  vitest-axe@0.1.0:
+    resolution: {integrity: sha512-jvtXxeQPg8R/2ANTY8QicA5pvvdRP4F0FsVUAHANJ46YCDASie/cuhlSzu0DGcLmZvGBSBNsNuK3HqfaeknyvA==}
+    peerDependencies:
+      vitest: '>=0.16.0'
 
   vitest@4.1.11:
     resolution: {integrity: sha512-fhACrNXUidIbGSBr5FlbuBkO7VWC1ZyLl0DO4CU2DrQoAPxX84Ysxs+HeGQpii5lZWV1Q4gBZTTu49mF+A6Edw==}
@@ -4140,6 +4159,8 @@ snapshots:
 
   asynckit@0.4.0: {}
 
+  axe-core@4.13.0: {}
+
   balanced-match@1.0.2: {}
 
   base64-js@0.0.8: {}
@@ -4179,6 +4200,8 @@ snapshots:
   caniuse-lite@1.0.30001810: {}
 
   chai@6.2.2: {}
+
+  chalk@5.6.2: {}
 
   class-variance-authority@0.7.1:
     dependencies:
@@ -4697,6 +4720,8 @@ snapshots:
       base64-js: 0.0.8
       unicode-trie: 2.0.0
 
+  lodash-es@4.18.1: {}
+
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
@@ -5180,6 +5205,16 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       tsx: 4.23.13
+
+  vitest-axe@0.1.0(vitest@4.1.11(@types/node@22.20.1)(jsdom@25.0.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))):
+    dependencies:
+      aria-query: 5.3.2
+      axe-core: 4.13.0
+      chalk: 5.6.2
+      dom-accessibility-api: 0.5.16
+      lodash-es: 4.18.1
+      redent: 3.0.0
+      vitest: 4.1.11(@types/node@22.20.1)(jsdom@25.0.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))
 
   vitest@4.1.11(@types/node@22.20.1)(jsdom@25.0.1)(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)):
     dependencies:
