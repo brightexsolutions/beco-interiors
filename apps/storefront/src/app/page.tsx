@@ -215,7 +215,7 @@ export default async function HomePage() {
               the picture. It also removes the card that used to hang below a
               wide image with empty space beside it. --- */}
       <section aria-label="The showroom" className="bg-charcoal text-high-vis-white">
-        <div className="mx-auto grid max-w-[1380px] items-center gap-12 px-6 py-16 sm:py-22 lg:grid-cols-[1fr_22rem] lg:gap-20 lg:py-30">
+        <div className="mx-auto grid max-w-[1380px] items-center gap-12 px-6 py-16 sm:py-22 lg:grid-cols-[1fr_28rem] lg:gap-20 lg:py-30">
           <div>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

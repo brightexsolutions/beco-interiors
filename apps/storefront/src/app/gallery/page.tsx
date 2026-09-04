@@ -68,7 +68,12 @@ export default async function GalleryPage() {
         cta={{ label: 'Visit the showroom', href: '/contact' }}
       />
 
-      <div className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
+      {/* pt smaller than pb, deliberately: the video section right above
+          already closes on its own caption, padded to its own bottom edge,
+          so the full py-16..24 rhythm every other section opens on stacked
+          a second helping of empty space on top of that and read as a gap
+          rather than a considered break between sections. */}
+      <div className="mx-auto max-w-[1380px] px-6 pb-16 pt-10 sm:pb-20 sm:pt-12 lg:pb-24 lg:pt-14">
         <PageHeader
           className="mb-16"
           eyebrow="Project gallery"

@@ -368,6 +368,13 @@ These were discovered while building and are recorded rather than remembered.
       respecting WordReveal's own single-use rule. **5 tests**, including one proving exactly
       one opacity class per layer, learned directly from D67. See D70
 
+- [x] **Three direct layout fixes.** The showroom video column widened on home and contact,
+      26 to 28rem rather than 20 to 22rem, still Beco's own portrait footage. The gallery's
+      opening gap closed: the top padding under the new video section was stacking on top of
+      that section's own bottom padding. The hero's scroll cue made more visible, taller and
+      Warm Red rather than neutral, counted deliberately against the page's red budget rather
+      than added freely. See D71
+
 ## Found later on 4 September, not planned
 
 - [x] **The splash froze forever on every first load in dev.** Real bug, root caused: React 18

@@ -124,7 +124,7 @@ export default async function ContactPage() {
 
       {/* --- The showroom itself: address, hours, and Beco's own footage. --- */}
       <section className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto grid max-w-[1380px] gap-14 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_20rem] lg:gap-20 lg:py-24">
+        <div className="mx-auto grid max-w-[1380px] gap-14 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_26rem] lg:gap-20 lg:py-24">
           <Reveal>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

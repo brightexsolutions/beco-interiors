@@ -279,10 +279,16 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                 ))}
               </ol>
 
+              {/* The cue got more visible on request: taller, a hair
+                  thicker, and one of the page's few Warm Red touches rather
+                  than neutral, since "you can move this" is exactly the
+                  moment worth the colour. Still the travelling tick this
+                  file already argued for over a bouncing chevron, just
+                  easier to actually notice. */}
               <p className="mt-6 flex items-center gap-3 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 <span
                   aria-hidden
-                  className="beco-scroll-cue inline-block h-6 w-px bg-neutral-300 motion-reduce:animate-none"
+                  className="beco-scroll-cue inline-block h-8 w-0.5 bg-warm-red-deep motion-reduce:animate-none"
                 />
                 Scroll through the range
               </p>

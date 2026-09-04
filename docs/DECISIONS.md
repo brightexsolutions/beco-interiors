@@ -750,3 +750,23 @@ rather than rediscovered. A test asserts exactly one opacity class per layer for
 that feeds the home page's hero previously stopped at `specs`. `specs['Recommended for']` was
 considered and rejected as the source: it is the identical sentence on every stone in the
 catalogue, so using it would not have varied at all.
+
+## D71, 4 September 2026: the showroom video widened, the gallery's opening gap closed
+
+Three small, direct fixes.
+
+The showroom split section's video column, on both home and contact, was fixed at 20 to 22rem,
+narrow enough to read as cramped beside its copy. Widened to 26 to 28rem on each. Still Beco's
+own portrait footage, still the tall frame D51 calls for: this is a proportion change, not a
+reversal.
+
+The gallery page had a plain top padding, 64 to 96px, stacked immediately under the new video
+section per D69, which already closes on its own caption padded to its own bottom edge. Two
+paddings back to back read as a gap rather than a considered break. Split into a smaller top and
+the original bottom, so the section that opens the page and the section that follows it no
+longer double up on empty space between them.
+
+The hero's scroll cue, asked to be more noticeable, got taller, a hair thicker, and Warm Red
+instead of neutral, since "you can move this" is exactly the moment worth spending one of the
+page's few red touches on. Counted deliberately rather than added freely: the palette rule caps
+Warm Red at three or four uses per page, and this is one of them, not an exception to it.
