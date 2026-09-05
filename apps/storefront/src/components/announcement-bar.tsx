@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getLiveAnnouncement } from '@/lib/announcements';
+import type { Announcement } from '@/lib/announcements';
 
 /**
  * The announcement bar, per D36.
@@ -38,8 +38,7 @@ const TONE = {
   clearance: 'bg-warm-red-deep text-high-vis-white',
 } as const;
 
-export async function AnnouncementBar() {
-  const announcement = await getLiveAnnouncement();
+export function AnnouncementBar({ announcement }: { announcement: Announcement | null }) {
   if (!announcement) return null;
 
   return (

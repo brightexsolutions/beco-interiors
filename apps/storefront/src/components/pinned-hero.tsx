@@ -149,11 +149,23 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
   const longestLede = [...ledes].sort((a, b) => b.length - a.length)[0];
 
   return (
-    <section aria-label="Sintered stone" className="relative border-b border-neutral-200 bg-charcoal">
+    <section
+      aria-label="Sintered stone"
+      className="beco-hero-bleed relative border-b border-neutral-200 bg-charcoal"
+    >
       {/* --- The sticky visual: photograph, gradient and type together, one
               box spanning the section's full width regardless of the
-              invisible scroll track beneath it. --- */}
-      <div className="relative hidden overflow-hidden lg:sticky lg:top-20 lg:block lg:h-[calc(100vh-5rem)]">
+              invisible scroll track beneath it.
+
+              top-0 and a full 100vh, not top-20 and 100vh minus the
+              header: the photograph itself needs to reach the very top of
+              the viewport, behind the header, per beco-hero-bleed above,
+              or the header would float over a gap rather than over the
+              photograph. Once actually scrolled, the header's own z-50
+              simply paints over this box's own top 5rem, the same
+              relationship a sticky header has with any page's content,
+              rather than this box reserving that space for it. --- */}
+      <div className="relative hidden overflow-hidden lg:sticky lg:top-0 lg:block lg:h-[100vh]">
         <div aria-hidden className="beco-ambient absolute inset-0">
           {slabs.map((slab, i) => (
             <Image
@@ -180,8 +192,8 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
         <div
           className={cn(
             GRID_INSET,
-            'relative flex h-full max-w-[640px] flex-col justify-end pb-10 pr-6 pt-16',
-            'lg:justify-center lg:py-10 lg:pb-14 lg:pr-20',
+            'beco-hero-content-top relative flex h-full max-w-[46rem] flex-col justify-end pb-10 pr-6 pt-16',
+            'lg:justify-center lg:pb-14 lg:pr-20',
           )}
         >
           <div className="flex items-center gap-4">
@@ -199,7 +211,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </h1>
 
           <div
-            className="beco-enter relative mt-6 max-w-[42ch]"
+            className="beco-enter relative mt-6 max-w-[48ch]"
             style={{ animationDelay: '620ms' }}
           >
             {/* Invisible, in normal flow, sized to the longest of the real
@@ -344,12 +356,12 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               actually consumes rather than doubling it. Desktop only:
               mobile drops the pin per D30 and gets the swipeable row
               below instead. --- */}
-      <div className="hidden lg:block lg:-mt-[calc(100vh-5rem)]" aria-hidden>
+      <div className="hidden lg:block lg:-mt-[100vh]" aria-hidden>
         {slabs.map((slab, i) => (
           <div
             key={slab.slug}
             ref={(el) => { panels.current[i] = el; }}
-            className="min-h-[calc(100vh-5rem)]"
+            className="min-h-[100vh]"
           />
         ))}
       </div>

@@ -6,6 +6,7 @@ import { SiteSplash } from '@/components/site-splash';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { MobileActionBar } from '@/components/mobile-action-bar';
+import { getLiveAnnouncement } from '@/lib/announcements';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -24,12 +25,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Fetched here rather than inside AnnouncementBar itself, per D79: the
+  // home hero needs to know whether the bar is taking up real space above
+  // it, to pull its own full bleed photograph up behind the right amount
+  // of chrome rather than leaving a gap the size of whatever the header
+  // alone does not cover.
+  const announcement = await getLiveAnnouncement();
+
   return (
     <html lang="en">
       {/* pb on mobile clears the sticky action bar, which is fixed and would
-          otherwise cover the last of the footer. */}
-      <body className="bg-high-vis-white font-ui text-base text-charcoal antialiased pb-20 md:pb-0">
+          otherwise cover the last of the footer. data-announcement is read
+          by the home hero's own CSS, nothing else. */}
+      <body
+        data-announcement={announcement ? '' : undefined}
+        className="bg-high-vis-white font-ui text-base text-charcoal antialiased pb-20 md:pb-0"
+      >
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[2px] focus:bg-charcoal focus:px-4 focus:py-3 focus:text-high-vis-white"
@@ -40,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             candidate and nothing below it waits on it. See its own file for
             the full reasoning against the site's performance budget. */}
         <SiteSplash />
-        <AnnouncementBar />
+        <AnnouncementBar announcement={announcement} />
         <SiteHeader />
         <div id="main">{children}</div>
         <SiteFooter />

@@ -126,6 +126,50 @@
   .beco-outline { -webkit-text-stroke-width: 2px; }
 }
 
+/* --- The home hero's full bleed photograph, per D79, pulled up to start
+       behind the header and the announcement bar rather than below them.
+       AnnouncementBar and SiteHeader sit in normal document flow, ABOVE
+       `{children}` in the root layout, so without this the hero's photo
+       only ever began after their combined height, leaving the
+       transparent header with nothing behind it but the page's own white
+       background. Reported directly as "the image slide is not started
+       from that level."
+
+       Two fixed heights, not a measured one: the header is always 5rem,
+       `h-20`, and the announcement bar's own padding bounds it to roughly
+       3rem even with its longest real content. `data-announcement` on
+       `<body>` is set server side in the root layout from the same query
+       that decides whether the bar renders at all, so this never
+       needs a client side measurement, and never causes a layout shift
+       once JavaScript catches up: the server already knows the answer. */
+.beco-hero-bleed {
+  margin-top: -5rem;
+}
+body[data-announcement] .beco-hero-bleed {
+  margin-top: -8rem;
+}
+
+/* --- The hero's own TEXT, as opposed to its background photograph above:
+       vertically centering it in a box that now starts at the true top of
+       the page, per .beco-hero-bleed, put it uncomfortably close to the
+       header, reported directly as "sintered stone, stocked in nairobi is
+       almost touching the top." The photograph is allowed to run all the
+       way up; the reading content still needs a real safe area below the
+       header and the announcement bar, so this pads the text column down
+       by the same two fixed heights rather than letting flex centering
+       alone decide how close is too close. Desktop only, matching where
+       the sticky full bleed treatment itself is desktop only: the mobile
+       block below it stays bottom anchored and was never crowding the
+       header the same way. */
+@media (min-width: 1024px) {
+  .beco-hero-content-top {
+    padding-top: 7rem;
+  }
+  body[data-announcement] .beco-hero-content-top {
+    padding-top: 10rem;
+  }
+}
+
 @layer base {
   /* The page never scrolls sideways.
      `clip` rather than `hidden`: hidden makes the element a scroll container,
