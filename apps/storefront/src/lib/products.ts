@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { ProductImage } from '@beco/types';
+import type { ProductImage, ProjectType } from '@beco/types';
 
 /**
  * Reads published products with the ANON key, so row level security is the
@@ -269,6 +269,9 @@ export interface GalleryShotImage {
   width: number;
   height: number;
   blur?: string | undefined;
+  /** Residential or commercial. Undefined on a shot Beco has not
+      classified yet, which is every real one at launch. */
+  projectType?: ProjectType | undefined;
 }
 
 export interface GalleryShot extends GalleryShotImage {
@@ -335,6 +338,36 @@ export const interleave = <T>(lists: T[][]): T[] => {
   return out;
 };
 
+export interface ProjectTypeFacet {
+  value: ProjectType;
+  label: string;
+  count: number;
+}
+
+const PROJECT_TYPE_LABEL: Record<ProjectType, string> = {
+  residential: 'Residential',
+  commercial: 'Commercial',
+};
+
+/**
+ * Real counts only, per Irene: Beco does both residential and commercial
+ * work, but the classification lives on each photograph and none carry it
+ * yet. Returns nothing until at least one shot has been tagged, so the
+ * gallery's own filter can gate on this the same way a category gates on
+ * having any published products, per D27: a control for a distinction
+ * nothing in the data has yet is a decorative one.
+ */
+export const projectTypeFacets = (shots: { projectType?: ProjectType | undefined }[]): ProjectTypeFacet[] => {
+  const counts = new Map<ProjectType, number>();
+  for (const shot of shots) {
+    if (!shot.projectType) continue;
+    counts.set(shot.projectType, (counts.get(shot.projectType) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([value, count]) => ({
+    value, count, label: PROJECT_TYPE_LABEL[value],
+  }));
+};
+
 export const getGalleryShots = async (): Promise<GalleryShot[]> => {
   const products = await getPublishedProducts();
 
@@ -347,6 +380,7 @@ export const getGalleryShots = async (): Promise<GalleryShot[]> => {
         width: image.width,
         height: image.height,
         blur: image.blur,
+        projectType: image.project_type,
       }));
     return shotsForProduct(applications, product.name, product.slug);
   });

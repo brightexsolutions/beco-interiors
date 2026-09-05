@@ -37,6 +37,14 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 export const IMAGE_ROLES = ['slab', 'on_stand', 'bookmatch', 'application', 'unknown'] as const;
 export type ImageRole = (typeof IMAGE_ROLES)[number];
 
+/** Which kind of installation an application shot came from, per Irene: Beco
+    does both. Optional, and set manually rather than by the import
+    pipeline, which has no source for it: no Drive naming convention
+    carries this today, per docs/CONTENT-CONVENTIONS.md. Absent on every
+    real photo until Beco confirms which project each one is. */
+export const PROJECT_TYPES = ['residential', 'commercial'] as const;
+export type ProjectType = (typeof PROJECT_TYPES)[number];
+
 export const ANALYTICS_EVENTS = [
   'page_view',
   'product_view',

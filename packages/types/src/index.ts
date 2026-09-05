@@ -10,6 +10,9 @@ export interface ProductImage {
   height: number;
   blur?: string;
   sort: number;
+  /** Residential or commercial, for an 'application' shot only. See
+      ProjectType: absent until Beco classifies the real photos. */
+  project_type?: import('./enums').ProjectType;
 }
 
 export interface Spec {

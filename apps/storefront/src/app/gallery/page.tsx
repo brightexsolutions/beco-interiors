@@ -4,16 +4,30 @@ import Link from 'next/link';
 import { buttonClasses, HoverGallery } from '@beco/ui';
 import { AmbientVideoSection } from '@/components/ambient-video-section';
 import { PageHeader } from '@/components/page-header';
-import { getGalleryShots, blurProps } from '@/lib/products';
+import { getGalleryShots, projectTypeFacets, blurProps } from '@/lib/products';
+import type { ProjectType } from '@beco/types';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: 'Project gallery',
-  description:
-    'Real interiors finished with Beco materials in Nairobi. Sintered stone worktops, feature walls, vanities and flooring, photographed on site.',
-  alternates: { canonical: '/gallery' },
-};
+type Search = Record<string, string | string[] | undefined>;
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? '';
+
+export async function generateMetadata(
+  { searchParams }: { searchParams: Promise<Search> },
+): Promise<Metadata> {
+  const params = await searchParams;
+  const filtered = Boolean(one(params.type));
+
+  return {
+    title: 'Project gallery',
+    description:
+      'Real interiors finished with Beco materials in Nairobi. Sintered stone worktops, feature walls, vanities and flooring, photographed on site.',
+    // D29 again: a type filtered view canonicalises to /gallery and carries
+    // noindex, the same reasoning as the shop's facets.
+    alternates: { canonical: '/gallery' },
+    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 /**
  * The project gallery.
@@ -57,8 +71,17 @@ const SPAN = ['lg:col-span-7', 'lg:col-span-5', 'lg:col-span-5', 'lg:col-span-7'
 const FRAME = ['aspect-[4/3]', 'aspect-[3/4]', 'aspect-[4/5]', 'aspect-[16/10]'] as const;
 const DEPTH = ['beco-depth-1', 'beco-depth-3', 'beco-depth-2', 'beco-depth-1'] as const;
 
-export default async function GalleryPage() {
-  const shots = await getGalleryShots();
+export default async function GalleryPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const params = await searchParams;
+  const type = one(params.type) as ProjectType | '';
+
+  const allShots = await getGalleryShots();
+  // Gated on real data existing at all, the same rule the facet helper's own
+  // tests enforce: at launch nothing is classified yet, so this renders
+  // nothing rather than a control that filters to an empty grid. Beco has
+  // not yet said which real photo is which, see docs/milestones/M4-HANDOVER.md.
+  const facets = projectTypeFacets(allShots);
+  const shots = type ? allShots.filter((shot) => shot.projectType === type) : allShots;
 
   return (
     <main>
@@ -83,17 +106,52 @@ export default async function GalleryPage() {
           eyebrow="Project gallery"
           title="Finished, and in use."
           aside={
-            shots.length > 0 ? (
+            allShots.length > 0 ? (
               <p className="font-ui text-sm text-neutral-500">{shots.length} photographs</p>
             ) : undefined
           }
           lede="Real interiors in Nairobi, photographed on site. A slab tells you the veining. A room tells you whether it works."
         />
 
-        {shots.length === 0 ? (
+        {facets.length > 0 ? (
+          <div className="mb-10 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by project type">
+            <Link
+              href="/gallery"
+              className={`rounded-full border px-4 py-2 font-ui text-sm font-medium transition-colors ${
+                type === '' ? 'border-charcoal bg-charcoal text-white' : 'border-neutral-300 text-neutral-700 hover:border-charcoal'
+              }`}
+              aria-current={type === '' ? 'true' : undefined}
+            >
+              All projects
+            </Link>
+            {facets.map((facet) => (
+              <Link
+                key={facet.value}
+                href={`/gallery?type=${facet.value}`}
+                className={`rounded-full border px-4 py-2 font-ui text-sm font-medium transition-colors ${
+                  type === facet.value
+                    ? 'border-charcoal bg-charcoal text-white'
+                    : 'border-neutral-300 text-neutral-700 hover:border-charcoal'
+                }`}
+                aria-current={type === facet.value ? 'true' : undefined}
+              >
+                {facet.label}
+                <span className={type === facet.value ? 'ml-2 text-neutral-300' : 'ml-2 text-neutral-400'}>
+                  {facet.count}
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        {allShots.length === 0 ? (
           <p className="max-w-[52ch] text-base text-neutral-700">
             We are photographing our installations now. In the meantime the showroom has the full
             range on the floor.
+          </p>
+        ) : shots.length === 0 ? (
+          <p className="max-w-[52ch] text-base text-neutral-700">
+            No {type} projects photographed yet. <Link href="/gallery" className="underline underline-offset-2">See every project</Link> instead.
           </p>
         ) : (
           <div className="grid gap-x-8 gap-y-12 lg:grid-cols-12 lg:gap-x-10">

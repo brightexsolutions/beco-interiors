@@ -87,6 +87,13 @@ five categories.
 - [ ] **Client names for the projects page.** Brown mentioned Art Caffe and Hass Consult from
       memory. NOT published: the `clients` table has a `has_permission` flag and a constraint
       enforcing it, because some corporates prohibit being named contractually
+- [ ] **Which gallery photo is residential and which is commercial.** Per Irene, Beco has done
+      both. `ProductImage.project_type` and the gallery's own filter are built and tested
+      (`projectTypeFacets` in `apps/storefront/src/lib/products.ts`), and the filter stays
+      hidden until at least one photo carries a value, same gating principle as D27's category
+      index. Nothing on any real photo is classified yet, and the import pipeline has no Drive
+      naming convention to infer it from, so it has to be set by hand once Beco confirms each
+      installation
 - [ ] **Nobody is flagged public on `/team`.** The page is built, gated and correct, and it
       renders its empty state. It needs `is_public`, `public_title`, `public_phone` and a
       photograph per sales agent. Directors cannot be listed even by mistake, held by the
