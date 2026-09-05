@@ -294,6 +294,47 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             </p>
           </div>
         </div>
+
+        {/* --- The rest of the range, popping in where the gradient
+                lightens on the right, reported directly: real links to
+                each product, not a second orbit, and a real ring marks
+                whichever one the background is currently showing. One
+                entrance each, on load, never repeating, the same
+                restraint every other beco-enter use already holds to,
+                so this reads as one more beat of the section's own
+                assembly rather than a second effect competing with the
+                crossfade behind it. --- */}
+        <div className="pointer-events-none absolute inset-y-0 right-6 hidden items-center lg:flex xl:right-14">
+          <ul className="pointer-events-auto flex flex-col gap-3">
+            {slabs.map((slab, i) => (
+              <li
+                key={slab.slug}
+                className="beco-pop-in"
+                style={{ animationDelay: `${1000 + i * 120}ms` }}
+              >
+                <Link
+                  href={`/product/${slab.slug}`}
+                  className={cn(
+                    'group relative block h-16 w-16 overflow-hidden bg-neutral-800 ring-1 ring-inset ring-white/25 transition-transform duration-300 hover:scale-105 sm:h-20 sm:w-20',
+                    i === active && 'ring-2 ring-high-vis-white',
+                  )}
+                >
+                  <Image
+                    src={slab.src}
+                    alt=""
+                    fill
+                    sizes="80px"
+                    {...blurProps(slab)}
+                    className="object-cover opacity-90 transition-opacity group-hover:opacity-100"
+                  />
+                  <span className="sr-only">
+                    {slab.name}{i === active ? ', showing now' : ''}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {/* --- The invisible scroll track. One panel per slab, giving the

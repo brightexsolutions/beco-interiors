@@ -283,6 +283,20 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* --- The hero's stone chips, per D79: a smaller, more deliberate rise
+         than beco-enter, scale added so they read as arriving rather than
+         only fading, for a handful of small specimens rather than a whole
+         section. Still one entrance, on load, never repeating: the same
+         restraint every other use of beco-enter already holds to. --- */
+  .beco-pop-in {
+    animation: beco-pop-in 650ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-pop-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.88); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
   /* --- The splash: mark, rule, strapline, each a beat apart. No
          `[data-inview]` gate anywhere in this sequence: this overlay is
          fixed and full screen the instant it mounts, so mounting IS the

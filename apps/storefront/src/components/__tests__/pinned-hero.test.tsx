@@ -155,3 +155,39 @@ describe('PinnedHero, the full bleed photograph', () => {
     expect(desktopLayers(container)[0]).not.toHaveAttribute('loading', 'lazy');
   });
 });
+
+describe('PinnedHero, the right side stone chips', () => {
+  const SLABS = [
+    slab({ slug: 'amber-jade', name: 'Amber Jade' }),
+    slab({ slug: 'beverly-gold', name: 'Beverly Gold' }),
+    slab({ slug: 'bianco-fendi', name: 'Bianco Fendi' }),
+  ];
+
+  // The mobile swipeable row renders a SlabCard for every stone too, a
+  // real link to the same href with a longer accessible name built from
+  // its own image alt and visible plate text. Exact string matches, not
+  // regex, is what tells the chip's own short sr-only name apart from it:
+  // jsdom renders both trees regardless of the lg: classes hiding one.
+  const chip = (name: string) => screen.getByRole('link', { name });
+
+  it('is a real link to each product, not a decorative control', () => {
+    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
+    expect(chip('Amber Jade, showing now')).toHaveAttribute('href', '/product/amber-jade');
+    expect(chip('Beverly Gold')).toHaveAttribute('href', '/product/beverly-gold');
+    expect(chip('Bianco Fendi')).toHaveAttribute('href', '/product/bianco-fendi');
+  });
+
+  it('names which stone is showing now for assistive technology, without misusing aria-current', () => {
+    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
+    // Active stays at index 0 in jsdom, per this file's own top note: there
+    // is no IntersectionObserver here to move it.
+    expect(chip('Amber Jade, showing now')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Beverly Gold, showing now' })).toBeNull();
+  });
+
+  it('rings only the active chip', () => {
+    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
+    expect(chip('Amber Jade, showing now').className.split(' ')).toContain('ring-high-vis-white');
+    expect(chip('Beverly Gold').className.split(' ')).not.toContain('ring-high-vis-white');
+  });
+});
