@@ -72,7 +72,14 @@ export function SiteHeader() {
         'sticky top-0 z-50 transition-colors duration-300 ease-brand',
         scrolled || !overHero
           ? 'border-b border-neutral-200 bg-high-vis-white'
-          : 'border-b border-transparent bg-transparent',
+          : // The hero's own gradient is tuned for the type block on the
+            // LEFT of the photo, not the header, which spans the full
+            // width above it. Wherever the header happens to sit over a
+            // bright patch of whichever stone is currently showing, that
+            // gradient can leave nav text with nowhere near enough
+            // contrast. The header needs its own guaranteed scrim rather
+            // than trusting content behind it it does not control.
+            'border-b border-transparent bg-gradient-to-b from-charcoal/55 via-charcoal/20 to-transparent',
       )}
     >
       <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between gap-6 px-6">

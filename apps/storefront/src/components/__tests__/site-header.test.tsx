@@ -93,6 +93,16 @@ describe('SiteHeader, light chrome over the hero', () => {
     expect(desktopLink('Shop').className.split(' ')).toContain('text-neutral-200');
   });
 
+  it('carries its own dark scrim rather than trusting the photo behind it', () => {
+    // The hero's own gradient is tuned for the type block on the LEFT of
+    // the photo, not the header, which spans the full width above it and
+    // can sit over a bright patch of whichever stone is currently showing.
+    // Reported directly as nav text disappearing over a light stone.
+    mockPathname.mockReturnValue('/');
+    const { container } = render(<SiteHeader />);
+    expect(container.querySelector('header')?.className).toContain('from-charcoal/55');
+  });
+
   it('reverts to the dark logo and nav once scrolled', () => {
     mockPathname.mockReturnValue('/');
     render(<SiteHeader />);
