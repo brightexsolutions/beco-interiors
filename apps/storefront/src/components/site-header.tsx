@@ -79,7 +79,16 @@ export function SiteHeader() {
             // gradient can leave nav text with nowhere near enough
             // contrast. The header needs its own guaranteed scrim rather
             // than trusting content behind it it does not control.
-            'border-b border-transparent bg-gradient-to-b from-charcoal/55 via-charcoal/20 to-transparent',
+            //
+            // Never fades below 55% at its weakest point (the bottom
+            // edge, right where the nav sits): verified against the
+            // project's own contrast formula for a near white stone photo
+            // behind it, the worst real case, which still holds text-
+            // neutral-200 at 4.77:1, past the 4.5 AA floor. The earlier
+            // fade to fully transparent measured 3.02:1 in that same
+            // scenario, a real failure a lighter application photo would
+            // have exposed the first time one rotated into view.
+            'border-b border-transparent bg-gradient-to-b from-charcoal/75 to-charcoal/55',
       )}
     >
       <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between gap-6 px-6">

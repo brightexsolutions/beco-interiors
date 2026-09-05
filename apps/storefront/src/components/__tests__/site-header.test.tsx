@@ -100,7 +100,7 @@ describe('SiteHeader, light chrome over the hero', () => {
     // Reported directly as nav text disappearing over a light stone.
     mockPathname.mockReturnValue('/');
     const { container } = render(<SiteHeader />);
-    expect(container.querySelector('header')?.className).toContain('from-charcoal/55');
+    expect(container.querySelector('header')?.className).toContain('from-charcoal/75');
   });
 
   it('reverts to the dark logo and nav once scrolled', () => {
