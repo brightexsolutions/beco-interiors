@@ -287,6 +287,11 @@ Key/value. VAT rate, quote validity days, bank and till details, notification re
 WhatsApp number, quote footer, and `brightex_allowed_emails` for the D42 Studio gate. **Without
 this table each of those is a code deploy.**
 
+`site_launch_at` (nullable ISO instant) and `site_launch_live` (boolean) drive the first
+anniversary countdown and reveal, set from `apps/dashboard`'s `/launch` control. Both are on
+the `settings_read_public` allowlist because the storefront renders them server side for
+anonymous visitors. See migration 25 and D80.
+
 ### analytics_events
 
 `event_type`: `page_view`, `product_view`, `add_to_cart`, `quote_started`, `quote_submitted`,

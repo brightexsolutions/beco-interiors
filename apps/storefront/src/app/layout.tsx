@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import '@beco/ui/src/tokens/tokens.css';
 import { ScrollMotion } from '@beco/ui';
 import { AnnouncementBar } from '@/components/announcement-bar';
+import { LaunchBanner } from '@/components/launch-banner';
 import { SiteSplash } from '@/components/site-splash';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { MobileActionBar } from '@/components/mobile-action-bar';
 import { getLiveAnnouncement } from '@/lib/announcements';
+import { getLaunchState } from '@/lib/launch';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -26,12 +28,22 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Fetched here rather than inside AnnouncementBar itself, per D79: the
-  // home hero needs to know whether the bar is taking up real space above
-  // it, to pull its own full bleed photograph up behind the right amount
-  // of chrome rather than leaving a gap the size of whatever the header
-  // alone does not cover.
-  const announcement = await getLiveAnnouncement();
+  // Fetched here rather than inside the bars themselves, per D79: the home
+  // hero needs to know whether a bar is taking up real space above it, to
+  // pull its own full bleed photograph up behind the right amount of chrome
+  // rather than leaving a gap the size of whatever the header alone does
+  // not cover.
+  //
+  // Only ONE bar ever shows. The launch banner (D80) wins the slot the
+  // moment Beco sets a date or throws the switch, because for that month
+  // the anniversary IS the announcement. Its wrapper is shaped exactly like
+  // AnnouncementBar's, so the spacing contract below does not care which.
+  const [announcement, launch] = await Promise.all([
+    getLiveAnnouncement(),
+    getLaunchState(),
+  ]);
+  const launchActive = Boolean(launch.launchAt) || launch.isLive;
+  const hasBanner = launchActive || Boolean(announcement);
 
   return (
     <html lang="en">
@@ -39,7 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           otherwise cover the last of the footer. data-announcement is read
           by the home hero's own CSS, nothing else. */}
       <body
-        data-announcement={announcement ? '' : undefined}
+        data-announcement={hasBanner ? '' : undefined}
         className="bg-high-vis-white font-ui text-base text-charcoal antialiased pb-20 md:pb-0"
       >
         <a
@@ -52,7 +64,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             candidate and nothing below it waits on it. See its own file for
             the full reasoning against the site's performance budget. */}
         <SiteSplash />
-        <AnnouncementBar announcement={announcement} />
+        {launchActive ? (
+          <LaunchBanner launch={launch} />
+        ) : (
+          <AnnouncementBar announcement={announcement} />
+        )}
         <SiteHeader />
         <div id="main">{children}</div>
         <SiteFooter />

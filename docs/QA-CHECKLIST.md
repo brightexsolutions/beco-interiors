@@ -43,6 +43,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Mobile menu trigger | Opens the panel, traps focus, locks the page, escape returns focus to the trigger, closes on navigation | Test, 7 tests |
 | Mobile action bar: Quote, WhatsApp, Call | Navigate and open external channels | Server on hrefs. **NOT CONFIRMED** that it never sits under the on screen keyboard |
 | Announcement bar CTA | Navigates to `/contact` | Server. No close control by design, per D49 |
+| Launch banner (D80), when a launch date or the live switch is set | Replaces the announcement bar. Counts down to `site_launch_at`, or once live shows the reveal and links to `/gallery`. Confetti plays once per browser, `localStorage` gated, skipped under reduced motion | Test, 9 tests on `LaunchBanner`. The live transform across a page load has not been walked on a device |
 | Footer nav and category links | Navigate | Server |
 | Footer social icons | **Deliberately not links.** Five platforms drawn, all five URLs null until Beco supplies handles, so the icon is drawn without an anchor rather than shipping `href="#"` | Test |
 | Skip to content | Moves focus to `#main` | **NOT CONFIRMED** |
@@ -146,6 +147,8 @@ outstanding on this checklist.
 | Control | What it does | Status |
 |---|---|---|
 | Each photograph | Navigates to its product | Server, 61 product links |
+| Project type filter, Residential / Commercial / All | Rewrites `?type=`, server re-filters, filtered view canonicalises to `/gallery` and carries `noindex` per D29 | **Renders only once a photo carries a `project_type`.** Zero do today, so the control is currently absent by design. Facet logic is tested, `projectTypeFacets`, 4 tests |
+| "Delivered for" client cards | Static credential strip from the `clients` table | **Renders only once a client row is both published and permitted.** None are, so the section is currently absent. `ClientShowcase`, 5 tests |
 | Request a quote, Visit the showroom | Navigate | Server |
 
 Motion: frame drawn first, photograph wipes up into it, caption plate rises after. All inside
@@ -188,6 +191,17 @@ gate as an empty category. **Server confirmed.**
 | 500: Try again | Calls `reset()`, genuinely re-renders the segment | **NOT CONFIRMED**, no error has been forced |
 | 500: WhatsApp, Back to the range | Open the channel, navigate | **NOT CONFIRMED** |
 | Global error: Reload the site | Calls `reset()` | **NOT CONFIRMED** |
+
+---
+
+## dashboard: `/login` and `/launch` (D80)
+
+| Control | What it does | Status |
+|---|---|---|
+| Sign in form | `signInWithPassword`, redirects to `next` or `/launch`, one message for every failure | `SignInForm` tested, 4 tests. `signInSchema` unit tested. The real sign in **NOT WALKED**: needs a Supabase Auth admin account to exist |
+| `/launch` guard | `requireAdmin` redirects a signed-out or non-admin caller. `proxy.ts` redirects the obvious signed-out case first | RLS backstop proven in pgTAP, `04_role_writes`: admin can write `site_launch_live`, sales cannot. The redirect path **NOT WALKED** |
+| Save date | Writes `site_launch_at`, empty clears it | Writes the row: **NOT CONFIRMED end to end**. `launchSettingsSchema` unit tested, RLS pgTAP tested |
+| Launch the site / Revert | Flips `site_launch_live` behind a `ConfirmDialog` with the verb on its button | `LaunchControls` tested, 6 tests, including that the first click only opens the dialog. The row write **NOT CONFIRMED end to end** |
 
 ---
 

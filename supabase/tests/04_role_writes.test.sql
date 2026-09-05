@@ -3,7 +3,7 @@
 -- auth.uid() reads request.jwt.claims ->> 'sub', so becoming a user means
 -- setting that claim and switching to the `authenticated` role.
 begin;
-select plan(14);
+select plan(16);
 
 -- Fixed ids so the assertions below are readable.
 \set admin_id      '''aaaaaaaa-0000-0000-0000-000000000001'''
@@ -92,6 +92,14 @@ select throws_ok(
   'beco_sales CANNOT create a product'
 );
 
+-- D80: the launch switch is a beco_admin or brightex_admin action, not a
+-- salesperson one, even though sales can read settings.
+select is_empty(
+  $$update settings set value = 'true'::jsonb
+     where key = 'site_launch_live' returning key$$,
+  'beco_sales CANNOT throw the launch switch'
+);
+
 -- ---------- beco_product_manager ----------
 set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000004","role":"authenticated"}';
 
@@ -136,6 +144,15 @@ set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000006","r
 select ok(
   current_user_role() is null,
   'an inactive user has NO role at all, so every policy denies it'
+);
+
+-- ---------- beco_admin ----------
+set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","role":"authenticated"}';
+
+select isnt_empty(
+  $$update settings set value = 'true'::jsonb
+     where key = 'site_launch_live' returning key$$,
+  'beco_admin CAN throw the launch switch, from apps/dashboard'
 );
 
 -- ---------- D42: the Studio gate needs BOTH conditions ----------

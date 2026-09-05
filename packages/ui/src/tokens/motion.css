@@ -429,6 +429,39 @@
     animation: beco-word-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
+  /* --- D80: the launch banner's own reveal, when the countdown gives way to
+         "we are live". This is `reveal` per D31 applied to a strip of the
+         chrome instead of a section entering the viewport on scroll, the
+         same category with a different trigger, played once on the switch
+         flipping rather than looping. --- */
+  .beco-launch-reveal {
+    animation: beco-launch-reveal 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes beco-launch-reveal {
+    from { opacity: 0; transform: scale(0.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* --- Confetti. A textural detail INSIDE that one reveal, not a seventh
+         effect and not a persistent one: each piece falls once and settles
+         at opacity 0, `both` rather than `infinite`, so nothing on this
+         page loops forever in a peripheral vision the way a decorative
+         animation would. Warm Red is rationed to three or four appearances
+         a page per the brand system, so only one of every four pieces uses
+         it; the rest are Charcoal and High-Vis White, which is also what
+         keeps this reading as the site's own moment rather than a generic
+         party popper. --- */
+  .beco-confetti-piece {
+    animation: beco-confetti-fall 1600ms cubic-bezier(0.55, 0, 0.35, 1) both;
+  }
+
+  @keyframes beco-confetti-fall {
+    from { opacity: 1; transform: translateY(-14px) rotate(0deg); }
+    80%  { opacity: 1; }
+    to   { opacity: 0; transform: translateY(48px) rotate(80deg); }
+  }
+
   @supports (animation-timeline: view()) {
 
     /* --- The hero slabs ride an ORBIT, not a scroll.

@@ -82,6 +82,14 @@ five categories.
 - [ ] **Is the "2 hour quote" claim real?** The prototype stated it in five places and stated
       24 hours in a sixth. The site currently states no response time promise at all, on
       purpose, until this is confirmed
+- [ ] **The exact anniversary and launch date, in October.** The countdown, the reveal and the
+      `apps/dashboard` control are all built and tested (D80), but `site_launch_at` is null:
+      until Beco sets a date on the `/launch` page the storefront shows no countdown. The
+      switch itself can be thrown any time from that page by a `beco_admin` or `brightex_admin`
+      account, which Beco also needs to have created in Supabase Auth. Throw it about an hour
+      before the event: there is no realtime push and pages are cached for an hour, so the
+      reveal propagates over that window rather than instantly, the same as the announcement
+      bar always has
 - [ ] **No product carries a SKU**, 0 of 31. The product page's WhatsApp message is built to
       include one and that branch has therefore never rendered
 - [ ] **Client names for the projects page.** The showcase itself is built: `/gallery` renders

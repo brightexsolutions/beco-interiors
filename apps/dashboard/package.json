@@ -17,5 +17,8 @@
     "@beco/types": "workspace:*",
     "@beco/validation": "workspace:*",
     "@beco/supabase-client": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18"
   }
 }

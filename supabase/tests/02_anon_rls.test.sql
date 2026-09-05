@@ -1,6 +1,6 @@
 -- Anonymous access. Proving the NEGATIVE is the point of this file.
 begin;
-select plan(10);
+select plan(13);
 
 -- Seed as the owner, before dropping to anon.
 insert into categories (id, name, slug, is_published)
@@ -75,6 +75,25 @@ select results_eq(
   $$select count(*)::int from pg_proc where proname = 'submit_quote'$$,
   ARRAY[1],
   'only one submit_quote exists, so a short call cannot be ambiguous'
+);
+
+-- D80: the launch countdown and reveal are server rendered from settings
+-- like everything else, so anon has to be able to read both keys.
+select isnt_empty(
+  $$select * from settings where key = 'site_launch_at'$$,
+  'anon can read the launch date, the countdown needs it before any login exists'
+);
+select isnt_empty(
+  $$select * from settings where key = 'site_launch_live'$$,
+  'anon can read whether the site has gone live'
+);
+-- settings_write_admin's USING clause is is_admin(), false for anon, so the
+-- row is simply never matched for update: 0 rows, no error, same shape as
+-- beco_sales failing to reach another salesperson's quote below.
+select is_empty(
+  $$update settings set value = 'true'::jsonb
+     where key = 'site_launch_live' returning key$$,
+  'anon cannot throw the launch switch itself, only staff can'
 );
 
 select * from finish();

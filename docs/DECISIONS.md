@@ -1024,3 +1024,65 @@ active and light colour rules never have to be resolved against one another.
 **Known cleanup, not done here:** `.beco-orbit` and `.beco-orbit-stage` in `motion.css`, D56's
 turning card keyframes, are unused now that the desktop cards are gone. Left in place rather than
 deleted in the same pass as a structural rewrite, recorded here so it is not silently forgotten.
+
+## D80, 5 September 2026: the first anniversary countdown, and a real control to launch it
+
+Requested directly, relayed from Irene: Beco turns one in October 2026 and wants that on the
+announcement banner, and the site launch is being run as an event in the same month, so there
+should be a countdown, a reveal and a celebration on the day, controlled from a URL with a
+button that Brown can reach.
+
+**State lives in `settings`, not a new table.** Two keys, `site_launch_at` (a nullable ISO
+instant) and `site_launch_live` (a boolean). This is exactly the shape the key/value table
+exists for, and it inherits `settings`' policies rather than opening a new RLS surface:
+`settings_write_admin` already restricts writes to `beco_admin` and `brightex_admin`, and the
+`settings_read_public` allowlist is extended so both keys are anon readable, which the
+storefront needs because the countdown and the reveal are server rendered like everything else,
+not fetched client side from an admin value. Migration 25, with the anon read and the
+sales-cannot / admin-can write proven in `02_anon_rls` and `04_role_writes`.
+
+**The reveal is a click, not a clock.** `site_launch_live` is only ever set by the dashboard's
+own button. A first anniversary is a real moment with people in a room, and a value a cron job
+flips at midnight is not that. The countdown counts to `site_launch_at`; the actual transform
+waits for a person.
+
+Two propagation limits, both deliberate and both matching how `AnnouncementBar` has always
+behaved from this same slot. There is no realtime push: `settings` is not in the
+`supabase_realtime` publication and stays out, per `docs/SCHEMA.md`, so a tab open when the
+switch is thrown keeps its countdown until its next load. And every storefront page is
+`revalidate = 3600`, so a page already in the ISR cache can take up to an hour to pick the
+change up. Neither matters for a soft celebratory banner rather than a functional gate: the
+practical guidance, in `docs/milestones/M4-HANDOVER.md`, is to throw the switch an hour before
+the event. Building cross-app on-demand revalidation for one banner was not worth it.
+
+**One banner, not two.** For that month the anniversary IS the announcement, so `LaunchBanner`
+takes `AnnouncementBar`'s slot in the layout rather than stacking above it, keeping the vertical
+space that feedback has already pushed back on twice elsewhere. Its wrapper is shaped exactly
+like `AnnouncementBar`'s, same height and z-index, so D79's `data-announcement` hero-spacing
+contract does not need to know which one is in the slot. The regular announcements mechanism is
+untouched and still there for ordinary sales and notices.
+
+**Motion: `reveal` and `count up`, per D31, not a seventh effect.** The countdown digits are
+`count up` running the other direction, tabular figures so nothing reflows. The switch-over
+plays `reveal` once, applied to a strip of chrome instead of a section entering on scroll: same
+category, different trigger. The falling confetti is a textural detail inside that single
+reveal, `animation-fill-mode: both` not `infinite`, so nothing loops in a reader's peripheral
+vision the way a decorative animation would, and it is gated once more in JS on
+`prefers-reduced-motion` on top of the CSS `@media` block. Warm Red is rationed to one piece in
+four; the rest are Charcoal and High-Vis White. The whole flourish plays once per browser,
+tracked in `localStorage`, so a returning visitor gets the settled banner with no replay.
+
+**The control is a real authenticated page, not a secret link.** Rule 7 does not accept a
+shared token in a URL as access control, so `apps/dashboard` gets its first real surface: a
+password sign in against Supabase Auth, a `proxy.ts` fast-path redirect, and `/launch` gated by
+`requireAdmin`, which reads the role from the `users` table. That is the route half of "role
+checks in two places"; RLS on `settings` is the half that actually holds, and every server
+action re-checks the caller because a server action is a public endpoint whatever gated the
+render. This is NOT the start of M5's dashboard build, it is the one vertical slice this
+feature needs: sign in, one page, one date field, one switch. The switch uses `ConfirmDialog`
+with the verb on its button, per rule 4, because going live publicly is exactly the
+irreversible-in-effect action that rule is for.
+
+**Blocked on Beco:** the exact October date. The field is deliberately nullable and set from
+the control page rather than hardcoded, so the date being unconfirmed is not a blocker on the
+build, only on the countdown showing anything. Recorded in `docs/milestones/M4-HANDOVER.md`.
