@@ -3,8 +3,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { buttonClasses, HoverGallery } from '@beco/ui';
 import { AmbientVideoSection } from '@/components/ambient-video-section';
+import { ClientShowcase } from '@/components/client-showcase';
 import { PageHeader } from '@/components/page-header';
 import { getGalleryShots, projectTypeFacets, blurProps } from '@/lib/products';
+import { getPublishedClients } from '@/lib/clients';
 import type { ProjectType } from '@beco/types';
 
 export const revalidate = 3600;
@@ -75,7 +77,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
   const params = await searchParams;
   const type = one(params.type) as ProjectType | '';
 
-  const allShots = await getGalleryShots();
+  const [allShots, clients] = await Promise.all([getGalleryShots(), getPublishedClients()]);
   // Gated on real data existing at all, the same rule the facet helper's own
   // tests enforce: at launch nothing is classified yet, so this renders
   // nothing rather than a control that filters to an empty grid. Beco has
@@ -223,6 +225,8 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
             ))}
           </div>
         )}
+
+        <ClientShowcase clients={clients} />
 
         <div className="mt-20 border-t border-neutral-200 pt-12">
           <p className="max-w-[26ch] font-display text-3xl leading-[1.12] text-charcoal sm:text-4xl">

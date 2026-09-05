@@ -84,9 +84,13 @@ five categories.
       purpose, until this is confirmed
 - [ ] **No product carries a SKU**, 0 of 31. The product page's WhatsApp message is built to
       include one and that branch has therefore never rendered
-- [ ] **Client names for the projects page.** Brown mentioned Art Caffe and Hass Consult from
-      memory. NOT published: the `clients` table has a `has_permission` flag and a constraint
-      enforcing it, because some corporates prohibit being named contractually
+- [ ] **Client names for the projects page.** The showcase itself is built: `/gallery` renders
+      a "Delivered for" section from `clients` the moment a row is both published and permitted,
+      same as the rest of the site gates on real data. Brown mentioned Art Caffe and Hass
+      Consult from memory, but nothing is entered. NOT published: the `clients` table has a
+      `has_permission` flag and a constraint enforcing it, because some corporates prohibit
+      being named contractually. Logo, sector and a one line project description are all
+      optional columns worth filling in once names are confirmed
 - [ ] **Which gallery photo is residential and which is commercial.** Per Irene, Beco has done
       both. `ProductImage.project_type` and the gallery's own filter are built and tested
       (`projectTypeFacets` in `apps/storefront/src/lib/products.ts`), and the filter stays
