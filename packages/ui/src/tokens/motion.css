@@ -297,6 +297,45 @@
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
+  /* --- The chip's own photograph, wiping up into the frame beco-pop-in
+         already drew, a beat later: the same two stage assembly the
+         gallery and completed interiors already use, frame first,
+         photograph second, reused here at chip scale rather than
+         inventing a second entrance language for one small element.
+         Shares beco-wipe-up's own keyframe, not beco-wipe itself, since
+         that class is gated on [data-inview] from ScrollMotion and these
+         chips are part of the hero, always above the fold, animating on
+         load like the rest of it rather than on scroll arrival. --- */
+  .beco-chip-wipe {
+    animation: beco-wipe-up 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* --- The active chip's ring, a slow breathing opacity loop so the
+         "showing now" chip reads as alive rather than merely labelled,
+         without moving or resizing anything: opacity alone, so it never
+         competes with the crossfade behind the whole hero as a second
+         effect, only ever a quiet accent on one small ring. --- */
+  .beco-chip-active-ring {
+    animation: beco-chip-pulse 2600ms ease-in-out infinite;
+  }
+
+  @keyframes beco-chip-pulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+
+  /* --- The floating name label beside whichever chip is currently
+         showing, replayed by remounting on change, the same technique
+         beco-roll already uses for the specimen indicator's own name. --- */
+  .beco-chip-label {
+    animation: beco-chip-label-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes beco-chip-label-in {
+    from { opacity: 0; transform: translateX(6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
   /* --- The splash: mark, rule, strapline, each a beat apart. No
          `[data-inview]` gate anywhere in this sequence: this overlay is
          fixed and full screen the instant it mounts, so mounting IS the

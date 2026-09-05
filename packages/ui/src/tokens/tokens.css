@@ -156,11 +156,27 @@ body[data-announcement] .beco-hero-bleed {
        almost touching the top." The photograph is allowed to run all the
        way up; the reading content still needs a real safe area below the
        header and the announcement bar, so this pads the text column down
-       by the same two fixed heights rather than letting flex centering
-       alone decide how close is too close. Desktop only, matching where
-       the sticky full bleed treatment itself is desktop only: the mobile
-       block below it stays bottom anchored and was never crowding the
-       header the same way. */
+       by the same two fixed heights rather than letting flex centering,
+       or a bottom anchored flex box's own top edge, decide how close is
+       too close.
+
+       The mobile block is bottom anchored, not centred, but it is a
+       CHILD of the same pulled up section, so its own top edge moved up
+       exactly as far as the desktop box's did. Assumed at first not to
+       need this, on the theory that anchoring content to the bottom of
+       its own box was enough on its own: checked directly against the
+       real layout rather than left as an assumption, and the eyebrow
+       measured 64px INTO the header's own space. Both breakpoints need
+       the same safe area; only the exact amount differs, since the
+       header and announcement bar's own heights do not change by
+       breakpoint but the surrounding padding this replaces did. */
+.beco-hero-content-top {
+  padding-top: 5.5rem;
+}
+body[data-announcement] .beco-hero-content-top {
+  padding-top: 8.5rem;
+}
+
 @media (min-width: 1024px) {
   .beco-hero-content-top {
     padding-top: 7rem;

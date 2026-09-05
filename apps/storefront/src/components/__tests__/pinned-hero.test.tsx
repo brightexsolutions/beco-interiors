@@ -185,9 +185,26 @@ describe('PinnedHero, the right side stone chips', () => {
     expect(screen.queryByRole('link', { name: 'Beverly Gold, showing now' })).toBeNull();
   });
 
-  it('rings only the active chip', () => {
+  it('rings only the active chip, on its own overlay rather than the link', () => {
+    // A separate span, not a class on the link itself, so the ring can
+    // pulse on its own opacity without fighting the link's own scale
+    // transition on the same element.
     render(<PinnedHero thickness="12mm" slabs={SLABS} />);
-    expect(chip('Amber Jade, showing now').className.split(' ')).toContain('ring-high-vis-white');
-    expect(chip('Beverly Gold').className.split(' ')).not.toContain('ring-high-vis-white');
+    expect(chip('Amber Jade, showing now').querySelector('.ring-high-vis-white')).not.toBeNull();
+    expect(chip('Beverly Gold').querySelector('.ring-high-vis-white')).toBeNull();
+  });
+
+  it('scales up only the active chip, via transform rather than a width change', () => {
+    // A width change would reflow its neighbours in the column; scale
+    // does not, per the site's own transform-and-opacity-only motion rule.
+    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
+    expect(chip('Amber Jade, showing now').className.split(' ')).toContain('scale-110');
+    expect(chip('Beverly Gold').className.split(' ')).not.toContain('scale-110');
+  });
+
+  it('labels the active chip with a floating name, replayed on change', () => {
+    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
+    expect(screen.getByText('Amber Jade', { selector: '.beco-chip-label' })).toBeInTheDocument();
+    expect(screen.queryByText('Beverly Gold', { selector: '.beco-chip-label' })).toBeNull();
   });
 });

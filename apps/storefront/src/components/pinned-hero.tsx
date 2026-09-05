@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { buttonClasses, cn, WordReveal } from '@beco/ui';
 import { blurProps } from '@/lib/products';
 
@@ -34,9 +34,7 @@ import { blurProps } from '@/lib/products';
  * real headline, used once, per WordReveal's own rule. The lede
  * crossfading with the active stone, Beco's own first sentence per slab,
  * not written for this hero. The specimen indicator and its progress
- * rail. Native `position: sticky`, not a scroll hijacking library, so the
- * native scrollbar still behaves and a fast flick still reaches the
- * footer. Pin dropped entirely on mobile.
+ * rail. Pin dropped entirely on mobile.
  *
  * What does NOT carry over: the prototype's stock Unsplash photography,
  * its fabricated "520+ products" and five star "Client Rated" stats, and
@@ -45,12 +43,16 @@ import { blurProps } from '@/lib/products';
  * the hero's structure does not reverse that.
  *
  * TECHNIQUE: the crossfading photograph and the pinned type sit in ONE
- * sticky box spanning the section's full width. A second, invisible stack
- * of one panel per slab sits after it with a negative top margin pulling
- * it back under the sticky box, so it contributes only the SCROLL LENGTH
- * the pin rides across, an IntersectionObserver watching those panels for
- * which one is centred. Nothing about it costs INP: no scroll handler,
- * transform and opacity only, matching the site's own motion rules.
+ * sticky box spanning the section's full width. Which slab is active was
+ * originally ALSO driven by scroll position, an IntersectionObserver
+ * watching a second, invisible stack of chapters for which one was
+ * centred: removed on request, since scrolling the page changing the
+ * hero's own photograph read as an unwanted second thing happening at
+ * once. The interval below is the only thing that changes `active` now,
+ * so the section is close to a normal sticky block rather than one
+ * engineered for scroll length, and nothing about it costs INP: no
+ * scroll handler, transform and opacity only, matching the site's own
+ * motion rules regardless.
  *
  * The first photograph is the LCP element. It is never animated on entry,
  * priority loaded, and the only ambient drift on it starts 1.6s after
@@ -94,15 +96,14 @@ const AUTO_ADVANCE_MS = 4200;
 
 export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness: string }) {
   const [active, setActive] = useState(0);
-  const panels = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Auto advance, so the range is seen without requiring a scroll: reported
-  // directly, since the pinned column previously only changed slab as the
-  // reader scrolled past a chapter, and a visitor who never scrolls the
-  // hero saw exactly one stone. Independent of the IntersectionObserver
-  // below: scrolling still jumps `active` to whichever chapter is centred,
-  // this just keeps it moving on its own the rest of the time. The same
-  // guard RotatingStatement and StoneSlider already use: off under
+  // Auto advance, so the range is seen without requiring a scroll, on
+  // request: which stone is active USED to also change as the reader
+  // scrolled past one of a set of invisible chapters, an
+  // IntersectionObserver watching which one was centred. That coupling is
+  // removed here rather than layered under this timer: scrolling the page
+  // no longer changes the background at all, only this interval does. The
+  // same guard RotatingStatement and StoneSlider already use: off under
   // prefers-reduced-motion, and never armed for a single slab.
   useEffect(() => {
     if (slabs.length < 2) return;
@@ -112,24 +113,6 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
       AUTO_ADVANCE_MS,
     );
     return () => clearInterval(id);
-  }, [slabs.length]);
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const index = panels.current.indexOf(entry.target as HTMLDivElement);
-          if (index >= 0) setActive(index);
-        }
-      },
-      // Only the panel across the middle band counts, so the counter changes
-      // once per slab rather than twice at every boundary.
-      { rootMargin: '-45% 0px -45% 0px' },
-    );
-    for (const el of panels.current) if (el) io.observe(el);
-    return () => io.disconnect();
   }, [slabs.length]);
 
   const current = slabs[active] ?? slabs[0];
@@ -154,8 +137,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
       className="beco-hero-bleed relative border-b border-neutral-200 bg-charcoal"
     >
       {/* --- The sticky visual: photograph, gradient and type together, one
-              box spanning the section's full width regardless of the
-              invisible scroll track beneath it.
+              box spanning the section's full width.
 
               top-0 and a full 100vh, not top-20 and 100vh minus the
               header: the photograph itself needs to reach the very top of
@@ -192,7 +174,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
         <div
           className={cn(
             GRID_INSET,
-            'beco-hero-content-top relative flex h-full max-w-[46rem] flex-col justify-end pb-10 pr-6 pt-16',
+            'beco-hero-content-top relative flex h-full max-w-[52rem] flex-col justify-end pb-10 pr-6 pt-16',
             'lg:justify-center lg:pb-14 lg:pr-20',
           )}
         >
@@ -211,7 +193,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </h1>
 
           <div
-            className="beco-enter relative mt-6 max-w-[48ch]"
+            className="beco-enter relative mt-6 max-w-[54ch]"
             style={{ animationDelay: '620ms' }}
           >
             {/* Invisible, in normal flow, sized to the longest of the real
@@ -223,7 +205,11 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             </p>
             {ledes.map((lede, i) => (
               <p
-                key={lede}
+                // The slab's own slug, not the lede text: more than one
+                // slab without its own description shares the identical
+                // fallback sentence, which made this a duplicate React key
+                // the moment two slabs on the same hero both lacked one.
+                key={slabs[i]?.slug ?? i}
                 aria-hidden={i !== active}
                 className={cn(
                   'absolute inset-0 text-base leading-[1.65] text-neutral-300 lg:text-lg',
@@ -260,8 +246,10 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           {/* --- The slab indicator. Sits on a hairline at the foot of the
                   pinned column, so the type block above never moves as it
                   updates. Announced politely rather than interrupting.
-                  Desktop only: it tracks the scroll chapters below, which
-                  do not exist as a distinct interaction on mobile. --- */}
+                  Desktop only, matching the chip strip on the right: a
+                  design choice for this wider layout, not a functional
+                  need, now that the timer above is what drives it on
+                  every breakpoint alike. --- */}
           <div
             className="beco-enter mt-12 hidden border-t border-white/15 pt-5 lg:block"
             style={{ animationDelay: '900ms' }}
@@ -296,74 +284,74 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                 </li>
               ))}
             </ol>
-
-            <p className="mt-6 flex items-center gap-3 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
-              <span
-                aria-hidden
-                className="beco-scroll-cue inline-block h-8 w-0.5 bg-warm-red-deep motion-reduce:animate-none"
-              />
-              Scroll through the range
-            </p>
           </div>
         </div>
 
-        {/* --- The rest of the range, popping in where the gradient
-                lightens on the right, reported directly: real links to
-                each product, not a second orbit, and a real ring marks
-                whichever one the background is currently showing. One
-                entrance each, on load, never repeating, the same
-                restraint every other beco-enter use already holds to,
-                so this reads as one more beat of the section's own
-                assembly rather than a second effect competing with the
-                crossfade behind it. --- */}
+        {/* --- The rest of the range, on the right where the gradient
+                lightens, reported directly as too basic and needing real
+                design and motion. Real links to each product, not a
+                second orbit. Frame first (beco-pop-in), photograph
+                wiping up into it a beat later (beco-chip-wipe), the same
+                two stage assembly the gallery already uses reused at
+                chip scale rather than invented fresh. Only TRANSFORM and
+                OPACITY change on the active state, scale rather than a
+                width change, so a stone becoming active never reflows
+                its neighbours in the column. Still one section effect,
+                the crossfade: everything here is either a one time
+                entrance or a quiet accent on a single ring, never a
+                second competing choreography. --- */}
         <div className="pointer-events-none absolute inset-y-0 right-6 hidden items-center lg:flex xl:right-14">
-          <ul className="pointer-events-auto flex flex-col gap-3">
-            {slabs.map((slab, i) => (
-              <li
-                key={slab.slug}
-                className="beco-pop-in"
-                style={{ animationDelay: `${1000 + i * 120}ms` }}
-              >
-                <Link
-                  href={`/product/${slab.slug}`}
-                  className={cn(
-                    'group relative block h-16 w-16 overflow-hidden bg-neutral-800 ring-1 ring-inset ring-white/25 transition-transform duration-300 hover:scale-105 sm:h-20 sm:w-20',
-                    i === active && 'ring-2 ring-high-vis-white',
-                  )}
-                >
-                  <Image
-                    src={slab.src}
-                    alt=""
-                    fill
-                    sizes="80px"
-                    {...blurProps(slab)}
-                    className="object-cover opacity-90 transition-opacity group-hover:opacity-100"
-                  />
-                  <span className="sr-only">
-                    {slab.name}{i === active ? ', showing now' : ''}
-                  </span>
-                </Link>
-              </li>
-            ))}
+          <ul className="pointer-events-auto flex flex-col gap-5">
+            {slabs.map((slab, i) => {
+              const isActive = i === active;
+              return (
+                <li key={slab.slug} className="relative">
+                  {isActive ? (
+                    <span
+                      key={`${slab.slug}-label`}
+                      aria-hidden
+                      className="beco-chip-label absolute right-full top-1/2 mr-3 -translate-y-1/2 whitespace-nowrap bg-charcoal/90 px-3 py-1.5 font-ui text-xs font-semibold uppercase tracking-[0.12em] text-high-vis-white"
+                    >
+                      {slab.name}
+                    </span>
+                  ) : null}
+
+                  <Link
+                    href={`/product/${slab.slug}`}
+                    className={cn(
+                      'beco-pop-in group relative block aspect-[4/5] w-16 overflow-hidden bg-neutral-800 transition-transform duration-500 ease-brand sm:w-20',
+                      isActive
+                        ? 'scale-110'
+                        : 'opacity-70 ring-1 ring-inset ring-white/25 hover:scale-105 hover:opacity-100',
+                    )}
+                    style={{ animationDelay: `${1000 + i * 130}ms` }}
+                  >
+                    <span className="beco-clip absolute inset-0">
+                      <Image
+                        src={slab.src}
+                        alt=""
+                        fill
+                        sizes="96px"
+                        {...blurProps(slab)}
+                        className="beco-chip-wipe object-cover"
+                        style={{ animationDelay: `${1150 + i * 130}ms` }}
+                      />
+                    </span>
+                    {isActive ? (
+                      <span
+                        aria-hidden
+                        className="beco-chip-active-ring pointer-events-none absolute inset-0 ring-2 ring-inset ring-high-vis-white"
+                      />
+                    ) : null}
+                    <span className="sr-only">
+                      {slab.name}{isActive ? ', showing now' : ''}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
-      </div>
-
-      {/* --- The invisible scroll track. One panel per slab, giving the
-              section its scroll length and telling the observer above
-              which slab is centred. Pulled back under the sticky visual
-              with a negative margin, so it adds only the length the pin
-              actually consumes rather than doubling it. Desktop only:
-              mobile drops the pin per D30 and gets the swipeable row
-              below instead. --- */}
-      <div className="hidden lg:block lg:-mt-[100vh]" aria-hidden>
-        {slabs.map((slab, i) => (
-          <div
-            key={slab.slug}
-            ref={(el) => { panels.current[i] = el; }}
-            className="min-h-[100vh]"
-          />
-        ))}
       </div>
 
       {/* --- Mobile: no pin, since D30 drops it below lg, but the SAME auto
@@ -392,7 +380,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRADIENT }} />
         </div>
 
-      <div className={cn(GRID_INSET, 'relative flex h-full flex-col justify-end pb-10 pr-6 pt-16')}>
+      <div className={cn(GRID_INSET, 'beco-hero-content-top relative flex h-full flex-col justify-end pb-10 pr-6')}>
         <div className="flex items-center gap-4">
           <span aria-hidden className="beco-rule-draw h-px w-8 bg-warm-red" />
           <p className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300" style={{ animationDelay: '120ms' }}>
