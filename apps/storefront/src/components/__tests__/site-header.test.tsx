@@ -121,4 +121,11 @@ describe('SiteHeader, light chrome over the hero', () => {
     // covers elsewhere. This checks an INACTIVE link stays dark.
     expect(desktopLink('Contact').className.split(' ')).toContain('text-neutral-700');
   });
+
+  it('also goes light on /gallery, whose own opening film sits behind it the same way', () => {
+    mockPathname.mockReturnValue('/gallery');
+    render(<SiteHeader />);
+    expect(screen.getByAltText('').getAttribute('src')).toContain(encodeURIComponent('/logo-mark-white.png'));
+    expect(desktopLink('Projects')).toHaveAttribute('aria-current', 'page');
+  });
 });

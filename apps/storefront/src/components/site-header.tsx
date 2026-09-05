@@ -46,10 +46,12 @@ const ABOUT: NavItem[] = [
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  // Transparent belongs to the HOME hero and nowhere else. Every other page
-  // starts with content directly beneath the bar, so a transparent header let
-  // a product gallery show through it and read as broken layout.
-  const overHero = pathname === '/';
+  // Transparent belongs only to a page whose own opening is a full bleed
+  // dark section built to sit behind it, per D79: home's photograph, and
+  // the gallery's own opening film, added on request. Every other page
+  // starts with content directly beneath the bar, so a transparent header
+  // let a product listing show through it and read as broken layout.
+  const overHero = pathname === '/' || pathname === '/gallery';
   // The transparent state now sits over a full bleed dark photograph, per
   // D79, rather than the page's own light background, so it needs light
   // chrome to stay legible: the wordmark, the nav and the phone line all

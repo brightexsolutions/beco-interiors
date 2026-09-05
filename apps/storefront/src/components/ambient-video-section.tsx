@@ -94,16 +94,17 @@ export function AmbientVideoSection({
       // which is exactly what the selector needs, and the section's own
       // overflow-hidden is what clips the drift's scale without an extra
       // element existing only to crop it.
-      // 100svh minus the chrome ABOVE this section, not 100svh alone. This
-      // is not the first thing on the page: the announcement bar and the
-      // sticky header both sit above it and both take real space on first
-      // paint, so a section literally the height of the viewport pushed its
-      // own caption and scroll cue below the fold before anyone had
-      // scrolled at all, which defeats the point of a cue that says to
-      // scroll. 8rem covers the header's own h-20 (5rem) plus the
-      // announcement bar's rendered height (roughly 2.75 to 3rem, one line
-      // of text plus its padding).
-      className="beco-ambient relative flex h-[calc(100svh-8rem)] min-h-[32rem] w-full items-center justify-center overflow-hidden bg-charcoal"
+      //
+      // Full 100svh again, and beco-hero-bleed pulling the section up
+      // behind the header and the announcement bar, reversing the
+      // shrink-to-fit-below fix this section shipped with: the header is
+      // now transparent here too, per D79, so the video needs to reach
+      // the true top of the page for there to be anything behind it, the
+      // same reasoning the home hero already went through. The header's
+      // own scrim guarantees its text stays legible regardless of what
+      // the video is doing underneath it, so this section does not need
+      // its own special casing for that part.
+      className="beco-ambient beco-hero-bleed relative flex h-[100svh] min-h-[32rem] w-full items-center justify-center overflow-hidden bg-charcoal"
     >
       <video
         ref={video}
