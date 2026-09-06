@@ -1065,12 +1065,15 @@ untouched and still there for ordinary sales and notices.
 **Motion: `reveal` and `count up`, per D31, not a seventh effect.** The countdown digits are
 `count up` running the other direction, tabular figures so nothing reflows. The switch-over
 plays `reveal` once, applied to a strip of chrome instead of a section entering on scroll: same
-category, different trigger. The falling confetti is a textural detail inside that single
-reveal, `animation-fill-mode: both` not `infinite`, so nothing loops in a reader's peripheral
+category, different trigger. Alongside it, confetti falls once from the bar over the header and
+the top of the hero, roughly 2.5s, from a `fixed pointer-events-none` overlay that unmounts
+itself: `animation-fill-mode: both` not `infinite`, so nothing loops in a reader's peripheral
 vision the way a decorative animation would, and it is gated once more in JS on
-`prefers-reduced-motion` on top of the CSS `@media` block. Warm Red is rationed to one piece in
-four; the rest are Charcoal and High-Vis White. The whole flourish plays once per browser,
-tracked in `localStorage`, so a returning visitor gets the settled banner with no replay.
+`prefers-reduced-motion` on top of the CSS `@media` block. The reach past the bar is a
+deliberate call after seeing it live, since clipped to a 47px strip it did not read as a
+celebration at all. Warm Red is rationed to one piece in four; the rest are Charcoal and
+High-Vis White. The whole flourish plays once per browser, tracked in `localStorage`, so a
+returning visitor gets the settled banner with no replay.
 
 **The control is a real authenticated page, not a secret link.** Rule 7 does not accept a
 shared token in a URL as access control, so `apps/dashboard` gets its first real surface: a

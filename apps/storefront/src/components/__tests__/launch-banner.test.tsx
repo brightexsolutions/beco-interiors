@@ -54,8 +54,14 @@ describe('LaunchBanner', () => {
     const { container } = await act(async () =>
       render(<LaunchBanner launch={{ launchAt: null, isLive: true }} />),
     );
-    expect(container.querySelectorAll('.beco-confetti-piece').length).toBeGreaterThan(0);
+    const pieces = container.querySelectorAll('.beco-confetti-piece');
+    expect(pieces.length).toBeGreaterThan(0);
     expect(window.localStorage.getItem('beco-launch-seen')).toBe('true');
+    // The overlay is fixed and non-interactive, so the fall can spill past
+    // the bar over the header without the confetti ever eating a click.
+    const overlay = pieces[0]!.parentElement!;
+    expect(overlay.className).toContain('fixed');
+    expect(overlay.className).toContain('pointer-events-none');
   });
 
   it('never replays the reveal for a visitor who has already seen it', async () => {

@@ -32,13 +32,13 @@ import type { LaunchState } from '@/lib/launch';
  */
 const SEEN_KEY = 'beco-launch-seen';
 
-// Sixteen pieces, positions and delays fixed rather than random so the
-// layout is stable across renders. Only one in four uses Warm Red, which the
-// brand system rations to three or four appearances a page: the rest are
-// Charcoal and High-Vis White.
-const CONFETTI = Array.from({ length: 16 }, (_, i) => ({
-  left: `${(i * 41 + 3) % 100}%`,
-  delayMs: (i % 8) * 90,
+// Twenty pieces, positions and delays fixed rather than random so the layout
+// is stable across renders. Only one in four uses Warm Red, which the brand
+// system rations to three or four appearances a page: the rest are Charcoal
+// and High-Vis White.
+const CONFETTI = Array.from({ length: 20 }, (_, i) => ({
+  left: `${(i * 37 + 3) % 100}%`,
+  delayMs: (i % 10) * 80,
   tone: i % 4 === 0 ? 'bg-warm-red' : i % 2 === 0 ? 'bg-high-vis-white' : 'bg-neutral-400',
 }));
 
@@ -88,7 +88,7 @@ export function LaunchBanner({ launch }: { launch: LaunchState }) {
   // The confetti overlay unmounts itself rather than sitting inert forever.
   useEffect(() => {
     if (!celebrate) return undefined;
-    const id = setTimeout(() => setCelebrate(false), 2200);
+    const id = setTimeout(() => setCelebrate(false), 2600);
     return () => clearTimeout(id);
   }, [celebrate]);
 
@@ -96,34 +96,44 @@ export function LaunchBanner({ launch }: { launch: LaunchState }) {
 
   if (launch.isLive) {
     return (
-      <aside
-        aria-label="Announcement"
-        className="relative z-30 overflow-hidden bg-charcoal text-high-vis-white"
-      >
+      <>
         {celebrate ? (
-          <div aria-hidden className="pointer-events-none absolute inset-0">
+          // A fixed overlay, not a child of the bar, so the fall can spill
+          // past it over the header and the top of the hero rather than being
+          // clipped to a 47px strip. z above the header, pointer-events-none
+          // so it never intercepts a click, and it unmounts after 2.6s so
+          // nothing loops in a reader's peripheral vision.
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-56 overflow-hidden"
+          >
             {CONFETTI.map((piece, i) => (
               <span
                 key={i}
-                className={`beco-confetti-piece absolute top-0 h-2 w-2 ${piece.tone}`}
+                className={`beco-confetti-piece absolute top-0 h-2.5 w-2.5 ${piece.tone}`}
                 style={{ left: piece.left, animationDelay: `${piece.delayMs}ms` }}
               />
             ))}
           </div>
         ) : null}
-        <div className={`mx-auto max-w-[1380px] px-6 py-2.5 sm:py-3 ${celebrate ? 'beco-launch-reveal' : ''}`}>
-          <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">
-            <span className="font-semibold uppercase tracking-[0.12em]">One year in Nairobi.</span>
-            <span className="hidden text-neutral-300 sm:inline">Beco is live.</span>
-            <Link
-              href="/gallery"
-              className="font-semibold underline underline-offset-4 hover:no-underline"
-            >
-              See the year in projects
-            </Link>
-          </p>
-        </div>
-      </aside>
+        <aside
+          aria-label="Announcement"
+          className="relative z-30 bg-charcoal text-high-vis-white"
+        >
+          <div className={`mx-auto max-w-[1380px] px-6 py-2.5 sm:py-3 ${celebrate ? 'beco-launch-reveal' : ''}`}>
+            <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">
+              <span className="font-semibold uppercase tracking-[0.12em]">One year in Nairobi.</span>
+              <span className="hidden text-neutral-300 sm:inline">Beco is live.</span>
+              <Link
+                href="/gallery"
+                className="font-semibold underline underline-offset-4 hover:no-underline"
+              >
+                See the year in projects
+              </Link>
+            </p>
+          </div>
+        </aside>
+      </>
     );
   }
 

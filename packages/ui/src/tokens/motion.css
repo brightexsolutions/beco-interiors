@@ -443,23 +443,25 @@
     to   { opacity: 1; transform: scale(1); }
   }
 
-  /* --- Confetti. A textural detail INSIDE that one reveal, not a seventh
+  /* --- Confetti. A textural detail alongside that one reveal, not a seventh
          effect and not a persistent one: each piece falls once and settles
          at opacity 0, `both` rather than `infinite`, so nothing on this
          page loops forever in a peripheral vision the way a decorative
-         animation would. Warm Red is rationed to three or four appearances
-         a page per the brand system, so only one of every four pieces uses
-         it; the rest are Charcoal and High-Vis White, which is also what
-         keeps this reading as the site's own moment rather than a generic
-         party popper. --- */
+         animation would. It falls from the banner over the header and the
+         top of the hero, roughly 2.5s end to end, then the overlay unmounts.
+         Warm Red is rationed to three or four appearances a page per the
+         brand system, so only one of every four pieces uses it; the rest
+         are Charcoal and High-Vis White, which is also what keeps this
+         reading as the site's own moment rather than a generic party
+         popper. --- */
   .beco-confetti-piece {
-    animation: beco-confetti-fall 1600ms cubic-bezier(0.55, 0, 0.35, 1) both;
+    animation: beco-confetti-fall 2400ms cubic-bezier(0.4, 0, 0.35, 1) both;
   }
 
   @keyframes beco-confetti-fall {
-    from { opacity: 1; transform: translateY(-14px) rotate(0deg); }
-    80%  { opacity: 1; }
-    to   { opacity: 0; transform: translateY(48px) rotate(80deg); }
+    from { opacity: 1; transform: translateY(-16px) rotate(0deg); }
+    75%  { opacity: 1; }
+    to   { opacity: 0; transform: translateY(210px) rotate(190deg); }
   }
 
   @supports (animation-timeline: view()) {
