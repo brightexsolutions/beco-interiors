@@ -93,5 +93,11 @@ export async function submitQuote(input: unknown): Promise<SubmitResult> {
     };
   }
 
+  // The confirmation email is deliberately NOT sent from here. This app must
+  // never hold the Resend key, per the ownership split and the storefront
+  // .env.example: a fully compromised storefront must leak nothing but the
+  // anon key. The send belongs on the database side, triggered by the
+  // quotes insert, using the template in @beco/documents. Deferred with
+  // that reason in docs/milestones/M4-TODO.md.
   return { ok: true, reference: reference as string };
 }
