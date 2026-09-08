@@ -153,7 +153,7 @@ export default async function BlogPostPage({ params }: Params) {
   );
 }
 
-function BlogPostingSchema({ post }: { post: BlogPost }) {
+export function BlogPostingSchema({ post }: { post: BlogPost }) {
   const url = `https://www.beco.co.ke/blog/${post.slug}`;
   const schema = {
     '@context': 'https://schema.org',
