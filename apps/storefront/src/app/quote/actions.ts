@@ -1,7 +1,8 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
-import { webQuoteSubmissionSchema } from '@beco/validation';
+import { createRateLimiter, webQuoteSubmissionSchema } from '@beco/validation';
 
 /**
  * The public quote submission.
@@ -21,7 +22,34 @@ const anon = () =>
     { auth: { persistSession: false } },
   );
 
+// App-level stopgap until the Cloudflare edge rule exists, per D81. Module
+// scoped so the window survives across calls within one server instance;
+// per instance and lost on deploy, which is the limitation the edge rule
+// closes. Ten submissions a minute from one address is far above a real
+// customer and well below a script.
+const limiter = createRateLimiter({ limit: 10, windowMs: 60_000 });
+
+/** The caller's address, or null when there is no request scope, which in
+    practice is only a direct call from a test. A null skips the limit. */
+async function callerKey(): Promise<string | null> {
+  try {
+    const h = await headers();
+    const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip');
+    return ip ? `quote:${ip}` : 'quote:unknown';
+  } catch {
+    return null;
+  }
+}
+
 export async function submitQuote(input: unknown): Promise<SubmitResult> {
+  const key = await callerKey();
+  if (key && !limiter.check(key).ok) {
+    return {
+      ok: false,
+      error: 'Too many requests from here. Please wait a minute, or call us on 0722 333 730.',
+    };
+  }
+
   const parsed = webQuoteSubmissionSchema.safeParse(input);
   if (!parsed.success) {
     return {

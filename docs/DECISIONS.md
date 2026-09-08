@@ -1089,3 +1089,36 @@ irreversible-in-effect action that rule is for.
 **Blocked on Beco:** the exact October date. The field is deliberately nullable and set from
 the control page rather than hardcoded, so the date being unconfirmed is not a blocker on the
 build, only on the countdown showing anything. Recorded in `docs/milestones/M4-HANDOVER.md`.
+
+## D81, 8 September 2026: an app-level rate limiter, as a stopgap in front of the edge rule
+
+Rule 7 requires rate limiting on public write endpoints. The M0 review, and `M4-TODO`, had it
+as a Cloudflare rule, which cannot exist until the M1 DNS cutover. That left the two public
+writes, `submit_quote` and now the dashboard sign in, with nothing in front of them.
+
+`createRateLimiter` in `@beco/validation` is a stopgap and is commented as one. It is an exact
+sliding-window log: every hit's timestamp is kept, anything older than the window is dropped on
+the next check, and the survivors are the count. Store and clock are injected, so the unit
+tests assert exact boundaries without sleeping and a shared store can be swapped in later
+without touching the file.
+
+**It lives in `@beco/validation`, not a new package.** That package is already "the server-side
+guard on a request", both apps depend on it, and rule 5 is satisfied by one home. A new
+`@beco/rate-limit` package would have been a package.json, a tsconfig, a workspace entry and
+two dependency edges for one 60-line file.
+
+**The store is in memory, so the limit is per instance and resets on deploy.** This is a real
+limitation, not a bug, and it is exactly why the Cloudflare rule still has to happen: an
+attacker spread across enough serverless instances is not stopped by this. What it does stop is
+the common case, a single address hammering one instance, and it works today with no infra.
+Ten requests a minute per address on both endpoints: far above a real customer pricing a list
+or an admin mistyping a password, far below a script.
+
+**The wiring tolerates no request scope.** `headers()` throws when called outside a request,
+which in practice is only a direct call from an integration test. The helper catches that and
+returns null, and a null key skips the limit, so `submit_quote`'s end-to-end tests keep
+exercising the real path. Every real HTTP request has a scope, so production is always limited.
+
+**Sign in already had Supabase Auth's own limiter behind it.** The app layer there is thin: it
+turns a burst into one clear message instead of a run of GoTrue 429s, and keeps the two public
+writes shaped the same way.

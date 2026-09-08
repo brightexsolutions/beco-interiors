@@ -1,11 +1,27 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { signInSchema } from '@beco/validation';
+import { createRateLimiter, signInSchema } from '@beco/validation';
 import { getSupabase } from '@/lib/supabase';
 
 export interface SignInState {
   error?: string;
+}
+
+// Supabase Auth rate limits sign in on its own side; this is a thin layer
+// in front of it so a burst gets one clear message rather than a string of
+// GoTrue 429s, per D81. Ten attempts a minute from one address.
+const limiter = createRateLimiter({ limit: 10, windowMs: 60_000 });
+
+async function callerKey(): Promise<string | null> {
+  try {
+    const h = await headers();
+    const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip');
+    return ip ? `sign-in:${ip}` : 'sign-in:unknown';
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -15,6 +31,11 @@ export interface SignInState {
  * write. See D80 and rule 7.
  */
 export async function signIn(_prev: SignInState, formData: FormData): Promise<SignInState> {
+  const key = await callerKey();
+  if (key && !limiter.check(key).ok) {
+    return { error: 'Too many attempts. Please wait a minute and try again.' };
+  }
+
   const parsed = signInSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
