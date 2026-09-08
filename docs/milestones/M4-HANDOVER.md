@@ -122,6 +122,12 @@ five categories.
 
 ## 4. Technical debt and known limits
 
+- [ ] **`pnpm lint` is broken and CI does not run it.** Next 16 removed `next lint`, which is
+      still what both apps' `lint` script calls, and no flat `eslint.config` was ever set up.
+      The rule-level guards CLAUDE.md relies on, no em dashes and no browser dialogs, run as
+      grep steps in `ci.yml` and are unaffected, but the ordinary lint layer, unused vars,
+      hook deps, `no-explicit-any`, is not running anywhere. Found 9 September during closeout.
+      Setting up ESLint flat config for a Next 16 TypeScript monorepo is its own task
 - [ ] **Video transcoding is manual.** Beco's 52 clips are portrait QuickTime `.MOV` at 8 to
       80MB. One was converted by hand to 1.7MB of MP4. The step belongs in the import pipeline
       and needs **ffmpeg installed**
