@@ -24,9 +24,11 @@
     "drive:import": "tsx tools/drive-import/src/cli.ts",
     "backup:verify": "tsx tools/backup/src/verify.ts",
     "check:secrets": "tsx tools/backup/src/secret-scan.ts",
-    "check:type-floor": "node tools/setup/assert-type-floor.mjs"
+    "check:type-floor": "node tools/setup/assert-type-floor.mjs",
+    "lighthouse": "lhci autorun"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",

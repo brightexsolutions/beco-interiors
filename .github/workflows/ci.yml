@@ -83,3 +83,28 @@ jobs:
           echo "$csp" | grep -q "upgrade-insecure-requests" || { echo "missing upgrade-insecure-requests"; exit 1; }
           echo "production CSP correct"
 
+  # Separate job: a production build measured with the motion live, per
+  # CLAUDE.md's performance budgets. The catalogue is seeded but has no
+  # images in CI, so lighthouserc.json hard-fails on CLS and blocking time
+  # and warns on the image-dominated metrics. See docs/milestones/M4-TODO.md.
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+      - name: Seed a local catalogue for the run
+        run: supabase start
+
+      - run: pnpm build
+      - name: Lighthouse CI
+        run: pnpm lighthouse
+      - if: always()
+        run: supabase stop
+

@@ -95,15 +95,28 @@ Verification for this milestone was done against a running dev server on
 - [x] **Submission verified end to end** by integration test against the local database: the
       row exists, the items exist, the reference is minted, the quote arrives unowned, and a
       crafted request cannot supply its own description or price. **7 tests**
-- [ ] Confirmation email through Resend
-- [ ] Rate limiting on the endpoint (Cloudflare rule, needs M1 DNS)
+- [~] Confirmation email through Resend. **Template built, delivery deferred.**
+      `buildQuoteConfirmationEmail` and `sendQuoteConfirmation` are in `@beco/documents`, tested,
+      no-op without `RESEND_API_KEY`. NOT wired into `submitQuote`: the storefront must never
+      hold the Resend key, per the ownership split and its own `.env.example`. The web
+      submission's confirmation belongs on the database side, triggered by the `quotes` insert
+      via an edge function, which is a new deployment surface with no precedent here yet. The
+      dashboard's priced-quote send flow will use the same template. See D81's neighbourhood
+- [x] **Rate limiting on the public writes, 8 September.** `createRateLimiter` in
+      `@beco/validation`, an exact sliding-window log with an injected store and clock, wired
+      into `submitQuote` and the dashboard sign in. A STOPGAP: the store is in memory so the
+      limit is per instance and resets on deploy, which is why the Cloudflare edge rule still
+      has to happen at M1 DNS. Ten requests a minute per address on both. **7 tests.** See D81
 
 ## SEO, per D25 and the seo-checklist skill
 
 - [x] Metadata API on every route built so far, with title template
 - [x] Canonical on `/shop`, `/shop/[category]`, `/product/[slug]`, `/quote`
 - [x] `meta_title` and `meta_description` overrides honoured on products
-- [x] JSON-LD: LocalBusiness, Product with Offer, BreadcrumbList. **Verified by parsing**
+- [x] JSON-LD: LocalBusiness, Product with Offer, BreadcrumbList, and BlogPosting on posts.
+      **Verified by parsing**, and `BlogPostingSchema` now has 5 tests that parse both its
+      ld+json blocks and check headline, description, absolute image URL, author, publisher,
+      the omit-rather-than-null behaviour and the breadcrumb
 - [x] D27 automatic index gating: `robots: noindex` when `product_count === 0`
 - [ ] Validate every block in Google's Rich Results Test
 - [x] `sitemap.xml` from the database, `robots.txt`. **Verified:** 33 URLs, only categories
@@ -114,7 +127,10 @@ Verification for this milestone was done against a running dev server on
 - [x] `ItemList` on category grids. **Verified:** emitted on `/shop/12mm-sintered-stones`
       and on the group pages, with `numberOfItems` matching the rendered grid
 - [ ] The 301 redirect map. **Blocked:** the old URL list has not arrived
-- [ ] Three blog articles seeded through a migration
+- [x] **Three blog articles seeded through migration 24**, plus `/blog` and `/blog/[slug]`, a
+      category sidebar and a shop promo panel. **Verified:** `/blog` and
+      `/blog/sintered-stone-buying-guide` both 200, three published rows, `BlogPosting` JSON-LD
+      parses. Studio authoring itself is still M7, per the `blog-content` skill
 
 ## Design system additions
 
@@ -132,13 +148,12 @@ Verification for this milestone was done against a running dev server on
 - [x] `motion.css`: CSS scroll driven parallax, scale and crop, and rise. No scroll handler,
       so none of it costs INP
 - [x] `ProductCard` gains a `frame` variant, so a lead tile is not cropped to 4:5
-- [~] **The deck was NOT extracted into `@beco/ui`.** Corrected on 3 September by walking the
-      list against the code rather than the notes: there is no `CardDeck` anywhere. What is
-      shared is the CSS, `.beco-stack-card` in `motion.css`. `RoomStack` lives in
-      `apps/storefront/src/components/` and is used on BOTH the home page and About, so rule 5
-      applies and is currently unmet. Extracting it means decoupling it from `next/image` and
-      the products type the way `ProductCard` already is, which is a real refactor on the two
-      pages that matter most, so it is recorded rather than rushed at the end of a session
+- [x] **`RoomStack` extracted into `@beco/ui`, 5 September.** The deck's own mechanics, the fan,
+      the swipe, the caption plate, the static stacked transform that is also the reduced-motion
+      state, now live in `packages/ui/src/components/room-stack.tsx` and take `RoomStackCard[]`.
+      A thin `apps/storefront` wrapper is the only place that still knows about `next/image` and
+      `CatalogueProduct`, which is exactly what kept it out of the design system. Both call
+      sites, home and About, pass `products` unchanged. Tests in both packages. Rule 5 met
 - [x] Product gallery holds one card's worth of space whatever it contains. A strip has to
       reserve room for every image, so a three image gallery and a six image gallery look like
       different components, and a fifth of the catalogue has only three. **Corrected on 3
@@ -500,6 +515,44 @@ These were discovered while building and are recorded rather than remembered.
       the category join, so the same ProductCard showed a finish and its range on `/shop` and
       neither on a category page. One column list now serves every catalogue query
 
+## Raised by Brown, done 5 to 9 September
+
+Feedback from Irene relayed live, plus the closeout items above. Verified against a running dev
+server on `localhost:3000` and `:3001` and the local database on 9 September.
+
+- [x] **Residential and commercial gallery categorisation.** Per Irene, Beco has done both.
+      `ProductImage.project_type`, `projectTypeFacets`, and a filter on `/gallery` that renders
+      only once at least one photo carries a value, the same gating as D27. `?type=` is noindex
+      and canonical to `/gallery`. **4 helper tests, 3 metadata tests.** No photo is classified
+      yet, blocked on Beco in `M4-HANDOVER.md`
+- [x] **Named client showcase on `/gallery`.** `ClientShowcase` reads the `clients` table, which
+      has carried this shape since migration 10, and renders only once a row is both published
+      and permitted, RLS's own gate. **5 tests.** No client is entered yet, blocked on Beco
+- [x] **First anniversary countdown, reveal and launch control, D80.** `LaunchBanner` takes the
+      announcement slot for the campaign: a live countdown to `settings.site_launch_at`, then a
+      one-time confetti reveal once `site_launch_live` is thrown, `localStorage` gated, skipped
+      under reduced motion. The control is a real authenticated page: `apps/dashboard` gets its
+      first surface, a Supabase Auth sign in, a `proxy.ts` redirect, `/launch` gated by
+      `requireAdmin`, `ConfirmDialog` on the switch. Migration 25, extends `settings_read_public`.
+      **pgTAP: anon and sales cannot throw the switch, admin can. Component tests on the banner,
+      the countdown, the sign in form and the launch controls.** Exact October date blocked on Beco
+- [x] **The home hero always renders, 8 September.** `HeroStatic`, a server-rendered charcoal
+      hero with the same eyebrow, headline, lede and CTAs, shows when no product carries a slab
+      or application shot. The page used to fall through to no hero at all. **4 tests**
+- [x] **Rate limiting on the public writes, D81.** See the quote-flow section above
+- [x] **The two 500 pages tested.** `error.tsx` and `global-error.tsx` had none. **8 tests** on
+      the retry, the digest reference and the channels that do not need the site working
+- [x] **Reduced-motion code audit.** `motion.css` is disciplined: every keyframe-driven class
+      is inside `prefers-reduced-motion: no-preference` or the `@supports` scroll block, with
+      static destination states outside. One fix: the `LoadingState` skeleton kept pulsing, now
+      `motion-reduce:animate-none`. The hover nudges across `/shop` and `range-browse` were left
+      as the established site idiom. **Still needs the real-device walk**, which is separate
+- [~] **Lighthouse CI wired, 9 September.** `lighthouserc.json` and a `lighthouse` job in
+      `ci.yml`, against a production build with a real catalogue but no images. CLS, total
+      blocking time and unsized images hard-fail; LCP and byte weight warn, because the CI page
+      has no hero photograph and their real enforcement needs a preview deploy that does.
+      **Not yet run green in CI on a PR**
+
 ## Definition of done, per CLAUDE.md rule 8
 
 - [ ] Every todo above verified
@@ -508,3 +561,8 @@ These were discovered while building and are recorded rather than remembered.
 - [ ] Lighthouse meets every budget with the choreography live
 - [ ] Codex review pass run, findings resolved or explicitly deferred
 - [ ] Documentation written
+
+## Codex M4 review
+
+Codex's findings from the milestone-close pass land here as checkboxes, per CLAUDE.md's "The
+two agents". Not a separate backlog. Nothing yet: the pass has not run.
