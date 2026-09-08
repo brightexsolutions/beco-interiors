@@ -55,6 +55,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Control | What it does | Status |
 |---|---|---|
 | Hero CTAs | Navigate to `/shop` and `/quote` | Server |
+| Hero, no photography | `HeroStatic` renders in place of `PinnedHero` when no product carries a slab or application shot. Same eyebrow, h1, lede and the same two CTAs to the same routes, on flat charcoal | Test, 4 tests. The swap point is `slabs.length` in `page.tsx` |
 | Category rail cards | Navigate to the category | Server |
 | Range grid cards | Navigate to the product | Server, 29 product links present |
 | Room stack | Auto dealing, decorative, not interactive | n/a |

@@ -34,3 +34,4 @@ supabase/.temp/
 
 # Note: docs/ is deliberately NOT ignored. It holds the committed
 # documentation set and travels with the code.
+.playwright-mcp/

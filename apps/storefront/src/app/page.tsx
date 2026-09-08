@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ProductCard, Reveal, CountUp, CutoutReveal, buttonClasses } from '@beco/ui';
 import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
+import { HeroStatic } from '@/components/hero-static';
 import { SlabRail } from '@/components/slab-rail';
 import { SlabToSurface } from '@/components/slab-to-surface';
 import { RoomStack } from '@/components/room-stack';
@@ -79,7 +80,10 @@ export default async function HomePage() {
 
   return (
     <main>
-      {slabs.length > 0 ? <PinnedHero slabs={slabs} thickness="12mm" /> : null}
+      {/* The hero is guaranteed: the full crossfade when there is photography
+          to run it, a static charcoal hero with the same words when there is
+          not, never nothing. */}
+      {slabs.length > 0 ? <PinnedHero slabs={slabs} thickness="12mm" /> : <HeroStatic />}
 
       {/* --- Stat band. Counts up once on entry, then still. Label above
               figure, on a hairline, so it reads as a specification rather
