@@ -30,9 +30,12 @@ describe('buildQuoteConfirmationEmail', () => {
   });
 
   it('uses no em dashes anywhere, per rule 1', () => {
+    // Built from the code point so this file itself carries no literal em
+    // dash for the repo-wide grep in ci.yml to trip on.
+    const emDash = String.fromCharCode(0x2014);
     const email = buildQuoteConfirmationEmail({ reference: 'BEC-Q-1', customerName: 'Wanjiku' });
     for (const part of [email.subject, email.text, email.html]) {
-      expect(part).not.toContain('—');
+      expect(part).not.toContain(emDash);
     }
   });
 });
