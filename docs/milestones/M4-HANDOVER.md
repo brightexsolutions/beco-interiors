@@ -1,11 +1,13 @@
 # M4 handover: what is left
 
-Rewritten 3 September 2026. This file is only what is NOT done, and why.
-`docs/milestones/M4-TODO.md` is the full ticked list.
+Rewritten 3 September 2026, updated through 9 September. This file is only what is NOT done,
+and why. `docs/milestones/M4-TODO.md` is the full ticked list.
 
-**State:** 203 Vitest tests across 28 files, 56 pgTAP tests across 6 files, 9 packages
-typechecking, every built route 200. 30 published products, 24 priced, 21 described, 258
-images, 15 ranges under 6 groups.
+**State:** 425 Vitest tests across 60 files plus 11 integration tests, 68 pgTAP tests across 7
+files, 9 packages typechecking, every built route 200. 30 published products, 24 priced, 21
+described, 15 ranges under 6 groups. Images reach the database only through `pnpm drive:import`
+and are absent after a plain reset. The blog is live with three seeded articles. `apps/dashboard`
+has its first real surface, the D80 launch control, but the rest of it is still M5.
 
 **Read this first if you are starting cold:** a database reset is TWO steps.
 `pnpm db:reset` rebuilds the catalogue complete, because catalogue rows now live in migration
@@ -27,13 +29,14 @@ example", turned out not to be a layout problem at all. See section 3.
 
 ## 2. Pages and routes still missing
 
-- [ ] Three blog articles, seeded through a migration, each targeting a named search term and
-      linking into its category. On the D28 list, not cut. `/blog` is currently a 404 and
-      `blog_posts` already exists with its published-needs-alt-text constraint
 - [ ] Mega menu carrying real slab thumbnails. **Deferred rather than cut:** the range browse
       on `/shop` now carries the hierarchy with real photography, so a mega menu would be a
       second way to do what the shop already does. Worth revisiting once the header lockup is
       confirmed with Beco
+- [ ] The web-submission confirmation email's DELIVERY. The template is built and tested in
+      `@beco/documents`; it is not sent, because the storefront must never hold the Resend key.
+      It belongs on the database side, an edge function triggered by the `quotes` insert, which
+      is a deployment surface this repo does not have yet. See M4-TODO's quote-flow section
 
 ## 3. Blocked on Beco, not on code
 
@@ -119,10 +122,6 @@ five categories.
 
 ## 4. Technical debt and known limits
 
-- [ ] **`RoomStack` is used on two pages and is not in `@beco/ui`**, so rule 5 is unmet. The
-      M4 todo previously claimed a `CardDeck` had been extracted; walking the list against the
-      code on 3 September found no such component. Extracting it means decoupling it from
-      `next/image` and the products type the way `ProductCard` already is
 - [ ] **Video transcoding is manual.** Beco's 52 clips are portrait QuickTime `.MOV` at 8 to
       80MB. One was converted by hand to 1.7MB of MP4. The step belongs in the import pipeline
       and needs **ffmpeg installed**
@@ -138,9 +137,6 @@ five categories.
       thing a desktop visitor sees move, and on Safari it is a still column.
       Reveals, wipes, card flips and the hover gallery run everywhere because they go through
       `ScrollMotion`
-- [ ] **No accessibility assertion library is wired in.** The `component` skill asks for
-      `vitest-axe` and it is not installed, so accessibility is currently held by hand written
-      assertions about labels, roles and focus
 - [ ] SVG logo. No `pdftocairo`, `inkscape` or `rsvg` on this machine, so the header uses a PNG
 - [ ] A reset costs a twenty minute re-import because `import_files` is wiped with the
       database, so every file looks new even though R2 already holds the derivatives
@@ -158,23 +154,27 @@ sitemap and the robots tag, so they cannot disagree. See D52.
 
 ## 6. Verification owed
 
-Nothing in this section has been done, and the milestone cannot close without it.
+The code-level items here are closed. What is left needs a person and a device.
 
 - [ ] **Nothing has been checked by hand on a real phone.** No iOS, no Android.
-      `docs/QA-CHECKLIST.md` now carries a full interaction inventory per screen with an honest
+      `docs/QA-CHECKLIST.md` carries a full interaction inventory per screen with an honest
       status column, so this is a walk rather than a rediscovery
-- [ ] Reduced motion has not been toggled and looked at
+- [ ] **Reduced motion has not been toggled and looked at on a device.** The code audit is
+      done, 9 September: `motion.css` guards every keyframe class, the one gap found was the
+      loading skeleton and it is fixed. What is owed is switching the OS setting on and seeing
+      that the site is still and complete
 - [ ] **The rebuilt mobile hero has not been seen on a real phone.** It was changed in response
       to a screenshot, and the thing it is trying to fix is a judgement about how the opening
       screen feels, which a curl cannot answer
-- [ ] Lighthouse has never been run against these pages. Budgets are LCP under 2.0s, CLS under
-      0.05, home under 1.0MB, product under 1.2MB
+- [x] Lighthouse is wired, `lighthouserc.json` and a `ci.yml` job. **Not yet run green on a
+      PR**, and CI's page has no hero image so LCP and byte weight only warn there. A preview
+      deploy with images is where LCP under 2.0s and the page-weight budgets get enforced
 - [ ] Codex's review pass has not run
 - [ ] **A quote has never been submitted from the actual browser form.** The server action is
-      covered by integration tests against the real database, and the form is now covered for
-      rendering and for the `name` attributes the action reads, but the two have never been
-      joined by a person
-- [ ] Neither error page has been triggered, so `reset()` on the 500 is unproven
+      covered by integration tests against the real database, and the form for rendering and
+      for the `name` attributes the action reads, but the two have never been joined by a person
+- [x] The two 500 pages have tests, 8 September: `reset()`, the digest reference and the
+      channels are covered. Still not triggered by a real thrown error in a browser
 
 ## 7. Decisions taken 3 September
 

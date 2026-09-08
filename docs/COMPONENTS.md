@@ -43,8 +43,11 @@ Not in `@beco/ui`, because a second surface has no use for them yet. Moved the m
 | `RangeBrowse` | **B** | The taxonomy made visible: six top level ranges with a real photograph each and their child ranges as links. A range with no photography gets a charcoal plate with its name on it rather than a grey box with an icon, which is honest about the stock being real and the picture not being taken |
 | `ShopControls` | **B** | Search, a grouped range select, finish and sort, with the URL as the source of truth so the grid stays server rendered. Active filters stated back as removable chips |
 | `ProductGrid` | **B** | One grid for the home page, `/shop` and every category, so a card cannot quietly differ between them |
-| `RoomStack` | **B** | A self dealing stack of installations. **Used on two pages, so rule 5 says it belongs in `@beco/ui`**, and it does not yet. Extraction means decoupling it from `next/image` and the products type the way `ProductCard` already is |
+| `RoomStack` (`@beco/ui`) | **B** | The self dealing stack: fan, swipe, caption plate, and the static stacked transform that is also the reduced-motion state. Extracted 5 September, takes `RoomStackCard[]`. A thin `apps/storefront` `RoomStack` wrapper is the only place that still knows `next/image` and `CatalogueProduct`. Tests in both packages |
 | `PageHeader` | **B** | Red rule, eyebrow, Cormorant title, lede. The site's one section opening |
+| `HeroStatic` | **B** | The home hero when there is no photography for `PinnedHero`: same eyebrow, headline, lede and CTAs on flat charcoal, server rendered, no animation. Guarantees the page never opens with no hero. **4 tests** |
+| `ClientShowcase` | **B** | The "Delivered for" section on `/gallery`, from the `clients` table. Renders nothing until a row is both published and permitted, RLS's own gate. **5 tests** |
+| `LaunchBanner` | **B** | D80. Takes the announcement slot for the anniversary campaign: a live countdown to `settings.site_launch_at`, then a one-time confetti reveal when `site_launch_live` is thrown, `localStorage` gated, skipped under reduced motion. **9 tests** |
 
 ## Dashboard
 
@@ -56,6 +59,8 @@ Not in `@beco/ui`, because a second surface has no use for them yet. Moved the m
 | `LiveUpdateBanner` | P | "3 new quotes, show". **Never inserts rows into a list under the user's finger.** See D46 |
 | `LastUpdated` | P | "Updated 2 minutes ago, Refresh". Honest about staleness and gives control back |
 | `AuditEntry` | P | Before and after, readable by a human |
+| `SignInForm` | **B** | `apps/dashboard/src/app/login`. Password sign in against Supabase Auth, one message for every failure so a wrong password and an unknown email cannot be told apart. Rate limited, D81. First real dashboard surface, built for D80, not the M5 build |
+| `LaunchControls` | **B** | `apps/dashboard/src/app/launch`. Sets `site_launch_at` and throws `site_launch_live` through `ConfirmDialog`, per rule 4. Every server action re-checks `requireAdmin` because a server action is a public endpoint whatever gated the render |
 
 ## States
 
@@ -65,7 +70,7 @@ this project lives in it for weeks.
 | Component | Status | Notes |
 |---|---|---|
 | `EmptyState` | P | A designed page, never a broken one. Empty categories use this |
-| `LoadingState` | P | Skeletons matching final layout, so nothing shifts |
+| `LoadingState` | **B** | Skeletons matching final layout, so nothing shifts. `animate-pulse motion-reduce:animate-none`: the shape without the breathing for a reader who asked for no motion |
 | `ErrorState` | P | Says what happened and what to do next |
 
 ## ConfirmDialog

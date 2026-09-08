@@ -7,7 +7,10 @@ a test, and this is the record of what that has actually meant so far.
 React Testing Library in jsdom. UI journeys are verified by hand against `docs/QA-CHECKLIST.md`
 on a real device.
 
-As of 3 September 2026: **203 Vitest tests** across 28 files, **56 pgTAP tests** across 6 files.
+As of 9 September 2026: **425 Vitest tests** across 60 files, **11 integration tests**, and
+**68 pgTAP tests** across 7 files. Nine packages typecheck. `vitest-axe` is wired: every
+component test asserts no accessibility violations on its rendered output, per the `component`
+skill's baseline.
 
 ## How to run it
 
@@ -42,6 +45,8 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `04_role_writes.test.sql` | `beco_sales` cannot write another's quote, escalate its own role, or create products. `beco_product_manager` cannot touch quotes. An inactive user has no role at all |
 | `05_team_and_clients.test.sql` | **A director cannot be made public.** A client row cannot be published without recorded permission |
 | `06_category_groups.test.sql` | The taxonomy is exactly two levels deep, attacked from every direction: a grandchild by update, a grandchild by insert, a parent given a parent, a category made its own parent. Every Drive folder is filed under a group except Lighting. Anon can read a group, which the browse tree depends on |
+| `07_fractional_quantity.test.sql` | Half a slab is a valid quantity for anything sold per slab, a whole unit for everything else, enforced in `submit_quote` because it is a public RPC. See D68 |
+| D80 launch switch, in `02` and `04` | Anon and `beco_sales` cannot write `settings.site_launch_at` or `site_launch_live`; `beco_admin` can. Anon CAN read both keys, which the storefront countdown needs before any login exists |
 
 ## Storefront
 
@@ -55,6 +60,12 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | Mobile menu | `components/__tests__/mobile-menu.test.tsx` | Focus trap, escape returns focus to the trigger, closes on navigation |
 | Images | `lib/__tests__/image-loader.test.ts` | |
 | Social links | `components/__tests__/social-links.test.tsx` | A null URL DRAWS the icon without making it a link, so no control advertises an operation it cannot perform |
+| Error pages | `app/__tests__/error-pages.test.tsx` | `error.tsx` and `global-error.tsx`: `reset()` fires, the digest reference shows only when present and is logged, the WhatsApp and phone routes are there. 8 tests |
+| Home hero fallback | `components/__tests__/hero-static.test.tsx` | `HeroStatic` renders the same words and CTAs as `PinnedHero` when there is no photography. 4 tests |
+| Gallery project types | `lib/__tests__/project-type-facets.test.ts` | Counts by type with real labels, ignores unclassified shots, returns nothing when nothing is classified. 4 tests. Plus `app/gallery/__tests__/metadata.test.ts` for D29 on `?type=` |
+| Client showcase | `components/__tests__/client-showcase.test.tsx` | Renders nothing until a client is published and permitted; logo, name fallback, sector and project line. 5 tests |
+| Launch banner | `components/__tests__/launch-banner.test.tsx` | Countdown to the date, reveal on the switch, confetti once per browser and skipped under reduced motion. 9 tests |
+| Blog JSON-LD | `app/blog/[slug]/__tests__/blog-posting-schema.test.tsx` | Both ld+json blocks parse; headline, description, absolute image URL, author, publisher, omit-not-null, breadcrumb. 5 tests |
 
 ## Design system, `packages/ui`
 
@@ -66,7 +77,17 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `PriceDisplay` | POA reads as deliberate. "fixed" with a null price falls back rather than rendering `KES null`. A stale `compare_at_price` cannot fake a sale |
 | `ProductCard` `ProductGallery` | Correct on three images as well as six, since a fifth of the catalogue has only three |
 | `ScrollMotion` | An element with no attribute is fully visible, so nothing is hidden waiting for JavaScript |
+| `RoomStack` | Extracted from the storefront. Picks each product's application shot and only that, caps at four, renders nothing under two. Tests in both `@beco/ui` and the storefront wrapper |
+| `LoadingState` | The skeleton keeps its shape but stops pulsing under `motion-reduce` |
 | Tokens | Contrast verified by script, never assumed. Caught white on pure Warm Red at 4.38:1, below the AA floor |
+| `cn` | `twMerge` actually resolves conflicting same-property utilities, for example `opacity-50` then `opacity-0`, which a raw string join did not: the D67 bug shape |
+
+## Shared packages
+
+| Package | File | Proves |
+|---|---|---|
+| `@beco/validation` | `__tests__/rate-limit.test.ts` | The sliding-window limiter: allows up to the limit then denies, per key, frees a slot as the oldest hit ages out, reports the exact wait, shares a store when given one. 7 tests. See D81 |
+| `@beco/documents` | `email/__tests__/*.ts` | `buildQuoteConfirmationEmail` carries the reference and no totals, escapes the name, no em dashes. `sendQuoteConfirmation` no-ops without a key, sends with one, and reports a provider or transport error without throwing. 10 tests |
 
 ## Import pipeline, `tools/drive-import`
 
@@ -84,12 +105,12 @@ LOCAL stack only and never to a hosted project, per rule 6.
 Named rather than rounded up.
 
 - **Nothing has been checked by hand on a real phone.** No iOS, no Android
-- Reduced motion has not been toggled and looked at
-- Lighthouse has never been run against these pages
-- The interaction inventory in `docs/QA-CHECKLIST.md` is not filled in for any storefront screen
-- No accessibility assertion library is wired in. The `component` skill asks for `vitest-axe`
-  and it is not installed, so accessibility is currently held by hand written assertions about
-  labels, roles and focus rather than by an automated check
+- Reduced motion: the code audit is done and `vitest-axe` runs on every component, but the OS
+  setting has not been toggled on a device and looked at
+- Lighthouse is wired in `ci.yml` but has not run green on a PR, and CI's page has no hero
+  image so LCP and byte weight only warn there
+- The interaction inventory in `docs/QA-CHECKLIST.md` is filled in but not yet walked on a device
 - A quote has never been submitted from the actual browser form. The server action is covered
   against the real database; the form itself has not been used by a person
+- Neither error page has been triggered by a real thrown error in a browser
 - Linux CI cannot process HEIC until Sharp is built with libheif
