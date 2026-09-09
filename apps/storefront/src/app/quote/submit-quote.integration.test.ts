@@ -18,41 +18,38 @@ const service = () =>
   });
 
 const created: string[] = [];
-let productSlug: string;
-let productName: string;
-let slabSlug: string;
+
+// This suite seeds its OWN products rather than reading whatever the catalogue
+// happens to hold. A plain `supabase db reset` leaves the catalogue seeded,
+// but a fresh stack or a half-applied reset does not, and reading `[0]` off an
+// empty table with a `!` was how `pnpm vitest run` broke: a null deref with no
+// hint that the local database simply had nothing in it. See the Codex M4 review.
+const PRODUCT_SLUG = 'zz-int-quote-product';
+const SLAB_SLUG = 'zz-int-quote-slab';
+const productName = 'ZZ Integration Test Stone';
 
 beforeAll(async () => {
   expect(process.env.NEXT_PUBLIC_SUPABASE_URL, 'local Supabase must be running').toContain(
     '127.0.0.1',
   );
-  // Read a real published product rather than assuming a slug. The seed is
-  // not the only thing in this table.
-  const { data } = await service()
-    .from('products')
-    .select('slug,name')
-    .eq('is_published', true)
-    .limit(1)
-    .single();
-  productSlug = data!.slug;
-  productName = data!.name;
-
-  // A product actually sold "per slab", for the fractional quantity tests.
-  // Picked rather than assumed, so this does not silently stop covering
-  // anything if the catalogue changes shape.
-  const { data: slab } = await service()
-    .from('products')
-    .select('slug')
-    .eq('unit', 'per slab')
-    .eq('is_published', true)
-    .limit(1)
-    .single();
-  slabSlug = slab!.slug;
+  const sb = service();
+  // Clean up anything a previous crashed run left behind, then seed fresh.
+  await sb.from('products').delete().in('slug', [PRODUCT_SLUG, SLAB_SLUG]);
+  const { error } = await sb.from('products').insert([
+    { name: productName, slug: PRODUCT_SLUG, unit: 'per piece', is_published: true },
+    { name: 'ZZ Integration Test Slab', slug: SLAB_SLUG, unit: 'per slab', is_published: true },
+  ]);
+  expect(error, 'seeding the test products failed').toBeNull();
 });
 
 afterAll(async () => {
-  if (created.length > 0) await service().from('quotes').delete().in('id', created);
+  const sb = service();
+  if (created.length > 0) await sb.from('quotes').delete().in('id', created);
+  await sb.from('products').delete().in('slug', [PRODUCT_SLUG, SLAB_SLUG]);
 });
+
+const productSlug = PRODUCT_SLUG;
+const slabSlug = SLAB_SLUG;
 
 const validSubmission = (over: Record<string, unknown> = {}) => ({
   customerName: 'Test Buyer',
