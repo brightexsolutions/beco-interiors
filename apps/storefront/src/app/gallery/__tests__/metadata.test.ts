@@ -26,4 +26,10 @@ describe('gallery generateMetadata', () => {
     const meta = await run({ type: ['commercial', 'residential'] });
     expect(meta.robots).toMatchObject({ index: false });
   });
+
+  it('noindexes even a junk type value, so a crawled bad link cannot be indexed', async () => {
+    const meta = await run({ type: 'not-a-real-type' });
+    expect(meta.alternates?.canonical).toBe('/gallery');
+    expect(meta.robots).toMatchObject({ index: false, follow: true });
+  });
 });

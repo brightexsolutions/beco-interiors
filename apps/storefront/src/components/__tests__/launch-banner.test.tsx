@@ -41,6 +41,14 @@ describe('LaunchBanner', () => {
     expect(screen.getByText('Live any moment.')).toBeInTheDocument();
   });
 
+  it('does not crash or blank on a malformed date, it reads "any moment"', async () => {
+    await act(async () => {
+      render(<LaunchBanner launch={{ launchAt: 'not-a-real-date', isLive: false }} />);
+    });
+    expect(screen.getByText('Beco turns one this October.')).toBeInTheDocument();
+    expect(screen.getByText('Live any moment.')).toBeInTheDocument();
+  });
+
   it('shows the live banner, linking through to the projects it is celebrating', async () => {
     await act(async () => {
       render(<LaunchBanner launch={{ launchAt: '2026-10-05T00:00:00Z', isLive: true }} />);

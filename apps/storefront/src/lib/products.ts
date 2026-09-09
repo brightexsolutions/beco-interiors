@@ -368,6 +368,15 @@ export const projectTypeFacets = (shots: { projectType?: ProjectType | undefined
   }));
 };
 
+/**
+ * On a Supabase error this PROPAGATES rather than returning `[]`. The
+ * photographs are the entire content of `/gallery`, so a failed read is
+ * the page failing, and `error.tsx` with its retry, WhatsApp and phone is
+ * the honest response. The empty return is reserved for the real "no
+ * installations photographed yet" state. Secondary reads on the same page,
+ * `getPublishedClients`, degrade quietly instead; primary content does not.
+ * A test pins this so it is not later "helpfully" swallowed.
+ */
 export const getGalleryShots = async (): Promise<GalleryShot[]> => {
   const products = await getPublishedProducts();
 
