@@ -1,12 +1,38 @@
 import { redirect } from 'next/navigation';
+import { createServerClient } from '@beco/supabase-client';
 import type { UserRole } from '@beco/types';
 import { getSupabase } from './supabase';
+
+export type AdminRole = Extract<UserRole, 'beco_admin' | 'brightex_admin'>;
 
 export interface AdminSession {
   userId: string;
   email: string;
-  role: Extract<UserRole, 'beco_admin' | 'brightex_admin'>;
+  role: AdminRole;
 }
+
+/** A Supabase client carrying the caller's session, however it was built. */
+type SessionClient = ReturnType<typeof createServerClient>;
+
+/**
+ * The role decision, in one place so the proxy and `requireAdmin` cannot
+ * drift. Reads `users`, not a JWT claim, because that is where role lives
+ * and where it is revoked. Returns null for a signed-out caller, an
+ * inactive one, or any non-admin role. RLS (`users_read_self`) lets a user
+ * read exactly their own row, which is all this needs.
+ */
+export const resolveAdminRole = async (
+  supabase: SessionClient,
+  userId: string,
+): Promise<AdminRole | null> => {
+  const { data } = await supabase
+    .from('users')
+    .select('role, is_active')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!data?.is_active) return null;
+  return data.role === 'beco_admin' || data.role === 'brightex_admin' ? data.role : null;
+};
 
 /**
  * The route side of "role checks in two places", per rule 7. RLS is the
@@ -22,19 +48,8 @@ export const requireAdmin = async (): Promise<AdminSession> => {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, is_active')
-    .eq('id', auth.user.id)
-    .maybeSingle();
+  const role = await resolveAdminRole(supabase, auth.user.id);
+  if (!role) redirect('/login?denied=1');
 
-  if (!profile?.is_active || (profile.role !== 'beco_admin' && profile.role !== 'brightex_admin')) {
-    redirect('/login?denied=1');
-  }
-
-  return {
-    userId: auth.user.id,
-    email: auth.user.email ?? '',
-    role: profile.role,
-  };
+  return { userId: auth.user.id, email: auth.user.email ?? '', role };
 };

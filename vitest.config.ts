@@ -42,7 +42,15 @@ export default defineConfig({
           alias: {
             // Matches apps/storefront/tsconfig.json, so a component test
             // imports exactly what the app imports rather than a copy.
+            // Dashboard tests use relative imports rather than `@/`, since
+            // this one alias cannot serve both apps.
             '@': fileURLToPath(new URL('./apps/storefront/src', import.meta.url)),
+            // `server-only` throws outside an RSC render. It is a build-time
+            // guard with no runtime API, so a stub lets a module that
+            // imports it, for example @beco/supabase-client, be tested.
+            'server-only': fileURLToPath(
+              new URL('./tools/test/server-only-stub.ts', import.meta.url),
+            ),
           },
         },
       },
