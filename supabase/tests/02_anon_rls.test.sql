@@ -1,6 +1,6 @@
 -- Anonymous access. Proving the NEGATIVE is the point of this file.
 begin;
-select plan(13);
+select plan(15);
 
 -- Seed as the owner, before dropping to anon.
 insert into categories (id, name, slug, is_published)
@@ -94,6 +94,19 @@ select is_empty(
   $$update settings set value = 'true'::jsonb
      where key = 'site_launch_live' returning key$$,
   'anon cannot throw the launch switch itself, only staff can'
+);
+select is_empty(
+  $$update settings set value = to_jsonb('2026-10-16'::text)
+     where key = 'site_launch_at' returning key$$,
+  'anon cannot set the launch date either'
+);
+
+-- settings_read_public is an explicit key allowlist. The allowlist and the
+-- bank details are NOT on it, so anon reading any settings row still only
+-- ever sees the public keys.
+select is_empty(
+  $$select * from settings where key = 'brightex_allowed_emails'$$,
+  'anon cannot read an admin-only settings key, only the allowlisted public ones'
 );
 
 select * from finish();

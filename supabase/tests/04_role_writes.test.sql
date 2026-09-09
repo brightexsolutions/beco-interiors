@@ -3,7 +3,7 @@
 -- auth.uid() reads request.jwt.claims ->> 'sub', so becoming a user means
 -- setting that claim and switching to the `authenticated` role.
 begin;
-select plan(16);
+select plan(21);
 
 -- Fixed ids so the assertions below are readable.
 \set admin_id      '''aaaaaaaa-0000-0000-0000-000000000001'''
@@ -92,16 +92,32 @@ select throws_ok(
   'beco_sales CANNOT create a product'
 );
 
--- D80: the launch switch is a beco_admin or brightex_admin action, not a
--- salesperson one, even though sales can read settings.
+-- D80: neither launch key is a salesperson's to write, even though sales
+-- can read settings. Both keys, so a future policy split cannot leave one open.
 select is_empty(
   $$update settings set value = 'true'::jsonb
      where key = 'site_launch_live' returning key$$,
   'beco_sales CANNOT throw the launch switch'
 );
+select is_empty(
+  $$update settings set value = to_jsonb('2026-10-16'::text)
+     where key = 'site_launch_at' returning key$$,
+  'beco_sales CANNOT set the launch date'
+);
 
 -- ---------- beco_product_manager ----------
 set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000004","role":"authenticated"}';
+
+select is_empty(
+  $$update settings set value = 'true'::jsonb
+     where key = 'site_launch_live' returning key$$,
+  'beco_product_manager CANNOT throw the launch switch'
+);
+select is_empty(
+  $$update settings set value = to_jsonb('2026-10-16'::text)
+     where key = 'site_launch_at' returning key$$,
+  'beco_product_manager CANNOT set the launch date'
+);
 
 select lives_ok(
   $$insert into products (name, slug, price_display_mode)
@@ -136,6 +152,17 @@ select throws_ok(
   '42501',
   null,
   'beco_editor CANNOT create a product'
+);
+
+select is_empty(
+  $$update settings set value = 'true'::jsonb
+     where key = 'site_launch_live' returning key$$,
+  'beco_editor CANNOT throw the launch switch'
+);
+select is_empty(
+  $$update settings set value = to_jsonb('2026-10-16'::text)
+     where key = 'site_launch_at' returning key$$,
+  'beco_editor CANNOT set the launch date'
 );
 
 -- ---------- inactive user ----------

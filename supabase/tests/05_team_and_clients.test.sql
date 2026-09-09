@@ -1,6 +1,6 @@
 -- The two rules Beco actually asked for, proven rather than assumed.
 begin;
-select plan(8);
+select plan(9);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
                         email_confirmed_at, created_at, updated_at)
@@ -47,6 +47,8 @@ select lives_ok(
 
 insert into clients (name, slug, is_published, has_permission)
   values ('Quiet Corp', 'quiet-corp', false, true);
+insert into clients (name, slug, is_published, has_permission)
+  values ('No Deal Corp', 'no-deal-corp', false, false);
 
 -- What anonymous actually sees.
 set local role anon;
@@ -69,6 +71,11 @@ select results_eq(
 select is_empty(
   $$select * from clients where slug = 'quiet-corp'$$,
   'an unpublished client stays invisible even with permission recorded'
+);
+
+select is_empty(
+  $$select * from clients where slug = 'no-deal-corp'$$,
+  'an unpublished, unpermitted client is invisible to anon, the ClientShowcase gate'
 );
 
 select * from finish();
