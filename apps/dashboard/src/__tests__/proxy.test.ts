@@ -7,7 +7,7 @@ vi.mock('@beco/supabase-client', () => ({
 }));
 
 const resolveAdminRole = vi.fn();
-vi.mock('../lib/session', () => ({ resolveAdminRole: (...a: unknown[]) => resolveAdminRole(...a) }));
+vi.mock('@/lib/session', () => ({ resolveAdminRole: (...a: unknown[]) => resolveAdminRole(...a) }));
 
 const { proxy } = await import('../proxy');
 

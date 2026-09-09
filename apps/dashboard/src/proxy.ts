@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@beco/supabase-client';
-import { resolveAdminRole } from './lib/session';
+import { resolveAdminRole } from '@/lib/session';
 
 /**
  * Next 16 renamed `middleware` to `proxy`. This is the route half of "role

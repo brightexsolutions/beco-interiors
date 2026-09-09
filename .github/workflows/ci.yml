@@ -57,15 +57,21 @@ jobs:
       - run: pnpm check:type-floor
       - run: pnpm typecheck
       - run: pnpm --filter @beco/ui check:contrast
-      - run: pnpm test:unit
 
-      # RLS policies are tested against a LOCAL ephemeral database.
+      # The jsdom suites: pure functions, the design system, the storefront
+      # and the dashboard. No database needed for these.
+      - run: pnpm test:unit
+      - run: pnpm test:component
+      - run: pnpm test:dashboard
+
+      # Everything that needs Postgres, against a LOCAL ephemeral database.
       # Nothing in CI ever connects to staging or production.
       - uses: supabase/setup-cli@v1
-      - name: RLS policy tests, local database only
+      - name: Database-backed tests, local only
         run: |
           supabase start
           supabase test db
+          pnpm test:integration
           supabase stop
 
       - run: pnpm build

@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:component": "vitest run --project component",
+    "test:dashboard": "vitest run --project dashboard",
     "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
     "db:start": "supabase start",
