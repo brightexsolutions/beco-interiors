@@ -555,14 +555,65 @@ server on `localhost:3000` and `:3001` and the local database on 9 September.
 
 ## Definition of done, per CLAUDE.md rule 8
 
-- [ ] Every todo above verified
-- [ ] Interaction inventory complete in `docs/QA-CHECKLIST.md` for every storefront screen
+- [~] Every todo above verified. Code items are closed; what remains is Beco's content and the
+      real-device pass
+- [x] Interaction inventory complete in `docs/QA-CHECKLIST.md` for every storefront screen
 - [ ] `docs/QA-CHECKLIST.md` walked on a real phone
-- [ ] Lighthouse meets every budget with the choreography live
-- [ ] Codex review pass run, findings resolved or explicitly deferred
-- [ ] Documentation written
+- [~] Lighthouse wired in `ci.yml`; not yet run green on a PR, and CI's imageless page only
+      warns on LCP and byte weight
+- [x] Codex review pass run 9 September; seven of eight findings resolved, the eighth (real
+      phone) and the ESLint gap (blocked on typescript-eslint TS 7 support) recorded
+- [x] Documentation written
 
 ## Codex M4 review
 
-Codex's findings from the milestone-close pass land here as checkboxes, per CLAUDE.md's "The
-two agents". Not a separate backlog. Nothing yet: the pass has not run.
+Codex's findings from the milestone-close pass, per CLAUDE.md's "The two agents". Not a
+separate backlog. Pass ran 9 September; seven of eight findings resolved the same day, the
+eighth needs a phone.
+
+- [x] **Make the `/launch` proxy enforce the admin role.** `proxy.ts` detected only an
+      `sb-*-auth-token` cookie, so a signed-in non-admin reached the route and was turned away
+      only later by `requireAdmin`. The proxy now verifies the session and the role, through a
+      shared `resolveAdminRole` that `requireAdmin` also calls. Tests: `resolveAdminRole` across
+      active admin, non-admin, deactivated and missing rows; the proxy redirecting a signed-out
+      visitor and a valid non-admin session, and passing an admin.
+
+- [x] **Complete the D80 adversarial RLS matrix.** Every non-admin role, anon, `beco_sales`,
+      `beco_product_manager`, `beco_editor`, is now proven unable to write EITHER `site_launch_at`
+      or `site_launch_live`; anon cannot read an admin-only settings key; an unpublished
+      unpermitted client is invisible to anon. 76 pgTAP tests.
+
+- [x] **Cover Supabase failure paths for the new storefront data readers.** `getLaunchState`
+      and `getPublishedClients` error-path tests added. `getGalleryShots` is DELIBERATELY not a
+      safe fallback: the photographs are the whole page, so a failed read is the page failing
+      and `error.tsx` is the honest response, not a false "still photographing" empty state. A
+      comment and a test pin that. Plus `LaunchBanner` on a malformed date, the launch action's
+      failed write, and a junk `?type=`.
+
+- [x] **Add property-based boundary tests for D68 and the import role matcher.**
+      `08_quantity_rounding_property.test.sql` drives 120 arbitrary fractions per product kind
+      through the real `submit_quote` and asserts the shape of every stored quantity. 82 pgTAP
+      tests. `roles.test.ts` gains order and separator invariance: 400 scrambles per token bag,
+      500 random strings all unknown, dropping a required token drops the role.
+
+- [x] **Repair the red Vitest integration gate.** The quote integration setup read the first
+      published product and dereferenced it with `!`. It now seeds its own `zz-int-*` products,
+      so `pnpm vitest run` is green regardless of catalogue state. AND CI now actually runs
+      `test:component`, `test:dashboard` and `test:integration`, which it never did.
+
+- [~] **Replace the removed Next lint command.** BLOCKED ON THE ECOSYSTEM, not on us.
+      `typescript-eslint`, the only path to linting TypeScript, does not support TypeScript 7.0
+      yet (typescript-eslint#10940), and this repo is on TS 7; installing eslint against it
+      fails at load. The dead `next lint` scripts are removed rather than stubbed to a fake
+      pass. `tsc --noEmit` runs on every package, and the em-dash and browser-dialog guards are
+      grep steps in `ci.yml`. Revisit when typescript-eslint ships TS 7 support.
+
+- [x] **Test the sign-in server action, including session rotation.** A malformed email stops
+      before Supabase; any auth failure gives one message and starts no session (no redirect,
+      so the render never re-runs with new cookies); success delegates to `signInWithPassword`
+      and redirects; an off-site return path is ignored; an eleventh attempt in a minute is
+      turned away without asking Supabase again.
+
+- [ ] **Walk the interaction inventory on a real phone.** Needs a device. HTTP smoke checks
+      passed on both localhost apps, but the real-device interaction inventory, reduced-motion
+      rendering, and the launch write path remain unconfirmed in `docs/QA-CHECKLIST.md`.
