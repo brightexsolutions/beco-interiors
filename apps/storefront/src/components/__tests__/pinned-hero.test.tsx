@@ -50,7 +50,7 @@ describe('PinnedHero, the lede', () => {
     // the invisible sizer and once in the one real crossfade layer, both
     // showing the same fallback text since there is nothing else to differ
     // from.
-    expect(screen.getAllByText(/Large format slabs for kitchens/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Large format slabs, here in the showroom today/).length).toBeGreaterThan(0);
   });
 
   it('renders every lede in the document, so the crossfade has something to fade between', () => {

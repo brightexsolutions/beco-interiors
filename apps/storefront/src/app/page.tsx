@@ -41,15 +41,26 @@ export default async function HomePage() {
     getCategoriesWithProducts(),
   ]);
 
-  // Four slabs for the hero, taken from products that actually have a slab
-  // shot, so the hero can never fall back to a photograph of a stand.
+  // The hero, the "Stone that behaves like a finished surface" grid and the
+  // pinned rail are all about the SINTERED STONE range specifically, so they
+  // draw from the stone subset rather than the whole published catalogue.
+  // Before the import brought handles and hardware in, `products` happened to
+  // be stone only and this was invisible; now a handle would otherwise land
+  // in a grid headed "See all 30 colours". The broader "everything on the
+  // floor" browse is `RangeBrowse` at the foot of the page, which is meant to
+  // carry every range.
+  const stones = products.filter((p) => p.category?.slug?.includes('sintered-stone'));
+
+  // Four slabs for the hero, taken from stones that actually have a slab or
+  // application shot, so the hero can never fall back to a photograph of a
+  // stand.
   //
   // Application over slab, per D79: the hero sells a finished room now, not
   // a material sample, so it needs a stone actually installed somewhere,
   // not a close crop of the sheet it was cut from. Falls back to the slab
   // shot for a stone with no application photography yet, rather than
   // dropping it from the hero entirely.
-  const slabs: HeroSlab[] = products
+  const slabs: HeroSlab[] = stones
     .filter((p) => p.images?.some((i) => i.role === 'application' || i.role === 'slab'))
     .slice(0, 4)
     .map((p) => {
@@ -66,16 +77,30 @@ export default async function HomePage() {
       };
     });
 
-  const featured = products.slice(0, 8);
+  const featured = stones.slice(0, 8);
   const application = products.find((p) => p.images?.some((i) => i.role === 'application'));
-  // The signature section needs BOTH roles. Seven stones have a bookmatch
-  // shot today; the one with the most room photography leads.
-  const signature = products
-    .filter((p) => p.images?.some((i) => i.role === 'bookmatch')
-                && p.images?.some((i) => i.role === 'application'))
-    .sort((a, b) =>
-      b.images.filter((i) => i.role === 'application').length -
-      a.images.filter((i) => i.role === 'application').length)[0];
+  // The signature section reveals a finished room behind a parting slab, so
+  // it needs a stone with BOTH a bookmatch shot and a clean, upright,
+  // landscape interior. Two constraints beyond that:
+  //
+  //  1. A ratio band, 1.2 to 2.0, so a near-square or portrait crop of a
+  //     worktop corner never lands here.
+  //  2. A quality order. Some rooms rescued from the mis-organised DELFONE
+  //     folder carry a broken EXIF orientation and render on their side
+  //     (recorded as an import issue). Until the source files are fixed,
+  //     the stones with their own clean folders are preferred by name, and
+  //     the ratio guard catches the rest.
+  const goodRoom = (i: { role: string; width: number; height: number }) =>
+    i.role === 'application' && i.width / i.height >= 1.2 && i.width / i.height <= 2;
+  const SIGNATURE_ORDER = ['bianco-fendi', 'statuario', 'calcatta-gold', 'beverly-gold'];
+  const signatureField = products.filter(
+    (p) => p.images?.some((i) => i.role === 'bookmatch') && p.images?.some(goodRoom),
+  );
+  const signature =
+    SIGNATURE_ORDER.map((slug) => signatureField.find((p) => p.slug === slug)).find(Boolean) ??
+    signatureField.sort(
+      (a, b) => b.images.filter(goodRoom).length - a.images.filter(goodRoom).length,
+    )[0];
   const applicationImage = application?.images.find((i) => i.role === 'application');
 
   return (
@@ -91,7 +116,7 @@ export default async function HomePage() {
       <section className="border-b border-neutral-200">
         <div className="mx-auto max-w-[1380px] px-6">
           <dl className="grid divide-y divide-neutral-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <Stat value={products.length} label="Colours on the floor today" suffix="" />
+            <Stat value={stones.length} label="Stone colours on the floor" suffix="" />
             <Stat value={12} label="Slab thickness" suffix="mm" />
             <Stat value={6} label="Days a week, Urban Square" suffix="" />
           </dl>
@@ -123,7 +148,7 @@ export default async function HomePage() {
               href="/shop"
               className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep underline-offset-4 hover:underline"
             >
-              See all {products.length} colours
+              See all {stones.length} colours
             </Link>
           </div>
           </div>
@@ -179,13 +204,10 @@ export default async function HomePage() {
       <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
-            <div className="flex items-center gap-4">
-              <span aria-hidden className="h-px w-8 bg-warm-red" />
-              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                How it works
-              </p>
-            </div>
-            <h2 className="mt-4 max-w-[16ch] font-display text-4xl leading-[1.1] text-charcoal sm:text-5xl">
+            {/* No eyebrow here on purpose: the numbered list below names the
+                section, and an uppercase label over every heading is the
+                rhythm that makes a page read as templated. */}
+            <h2 className="max-w-[16ch] font-display text-4xl leading-[1.1] text-charcoal sm:text-5xl">
               From a shortlist to a priced quote.
             </h2>
           </div>
@@ -304,7 +326,7 @@ export default async function HomePage() {
               same scroll produces a pan rather than a lurch. That speed is
               what made the section feel like the page had stuck. Not adjacent
               to the hero, which is the other pinned section. --- */}
-      <SlabRail products={products.slice(8, 16)} />
+      <SlabRail products={stones.slice(8, 16)} />
 
       <LocalBusinessSchema />
     </main>
@@ -352,9 +374,15 @@ function LocalBusinessSchema() {
     openingHoursSpecification: [
       {
         '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
         opens: '08:00',
-        closes: '18:00',
+        closes: '16:00',
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: 'Saturday',
+        opens: '08:00',
+        closes: '14:00',
       },
     ],
     areaServed: { '@type': 'City', name: 'Nairobi' },

@@ -7,10 +7,17 @@ a test, and this is the record of what that has actually meant so far.
 React Testing Library in jsdom. UI journeys are verified by hand against `docs/QA-CHECKLIST.md`
 on a real device.
 
-As of 9 September 2026: **425 Vitest tests** across 60 files, **11 integration tests**, and
-**68 pgTAP tests** across 7 files. Nine packages typecheck. `vitest-axe` is wired: every
+As of 10 September 2026: **482 Vitest tests** across 68 files, **11 integration tests**, and
+**82 pgTAP tests** across 8 files. Nine packages typecheck. `vitest-axe` is wired: every
 component test asserts no accessibility violations on its rendered output, per the `component`
 skill's baseline.
+
+The storefront modernisation pass (D82) rebuilt or extended these suites: `announcement-bar`
+(now a rotating client component, `buildAnnouncementItems` plus roll and reduced-motion
+behaviour), `add-to-quote` (the "Review quote" route after an add), `shop-controls` (the
+mobile filter panel, contracts otherwise unchanged), `pinned-hero` (the shortened fallback
+lede), `product-card` (the specimen plate is `aria-hidden`, the heading link is the accessible
+name), and `quote-builder` (the confirmed hours string).
 
 ## How to run it
 

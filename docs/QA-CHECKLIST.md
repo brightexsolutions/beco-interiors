@@ -36,13 +36,14 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Control | What it does | Status |
 |---|---|---|
 | Logo | Navigates to `/` | Server, 200 |
+| Header background (D82) | Transparent with light chrome over the dark-hero pages (`/`, `/gallery`, `/about`, `/contact`); solid white with a hairline everywhere else and on scroll past 8px | Verified by DOM measurement on `/about`, `/contact`, `/product`: transparent bg and white logo at top, solid white bg, hairline and dark logo after scroll. **Not walked on a device** |
 | Nav: Shop, Projects, About, Contact | Navigate | Server, each 200 |
 | About dropdown | Opens on hover for a pointer, on click or Enter otherwise. Escape returns focus to the trigger, arrows walk the items, click outside dismisses | **NOT CONFIRMED** by test. Keyboard behaviour is written but has no test and has not been walked |
 | Quote counter | Reads the localStorage list and navigates to `/quote` | Test, on the list. Navigation Server |
 | Business line, header | Opens the dialler on `+254722333730` | Server, `tel:` href correct. Dialler itself **NOT CONFIRMED** |
 | Mobile menu trigger | Opens the panel, traps focus, locks the page, escape returns focus to the trigger, closes on navigation | Test, 7 tests |
 | Mobile action bar: Quote, WhatsApp, Call | Navigate and open external channels | Server on hrefs. **NOT CONFIRMED** that it never sits under the on screen keyboard |
-| Announcement bar CTA | Navigates to `/contact` | Server. No close control by design, per D49 |
+| Announcement bar (D82) | Rotates through every live announcement, then "Call the showroom" (dials), then "Email us:" (`mailto:`). An announcement's own CTA navigates. Rolls up and out on a ~5.5s timer, pauses on hover, no rotation under reduced motion, no close control per D49 | Test: `buildAnnouncementItems` order, the roll, reduced-motion hold, the contact links. Server: rotates through all three items, bar stays charcoal. **Not walked on a device** |
 | Launch banner (D80), when a launch date or the live switch is set | Replaces the announcement bar. Counts down to `site_launch_at`, or once live shows the reveal and links to `/gallery`. Confetti plays once per browser, `localStorage` gated, skipped under reduced motion | Test, 9 tests on `LaunchBanner`. The live transform across a page load has not been walked on a device |
 | Footer nav and category links | Navigate | Server |
 | Footer social icons | **Deliberately not links.** Five platforms drawn, all five URLs null until Beco supplies handles, so the icon is drawn without an anchor rather than shipping `href="#"` | Test |
@@ -71,10 +72,12 @@ LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN
 | Control | What it does | Status |
 |---|---|---|
 | Search box | Rewrites `?q=`, debounced at 250ms, server re-filters | Server: `?q=calc` narrows the grid |
+| "Filters" button (mobile, D82) | Opens and closes the facet panel; a red badge shows how many of range, finish, sort are active | Test: `aria-expanded` and the panel toggle. Server: closed bar ~100px, panel opens with full-width controls and a "Show N results" close |
 | Range select | Rewrites `?range=` for a group or `?category=` for a range, clearing the other so the two cannot disagree | Server: `?range=hardware` 6 of 30, `?category=handles` 6, `?range=sintered-stone` 24, `?range=wall-panels` 0 |
 | Finish select | Rewrites `?finish=` | Server: `?finish=Polished` 4 of 30 |
 | Sort select | Rewrites `?sort=` | Server: `price-desc` orders 95,000 then 85,000 then 75,000 |
-| Filter chips | Each removes its own filter | **NOT CONFIRMED** by test. The handlers call the same `set` the selects use |
+| "Show N results" (mobile, D82) | Closes the facet panel, count matches the grid | Test |
+| Filter chips | Each removes its own filter | Test: clearing a chip rewrites the URL without that filter |
 | Clear all | Returns to bare `/shop` | **NOT CONFIRMED** by test |
 | Range browse tiles | Navigate to the group page | Server, each 200 |
 | Range browse child links | Navigate to the range page | Server, each 200 |
@@ -111,6 +114,7 @@ Index gating asked of the subtree: `/shop/wall-panels` noindex, `/shop/hardware`
 | Gallery | Steps through images in role order, correct on three as well as six | Test |
 | Quantity stepper | Increments and decrements | Test |
 | Add to quote | Writes the product AND the chosen quantity to the list | Test, asserts quantity 3 after two increments |
+| "Review quote (N)" (D82, after an add) | Appears beside the button, carries the live list count, navigates to `/quote` | Test: `href="/quote"`, text `(1)` after one add |
 | WhatsApp | Opens `wa.me` prefilled with the product name | Server: confirmed on two products. **The SKU half of the message has never rendered**, because no product carries a SKU, 0 of 31 |
 | Call | Opens the dialler | Server on href |
 | Related product cards | Navigate | Server |

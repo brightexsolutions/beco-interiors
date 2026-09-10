@@ -65,6 +65,7 @@ export function ProductCard({
   className,
 }: ProductCardProps) {
   const frames = images && images.length > 1 ? images : null;
+  const hasVisual = Boolean(frames || image);
 
   return (
     // cursor-pointer on the whole card: the stretched link covers all of it,
@@ -74,12 +75,32 @@ export function ProductCard({
           photographed on white, so without an edge its card looks like an
           image that failed to load. The card itself still carries no border. */}
       <div className={cn(
-        'relative w-full overflow-hidden bg-neutral-100',
+        'relative w-full overflow-hidden',
+        hasVisual ? 'bg-neutral-100' : 'bg-charcoal',
         'after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15',
         FRAME[frame], imageClassName,
       )}>
         <div className="h-full w-full transition-transform duration-[600ms] ease-brand group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">
-          {frames ? <HoverGallery frames={frames} className="absolute inset-0" /> : image}
+          {frames ? (
+            <HoverGallery frames={frames} className="absolute inset-0" />
+          ) : hasVisual ? (
+            image
+          ) : (
+            /* No photograph yet. Not a blank grey rectangle: a charcoal
+               specimen plate with the stone named on it, the same
+               treatment the range tiles use, so an unphotographed
+               product reads as awaiting its shot rather than as broken.
+               aria-hidden: the heading link below is the real accessible
+               name, so a screen reader does not hear the product twice. */
+            <div aria-hidden className="absolute inset-0 flex flex-col justify-between p-4 sm:p-5">
+              <span className="font-ui text-xs font-semibold uppercase tracking-[0.18em] text-high-vis-white/45">
+                In the showroom
+              </span>
+              <span className="font-display text-2xl leading-[1.1] text-high-vis-white/75">
+                {name}
+              </span>
+            </div>
+          )}
         </div>
         {badge ? (
           <span className="absolute left-0 top-0 bg-warm-red-deep px-2 py-1 font-ui text-xs font-semibold uppercase tracking-[0.09em] text-high-vis-white">

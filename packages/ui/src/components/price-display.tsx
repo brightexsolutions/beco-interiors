@@ -64,7 +64,7 @@ export function PriceDisplay({
   const onSale = compareAtPrice != null && compareAtPrice > price;
 
   return (
-    <p className={cn('font-ui text-charcoal flex flex-wrap items-baseline gap-2', className)}>
+    <p className={cn('font-ui text-charcoal flex flex-wrap items-baseline gap-2 tabular-nums', className)}>
       <span className={cn('font-semibold', big ? 'text-xl' : 'text-base')}>
         {formatPrice(price, currency)}
       </span>

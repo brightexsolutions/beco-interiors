@@ -43,15 +43,26 @@ const ABOUT: NavItem[] = [
   { href: '/contact', label: 'The showroom', description: 'Urban Square, Industrial Area' },
 ];
 
+/**
+ * Pages whose opening section is a full bleed dark hero, built to sit behind
+ * the header. Over these the bar is transparent with light chrome until the
+ * reader scrolls, then it settles to solid white with a hairline, the same as
+ * on the home page. Everywhere else the bar is solid from first paint, because
+ * a transparent bar over a light page shows the content through it and reads
+ * as broken layout. `usePathname()` is available during SSR, so this decision
+ * is made on the server and the bar never flashes from solid to transparent
+ * on hydration.
+ *
+ * `/shop` (a deliberately slim banner, not a full hero), `/shop/<category>`,
+ * `/product`, `/blog`, `/team` and `/quote` all open on a light background or
+ * a short band, and are deliberately absent.
+ */
+const DARK_HERO_ROUTES = new Set(['/', '/gallery', '/about', '/contact']);
+
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  // Transparent belongs only to a page whose own opening is a full bleed
-  // dark section built to sit behind it, per D79: home's photograph, and
-  // the gallery's own opening film, added on request. Every other page
-  // starts with content directly beneath the bar, so a transparent header
-  // let a product listing show through it and read as broken layout.
-  const overHero = pathname === '/' || pathname === '/gallery';
+  const overHero = DARK_HERO_ROUTES.has(pathname);
   // The transparent state now sits over a full bleed dark photograph, per
   // D79, rather than the page's own light background, so it needs light
   // chrome to stay legible: the wordmark, the nav and the phone line all

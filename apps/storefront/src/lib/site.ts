@@ -20,30 +20,29 @@ export const SITE = {
     line2: 'Enterprise Road, Industrial Area',
     city: 'Nairobi',
   },
-  hours: 'Mon to Sat, 8am to 6pm',
+  /** Confirmed by Beco, 10 September 2026. Weekday and Saturday windows differ. */
+  hours: 'Mon to Fri, 8am to 4pm. Sat, 8am to 2pm',
+  hoursByDay: [
+    ['Monday to Friday', '8am to 4pm'],
+    ['Saturday', '8am to 2pm'],
+  ] as const,
 } as const;
 
 /**
  * Beco's social profiles.
  *
- * **URLs are placeholders until Beco confirms the handles.** The approved
- * prototype had Instagram and Facebook buttons and every one was `href="#"`,
- * with one labelled "profile coming soon", so no real URL has ever been
- * supplied.
+ * Confirmed by Beco on 10 September 2026, in docs/BECO-COMPANY-PROFILE.md:
+ * Instagram and TikTok are live, and no Facebook, YouTube or X account has
+ * been opened. The three that do not exist are left out of the row entirely
+ * rather than drawn as "coming soon" placeholders, since two real links now
+ * carry it. `SocialLinks` still supports a null URL, per D48, if one is added
+ * back before its account exists.
  *
- * A null here still DRAWS the icon, it just does not make it a link: see
- * SocialLinks. That keeps the row visually complete without shipping a
- * control that advertises an operation and does not perform it, which rule 3
- * forbids and a lint rule fails the build on.
- *
- * Filling in a URL is the whole change. Order is the order they appear.
+ * Order is the order they appear.
  */
 export const SOCIAL: { name: string; url: string | null }[] = [
-  { name: 'Instagram', url: null },
-  { name: 'Facebook', url: null },
-  { name: 'YouTube', url: null },
-  { name: 'TikTok', url: null },
-  { name: 'X', url: null },
+  { name: 'Instagram', url: 'https://www.instagram.com/becointeriorskenya' },
+  { name: 'TikTok', url: 'https://www.tiktok.com/@beco.interiors' },
 ];
 
 /**

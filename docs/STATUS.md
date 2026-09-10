@@ -5,9 +5,13 @@
 Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, `BLOCKED`
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
-Last updated: 9 September 2026. M0 through M3 are done, M4 is in closeout: the code list is
-essentially clear, what remains is Beco's content and a real-device pass. The Codex M4 review
-has not run yet.
+Last updated: 10 September 2026. M0 through M4 done; M4's Codex review ran 9 Sept (7 of 8
+resolved). M5 (operations dashboard) was scoped into `docs/milestones/M5-TODO.md` on branch
+`m5-dashboard`, then paused at the plan stage: Beco asked for a temporary storefront link to
+review, so a storefront modernisation pass (D82) is running on branch `storefront-revamp`
+instead. That pass is uncommitted working-tree at time of writing, all tests green. **M5
+resumes from `m5-dashboard`**, which carries only the M5 plan and the D82 / gitignore
+housekeeping, so it starts clean.
 
 **Both external dependencies confirmed against real infrastructure**, since 31 August.
 
@@ -17,12 +21,13 @@ has not run yet.
 - **R2:** write, read with matching contents, list and delete all succeed against
   `beco-product-images`, with a token scoped to that bucket alone
 
-**Headline numbers, 9 September:** 25 migrations replaying clean from an empty database, 425
-Vitest tests across 60 files plus 11 integration tests, 68 pgTAP tests across 7 files, 9
-packages typechecking. 31 products, 30 published, one held back deliberately by the pipeline
-itself (`DELFONE 12MM`, see D53), 24 priced, 21 described. The blog is live with three seeded
-articles. `apps/dashboard` has its first real page, the D80 launch control. Decisions recorded
-through D81, `docs/DECISIONS.md`.
+**Headline numbers, 10 September:** 25 migrations replaying clean, **482 Vitest** across 68
+files, 82 pgTAP across 8 files, 9 packages typechecking. After `drive:import`: 32 products, 30
+published (`DELFONE 12MM` still held, see D53), all 30 with real photography. The blog is live
+with three seeded articles. `apps/dashboard` has its first real page, the D80 launch control.
+Decisions recorded through **D82**, `docs/DECISIONS.md`. `docs/BECO-COMPANY-PROFILE.md` is
+Beco's own description of the business, supplied 10 September, and is the source for About page
+copy, hours (Mon to Fri 8am to 4pm, Sat 8am to 2pm) and the two live social accounts.
 
 ---
 
@@ -34,8 +39,8 @@ through D81, `docs/DECISIONS.md`.
 | M1 | Foundation and infrastructure | 3.5 | **DONE**, schema and RLS complete. DNS on Beco and the Vercel Pro upgrade on Brightex are the two items still open, both blocking M6 rather than M1 itself |
 | M2 | Drive import pipeline | 3.5 | **DONE**, live against real Drive and R2, incremental, reports rather than guesses |
 | M3 | Design system | 2.0 | **DONE**, tokens, contrast verified, `@beco/ui` built out through M4 |
-| M4 | Storefront, SEO, conversion, motion | 8.5 | **WIP, in closeout.** The code list is essentially clear: blog live, `RoomStack` extracted, rate limiting in, error pages tested, reduced-motion audited, Lighthouse wired, JSON-LD tested, and the guaranteed home hero. What is left is the Codex review pass, Beco's content, and a walk on a real phone. Full detail in `docs/milestones/M4-TODO.md` and `docs/milestones/M4-HANDOVER.md` |
-| M5 | Operations dashboard | 6.5 | **TODO.** `apps/dashboard` now has one real vertical slice, the D80 launch control: Supabase Auth sign in, `proxy.ts`, an admin-gated page. The rest, quotes, orders, stock, team, is unstarted. Two requirements captured ahead of scoping: stock tracking in half slab units, and per agent quote ownership against admin assignment, see D68 |
+| M4 | Storefront, SEO, conversion, motion | 8.5 | **DONE**, Codex review ran 9 Sept. A modernisation pass (D82) followed 9 to 10 Sept on branch `storefront-revamp`: real photography imported, fluid type scale, craft floor, specimen plates, the home hero and `SlabToSurface` reworked, a rotating announcement bar, a transparent header across the dark-hero pages, the `/shop` filter rebuilt for mobile, `/about` opened on Beco's own copy, confirmed hours and social. Uncommitted working-tree, all green. Follow-ups deferred in `docs/PLAN.md`: portrait video sections, `/about` lower sections, the import pipeline EXIF fix |
+| M5 | Operations dashboard | 6.5 | **TODO, planned.** `docs/milestones/M5-TODO.md` expands the milestone; section 0 records the resolved decisions (stock = manual half-slab quantity, quote expiry display-only, unpriced totals as "Pricing on application", the agreed cuts). Build resumes from branch `m5-dashboard`. `apps/dashboard` has the D80 launch slice (Supabase Auth sign in, `proxy.ts`, `requireAdmin`, one admin-gated page); quotes, orders, stock, products, team, reports are unstarted |
 | M6 | Launch | 3.5 | TODO. Depends on M4, M5, and the old URL list, still not received and the largest ranking risk in the project |
 | M7 | Studio, inside the dashboard | 3.5 | After launch, unbilled |
 

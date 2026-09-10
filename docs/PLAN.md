@@ -21,6 +21,10 @@ Brightex material.
 6 days and is closed by staging the motion and taking the dashboard cuts below, accepting a
 one day slip rather than cutting into the storefront.
 
+**Post-M5:** a storefront modernisation pass, accepted per D82. Targeted craft passes on named
+pages after the dashboard closes, each an M4 revision, inside the brand guideline and the
+performance budgets. Not a rebrand and not a milestone in its own right unless Beco asks for one.
+
 ## Agreed cut order, if the date is held
 
 Stop when it fits.
@@ -43,7 +47,13 @@ Anything cut or deferred is recorded here with a reason, never silently dropped.
 
 | Item | Milestone | Reason | Revisit |
 |---|---|---|---|
-| (none yet) | | | |
+| Receipt PDF and its email template | M5 | Agreed cut order item 1: quotes only at launch, receipts the week after. `document_type` already carries `receipt`, so this defers the renderer and template, not schema | Week after launch |
+| Audit log viewer (`/dashboard/audit`) | M5 | Agreed cut order item 3: audit *writing* is live from day one via the trigger, *reading* it through a screen waits. Admin roles can still query the table directly meanwhile | M6 or first retainer cycle |
+| `/dashboard/imports` screen | M5 | Agreed cut order item 4: the `drive:import` CLI and the `import_runs` / `import_issues` tables carry the same information until the screen exists | Post-launch retainer |
+| Automatic stock decrement on order status change | M5 | 0.1 resolved to option B (manual quantity). Auto-decrement needs a non-racing, non-negative decrement path, a put-back on cancellation, and a decision on whether a `quoted` quote reserves stock, none of which should be designed before the order flow has been used for real | After the order flow has real usage |
+| Import pipeline EXIF auto-orient | Storefront revamp (D82) | Some rescued DELFONE-folder room photos render rotated 90 degrees: `tools/drive-import/src/images.ts` reads metadata without auto-orienting, so stored `width/height` are pre-rotation and a ratio guard cannot catch them. Worked around in `SlabToSurface` and `/about`; the real fix is `.rotate()` before `.metadata()`, or recording `orientation` | Next import pipeline pass |
+| Portrait video sections to landscape stock | Storefront revamp (D82) | Beco approved the licensed landscape clip on `/gallery` (D69) and wants the portrait `SHOWROOM_FILM` sections (home, `/contact`) done the same way. Sourcing and licence-verifying a specific clip needs a session with web access | Next revamp session |
+| `/about` lower sections | Storefront revamp (D82) | The opening hero and statement section were rebuilt; the pillars, rotating statement and showroom block still carry their pre-pass design | Follow-up revamp pass |
 
 ## External dependencies
 

@@ -68,12 +68,17 @@ export function RangeBrowse({
                         className="object-cover transition-transform duration-[900ms] ease-brand group-hover/tile:scale-[1.04]"
                       />
                     ) : (
-                      // Not a grey box with an icon in it. A charcoal plate
-                      // with the range set on it reads as deliberate, which is
-                      // the truth: the stock is real, the photograph is not
-                      // taken yet.
-                      <div className="absolute inset-0 flex items-end p-5">
-                        <p className="font-display text-2xl leading-tight text-high-vis-white/70">
+                      // Not a grey box with an icon in it. A charcoal
+                      // specimen plate, named top and bottom, reads as
+                      // deliberate, which is the truth: the stock is real,
+                      // the photograph is not taken yet. Same treatment as
+                      // an unphotographed product card, so the whole site
+                      // handles "no shot yet" one way.
+                      <div className="absolute inset-0 flex flex-col justify-between p-5">
+                        <span className="font-ui text-xs font-semibold uppercase tracking-[0.18em] text-high-vis-white/45">
+                          In the showroom
+                        </span>
+                        <p className="font-display text-2xl leading-tight text-high-vis-white/75">
                           {group.name}
                         </p>
                       </div>

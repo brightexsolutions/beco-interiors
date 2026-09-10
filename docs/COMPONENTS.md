@@ -28,11 +28,11 @@ These carry business rules, so they exist once and are tested once.
 |---|---|---|
 | `PriceDisplay` | **B** | **The most important component on the storefront.** Renders fixed price, POA, or a sale with a struck through `compare_at_price`. `price_display_mode` is separate from `availability` precisely so this can never be ambiguous, and ambiguity here costs sales |
 | `AvailabilityBadge` | **B** | In Stock, Pre-Order, POA. Warm Red only for genuine attention |
-| `ProductCard` | **B** | No border, no shadow. Fixed 4:5 frame, image scales on hover, red hairline draws under the name. A shadow lift is the generic move |
+| `ProductCard` | **B** | No border, no shadow. Fixed 4:5 frame, image scales on hover, red hairline draws under the name. With no photograph (D82) the frame is a charcoal specimen plate naming the stone, `aria-hidden` so the heading link stays the one accessible name |
 | `ProductGallery` | **B** | Ordered by image role: slab, on_stand, bookmatch, application. **Must read correctly on three images as well as six**, since five products have no on stand shot |
 | `QuoteActions` | P | The three actions, ranked identically everywhere: Request a quote, WhatsApp, Call |
 | `MobileActionBar` | **B** | Storefront. | Mobile. **Never sits under the on screen keyboard.** Verified on real iOS and Android |
-| `AnnouncementBar` | **B** | Lives in the storefront, not `@beco/ui`, because only one surface has one. | Server rendered with reserved height. Dismissal is a **cookie, not localStorage**, so the server knows and the bar never flashes then vanishes |
+| `AnnouncementBar` | **B** | Storefront only. **Rotating strip** since D82: cycles every live announcement, then the phone, then "Email us:". A `'use client'` component with a fixed single-line height so the roll costs no CLS; the outgoing line lifts up and out as the incoming one rises in; pauses on hover; no rotation under `prefers-reduced-motion`. `buildAnnouncementItems` lives in `lib/announcements.ts` so the RSC layout can assemble the items server side. Not dismissible, per D49 |
 
 ## Storefront only
 
@@ -41,7 +41,7 @@ Not in `@beco/ui`, because a second surface has no use for them yet. Moved the m
 | Component | Status | Notes |
 |---|---|---|
 | `RangeBrowse` | **B** | The taxonomy made visible: six top level ranges with a real photograph each and their child ranges as links. A range with no photography gets a charcoal plate with its name on it rather than a grey box with an icon, which is honest about the stock being real and the picture not being taken |
-| `ShopControls` | **B** | Search, a grouped range select, finish and sort, with the URL as the source of truth so the grid stays server rendered. Active filters stated back as removable chips |
+| `ShopControls` | **B** | Search, a grouped range select, finish and sort, URL as the source of truth so the grid stays server rendered. Active filters stated back as removable chips. Sticky on every size since D82. **Mobile**: search plus a "Filters" button that opens a panel with full-width controls and a "Show N results" close; the controls are the same elements at both sizes, `display: contents` from `lg` up. Revises D65 |
 | `ProductGrid` | **B** | One grid for the home page, `/shop` and every category, so a card cannot quietly differ between them |
 | `RoomStack` (`@beco/ui`) | **B** | The self dealing stack: fan, swipe, caption plate, and the static stacked transform that is also the reduced-motion state. Extracted 5 September, takes `RoomStackCard[]`. A thin `apps/storefront` `RoomStack` wrapper is the only place that still knows `next/image` and `CatalogueProduct`. Tests in both packages |
 | `PageHeader` | **B** | Red rule, eyebrow, Cormorant title, lede. The site's one section opening |

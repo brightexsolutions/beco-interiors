@@ -2,13 +2,10 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { buttonClasses, Reveal } from '@beco/ui';
-import { PageHeader } from '@/components/page-header';
 import { RoomStack } from '@/components/room-stack';
 import { RotatingStatement } from '@/components/rotating-statement';
-import { StoneSlider } from '@/components/stone-slider';
 import {
   getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages,
-  stoneSlidesFrom,
 } from '@/lib/products';
 import { SITE } from '@/lib/site';
 
@@ -79,8 +76,26 @@ const PILLARS = [
 
 export default async function AboutPage() {
   const [products, groups] = await Promise.all([getPublishedProducts(), getCategoryTree()]);
-  const hero = products.find((p) => p.images?.some((i) => i.role === 'application'));
-  const heroImage = hero?.images.find((i) => i.role === 'application') ?? primaryImage(products[0]!);
+  // The opening photograph: a real Beco installation, wide, and upright. Some
+  // rooms rescued from the mis-organised DELFONE folder carry a broken EXIF
+  // orientation and render on their side, so the pick is guarded twice: a
+  // ratio band that only a genuine landscape interior passes, and a
+  // preference for stones that were photographed in their own clean folders.
+  const goodRoom = (i: { role: string; width: number; height: number }) =>
+    i.role === 'application' && i.width / i.height >= 1.3 && i.width / i.height <= 2;
+  const HERO_ORDER = ['bianco-fendi', 'statuario', 'calcatta-gold', 'beverly-gold', 'amber-jade'];
+  const aboutHero =
+    HERO_ORDER.map(
+      (slug) =>
+        (products.find((p) => p.slug === slug)?.images ?? [])
+          .filter(goodRoom)
+          .sort((a, b) => b.width - a.width)[0],
+    ).find(Boolean) ??
+    products
+      .flatMap((p) => p.images ?? [])
+      .filter(goodRoom)
+      .sort((a, b) => b.width - a.width)[0] ??
+    primaryImage(products[0]!);
 
   // One real photograph per pillar, matched through the group tree rather
   // than a hand maintained list of category slugs, so it stays correct if a
@@ -115,55 +130,101 @@ export default async function AboutPage() {
     ? ROTATING_WORDS.map((_, i) => applicationPool[i % applicationPool.length]!)
     : undefined;
 
-  // The opening header's own companion image, reported directly against the
-  // blank column beside the title on a wide screen. Real slab photographs,
-  // not application shots: this sits beside "New here. Stocked already."
-  // and the slab itself, not a room built from it, is what backs that up.
-  const stoneSlides = stoneSlidesFrom(products);
-
   return (
     <main>
-      <div className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
-        {/* Grid rather than PageHeader's own built-in aside slot: that slot
-            bottom-aligns a short caption against the heading, which is the
-            right call for the one-line stat the gallery and team pages put
-            there, but pushed the heading itself down to match a 360px tall
-            image instead. Top aligned here, so the slider actually fills the
-            blank column reported directly beside the title on a wide screen,
-            rather than shifting the text to chase it. */}
-        <div className="mb-16 grid gap-x-12 gap-y-10 lg:grid-cols-[1fr_18rem] lg:items-start">
-          <PageHeader
-            eyebrow="About Beco Interiors"
-            title="New here. Stocked already."
-            lede={
-              <>
-                Beco Interiors is new to the East African market. What matters to a project is
-                not how long we have been trading. It is whether the material is in Nairobi when
-                you need it, and whether someone can price it today.
-              </>
-            }
-          />
-          {stoneSlides.length > 1 ? (
-            <StoneSlider slides={stoneSlides} className="hidden lg:block" />
-          ) : null}
-        </div>
-
-        {heroImage ? (
-          <Reveal className="beco-zoom">
-            <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-100 sm:aspect-[21/9]">
+      {/* --- The opening. A finished Beco room fills the frame and the type
+              sits over it at the foot, the same charcoal-photograph
+              construction the home hero and the /shop and /contact openings
+              use. Height is BOUNDED to the viewport below the header so the
+              hero never runs past a screen: content is compact and bottom
+              anchored, not stretched by a large top padding. The photograph
+              settles out of a slight scale on entry, then drifts slowly.
+              Everything collapses to a still frame under reduced motion. --- */}
+      <section className="beco-hero-bleed relative isolate flex h-[100svh] min-h-[38rem] max-h-[56rem] items-end overflow-hidden bg-charcoal text-high-vis-white">
+        <div className="beco-zoom absolute inset-0">
+          {aboutHero ? (
+            <div className="beco-drift-slow absolute inset-0">
               <Image
-                src={heroImage.path}
-                alt={heroImage.alt}
+                src={aboutHero.path}
+                alt={aboutHero.alt}
                 fill
                 priority
                 sizes="100vw"
-                {...blurProps(heroImage)}
+                {...blurProps(aboutHero)}
                 className="object-cover"
               />
             </div>
+          ) : null}
+          {/* Legibility, from the site's own charcoal token, weighted to the
+              bottom and the left where the type sits. Lighter than before, so
+              the room still reads as a room. Never a flat black wash. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/45 to-transparent"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-r from-charcoal/60 via-charcoal/10 to-transparent"
+          />
+        </div>
+
+        <div className="beco-clip beco-hero-content-top relative mx-auto w-full max-w-[1380px] px-6 pb-12 sm:pb-16">
+          <div className="beco-wipe flex items-center gap-4">
+            <span aria-hidden className="h-px w-10 bg-warm-red" />
+            <p className="font-ui text-xs font-semibold uppercase tracking-[0.22em] text-neutral-300">
+              About Beco Interiors
+            </p>
+          </div>
+          <h1 className="beco-wipe mt-5 max-w-[15ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] sm:text-6xl">
+            New here. Stocked already.
+          </h1>
+          <Reveal delay={140} className="mt-5 max-w-[46ch]">
+            <p className="text-base leading-[1.6] text-neutral-200 sm:text-lg">
+              A Kenyan interior solutions company. The materials you specify, stocked in Nairobi
+              and priced the day you ask.
+            </p>
           </Reveal>
-        ) : null}
-      </div>
+          <Reveal delay={220} className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Link href="/quote" className={buttonClasses({ variant: 'primary' })}>
+              Request a quote
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-8 hover:underline"
+            >
+              Visit the showroom
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* --- The statement of intent, on white, straight after the photograph.
+              Beco's own positioning line, given room to be read. --- */}
+      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
+        <Reveal className="beco-clip">
+          <p className="beco-wipe max-w-[24ch] font-display text-3xl leading-[1.15] text-charcoal sm:text-4xl">
+            Creating spaces through thoughtful materials, intelligent solutions and exceptional
+            service.
+          </p>
+        </Reveal>
+        <div className="mt-10 grid gap-x-16 gap-y-8 border-t border-neutral-200 pt-10 lg:grid-cols-2">
+          <Reveal>
+            <p className="max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+              Great interiors are not simply about how a space looks. They are about how it
+              feels, how it functions, and how well every element works together. So we bring
+              quality products, practical solutions and a seamless client experience together,
+              from the first conversation to project completion.
+            </p>
+          </Reveal>
+          <Reveal delay={80}>
+            <p className="max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+              We would rather understand what a project is trying to achieve and then guide the
+              choice, than sell the most expensive option in the room. It is an experience, not
+              just a product.
+            </p>
+          </Reveal>
+        </div>
+      </section>
 
       {/* --- What we sell. The guideline's own four pillars, as a numbered
               editorial list rather than four cards with icons in circles. --- */}

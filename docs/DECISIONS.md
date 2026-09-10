@@ -1122,3 +1122,144 @@ exercising the real path. Every real HTTP request has a scope, so production is 
 **Sign in already had Supabase Auth's own limiter behind it.** The app layer there is thin: it
 turns a burst into one clear message instead of a run of GoTrue 429s, and keeps the two public
 writes shaped the same way.
+
+## D82, 9 September 2026: the storefront gets a modernisation pass, inside the guideline
+
+Brown's call: the storefront should feel more current. Accepted, with three constraints so it
+does not become an open-ended reskin.
+
+**Sequencing.** Originally scoped for after M5. Brought forward the same day, on Brown's
+follow-up call: the Beco team needs a temporary storefront link to review, so the revamp runs
+now and the M5 dashboard build pauses at section A (nothing was committed on `m5-dashboard`
+beyond the M5 plan, so M5 resumes cleanly from there later). The work happens on a
+`storefront-revamp` branch. Each page's change is still recorded as an M4 revision, the same
+way D70 to D79 were handled.
+
+**The guideline still governs.** D2 is not reversed: Charcoal Black, High-Vis White and Warm
+Red at their guideline values, Titillium Web and Cormorant Garamond, the near monochrome shell
+so the stone is the only colour on the page. The palette and type are Beco's own brand
+guideline, not a Brightex preference, so a pass that trades them away needs Beco at the table.
+The "Never build" list in `CLAUDE.md` and the Lighthouse budgets remain hard limits: a
+modernisation that costs the LCP or CLS budget is not shipped. "Modern" here means sharper
+craft inside the existing system, not a new visual world.
+
+**Tooling is machine-local.** Three third-party agent skill sets were installed to support this
+work: `emilkowalski/skills` (motion and polish), `Leonxlnx/taste-skill` (anti-generic frontend
+and design-reference image generation), and `impeccable` (a design-director skill with a
+detector). They live under `.agents/` and `.claude/skills/` and are **gitignored**, per the
+"third-party agent skills" block in `.gitignore`. They are not reviewed for a client repo, not
+a milestone deliverable, and CI must not depend on them. `impeccable`'s auto-run Edit/Write
+hook, which it installed into `.claude/settings.local.json` and which executes a downloaded
+binary, was removed the same day: the skill can still be invoked deliberately, but it does not
+sit in the edit loop.
+
+*Reverses if:* Beco asks for a genuine rebrand, at which case this stops being a craft pass and
+becomes its own milestone with Beco approval and a revised `docs/PLAN.md`. Or if the
+modernisation passes cannot stay inside the performance budgets, in which case the offending
+change is dropped rather than the budget raised.
+
+### What the pass changed, 9 to 10 September
+
+Recorded so the diff is legible and the review has a checklist. 26 files, all tests green
+(482 Vitest, 82 pgTAP unchanged, 9 packages typecheck) on branch `storefront-revamp`.
+
+**Foundation, `packages/ui`**
+
+- **Real photography is in.** `pnpm drive:import` was run: 30 published products now carry real
+  slab, bookmatch and room images. The catalogue is no longer a wall of charcoal name plates.
+- **Type scale.** `--text-4xl` to `--text-7xl` became fluid `clamp()` values in `tokens.css`.
+  This also fixed a real inversion: `--text-5xl` and above were undefined, so Tailwind's own
+  `3rem` default made `text-4xl sm:text-5xl` shrink a heading at the `sm` breakpoint instead of
+  growing it.
+- **Craft floor** in `tokens.css`: `::selection`, the caret, a themed scrollbar, one
+  `:focus-visible` ring, the list `::marker`, underline offset, a slight display tracking, and
+  `tabular-nums` on `PriceDisplay`, all from the palette.
+- **`ProductCard`** and **`RangeBrowse`**: an unphotographed item gets a charcoal specimen
+  plate naming the stone, `aria-hidden` because the heading link is the real accessible name,
+  rather than a blank grey box.
+- **`motion.css`**: `beco-ambient` widened from `> img` to a descendant selector (D64-style),
+  so the hero crossfade can nest a scale-settle wrapper without losing the drift; new
+  `beco-bar-in` / `beco-bar-out` keyframes for the announcement roll.
+
+**Home**
+
+- **Hero** (`PinnedHero`): the crossfade carries a slow scale settle now, on a wrapper so it
+  does not fight the ambient drift on the image (the D67 / D77 trap). De-crowded on feedback:
+  the per-stone lede is trimmed to a short phrase, the headline is two lines, the indicator
+  dropped the thickness and a row.
+- **Stone sections** (hero, the "finished surface" grid, the pinned rail) filter to the
+  sintered stone subset. The import brought handles into the published set and a handle was
+  landing in a grid headed "See all N colours".
+- **`SlabToSurface`** picks a landscape, ratio guarded room and covers the frame (see the EXIF
+  note below). It is now ONE responsive pinned structure at every breakpoint: on a phone the
+  parting frame grows to fill the height left after a compact caption (no lede, no secondary
+  link) and the whole pinned scene is `100dvh` minus the header, so the mirror parting still
+  runs on mobile without the frame bleeding into the next section.
+- **Home `openingHoursSpecification` JSON-LD** split into a weekday and a Saturday spec, per
+  the confirmed hours below.
+
+**Chrome**
+
+- **Announcement bar** is a rotating strip: every live announcement, then "Call the showroom",
+  then "Email us:". Server rendered first item for no CLS, the outgoing line rolls up and out
+  as the incoming one rises in, pauses on hover, still under `prefers-reduced-motion` (no
+  rotation). `getLiveAnnouncements` returns the array; `buildAnnouncementItems`, in
+  `lib/announcements.ts` so the RSC layout can call it, assembles the items server side.
+- **Transparent header across the dark-hero pages.** `SiteHeader`'s `overHero` is now a
+  `DARK_HERO_ROUTES` set, `{ '/', '/gallery', '/about', '/contact' }`, decided from
+  `usePathname()` on the server so the bar never flashes. `/about` and `/contact` gained
+  `beco-hero-bleed` + `beco-hero-content-top` so their opening sections sit behind the bar,
+  which is transparent with light chrome until scroll and settles to solid white with a
+  hairline, the same as home. `/shop` stays solid: its opening is a slim banner, not a hero.
+- **Hours**, confirmed by Beco 10 September: Mon to Fri 8am to 4pm, Sat 8am to 2pm. In
+  `SITE.hours`, `SITE.hoursByDay`, the home JSON-LD and the `/contact` page.
+- **Social**: real Instagram (`becointeriorskenya`) and TikTok (`beco.interiors`) in `SOCIAL`;
+  the three accounts Beco does not run are removed from the row rather than drawn as "coming
+  soon" placeholders.
+
+**About**
+
+- **New opening**: a charcoal full-bleed room hero, bounded to `100svh` with a `min-h` /
+  `max-h` so it never runs past a screen or collapses, content bottom-anchored, plus a
+  statement-of-intent section. Both built from `docs/BECO-COMPANY-PROFILE.md`, Beco's own words
+  supplied 10 September. The `PageHeader` / `StoneSlider` opening it replaced is gone.
+
+**Shop**
+
+- **`/shop` filter (`ShopControls`)**: better on both. Sticky under the header on every size
+  now. Desktop is the one inline row as before. Mobile is a compact bar of search + a
+  "Filters" button (red badge for active facets) that opens a panel with full-width range /
+  finish / sort selects and a "Show N results" button. The controls are the same elements at
+  both sizes, via `display: contents` from `lg` up. This revises D65.
+- **`/shop/[category]`**: leads its right column with a bookmatched pair where the range has
+  one. The column stretches to the full height of the long SEO description and the photograph
+  grows to fill the space above the facts list, so there is no dead space beside the lower
+  paragraphs.
+
+**Quote flow**
+
+- After "Add to quote", the button becomes "Add again" and a "Review quote (N)" link to
+  `/quote` appears beside it, carrying the live count, so the single item path is add, review,
+  send and the multi item path is add, keep browsing, review, without hunting for the header
+  link.
+
+### Known content issue found during the pass: EXIF orientation
+
+Several room photographs rescued from the mis-organised `DELFONE 12MM` folder (Statuario,
+Statuario Gold, Taj Mahal and neighbours) carry a broken EXIF orientation and render rotated
+90 degrees, even though Sharp's `.rotate()` runs in the pipeline. The metadata read at
+`tools/drive-import/src/images.ts` does not auto-orient, so `products.images[].width/height`
+records the pre-rotation dimensions, which is why a ratio guard alone cannot catch them. Worked
+around for now: `SlabToSurface` and the `/about` hero prefer stones photographed in their own
+clean folders and apply a ratio band. **The real fix is in the import pipeline** (auto-orient
+before reading metadata, or record `orientation` and correct the stored dimensions) and it is
+recorded in `docs/PLAN.md` as deferred.
+
+### Still open on this pass
+
+- **Portrait video sections.** Beco approved the licensed landscape clip on `/gallery` (D69)
+  and asked for the portrait `SHOWROOM_FILM` sections (home, `/contact`) to move to licensed
+  landscape stock the same way. Not done: sourcing and licence-verifying a specific clip needs
+  a session with web access, the same care D69 took. Recorded here and in `docs/PLAN.md`.
+- **`/about` lower sections** (the pillars, the rotating statement, the showroom block) still
+  carry their pre-pass design. The opening was the brief; the rest is a follow-up.

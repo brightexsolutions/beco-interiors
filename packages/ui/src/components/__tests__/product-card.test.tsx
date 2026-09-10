@@ -6,7 +6,10 @@ describe('ProductCard', () => {
   it('renders a POA product without inventing a price, and says it ONCE', () => {
     render(<ProductCard name="Limestone Ivory" href="/product/limestone-ivory"
                         priceDisplayMode="poa" availability="poa" />);
-    expect(screen.getByText('Limestone Ivory')).toBeDefined();
+    // The heading link is the product's one accessible name. With no photo,
+    // a charcoal specimen plate also shows the name, but aria-hidden, so a
+    // screen reader still hears it exactly once.
+    expect(screen.getByRole('link', { name: 'Limestone Ivory' })).toBeDefined();
     expect(screen.getByText('Price on application')).toBeDefined();
     // The badge suppresses itself here. Saying "Price on application" beside
     // "Call for price" is the same sentence twice, which is what shipped first.

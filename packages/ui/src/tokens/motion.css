@@ -85,6 +85,29 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* --- The announcement bar's rotating line. The outgoing line lifts up and
+         out of the clipped bar as the incoming one rises into its place, so a
+         change reads as a roll rather than a cut. The bar's min-height is
+         fixed and it clips, so nothing spills or moves the page. Outside this
+         block, under reduced motion, both lines just settle in place, and the
+         rotation does not arm anyway. --- */
+  .beco-bar-in {
+    animation: beco-bar-in 460ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .beco-bar-out {
+    animation: beco-bar-out 460ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes beco-bar-in {
+    from { opacity: 0; transform: translateY(85%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes beco-bar-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-85%); }
+  }
+
   /* --- Photographs settle out of an oversized crop rather than fading.
          The frame never moves, so this costs no layout. --- */
   .beco-zoom[data-inview] > img,
@@ -390,8 +413,14 @@
          paint so it cannot affect the LCP measurement. Stone is the only
          thing on the page with any colour in it, so it earns being alive
          rather than perfectly still. --- */
-  .beco-ambient > img,
-  .beco-ambient > video {
+  /* Descendant, not direct child: the hero crossfade wraps each photograph
+     in a scale-settle layer, so the image is one level deeper now. Every
+     existing direct-child case still matches, the same widening as D64. A
+     transition and an animation cannot both drive `transform` on one
+     element, so the settle lives on the wrapper and this drift on the
+     image, per the D77 lesson. */
+  .beco-ambient img,
+  .beco-ambient video {
     animation: beco-ambient-drift 28s ease-in-out 1600ms infinite alternate;
   }
 

@@ -45,11 +45,16 @@ describe('AddToQuote, a discrete item', () => {
     expect(readList()[0]?.quantity).toBe(1);
   });
 
-  it('confirms that it happened, rather than looking unchanged', async () => {
+  it('confirms that it happened, and offers the route to review the quote', async () => {
     const user = userEvent.setup();
     render(<AddToQuote line={handleLine} />);
     await user.click(screen.getByRole('button', { name: 'Add to quote' }));
-    expect(screen.getByRole('button', { name: 'Added to your list' })).toBeInTheDocument();
+    // The add button changes, and a link straight to /quote appears carrying
+    // the live count, so the reader is not left to find the header link.
+    expect(screen.getByRole('button', { name: 'Add again' })).toBeInTheDocument();
+    const review = screen.getByRole('link', { name: /Review quote/ });
+    expect(review).toHaveAttribute('href', '/quote');
+    expect(review).toHaveTextContent('(1)');
   });
 });
 

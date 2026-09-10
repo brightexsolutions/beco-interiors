@@ -124,7 +124,7 @@ describe('QuoteBuilder, on success', () => {
     await user.click(screen.getByRole('button', { name: /Send my request/ }));
 
     await screen.findByText(/BQ-2026-0001/);
-    expect(screen.getByText('Mon to Sat, 8am to 6pm')).toBeInTheDocument();
+    expect(screen.getByText('Mon to Fri, 8am to 4pm. Sat, 8am to 2pm')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '+254 722 333 730' })).toHaveAttribute(
       'href',
       'tel:+254722333730',

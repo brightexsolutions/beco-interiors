@@ -7,7 +7,7 @@ import { SiteSplash } from '@/components/site-splash';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { MobileActionBar } from '@/components/mobile-action-bar';
-import { getLiveAnnouncement } from '@/lib/announcements';
+import { getLiveAnnouncements, buildAnnouncementItems } from '@/lib/announcements';
 import { getLaunchState } from '@/lib/launch';
 import { SITE } from '@/lib/site';
 
@@ -38,12 +38,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // moment Beco sets a date or throws the switch, because for that month
   // the anniversary IS the announcement. Its wrapper is shaped exactly like
   // AnnouncementBar's, so the spacing contract below does not care which.
-  const [announcement, launch] = await Promise.all([
-    getLiveAnnouncement(),
+  const [announcements, launch] = await Promise.all([
+    getLiveAnnouncements(),
     getLaunchState(),
   ]);
   const launchActive = Boolean(launch.launchAt) || launch.isLive;
-  const hasBanner = launchActive || Boolean(announcement);
+  // The bar rotates through every live announcement plus Beco's phone and
+  // email, so the slot is always filled and the contact line is always in
+  // rotation. The launch banner still takes the slot outright while it is
+  // active, per D80.
+  const barItems = buildAnnouncementItems(announcements);
+  const hasBanner = launchActive || barItems.length > 0;
 
   return (
     <html lang="en">
@@ -67,7 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {launchActive ? (
           <LaunchBanner launch={launch} />
         ) : (
-          <AnnouncementBar announcement={announcement} />
+          <AnnouncementBar items={barItems} />
         )}
         <SiteHeader />
         <div id="main">{children}</div>

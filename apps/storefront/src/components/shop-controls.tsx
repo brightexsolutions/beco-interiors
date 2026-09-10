@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { Input, Select } from '@beco/ui';
+import { Input, Select, cn } from '@beco/ui';
 
 /**
  * Search, filter and sort, with the URL as the source of truth.
@@ -16,20 +16,20 @@ import { Input, Select } from '@beco/ui';
  * four facet grid cannot generate hundreds of thin duplicate URLs. That is
  * handled in the page's metadata, not here.
  *
- * The bar was two rows of loose text facets, which worked and looked like a
- * debug view. It is now one aligned control row on a charcoal rule, with the
- * range as a GROUPED select so fifteen categories fit in one control and their
- * hierarchy is visible while choosing rather than only after. What is active
- * is stated back as removable chips, so a reader who lands on a shared filtered
- * URL can see why they are looking at six products instead of thirty one.
+ * LAYOUT. The bar is sticky under the header on every size now. On desktop it
+ * is one row: search, the three facet controls, the live count. On a phone
+ * that row would wrap the controls onto two or three lines and push the grid
+ * off screen, so below `lg` only the search and a "Filters" button show, and
+ * the button opens the range, finish and sort controls in a panel beneath the
+ * bar with a badge for how many are active. The controls themselves are the
+ * SAME elements at both sizes: the wrapper is `display: contents` from `lg` up
+ * so its children flow into the bar row, and a toggled block below it on
+ * mobile. One set of labelled controls, one source of truth. This revises
+ * D65, which dropped the mobile sticky bar when it was still three rows of
+ * loose fields.
  *
- * A second pass, reported directly, cut it further: each control used to sit
- * under its own visible label from @beco/ui's Field, a shape built for a
- * form where the label is part of what is being read, not a toolbar someone
- * wants to clear in one glance on the way to the grid. The labels are now
- * sr-only, tied to their control the same way, and the bar is one slim row.
- * Controls stay 44px, the touch target floor, so what shrank is the padding
- * and the label line around them, never the thing a finger has to hit.
+ * What is active is stated back as removable chips, so a reader who lands on a
+ * shared filtered URL can see why they are looking at six products of thirty.
  */
 export interface Facet {
   value: string;
@@ -59,6 +59,7 @@ export function ShopControls({
   const [pending, startTransition] = useTransition();
 
   const [query, setQuery] = useState(params.get('q') ?? '');
+  const [open, setOpen] = useState(false);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const set = (key: string, value: string | null) => {
@@ -89,6 +90,9 @@ export function ShopControls({
   const finish = params.get('finish');
   const sort = params.get('sort') ?? 'name';
   const filtered = Boolean(query || range || category || finish || params.get('sort'));
+  // The "Filters" button badge counts the facets folded into the panel, not
+  // the search, which is always in view.
+  const panelActive = [range || category, finish, params.get('sort')].filter(Boolean).length;
 
   // The select carries both levels in one control, so its value is whichever
   // is set. Choosing a group clears the narrower category, or the two disagree
@@ -106,9 +110,7 @@ export function ShopControls({
   };
 
   const activeGroup = groups.find((g) => g.value === range);
-  const activeCategory = groups
-    .flatMap((g) => g.children)
-    .find((c) => c.value === category);
+  const activeCategory = groups.flatMap((g) => g.children).find((c) => c.value === category);
 
   const chips = [
     query ? { key: 'q', label: `“${query}”`, clear: () => setQuery('') } : null,
@@ -119,22 +121,15 @@ export function ShopControls({
     finish ? { key: 'finish', label: finish, clear: () => set('finish', null) } : null,
   ].filter((c) => c !== null);
 
+  const count = pending ? 'Filtering…' : `${showing} of ${total}`;
+
   return (
-    // Sticks under the header on DESKTOP ONLY. There the bar is one compact
-    // row and pinning it costs little. On mobile the four fields wrap onto
-    // two rows, and pinning that meant the bar, the fixed action bar at the
-    // bottom, and the on screen keyboard together left almost nothing of the
-    // actual grid visible, which is worse than the bar simply scrolling away
-    // the way it always did. `top-20` matches the header's own h-20, and z-40
-    // keeps it a layer below the header's z-50.
-    <div className="lg:sticky lg:top-20 lg:z-40 border-t-2 border-b border-t-charcoal border-b-neutral-200 bg-high-vis-white/95 py-3 backdrop-blur">
+    <div className="sticky top-20 z-40 border-b border-t-2 border-b-neutral-200 border-t-charcoal bg-high-vis-white/95 py-3 backdrop-blur">
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Full width of its own row below sm: at 390px there is not room
-              beside the range select for anything wider than the icon, which
-              is what shrinking it as a flex-1 sibling actually did. Fixed
-              and compact from sm up, where it sits inline with the rest. */}
-          <span className="relative block w-full sm:w-auto sm:min-w-[14rem]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          {/* Search shares the top row with the Filters button on a phone,
+              and sits inline in the full control row from sm up. */}
+          <span className="relative min-w-0 flex-1 sm:w-auto sm:flex-none sm:min-w-[14rem]">
             <label htmlFor="shop-search" className="sr-only">Search</label>
             <svg
               aria-hidden
@@ -156,71 +151,127 @@ export function ShopControls({
             />
           </span>
 
-          <label htmlFor="shop-range" className="sr-only">Range</label>
-          <Select id="shop-range" value={rangeValue} onChange={(e) => pickRange(e.target.value)} className="w-auto">
-            <option value="">All ranges</option>
-            {groups.map((group) => {
-              // A range with nothing under it is still selectable: it is a
-              // real part of the business, and the page it leads to says so.
-              if (group.children.length === 0) {
-                return (
-                  <option key={group.value} value={`group:${group.value}`}>
-                    {group.label} ({group.count})
-                  </option>
-                );
-              }
-              return (
-                <optgroup key={group.value} label={group.label}>
-                  <option value={`group:${group.value}`}>
-                    All {group.label.toLowerCase()} ({group.count})
-                  </option>
-                  {group.children.map((child) => (
-                    <option key={child.value} value={child.value}>
-                      {child.label} ({child.count})
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
-          </Select>
-
-          {finishes.length > 1 ? (
-            <>
-              <label htmlFor="shop-finish" className="sr-only">Finish</label>
-              <Select
-                id="shop-finish"
-                value={finish ?? ''}
-                onChange={(e) => set('finish', e.target.value || null)}
-                className="w-auto"
-              >
-                <option value="">Any finish</option>
-                {finishes.map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label} ({f.count})
-                  </option>
-                ))}
-              </Select>
-            </>
-          ) : null}
-
-          <label htmlFor="shop-sort" className="sr-only">Sort</label>
-          <Select
-            id="shop-sort"
-            value={sort}
-            onChange={(e) => set('sort', e.target.value === 'name' ? null : e.target.value)}
-            className="w-auto"
+          {/* Mobile only: opens the facet panel. Hidden from `lg`, where the
+              controls sit inline instead. */}
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-controls="shop-facets"
+            className="inline-flex h-11 items-center gap-2 border border-neutral-300 px-4 font-ui text-sm font-semibold text-charcoal transition-colors hover:border-charcoal lg:hidden"
           >
-            <option value="name">Sort: name</option>
-            <option value="price-asc">Price, low to high</option>
-            <option value="price-desc">Price, high to low</option>
-          </Select>
+            <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 stroke-current" fill="none" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M4 6h16M7 12h10M10 18h4" />
+            </svg>
+            Filters
+            {panelActive > 0 ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warm-red-deep px-1 font-ui text-xs font-semibold text-high-vis-white">
+                {panelActive}
+              </span>
+            ) : null}
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              className={cn('h-4 w-4 stroke-current transition-transform', open && 'rotate-180')}
+              fill="none"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
 
           <p
             aria-live="polite"
-            className="ml-auto font-ui text-sm tabular-nums text-neutral-500"
+            className="order-last w-full text-right font-ui text-sm tabular-nums text-neutral-500 sm:order-none sm:ml-auto sm:w-auto"
           >
-            {pending ? 'Filtering…' : `${showing} of ${total}`}
+            {count}
           </p>
+
+          {/* The facet controls. From `lg` up this wrapper is `display: contents`
+              so its children flow into the row above; below `lg` it is a block
+              that drops full width and toggles with the button. */}
+          <div
+            id="shop-facets"
+            className={cn(
+              'w-full basis-full flex-wrap items-stretch gap-3 pt-1',
+              open ? 'flex' : 'hidden',
+              'lg:contents',
+            )}
+          >
+            <label htmlFor="shop-range" className="sr-only">Range</label>
+            <Select
+              id="shop-range"
+              value={rangeValue}
+              onChange={(e) => pickRange(e.target.value)}
+              className="w-full sm:flex-1 lg:w-auto lg:flex-none"
+            >
+              <option value="">All ranges</option>
+              {groups.map((group) => {
+                if (group.children.length === 0) {
+                  return (
+                    <option key={group.value} value={`group:${group.value}`}>
+                      {group.label} ({group.count})
+                    </option>
+                  );
+                }
+                return (
+                  <optgroup key={group.value} label={group.label}>
+                    <option value={`group:${group.value}`}>
+                      All {group.label.toLowerCase()} ({group.count})
+                    </option>
+                    {group.children.map((child) => (
+                      <option key={child.value} value={child.value}>
+                        {child.label} ({child.count})
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </Select>
+
+            {finishes.length > 1 ? (
+              <>
+                <label htmlFor="shop-finish" className="sr-only">Finish</label>
+                <Select
+                  id="shop-finish"
+                  value={finish ?? ''}
+                  onChange={(e) => set('finish', e.target.value || null)}
+                  className="w-full sm:flex-1 lg:w-auto lg:flex-none"
+                >
+                  <option value="">Any finish</option>
+                  {finishes.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label} ({f.count})
+                    </option>
+                  ))}
+                </Select>
+              </>
+            ) : null}
+
+            <label htmlFor="shop-sort" className="sr-only">Sort</label>
+            <Select
+              id="shop-sort"
+              value={sort}
+              onChange={(e) => set('sort', e.target.value === 'name' ? null : e.target.value)}
+              className="w-full sm:flex-1 lg:w-auto lg:flex-none"
+            >
+              <option value="name">Sort: name</option>
+              <option value="price-asc">Price, low to high</option>
+              <option value="price-desc">Price, high to low</option>
+            </Select>
+
+            {/* Mobile only: a plain done affordance so the panel is not left
+                open over the grid. Desktop never renders it, the panel there
+                is always the inline row. */}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="h-11 w-full bg-charcoal px-4 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white sm:w-auto sm:flex-1 lg:hidden"
+            >
+              Show {showing} {showing === 1 ? 'result' : 'results'}
+            </button>
+          </div>
         </div>
 
         {chips.length > 0 ? (
@@ -237,7 +288,7 @@ export function ShopControls({
               >
                 {chip.label}
                 <span aria-hidden className="text-neutral-500 group-hover:text-warm-red-deep">
-                  ✕
+                  {'✕'}
                 </span>
                 <span className="sr-only">, remove this filter</span>
               </button>

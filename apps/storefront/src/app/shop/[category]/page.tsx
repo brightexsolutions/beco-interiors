@@ -58,7 +58,13 @@ export default async function CategoryPage({ params }: Params) {
     ? await getProductsInCategories([category.id, ...children.map((c) => c.id)])
     : await getProductsByCategory(slug);
 
-  const cover = products.map(primaryImage).find((img) => img !== undefined);
+  // The right-hand column leads with a bookmatched pair where the range has
+  // one: mirror-matched veining is the most striking single image a stone
+  // can give, and it sits naturally in the portrait frame. Falls back to a
+  // slab, then to whatever the first product has.
+  const cover =
+    products.flatMap((p) => p.images ?? []).find((i) => i.role === 'bookmatch') ??
+    products.map(primaryImage).find((img) => img !== undefined);
 
   return (
     <main>
@@ -125,9 +131,14 @@ export default async function CategoryPage({ params }: Params) {
           </div>
         </div>
 
-        <aside className="lg:col-span-5">
+        {/* The description runs long for SEO. The right column STRETCHES to the
+            full height of that copy (grid items align stretch), and the
+            photograph grows to fill whatever is left above the facts list, so
+            there is no dead space beside the lower paragraphs. On mobile it is
+            a normal 4:5 frame stacked under the copy. */}
+        <aside className="lg:col-span-5 lg:flex lg:flex-col">
           {cover ? (
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100">
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 lg:aspect-auto lg:min-h-[28rem] lg:flex-1">
               <Image
                 src={cover.path}
                 alt={cover.alt}

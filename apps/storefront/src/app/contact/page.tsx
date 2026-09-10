@@ -31,8 +31,8 @@ const DIRECTIONS = `https://www.google.com/maps/search/?api=1&query=${encodeURIC
 )}`;
 
 const HOURS = [
-  ['Monday to Friday', '8am to 6pm'],
-  ['Saturday', '8am to 6pm'],
+  ['Monday to Friday', '8am to 4pm'],
+  ['Saturday', '8am to 2pm'],
   ['Sunday', 'Closed'],
 ] as const;
 
@@ -44,9 +44,10 @@ export default async function ContactPage() {
 
   return (
     <main>
-      {/* --- A real opening, against a real installation. The page used to
-              start with a heading on white and three stacked buttons. --- */}
-      <section className="relative border-b border-neutral-200 bg-charcoal">
+      {/* --- A real opening, against a real installation. Pulled up under the
+              header, which is transparent over this dark section and settles
+              to solid on scroll, the same as the home hero. --- */}
+      <section className="beco-hero-bleed relative border-b border-neutral-200 bg-charcoal">
         {room ? (
           <div className="absolute inset-0">
             <Image
@@ -61,7 +62,7 @@ export default async function ContactPage() {
           </div>
         ) : null}
 
-        <div className="relative mx-auto max-w-[1380px] px-6 py-20 sm:py-24 lg:py-30">
+        <div className="beco-hero-content-top relative mx-auto max-w-[1380px] px-6 pb-20 sm:pb-24 lg:pb-28">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
@@ -102,7 +103,7 @@ export default async function ContactPage() {
           <Channel
             eyebrow="Straight through"
             title={SITE.phone}
-            body="Monday to Saturday, 8am to 6pm. Ask for whoever is on the counter."
+            body="Weekdays 8am to 4pm, Saturday 8am to 2pm. Ask for whoever is on the counter."
             href={SITE.phoneHref}
             cta="Call now"
             external

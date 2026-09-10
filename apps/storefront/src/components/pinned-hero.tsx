@@ -122,13 +122,20 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
   // own copy rule is short copy, and a hero lede is not the place for the
   // three sentence version. A slab with no description falls back to the
   // original generic sentence rather than showing nothing.
-  const FALLBACK_LEDE =
-    'Large format slabs for kitchens, bathrooms, feature walls and flooring. Heat, scratch and stain resistant, and here in the showroom today.';
-  const ledes = slabs.map((slab) => {
-    if (!slab.blurb) return FALLBACK_LEDE;
-    const firstSentence = slab.blurb.split(/(?<=[.!?])\s/)[0];
-    return firstSentence || FALLBACK_LEDE;
-  });
+  const FALLBACK_LEDE = 'Large format slabs, here in the showroom today.';
+  // One short line per stone, not the full first sentence: the hero should
+  // not crowd. Take the first sentence, then, if it is still long, its first
+  // clause up to a comma, so a stone reads as a phrase under the headline
+  // rather than a paragraph.
+  const shorten = (text: string) => {
+    const sentence = text.split(/(?<=[.!?])\s/)[0]?.trim() ?? '';
+    if (sentence.length <= 72) return sentence;
+    // First clause, trailing punctuation stripped so a single period can be
+    // put back cleanly rather than doubling one the sentence already had.
+    const clause = (sentence.split(/,\s/)[0]?.trim() ?? sentence).replace(/[\s.,;:]+$/, '');
+    return clause.length >= 24 && clause.length <= 88 ? `${clause}.` : sentence;
+  };
+  const ledes = slabs.map((slab) => (slab.blurb ? shorten(slab.blurb) || FALLBACK_LEDE : FALLBACK_LEDE));
   const longestLede = [...ledes].sort((a, b) => b.length - a.length)[0];
 
   return (
@@ -150,22 +157,37 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
       <div className="relative hidden overflow-hidden lg:sticky lg:top-0 lg:block lg:h-[100vh]">
         <div aria-hidden className="beco-ambient absolute inset-0">
           {slabs.map((slab, i) => (
-            <Image
+            // The scale-settle lives on this wrapper, the slow ambient drift
+            // on the image inside it: a transition and an animation cannot
+            // both own `transform` on one element, the bug D67 and D77 both
+            // turned on. An incoming photograph settles out of a slight zoom
+            // as the last one drifts back, so a change reads as considered
+            // rather than as a flat dissolve. The first slide renders at
+            // rest, so nothing animates on mount and it is safe as the LCP.
+            <div
               key={slab.slug}
-              src={slab.src}
-              alt=""
-              fill
-              priority={i === 0}
-              sizes="100vw"
-              {...blurProps(slab)}
-              // Opacity has exactly ONE source, the ternary: a hardcoded
-              // base value alongside a conditional one is the exact bug
-              // D67 found the first time this crossfade technique shipped.
               className={cn(
-                'object-cover transition-opacity duration-[1200ms] ease-brand motion-reduce:transition-none',
-                i === active ? 'opacity-100' : 'opacity-0',
+                'absolute inset-0 transition-transform duration-[1800ms] ease-brand',
+                'will-change-transform motion-reduce:transition-none motion-reduce:!transform-none',
+                i === active ? 'scale-100' : 'scale-[1.06]',
               )}
-            />
+            >
+              <Image
+                src={slab.src}
+                alt=""
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                {...blurProps(slab)}
+                // Opacity has exactly ONE source, the ternary: a hardcoded
+                // base alongside a conditional one is the exact bug D67 found
+                // the first time this crossfade shipped.
+                className={cn(
+                  'object-cover transition-opacity duration-[1400ms] ease-brand motion-reduce:transition-none',
+                  i === active ? 'opacity-100' : 'opacity-0',
+                )}
+              />
+            </div>
           ))}
         </div>
 
@@ -188,12 +210,12 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             </p>
           </div>
 
-          <h1 className="mt-6 max-w-[12ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-high-vis-white sm:text-6xl xl:text-7xl">
+          <h1 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
             <WordReveal text="Surfaces that outlast the room." />
           </h1>
 
           <div
-            className="beco-enter relative mt-6 max-w-[54ch]"
+            className="beco-enter relative mt-5 max-w-[42ch]"
             style={{ animationDelay: '620ms' }}
           >
             {/* Invisible, in normal flow, sized to the longest of the real
@@ -251,11 +273,11 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                   need, now that the timer above is what drives it on
                   every breakpoint alike. --- */}
           <div
-            className="beco-enter mt-12 hidden border-t border-white/15 pt-5 lg:block"
+            className="beco-enter mt-10 hidden border-t border-white/15 pt-5 lg:block"
             style={{ animationDelay: '900ms' }}
           >
             <div className="flex items-baseline justify-between gap-6">
-              <p aria-live="polite" className="flex items-baseline gap-3 font-ui text-sm">
+              <p aria-live="polite" className="font-ui text-sm">
                 {/* Keyed on the active slab so the animation replays as
                     the name changes, like a specimen label turning. */}
                 <span
@@ -264,7 +286,6 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                 >
                   {current?.name}
                 </span>
-                <span className="text-neutral-400">{thickness}</span>
               </p>
               <p className="font-ui text-sm font-semibold tabular-nums text-neutral-400">
                 <span className="text-high-vis-white">{String(active + 1).padStart(2, '0')}</span>
@@ -372,8 +393,9 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               sizes="800px"
               {...blurProps(slab)}
               className={cn(
-                'object-cover transition-opacity duration-[1200ms] ease-brand motion-reduce:transition-none',
-                i === active ? 'opacity-50' : 'opacity-0',
+                'object-cover transition-[opacity,transform] duration-[1600ms] ease-brand',
+                'will-change-transform motion-reduce:transition-none motion-reduce:!transform-none',
+                i === active ? 'opacity-50 scale-100' : 'opacity-0 scale-[1.06]',
               )}
             />
           ))}
@@ -387,10 +409,10 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             Sintered stone, stocked in Nairobi
           </p>
         </div>
-        <h2 className="mt-6 max-w-[12ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-high-vis-white sm:text-6xl">
+        <h2 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
           Surfaces that outlast the room.
         </h2>
-        <p className="beco-enter mt-6 max-w-[42ch] text-base leading-[1.65] text-neutral-300" style={{ animationDelay: '620ms' }}>
+        <p className="beco-enter mt-5 max-w-[38ch] text-base leading-[1.6] text-neutral-300" style={{ animationDelay: '620ms' }}>
           {ledes[0]}
         </p>
         <div className="beco-enter mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: '760ms' }}>
