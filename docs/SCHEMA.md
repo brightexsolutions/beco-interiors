@@ -164,10 +164,16 @@ former slug 301s to the current one. From `docs/REVIEW.md` 2.3.
 | `converted_order_id` | uuid FK orders null | |
 | `updated_at` | timestamptz | **Optimistic locking.** Compared on save, refused if stale, so two salespeople cannot silently overwrite each other |
 | `deleted_at` | timestamptz null | |
+| `requires_approval` | boolean default false | D86. True when a line deviates from the catalogue (`unit_price <> list_price`) or is a priced custom line (`product_id is null`). Recomputed by a trigger on every `quote_items` change, never set by hand |
+| `approved_by`, `approved_at` | uuid FK users null, timestamptz null | Set only by `is_admin()`. Cleared automatically the moment the lines change again after approval |
 
 **RLS.** Anonymous may `insert` only, through a rate limited server action. `beco_sales` reads
 all, writes only rows where it is `assigned_to` unless an admin reassigns. Reassignment is
-itself audited.
+itself audited. `requires_approval`, `approved_by` and `approved_at` are pinned in
+`quotes_update_own`: a self-update by `beco_sales` may not move them, only an admin write or
+the approval trigger can. A `check` constraint refuses `status in ('quoted','won','lost')` while
+`requires_approval` and `approved_at is null`, enforced at the database regardless of RLS or
+the UI. See D86.
 
 ### quote_items
 
@@ -184,8 +190,9 @@ itself audited.
 | `notes` | text | |
 | `sort_order` | int | |
 
-Keeping `list_price` beside `unit_price` makes every discount measurable after the fact, which
-is what makes D7's free price override safe without an approval gate.
+Keeping `list_price` beside `unit_price` makes every discount measurable after the fact. D7
+still lets any `beco_sales` set any `unit_price`, so raising a quote never waits; D86 is what
+compares the two and gates FINALIZING one, not the pricing itself.
 
 ---
 

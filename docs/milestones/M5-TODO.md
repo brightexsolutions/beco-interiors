@@ -298,8 +298,14 @@ D85.** `AppShell` wraps the `apps/dashboard/src/app/(app)` route group; `/login`
 - [ ] Assign and reassign: admin only, audited, `before`/`after` on `assigned_to`
 - [ ] Add a line item not in the catalogue: `product_id` null plus a `description` snapshot.
       Schema is ready (`quote_items.product_id` nullable on purpose)
-- [ ] Price override, D7: any `beco_sales` sets any `unit_price`. `list_price` is stored beside
-      it. Every override writes `audit_log` with before and after. No approval gate
+- [x] Price override, D7: any `beco_sales` sets any `unit_price`. `list_price` is stored beside
+      it. Every override writes `audit_log` with before and after (the `quotes` trigger already
+      covers it via `requires_approval`/`approved_by`/`approved_at`)
+- [x] **Revised by D86, 10 September:** a quote that deviates from the catalogue (a discount, a
+      markup, or a priced custom line) needs `is_admin()` approval before it can reach
+      `quoted`/`won`/`lost`. Enforced by a `check` constraint plus a `quote_items` trigger
+      (migration 27), not only in the UI. A catalogue-priced quote never waits. List and detail
+      UI for the "awaiting approval" state and the Approve action are still to build
 - [ ] Deleted product on a line: a graceful state, not a crash (`docs/REVIEW.md` 2.8).
       `product_id` goes null on delete, the `description` and prices are snapshots and survive
 - [ ] Status lifecycle new  to  reviewing  to  quoted  to  won or lost. Won stamps `finalized_at`.

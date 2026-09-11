@@ -837,6 +837,8 @@ export type Database = {
       }
       quotes: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           assigned_to: string | null
           budget_note: string | null
           company: string | null
@@ -856,6 +858,7 @@ export type Database = {
           project_details: string | null
           project_type: string | null
           reference_number: string
+          requires_approval: boolean
           source: Database["public"]["Enums"]["quote_source"]
           status: Database["public"]["Enums"]["quote_status"]
           subtotal: number
@@ -868,6 +871,8 @@ export type Database = {
           wants_samples: boolean
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_to?: string | null
           budget_note?: string | null
           company?: string | null
@@ -887,6 +892,7 @@ export type Database = {
           project_details?: string | null
           project_type?: string | null
           reference_number?: string
+          requires_approval?: boolean
           source?: Database["public"]["Enums"]["quote_source"]
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
@@ -899,6 +905,8 @@ export type Database = {
           wants_samples?: boolean
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           assigned_to?: string | null
           budget_note?: string | null
           company?: string | null
@@ -918,6 +926,7 @@ export type Database = {
           project_details?: string | null
           project_type?: string | null
           reference_number?: string
+          requires_approval?: boolean
           source?: Database["public"]["Enums"]["quote_source"]
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
@@ -930,6 +939,13 @@ export type Database = {
           wants_samples?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "quotes_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotes_assigned_to_fkey"
             columns: ["assigned_to"]

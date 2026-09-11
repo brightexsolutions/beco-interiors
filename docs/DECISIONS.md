@@ -1351,3 +1351,39 @@ is a server action (`app/actions.ts`), not a link.
 
 *Reverses if:* the section list grows past what a single row can hold on desktop, at which
 point the overflow behaviour is revisited rather than the pattern.
+
+## D86, 10 September 2026: a quote that deviates from the catalogue needs one person's approval
+
+Brown's steer, mid M5 section D: Beco wants one person tracking every salesperson's discounts
+and custom line items before a quote goes out, rather than D7's fully open price override.
+
+**Narrower than it could have been, on purpose.** The gate is not "every quote" and not "every
+price override attempt": it is "a quote that has been priced AND deviates from the catalogue."
+A quote raised and sold at list price, which is most of them, never waits, because that speed
+is what the counter flow and the 12 tap budget exist for. Only a discount, a markup, or a
+custom line with no catalogue reference trips it, and only once it is actually priced:
+`unit_price = 0` is 0.3's "not priced yet" state, not a pricing decision, so it does not gate.
+
+**The approver is a role, `is_admin()`, not a named person or a new permission flag.** Beco
+currently has one `beco_admin` account, so "one central person" and "the admin role" are the
+same thing today without inventing a bespoke single-user gate that breaks the day a second
+admin exists or the one admin is on leave.
+
+**Enforced at the database, in a `check` constraint on `quotes`, not only in RLS or the UI**:
+`status` cannot reach `quoted`, `won` or `lost` while `requires_approval` and `approved_at is
+null`. `requires_approval` itself is trigger maintained from the current `quote_items`, never a
+column a client sets, and `quotes_update_own` (the `beco_sales` self-update policy) pins all
+three approval columns the same way `users_update_self_safe` pins `role`, per D83.
+
+**An edit after approval clears it.** The trigger that recomputes `requires_approval` also
+clears `approved_by` and `approved_at` whenever the lines change, so an approval is a signature
+on a specific set of prices, not a standing permission to keep discounting. A side effect worth
+naming: editing a line on a quote that is already `quoted` and approved is refused outright,
+because the trigger's own update would leave the row in the state the `check` constraint
+exists to forbid. A finalized quote's pricing cannot be quietly reopened; it would need its
+status moved back first, which nothing in this migration does.
+
+Migration 27, `10_quote_pricing_approval.test.sql`, 11 pgTAP assertions.
+
+*Reverses if:* Beco names a second approver, at which point `is_admin()` already covers it, or
+wants per-person approval limits, which would need the permission flag this avoids for now.
