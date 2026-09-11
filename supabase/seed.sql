@@ -136,3 +136,64 @@ from _seed_staff s
 on conflict (id) do nothing;
 
 drop table _seed_staff;
+
+-- A handful of FICTIONAL quotes, one for each state the M5 dashboard list
+-- needs to show: the unassigned web queue, a plain assignment, a catalogue
+-- priced quote, a discounted one still awaiting approval, and an expired
+-- one. Referenced by product SLUG, never a hardcoded id, so this survives a
+-- catalogue re-import. Skipped quietly if the named products are not
+-- published in this environment yet, rather than failing the whole seed.
+do $$
+declare
+  v_sam     uuid := (select id from users where email = 'sam.odhiambo@beco.co.ke');
+  v_grace   uuid := (select id from users where email = 'grace.wanjiru@beco.co.ke');
+  v_ken     uuid := (select id from users where email = 'ken.mutiso@beco.co.ke');
+  v_slab_a  uuid := (select id from products where slug = 'bvlgari' and is_published);
+  v_slab_a_price numeric := (select price from products where slug = 'bvlgari');
+  v_slab_b  uuid := (select id from products where slug = 'jatoba-brown' and is_published);
+  v_slab_b_price numeric := (select price from products where slug = 'jatoba-brown');
+  v_q1 uuid; v_q2 uuid; v_q3 uuid; v_q4 uuid; v_q5 uuid;
+begin
+  if v_sam is null or v_grace is null or v_ken is null or v_slab_a is null or v_slab_b is null then
+    return;
+  end if;
+
+  -- 1. Unassigned, from the storefront, nothing priced yet: the queue.
+  insert into quotes (customer_name, customer_phone, source, status, created_at)
+  values ('Njeri Kamau', '0711222333', 'web', 'new', now() - interval '3 hours')
+  returning id into v_q1;
+  insert into quote_items (quote_id, product_id, description, quantity, list_price, unit_price)
+  values (v_q1, v_slab_a, 'ZZ Seed Bvlgari', 2, v_slab_a_price, 0);
+
+  -- 2. Assigned, being worked, priced at catalogue: no approval needed.
+  insert into quotes (customer_name, customer_phone, company, source, status, assigned_to, created_by, created_at)
+  values ('Otieno Omondi', '0722333444', 'Omondi Interiors', 'phone', 'reviewing', v_sam, v_sam, now() - interval '1 day')
+  returning id into v_q2;
+  insert into quote_items (quote_id, product_id, description, quantity, list_price, unit_price)
+  values (v_q2, v_slab_b, 'ZZ Seed Jatoba Brown', 3, v_slab_b_price, v_slab_b_price);
+
+  -- 3. Quoted at catalogue price, still valid.
+  insert into quotes (customer_name, customer_phone, source, status, assigned_to, created_by,
+                       valid_until, created_at)
+  values ('Achieng Wanjala', '0733444555', 'walk_in', 'quoted', v_grace, v_grace,
+          (current_date + 21), now() - interval '2 days')
+  returning id into v_q3;
+  insert into quote_items (quote_id, product_id, description, quantity, list_price, unit_price)
+  values (v_q3, v_slab_a, 'ZZ Seed Bvlgari', 1, v_slab_a_price, v_slab_a_price);
+
+  -- 4. Discounted, still awaiting the one approver (D86).
+  insert into quotes (customer_name, customer_phone, source, status, assigned_to, created_by, created_at)
+  values ('Mutua Peter', '0744555666', 'walk_in', 'reviewing', v_ken, v_ken, now() - interval '5 hours')
+  returning id into v_q4;
+  insert into quote_items (quote_id, product_id, description, quantity, list_price, unit_price)
+  values (v_q4, v_slab_b, 'ZZ Seed Jatoba Brown', 4, v_slab_b_price, v_slab_b_price - 8000);
+
+  -- 5. Quoted, catalogue price, but its validity window has passed (0.2).
+  insert into quotes (customer_name, customer_phone, source, status, assigned_to, created_by,
+                       valid_until, created_at)
+  values ('Wafula Grace', '0755666777', 'walk_in', 'quoted', v_grace, v_grace,
+          (current_date - 5), now() - interval '30 days')
+  returning id into v_q5;
+  insert into quote_items (quote_id, product_id, description, quantity, list_price, unit_price)
+  values (v_q5, v_slab_a, 'ZZ Seed Bvlgari', 2, v_slab_a_price, v_slab_a_price);
+end $$;

@@ -9,10 +9,10 @@ export function PageHeading({
   lede,
   actions,
 }: {
-  eyebrow?: string;
+  eyebrow?: string | undefined;
   title: string;
-  lede?: string;
-  actions?: React.ReactNode;
+  lede?: string | undefined;
+  actions?: React.ReactNode | undefined;
 }) {
   return (
     <header className="mb-8">

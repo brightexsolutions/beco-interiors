@@ -273,22 +273,34 @@ D85.** `AppShell` wraps the `apps/dashboard/src/app/(app)` route group; `/login`
 
 ### The list
 
-- [ ] `/dashboard/quotes`: full cards on mobile (D38, each row is a decision), table on desktop
-- [ ] Filters that actually change the result set and its count: status, owner, age, source.
-      A filter that only works on desktop is a filter that does not work
-- [ ] The unassigned queue: web quotes arrive `created_by` null and `assigned_to` null
-- [ ] Per-agent view vs admin assignment, per Brown 4 September: a `beco_sales` sees "assigned to
-      me" and, distinctly, "I am preparing" (`created_by = me`, not yet `assigned_to`); an admin
-      sees both plus everyone else's. Interpretation to confirm with Brown, schema already
-      supports it
-- [ ] Realtime: a new row shows a **banner, never an insertion** (D46). "3 new quotes / Show",
-      the list changes when the user chooses. Never reorder under a finger
-- [ ] Expired-quote presentation per 0.2
+**Built 10 September**, `apps/dashboard/src/app/(app)/quotes/page.tsx`, `lib/quotes.ts`,
+`components/quote-filters.tsx`, `components/quote-results.tsx`. Verified against the running
+server with real sessions per role, and unit plus integration tested (`lib/__tests__/quotes.test.ts`,
+`lib/quotes.integration.test.ts`, `components/__tests__/quote-filters.test.tsx`).
+
+- [x] `/dashboard/quotes`: full cards on mobile (D38, each row is a decision), table on desktop
+- [~] Filters that actually change the result set and its count: status, owner, source built and
+      verified live (`?owner=unassigned`, `?status=quoted`, `?search=` all narrow correctly).
+      **`age` not built yet**
+- [x] The unassigned queue: web quotes arrive `created_by` null and `assigned_to` null. `owner=unassigned`
+- [x] Per-agent view vs admin assignment, per Brown 4 September: built to the literal spec,
+      `beco_sales` gets "Assigned to me" / "I'm preparing" (`created_by = me`, `assigned_to`
+      null) / "Unassigned"; admins additionally get "Everyone". **"I'm preparing"'s exact
+      meaning is still unconfirmed with Brown**: no current insert path produces
+      `created_by` set without `assigned_to`, so this is forward compatible rather than
+      exercised by real data yet
+- [ ] Realtime: a new row shows a **banner, never an insertion** (D46). Deferred to section L,
+      unchanged
+- [x] Expired-quote presentation per 0.2: a muted "Expired" badge from `isExpired()`, Nairobi
+      date boundary, string compared so there is no Date/timezone parsing ambiguity. The
+      **Re-issue action is not built**, that is section E (the document)
 
 ### The detail
 
-- [ ] `/dashboard/quotes/[reference]`: customer, project details, line items, status, owner,
-      the audit trail inline
+- [~] `/dashboard/quotes/[reference]`: **read-only view built** 10 September, customer, project
+      details, line items with the discount struck through, status, owner, the approval state.
+      Verified live: a discounted quote, an unpriced one, and an unknown reference (real 404).
+      **Not yet built:** the audit trail inline, and every mutation below
 - [ ] **Optimistic locking**, `docs/REVIEW.md` 2.2 and the migration 5 comment: compare
       `updated_at` on every save, refuse a stale write with "this quote changed while you were
       editing" and reload. This is currently a column with nothing enforcing it. Enforce it in

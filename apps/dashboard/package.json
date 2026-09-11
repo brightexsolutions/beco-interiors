@@ -15,9 +15,11 @@
     "@beco/ui": "workspace:*",
     "@beco/types": "workspace:*",
     "@beco/validation": "workspace:*",
-    "@beco/supabase-client": "workspace:*"
+    "@beco/supabase-client": "workspace:*",
+    "@supabase/supabase-js": "^2.112.4"
   },
   "devDependencies": {
-    "@types/react": "19.2.18"
+    "@types/react": "19.2.18",
+    "dotenv": "^17.4.2"
   }
 }

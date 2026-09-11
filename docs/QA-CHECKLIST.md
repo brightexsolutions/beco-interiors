@@ -241,6 +241,26 @@ real phone** (M5 section D).
 | Per-route role check | A role opening a path it may not reach is redirected to its own landing (`/users` is `brightex_admin` only) | **Server** confirmed: `sam` (sales) at `/users`, `/products`, `/launch` all bounced to `/quotes`; `beco_admin` at `/users` bounced to `/` |
 | Deactivation mid-session | Proxy clears the `sb-*-auth-token` cookies and bounces to `/login?denied=1` | `proxy.test.ts` covers it. **Real mid-session walk still to do on device** |
 
+### `/quotes`
+
+| Control | What it does | Status |
+|---|---|---|
+| Search | Debounced, narrows to a matching name, phone or reference | **Server** confirmed: `?search=Mutua` returned exactly that quote |
+| Status / source filters | Narrow the row set via the URL | **Server** confirmed: `?status=quoted`, `?owner=unassigned` each returned the right subset and count. `QuoteFilters` tested, 6 tests |
+| Owner filter, per role | `beco_sales` gets Mine / I'm preparing / Unassigned; admins additionally get Everyone | **Server** confirmed for both a sales and an admin session |
+| Row / card "View" | Navigates to the real quote detail, not a placeholder | **Server** confirmed |
+| Needs approval / Expired badges | Show exactly when `requires_approval` and `isExpired()` say so | **Server** confirmed against the seeded discounted and expired fixtures |
+| Empty state | Renders when a filter matches nothing | **Server** confirmed: `?search=nonexistentxyz` |
+
+### `/quotes/[reference]`
+
+| Control | What it does | Status |
+|---|---|---|
+| Line items | Lists every line, a discount struck through against the catalogue price | **Server** confirmed on the discounted seed quote |
+| Totals / Pricing on application | Shows a real total once every line is priced, the 0.3 line otherwise | **Server** confirmed both states |
+| Unknown reference | A real 404, not a broken render | **Server** confirmed |
+| Claim, assign, edit, status, Approve, the document | **Not built yet.** This screen is read only so far |
+
 ### `/launch` (D80)
 
 | Control | What it does | Status |

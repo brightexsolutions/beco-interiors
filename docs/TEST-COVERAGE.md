@@ -7,8 +7,8 @@ a test, and this is the record of what that has actually meant so far.
 React Testing Library in jsdom. UI journeys are verified by hand against `docs/QA-CHECKLIST.md`
 on a real device.
 
-As of 10 September 2026: **547 Vitest tests** across 73 files, **11 integration tests**, and
-**100 pgTAP tests** across 9 files. Nine packages typecheck. `vitest-axe` is wired: every
+As of 11 September 2026: **605 Vitest tests** across 83 files, **17 integration tests**, and
+**123 pgTAP tests** across 11 files. Nine packages typecheck. `vitest-axe` is wired: every
 component test asserts no accessibility violations on its rendered output, per the `component`
 skill's baseline.
 
@@ -16,6 +16,10 @@ M5 section A (dashboard auth, sessions and accounts) added the dashboard's proxy
 map, the forced first-login flow, `record_sign_in()` / `complete_first_login()`, the six
 seeded staff, and `PasswordInput`. See the Dashboard section below and
 `09_dashboard_first_login.test.sql`.
+
+M5 section D (quotes) so far: the approval gate (D86, `10_quote_pricing_approval.test.sql`),
+a real RLS gap closed on quotes and orders (D87, `11_quotes_orders_read_gap.test.sql`), and the
+quotes list plus a read-only detail screen.
 
 The storefront modernisation pass (D82) rebuilt or extended these suites: `announcement-bar`
 (now a rotating client component, `buildAnnouncementItems` plus roll and reduced-motion
@@ -95,6 +99,9 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Forced-change action | `app/change-password/__tests__/actions.test.ts` | Rejects a short password and a mismatch before Supabase. A Supabase rejection is one generic message and does not clear the flag. An RPC failure is reported, not hidden. On success `complete_first_login` runs and the role lands on its home |
 | Sign-in form | `app/login/__tests__/sign-in-form.test.tsx` | Labels reach both controls, the return path is carried, the denied notice renders, axe clean |
 | Change-password form | `app/change-password/__tests__/change-password-form.test.tsx` | Both fields labelled, a hidden `username` field for password managers, the length hint reaches the browser, axe clean |
+| Quote helpers | `lib/__tests__/quotes.test.ts` | `isExpired`'s Nairobi day boundary (string compared, no Date/timezone parsing), a won or lost quote is never shown as expired. Every `quote_status` has a label and tone |
+| Quotes query | `lib/quotes.integration.test.ts` | Against the real database with real signed-in sessions, not a mock: a salesperson's `mine` and `unassigned` filters return exactly the right rows, an admin's `all` sees everyone's (D87's read policy), search narrows to a match, a comma in a search term cannot reshape the filter into an `or` clause, `value`/`isPriced` are computed from the real `quote_items`, not a stored total. 6 tests |
+| `QuoteFilters` | `components/__tests__/quote-filters.test.tsx` | Status, owner and search each push into the URL, so the result set actually changes; clearing a filter removes the param rather than setting it empty; search is debounced, not fired on every keystroke; the owner control hides itself when there is only one option; axe clean |
 | Nav items | `lib/__tests__/nav-items.test.ts` | The role -> section list, and that it never lists a path the access map would then deny |
 | `TopNav` | `components/__tests__/top-nav.test.tsx` | Only the current section carries `aria-current`, a nested path keeps its section, a shared stem does not, the Warm Red count shows on Quotes only and only when positive, axe clean. 6 tests |
 | `AccountMenu` | `components/__tests__/account-menu.test.tsx` | Closed until clicked, offers exactly Change password and Sign out, Sign out goes through the server action not a link, Escape closes, axe clean open and closed. 5 tests |
