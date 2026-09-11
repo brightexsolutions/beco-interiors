@@ -1387,3 +1387,20 @@ Migration 27, `10_quote_pricing_approval.test.sql`, 11 pgTAP assertions.
 
 *Reverses if:* Beco names a second approver, at which point `is_admin()` already covers it, or
 wants per-person approval limits, which would need the permission flag this avoids for now.
+
+## D87, 10 September 2026: closed a real RLS gap, quotes and orders were readable by any role
+
+Found while building the quotes list, and fixed rather than built around.
+`quotes_read_staff`, `quote_items_read_staff`, `orders_read_staff` and
+`order_items_read_staff` all read `current_user_role() is not null`, which is true for every
+active role. `docs/ARCHITECTURE.md` section 12's own role matrix has always said quotes and
+orders are `-` for `beco_product_manager` and `beco_editor`; the policy just never matched it.
+Nothing had a reason to read quotes or orders from either role, which is exactly why it went
+unnoticed rather than why it was safe.
+
+Migration 28 names the three roles that should read customer names, phone numbers and pricing:
+`beco_sales`, `beco_admin`, `brightex_admin`. Writes were never affected, since
+`quotes_update_own` and `quotes_write_admin` already named their roles explicitly; this closes
+the read side only. `11_quotes_orders_read_gap.test.sql`, 12 pgTAP assertions, proving the
+negative for both roles on all four tables and a regression check that sales and admin still
+read both.
