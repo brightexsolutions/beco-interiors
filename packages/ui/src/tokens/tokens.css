@@ -106,6 +106,15 @@
 
   --radius-card: 4px;
   --radius-button: 2px;
+  /* The dashboard shell only. Its chrome and content sit on floating panels
+     with a softer corner than the storefront's near-square 4px card, on
+     Brown's direction (see docs/DECISIONS.md D85). Storefront components keep
+     `--radius-card`. */
+  --radius-panel: 14px;
+  /* Also dashboard shell only: a genuine, restrained lift so a floating panel
+     reads as floating against the off-white ground. The storefront has no
+     floating chrome and uses no shadow. */
+  --shadow-panel: 0 1px 2px rgba(16, 24, 32, 0.04), 0 12px 32px -16px rgba(16, 24, 32, 0.12);
 
   /* --- Motion. Long expo out, settled rather than snappy. --- */
   --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
@@ -241,6 +250,17 @@ body[data-announcement] .beco-hero-content-top {
     caret-color: var(--color-warm-red);
   }
 
+  /* The browser's autofill paints its own pale yellow or blue fill and its
+     own text colour, which overrides the field's tokens. Force it back onto
+     the palette: white ground, charcoal text, the brand caret. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-charcoal);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-high-vis-white) inset;
+    caret-color: var(--color-warm-red);
+  }
+
   /* One narrow scrollbar, cool grey on the page ground, tracking the
      neutral ramp rather than the OS default slab. */
   * {
@@ -284,6 +304,18 @@ body[data-announcement] .beco-hero-content-top {
      typed. Body Cormorant is rare on this site, so the floor is safe. */
   .font-display {
     letter-spacing: -0.015em;
+  }
+}
+
+/* Opt out of the themed scrollbar for a strip that scrolls by design, for
+   example the dashboard's mobile section nav or a card row. The page's own
+   scrollbar keeps the treatment above. */
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
 
