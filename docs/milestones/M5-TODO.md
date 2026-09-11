@@ -186,27 +186,45 @@ exist. Recommend M5 if time allows, M6 if the cut order bites.
 `docs/ARCHITECTURE.md` section 11 and section 12. The `/launch` slice (D80) already has password sign-in,
 `proxy.ts`, `lib/session.ts` (`resolveAdminRole`, `requireAdmin`), `lib/supabase.ts`. Reuse it.
 
-- [ ] Extend `proxy.ts` `matcher` from `/launch/:path*` to the whole dashboard, with a
-      per-route role check, not just "is there an admin". A salesperson reaches `/quotes`, not
-      `/users` or `/settings`
-- [ ] `must_change_password` blocks every route except the change-password screen itself, until
-      it is cleared. `docs/ARCHITECTURE.md` section 11: "cannot reach any other route until it is done"
-- [ ] Forced password change screen: sets the new password via Supabase Auth, clears
-      `must_change_password`, stamps `last_login_at`, writes `audit_log`
-- [ ] `last_login_at` stamped on every successful sign-in, not only the first
-- [ ] Deactivation is immediate: `is_active = false` ends the session on the next request and
-      blocks sign-in. `current_user_role()` already returns null for an inactive user, so the
-      proxy and RLS both fall closed; verify the session actually ends rather than lingering
-- [ ] No self-service reset. No "forgot password". Confirm the login screen offers neither
-- [ ] Role-based landing: `/dashboard` redirects by role. `beco_sales` lands on its own quotes.
-      `beco_admin` and `brightex_admin` land on the stat-card home. `beco_product_manager` lands
-      on products or stock. "Role based views, not just role based permissions", PRD section 4.2
-- [ ] MFA for admin roles, per 0.6. Scope decided there
-- [ ] Six fictional staff accounts seeded per 0.8, `must_change_password = true`
-- [ ] Real account creation documented in `docs/RUNBOOK.md`, never in the repo
-- [ ] Tests: proxy admits and rejects per role per route; forced-change gate cannot be walked
-      around by typing another path; a deactivated user is bounced mid-session; `last_login_at`
-      moves on the second login; RLS still the authority when the proxy is bypassed
+**Built and verified 10 September. Model recorded as D83, exception note D84.** Route/role map
+is `apps/dashboard/src/lib/access.ts`; first-login RPCs and the narrowed `users_update_self_safe`
+are migration 26 with `09_dashboard_first_login.test.sql` (18 pgTAP). Verified live against the
+running dev server with real Supabase sessions for every seeded role.
+
+- [x] Extend `proxy.ts` `matcher` from `/launch/:path*` to the whole dashboard, with a
+      per-route role check. `lib/access.ts` `ROUTE_RULES` + `canAccess`, read by the proxy AND
+      `requirePath` so they cannot drift. Also excludes `public/` assets (any path with a dot)
+- [x] `must_change_password` blocks every route except `/change-password`. Proxy redirect +
+      `requireUser` re-check. Verified: flagged `sam.odhiambo` at `/` and `/quotes` -> `/change-password`
+- [x] Forced password change screen (`/change-password`): `auth.updateUser({ password })`, then
+      `complete_first_login()` clears the flag; the `users` trigger audits the transition;
+      redirects to the role's landing. `changePasswordSchema` in `@beco/validation`
+- [x] `last_login_at` stamped on every successful sign-in via `record_sign_in()`, which also
+      writes the `login` `audit_log` row (`audit_log` takes no direct insert)
+- [~] Deactivation is immediate: proxy clears the `sb-*-auth-token` cookies on a null-role
+      session and the sign-in action signs an inactive account back out. `proxy.test.ts` covers
+      it; the **real mid-session bounce still to be walked on a device** (in `docs/QA-CHECKLIST.md`)
+- [x] No self-service reset, no "forgot password". The login screen offers neither; a test pins
+      the denied copy. Reset path documented in `docs/RUNBOOK.md`
+- [x] Role-based landing at `/` (the dashboard app root, not `/dashboard`): `beco_sales` ->
+      `/quotes`, `beco_product_manager` -> `/products`, admins -> the stat-card home,
+      `beco_editor` -> a plain "nothing assigned yet" page (no M5 operations screen). Verified
+      live for all four
+- [x] MFA for admin roles: **deferred to the M6 security pass** per 0.6, recorded in
+      `docs/PLAN.md` Deferred. No code in M5
+- [x] Six fictional staff seeded in `seed.sql` (1 admin, 3 sales, 1 PM, 1 brightex), all
+      `must_change_password = true`, dev password `beco-dev-pass`, each with an `auth.identities`
+      row so GoTrue password sign-in actually works. Verified by signing in as each
+- [x] Real account creation documented in `docs/RUNBOOK.md` (out of band, two steps until
+      `/dashboard/users` ships), never in the repo
+- [x] Tests: `access.test.ts` (the matrix), `proxy.test.ts` (per role per route, the
+      forced-change gate incl. `/launch`, the deactivation cookie-clear), `09_dashboard_first_login`
+      pgTAP (RLS still the authority: self re-arm / self-deactivate / self role change all
+      refused, anon cannot execute the RPCs), sign-in and change-password action tests
+- [x] **Design pass** (Brown, 10 Sept): `AuthShell` (charcoal brand panel over Beco's own
+      `showroom.mp4` with a charcoal wash, white form panel, no dark-sidebar look), `PasswordInput`
+      in `@beco/ui` with a show/hide toggle, autofill fields forced onto the palette in
+      `tokens.css`, dashboard logo marks + favicon. Plain product copy, no "Brightex issued you"
 
 ## B. `/dashboard/users`, per D6
 
@@ -232,10 +250,18 @@ Design rules: no dark sidebar, no charts because a dashboard is expected to have
 from type and whitespace, Warm Red only for genuine attention states, 16px type floor including
 here (D34, `pnpm check:type-floor` already in CI).
 
-- [ ] App layout and navigation, role-scoped items. Top nav, not a sidebar
-- [ ] New-quote count in the nav, tier 1 realtime (section M). "The 2 hour promise depends on
-      someone noticing", `docs/ARCHITECTURE.md` section 17
-- [ ] `robots.ts` already blocks the dashboard: verify it, confirm `noindex` on every route
+**Started early alongside section A, on Brown's steer (10 September). Direction recorded as
+D85.** `AppShell` wraps the `apps/dashboard/src/app/(app)` route group; `/login`,
+`/change-password` and `/launch` sit outside it.
+
+- [~] App layout and navigation, role-scoped items, top nav not a sidebar. `AppShell` +
+      `TopNav` + `AccountMenu`, `navItemsFor(role)` from `lib/access.ts`. Section row of text
+      links, active one charcoal with a Warm Red underline; a horizontal scroll strip on mobile,
+      no hamburger. Verified live for each role. **Real-device swipe check still to do**
+- [~] New-quote count in the nav: the slot and styling are built (`TopNav` `newQuotes` prop, the
+      one Warm Red in the chrome). **Wired to 0** until tier 1 realtime lands (section L / M)
+- [x] `robots.ts` blocks the dashboard, and every route carries `robots: { index: false }` in
+      its metadata plus the `X-Robots-Tag` header from `next.config.ts`
 - [ ] `LastUpdated` control ("Updated 2 minutes ago / Refresh"), tier 3, available everywhere
 - [ ] Cloudflare cache bypass for the dashboard is infra, tracked in `docs/DEPLOYMENT.md` for
       M6, not built here

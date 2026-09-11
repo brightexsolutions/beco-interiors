@@ -337,8 +337,16 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `next_quote_reference()` | `BEC-Q-00042` from a sequence **inside the database**, so two salespeople saving in the same second cannot collide |
 | `next_order_reference()` | Same for `BEC-O-00042` |
 | `is_brightex_user()` | D42: `role = 'brightex_admin'` **and** email in `settings.brightex_allowed_emails`. An explicit address list, not a domain suffix, because Brightex's addresses are gmail.com |
-| `current_user_role()` | Reads the caller's role for policies |
+| `current_user_role()` | Reads the caller's role for policies. Null for an inactive account |
 | `audit_trigger()` | Writes `audit_log` on insert, update and soft delete |
+| `submit_quote(...)` | The public quote write, one atomic transaction, `security definer`. Products, descriptions and prices resolved from the catalogue, never the request. Enforces the D68 half-slab rule per product |
+| `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
+| `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
+
+Migration 26 also narrowed `users_update_self_safe`: a self-update may change `full_name`, but
+`role`, `is_active`, `email`, `must_change_password` and `last_login_at` are each pinned to
+their stored value in the policy. Those columns move only through `users_write_brightex` (an
+admin) or the two `security definer` functions above.
 
 ---
 

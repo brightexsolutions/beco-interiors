@@ -7,10 +7,15 @@ a test, and this is the record of what that has actually meant so far.
 React Testing Library in jsdom. UI journeys are verified by hand against `docs/QA-CHECKLIST.md`
 on a real device.
 
-As of 10 September 2026: **482 Vitest tests** across 68 files, **11 integration tests**, and
-**82 pgTAP tests** across 8 files. Nine packages typecheck. `vitest-axe` is wired: every
+As of 10 September 2026: **547 Vitest tests** across 73 files, **11 integration tests**, and
+**100 pgTAP tests** across 9 files. Nine packages typecheck. `vitest-axe` is wired: every
 component test asserts no accessibility violations on its rendered output, per the `component`
 skill's baseline.
+
+M5 section A (dashboard auth, sessions and accounts) added the dashboard's proxy and access
+map, the forced first-login flow, `record_sign_in()` / `complete_first_login()`, the six
+seeded staff, and `PasswordInput`. See the Dashboard section below and
+`09_dashboard_first_login.test.sql`.
 
 The storefront modernisation pass (D82) rebuilt or extended these suites: `announcement-bar`
 (now a rotating client component, `buildAnnouncementItems` plus roll and reduced-motion
@@ -54,6 +59,7 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `06_category_groups.test.sql` | The taxonomy is exactly two levels deep, attacked from every direction: a grandchild by update, a grandchild by insert, a parent given a parent, a category made its own parent. Every Drive folder is filed under a group except Lighting. Anon can read a group, which the browse tree depends on |
 | `07_fractional_quantity.test.sql` | Half a slab is a valid quantity for anything sold per slab, a whole unit for everything else, enforced in `submit_quote` because it is a public RPC. See D68 |
 | D80 launch switch, in `02` and `04` | Anon and `beco_sales` cannot write `settings.site_launch_at` or `site_launch_live`; `beco_admin` can. Anon CAN read both keys, which the storefront countdown needs before any login exists |
+| `09_dashboard_first_login.test.sql` | `record_sign_in()` stamps `last_login_at` and writes exactly one `login` audit row per sign-in, and it advances on the next sign-in. `complete_first_login()` clears `must_change_password` once and audits the transition once. A user cannot re-arm their own flag, deactivate themselves, or change their own email or role by hand (the narrowed `users_update_self_safe`), but CAN still edit their own `full_name`. Both functions are a no-op for a deactivated user and cannot be executed by anon. See D83, migration 26 |
 
 ## Storefront
 
@@ -74,6 +80,24 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | Launch banner | `components/__tests__/launch-banner.test.tsx` | Countdown to the date, reveal on the switch, confetti once per browser and skipped under reduced motion. 9 tests |
 | Blog JSON-LD | `app/blog/[slug]/__tests__/blog-posting-schema.test.tsx` | Both ld+json blocks parse; headline, description, absolute image URL, author, publisher, omit-not-null, breadcrumb. 5 tests |
 
+## Dashboard, `apps/dashboard`
+
+M5 section A. The dashboard has its own Vitest project (`--project dashboard`, jsdom).
+
+| Area | File | Proves |
+|---|---|---|
+| Access map | `lib/__tests__/access.test.ts` | The route/role matrix, every path against every role, both directions. A prefix rule reaches everything under it (`/quotes/new`) but not a sibling that merely shares a stem (`/quotes-archive`). Every role's landing is somewhere that role is actually allowed |
+| Proxy | `__tests__/proxy.test.ts` | Signed-out to `/login` with a return path (and none for `/`). A deactivated or unknown user is bounced and the `sb-*-auth-token` cookie is cleared. A flagged user is forced to `/change-password` from every route including `/launch`, and can reach `/change-password` itself. Then the full role x route grid, admit or redirect-to-landing, including a nested path |
+| Session helpers | `lib/__tests__/session.test.ts` | `resolveSessionUser` returns the full shape and nulls the role for an inactive account, matching `current_user_role()`. `resolveAdminRole` unchanged |
+| Sign-in action | `app/login/__tests__/actions.test.ts` | One message for every auth failure, no session started. A deactivated account is signed straight back out. On success, `record_sign_in` is called and the redirect is home (or a safe local `next`). The D81 burst limit still bites at the eleventh attempt |
+| Forced-change action | `app/change-password/__tests__/actions.test.ts` | Rejects a short password and a mismatch before Supabase. A Supabase rejection is one generic message and does not clear the flag. An RPC failure is reported, not hidden. On success `complete_first_login` runs and the role lands on its home |
+| Sign-in form | `app/login/__tests__/sign-in-form.test.tsx` | Labels reach both controls, the return path is carried, the denied notice renders, axe clean |
+| Change-password form | `app/change-password/__tests__/change-password-form.test.tsx` | Both fields labelled, a hidden `username` field for password managers, the length hint reaches the browser, axe clean |
+| Nav items | `lib/__tests__/nav-items.test.ts` | The role -> section list, and that it never lists a path the access map would then deny |
+| `TopNav` | `components/__tests__/top-nav.test.tsx` | Only the current section carries `aria-current`, a nested path keeps its section, a shared stem does not, the Warm Red count shows on Quotes only and only when positive, axe clean. 6 tests |
+| `AccountMenu` | `components/__tests__/account-menu.test.tsx` | Closed until clicked, offers exactly Change password and Sign out, Sign out goes through the server action not a link, Escape closes, axe clean open and closed. 5 tests |
+| `PageHeading` | `components/__tests__/page-heading.test.tsx` | Title is the `h1`, eyebrow and lede show when given, the actions slot renders, axe clean. 4 tests |
+
 ## Design system, `packages/ui`
 
 | Component | Notes |
@@ -81,6 +105,7 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `Button` | Variants, and the ref forward a form needs to focus a failed field |
 | `ConfirmDialog` | Escape, backdrop, focus placement, focus trap. 9 tests |
 | `Field` `Input` `Select` `Textarea` | The label genuinely reaches the control, an error is announced not just coloured, the drawn chevron stays out of the click path, `optgroup` carries the taxonomy. 10 tests |
+| `PasswordInput` | The toggle actually flips the input between `password` and `text`, both ways, from mouse and from the keyboard. It is `type="button"` so it never submits. Ref forwards to the input, `name` and `autoComplete` pass through. Axe clean masked and revealed. See the show/hide toggle on the dashboard auth screens |
 | `PriceDisplay` | POA reads as deliberate. "fixed" with a null price falls back rather than rendering `KES null`. A stale `compare_at_price` cannot fake a sale |
 | `ProductCard` `ProductGallery` | Correct on three images as well as six, since a fifth of the catalogue has only three |
 | `ScrollMotion` | An element with no attribute is fully visible, so nothing is hidden waiting for JavaScript |

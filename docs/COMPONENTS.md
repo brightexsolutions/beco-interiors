@@ -18,6 +18,7 @@ Status: **B** built, **S** stubbed, **P** planned.
 | `toast()` | P | **Replaces `window.alert`.** Announced to screen readers |
 | `Field` | **B** | Label, hint, error. The CONTROL is passed in, so one wrapper serves an input, a select, a textarea or a radio group without a variant for each. Errors carry `role="alert"`, so they are announced rather than only coloured. Written twice before this, in the quote form and the shop filter bar |
 | `Input` `Textarea` `Select` | **B** | 44px minimum, `text-base` so iOS does not zoom on focus. `Select` is NATIVE with `appearance-none` and a drawn chevron, not Radix: it needs `optgroup` to carry the two level taxonomy, and a native menu is better on a phone than a rebuilt one. All three forward refs. **10 tests** |
+| `PasswordInput` | **B** | `Input` plus a show/hide toggle. A `'use client'` island because the visibility is local state. The toggle is `type="button"` so it never submits, its label names the action it will perform ("Show password" while hidden), and it is a 44px target. **6 tests**: the type actually flips both ways, mouse and keyboard, ref and props pass through, axe clean in both states. Used on the dashboard auth screens |
 | `QuantityStepper` | P | **The 12 tap budget depends on this.** Big targets, no keyboard needed |
 
 ## Domain
@@ -59,8 +60,13 @@ Not in `@beco/ui`, because a second surface has no use for them yet. Moved the m
 | `LiveUpdateBanner` | P | "3 new quotes, show". **Never inserts rows into a list under the user's finger.** See D46 |
 | `LastUpdated` | P | "Updated 2 minutes ago, Refresh". Honest about staleness and gives control back |
 | `AuditEntry` | P | Before and after, readable by a human |
-| `SignInForm` | **B** | `apps/dashboard/src/app/login`. Password sign in against Supabase Auth, one message for every failure so a wrong password and an unknown email cannot be told apart. Rate limited, D81. First real dashboard surface, built for D80, not the M5 build |
+| `SignInForm` | **B** | `apps/dashboard/src/app/login`. Password sign in against Supabase Auth, one message for every failure so a wrong password and an unknown email cannot be told apart. Rate limited, D81. Show/hide password via `PasswordInput`. Built for D80, extended in M5 section A |
+| `AuthShell` | **B** | `apps/dashboard/src/components`. The frame for `/login` and `/change-password`: a charcoal brand panel over Beco's own `showroom.mp4` with a charcoal wash (poster only under `prefers-reduced-motion`), and a white form panel. No gradient, no card shadow, no dark-sidebar dashboard look. M5 section A |
+| `ChangePasswordForm` | **B** | `apps/dashboard/src/app/change-password`. The forced first-login change and a voluntary change later. `changePasswordSchema` (10-char floor, must match), a hidden `username` field for password managers, `PasswordInput` on both fields. **4 tests** |
 | `LaunchControls` | **B** | `apps/dashboard/src/app/launch`. Sets `site_launch_at` and throws `site_launch_live` through `ConfirmDialog`, per rule 4. Every server action re-checks `requireAdmin` because a server action is a public endpoint whatever gated the render |
+| `AppShell` | **B** | `apps/dashboard/src/components`. The signed-in frame, wrapping the `(app)` route group. A slim wordmark + account bar, then `TopNav` beneath. Top nav, never a sidebar. Wordmark is text only, no mark, because Beco's logo mark is Warm Red and a red element on every page would break the palette rule. M5 section C, D85 |
+| `TopNav` | **B** | `apps/dashboard/src/components`. The section row: text links, no icons, no pills. The current section is charcoal with a Warm Red underline; the rest are neutral-500. On a phone it is a horizontal scroll strip with a right-edge fade, not a hamburger, so every section is one swipe away and the most-used sit first. Role-scoped via `navItemsFor`. The Warm Red count on Quotes is the one attention colour in the chrome. **6 tests** |
+| `AccountMenu` | **B** | `apps/dashboard/src/components`. The name at the far right opens a flat bordered panel (no shadow) with Change password and Sign out. Sign out is a server action, not a link. Closes on Escape, outside click and navigation. **5 tests** |
 
 ## States
 

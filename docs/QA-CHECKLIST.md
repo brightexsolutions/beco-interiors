@@ -199,14 +199,62 @@ gate as an empty category. **Server confirmed.**
 
 ---
 
-## dashboard: `/login` and `/launch` (D80)
+## Dashboard
+
+The dashboard is `noindex` and robots-blocked; the site-chrome rows above do not apply. **Item
+one at milestone close is the 12-tap count on `/quotes/new`, written down after counting on a
+real phone** (M5 section D).
+
+### `/login`
 
 | Control | What it does | Status |
 |---|---|---|
-| Sign in form | `signInWithPassword`, redirects to `next` or `/launch`, one message for every failure | `SignInForm` tested, 4 tests. `signInSchema` unit tested. The real sign in **NOT WALKED**: needs a Supabase Auth admin account to exist |
-| `/launch` guard | `requireAdmin` redirects a signed-out or non-admin caller. `proxy.ts` redirects the obvious signed-out case first | RLS backstop proven in pgTAP, `04_role_writes`: admin can write `site_launch_live`, sales cannot. The redirect path **NOT WALKED** |
-| Save date | Writes `site_launch_at`, empty clears it | Writes the row: **NOT CONFIRMED end to end**. `launchSettingsSchema` unit tested, RLS pgTAP tested |
-| Launch the site / Revert | Flips `site_launch_live` behind a `ConfirmDialog` with the verb on its button | `LaunchControls` tested, 6 tests, including that the first click only opens the dialog. The row write **NOT CONFIRMED end to end** |
+| Email + password fields | Uncontrolled, read from FormData by the `signIn` action | `SignInForm` tested. `signInSchema` unit tested |
+| Show / hide password | `PasswordInput` flips the field between `password` and `text` | **Server** confirmed on the running dev server: the value showed and hid, mouse and keyboard. `PasswordInput` tested, 6 tests |
+| Sign in | `signInWithPassword`, then `resolveSessionUser`; an inactive or unknown account is signed straight back out with the same message; a valid one calls `record_sign_in` and redirects to `next` or `/` | **Server** confirmed: signed in as each seeded role against local GoTrue, `last_login_at` moved, `login` audit row written, landed per role. Burst limit (D81) unit tested |
+| Denied notice (`?denied=1`) | Renders, does not auto-forward, so no redirect loop | **Server** confirmed: a deactivated account lands here with cleared cookies |
+
+### `/change-password`
+
+| Control | What it does | Status |
+|---|---|---|
+| New + confirm password | Validated by `changePasswordSchema` (10-char floor, must match) | `ChangePasswordForm` tested, 4 tests. Schema unit tested, 4 tests |
+| Show / hide password | `PasswordInput` on both fields | **Server** confirmed |
+| Save password | `auth.updateUser({ password })`, then `complete_first_login()` clears `must_change_password`; redirects to the role's landing | **Server** confirmed: signed in flagged as `sam.odhiambo`, set a password, `must_change_password` went false, landed on `/quotes` |
+| Forced-change gate | The proxy sends a flagged account here from every other route, including `/launch`, and lets it reach only this screen | **Server** confirmed for `/` and `/quotes` -> `/change-password`. `proxy.test.ts` covers the grid |
+
+### Shell and navigation (section C, D85)
+
+| Control | What it does | Status |
+|---|---|---|
+| Section nav | Text links, role-scoped via `navItemsFor`. The current section is charcoal with a Warm Red underline; a nested path keeps its section highlighted | **Server** confirmed: signed in as each role, the nav listed exactly that role's sections, `/quotes` and `/quotes/...` both underlined Quotes. `TopNav` tested, 6 tests |
+| Mobile section strip | Horizontal scroll, no hamburger, right-edge fade | **Server** confirmed at 390px: the strip scrolls, Quotes stays first. **Real-device swipe still to walk** |
+| New-quote count | Warm Red badge on Quotes when positive | Styled and tested; **wired to 0** until realtime (section L / M) |
+| Account menu | Name opens a flat panel: Change password (link) and Sign out (server action). Closes on Escape, outside click, navigation | **Server** confirmed: opened, "Sign out" returned to `/login` with the session gone. `AccountMenu` tested, 5 tests |
+| `PageHeading` | Every screen opens with a Warm Red rule, eyebrow, Cormorant title, lede | **Server** confirmed on `/`, `/quotes`, `/products`. Tested, 4 tests |
+
+### Proxy and role landing
+
+| Control | What it does | Status |
+|---|---|---|
+| `/` role landing | `beco_sales` -> `/quotes`, `beco_product_manager` -> `/products`, admins render the stat-card home, `beco_editor` gets the "nothing assigned yet" page | **Server** confirmed for all four with real sessions |
+| Per-route role check | A role opening a path it may not reach is redirected to its own landing (`/users` is `brightex_admin` only) | **Server** confirmed: `sam` (sales) at `/users`, `/products`, `/launch` all bounced to `/quotes`; `beco_admin` at `/users` bounced to `/` |
+| Deactivation mid-session | Proxy clears the `sb-*-auth-token` cookies and bounces to `/login?denied=1` | `proxy.test.ts` covers it. **Real mid-session walk still to do on device** |
+
+### `/launch` (D80)
+
+| Control | What it does | Status |
+|---|---|---|
+| `/launch` guard | `requireAdmin` plus the proxy role check | RLS backstop in pgTAP `04_role_writes`. **Server** confirmed: `beco_admin` and `brightex_admin` reach it, other roles bounce |
+| Save date | Writes `site_launch_at`, empty clears it | `launchSettingsSchema` unit tested, RLS pgTAP tested. The row write **NOT CONFIRMED end to end** |
+| Launch the site / Revert | Flips `site_launch_live` behind a `ConfirmDialog` with the verb on its button | `LaunchControls` tested, 6 tests. The row write **NOT CONFIRMED end to end** |
+
+### Still to walk on a real device
+
+- [ ] Sign in on a phone, hit the forced change, set a password, land on the role's home
+- [ ] A colleague deactivating your account while you are on a page: next tap bounces you out
+- [ ] The auth panel video: it plays, the charcoal wash keeps the type legible on the darkest
+      frame, and `prefers-reduced-motion` drops it to the still
 
 ---
 

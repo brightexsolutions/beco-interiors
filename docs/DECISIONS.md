@@ -1263,3 +1263,91 @@ recorded in `docs/PLAN.md` as deferred.
   a session with web access, the same care D69 took. Recorded here and in `docs/PLAN.md`.
 - **`/about` lower sections** (the pillars, the rotating statement, the showroom block) still
   carry their pre-pass design. The opening was the brief; the rest is a follow-up.
+
+## D83, 10 September 2026: the dashboard authorization model, and the first-login RPCs
+
+M5 section A extends the D80 launch slice to the whole dashboard. Three decisions were made in
+the build and are recorded here so the next session does not re-derive them.
+
+**The route/role map is data, in `apps/dashboard/src/lib/access.ts`.** The proxy and every
+page read the same `ROUTE_RULES` table and the same `ROLE_LANDING` map, so "a salesperson
+cannot open `/users`" is decided in one place a test can point at, not re-argued per screen.
+The matrix: `beco_sales` gets `/quotes` and `/orders`; `beco_product_manager` gets `/stock`
+and `/products`; `beco_admin` and `brightex_admin` get those plus `/announcements`,
+`/reports`, `/settings` and `/launch`; `/users` is `brightex_admin` only, per D6. A wrong role
+is redirected to its own landing, not shown a 403, because it is a real signed-in user in the
+wrong place. `beco_editor` has no operations screen in M5 (its work is the blog, which is
+Studio, M7), so it lands on `/` and gets a plain "nothing assigned yet" page rather than being
+bounced out.
+
+**`last_login_at` and `must_change_password` move only through security-definer RPCs**
+(`record_sign_in()`, `complete_first_login()`, migration 26), never a direct `users` write from
+a near-client path. `users` carries the role, the active flag and the forced-change flag, and a
+write path a crafted request can reach must not be able to move any of them. `record_sign_in()`
+also writes the `login` `audit_log` row, because `audit_log` takes no direct insert. As part of
+the same migration, `users_update_self_safe` was narrowed: a self-update may still change
+`full_name`, but `role`, `is_active`, `email`, `must_change_password` and `last_login_at` are
+each pinned to their stored value in the policy's `WITH CHECK`.
+
+**Deactivation ends the session in the proxy, not just in RLS.** GoTrue does not know about
+`users.is_active`, so a deactivated account keeps a valid token until it expires. When the
+proxy resolves a live session to a null role it clears the `sb-*-auth-token` cookies on the
+response and redirects to `/login?denied=1`, so the account is out on the next request rather
+than lingering. The sign-in action makes the same check and signs an inactive account straight
+back out, with the same message a wrong password produces.
+
+**MFA enrolment is deferred to the M6 security pass**, per 0.6. Forced first-login password
+change is in M5 and is the part that closes the "issued password in a chat thread forever"
+hole; TOTP enrolment and an admin challenge are self-contained Supabase Auth work that blocks
+no other M5 screen. Recorded in `docs/PLAN.md` Deferred.
+
+*Reverses if:* the role set changes (the map is one file), or Beco wants MFA at launch rather
+than in M6.
+
+## D84, 10 September 2026: a one-off browser check of the dashboard UI, outside rule 2
+
+Rule 2 and D23 bar Playwright and browser automation on this project: component interaction is
+Vitest plus React Testing Library in jsdom, and UI journeys are walked by hand against
+`docs/QA-CHECKLIST.md`. During the M5 section A build Brown asked twice, the second time after
+the rule was put in front of him, to confirm the auth screens with Playwright.
+
+Done as a **one-off visual confirmation only**: the Playwright MCP browser drove the running
+dev server to screenshot `/login`, the forced-change screen and each role's landing, and to
+click the show/hide password toggle. **Nothing was added to the repo or CI**: no Playwright
+dependency, no `.spec` files, no new npm script. The automated test story is unchanged, and the
+before-close QA walk on a real device still stands.
+
+*Reverses if:* browser E2E is genuinely wanted in CI, which would be its own decision amending
+rule 2 and D23 rather than a note under them.
+
+## D85, 10 September 2026: the dashboard shell is an editorial top bar, not a dashboard chrome
+
+Brown's steer during the section A build: the dashboard navigation should be clear, mobile-aware
+with quick access to the key sections, and should not look like the usual admin dashboard. The
+"Never build" list already rules out the dark sidebar with sparkline tiles; this records what
+was built instead.
+
+**Two thin bands, both white.** A wordmark plus account bar, then a section row beneath it. Top
+nav, never a sidebar (CLAUDE.md). The section row is **text only**: no icons, no pills, no
+boxed active state. The current section is charcoal and carries a 2px Warm Red underline; the
+rest sit in neutral-500. Hierarchy comes from weight and colour, which is the same rule the
+storefront's nav follows.
+
+**Mobile is a horizontal scroll strip, not a hamburger.** Every section stays one swipe away,
+the ones a role uses most sit first (`navItemsFor` orders them), and a right-edge fade cues
+that there is more. A hamburger would have hidden the counter salesperson's own quotes behind a
+tap on the screen where speed matters most.
+
+**The wordmark is text, not the logo mark.** Beco's mark is Warm Red, and a red element on
+every dashboard page contradicts "Warm Red for attention states only" (the design-system skill).
+The only Warm Red in the chrome is the new-quote count on "Quotes".
+
+**`navItemsFor(role)` reads the same `lib/access.ts` map the proxy uses**, so the nav can never
+offer a link the route guard would then bounce.
+
+Structurally: `AppShell` wraps the `apps/dashboard/src/app/(app)` route group;
+`/login`, `/change-password` and `/launch` sit outside it and keep their own chrome. Sign out
+is a server action (`app/actions.ts`), not a link.
+
+*Reverses if:* the section list grows past what a single row can hold on desktop, at which
+point the overflow behaviour is revisited rather than the pattern.
