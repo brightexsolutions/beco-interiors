@@ -54,9 +54,9 @@ Not in `@beco/ui`, because a second surface has no use for them yet. Moved the m
 
 | Component | Status | Notes |
 |---|---|---|
-| `DataTable` | P | Desktop table. **Mobile treatment is per table, not one blanket rule**: quotes and orders become full cards because each row is a decision, stock and products keep a reduced column table with a detail sheet because those are scanning tables |
-| `StatCard` | P | States a number, its comparison, and what it implies. A number with no comparison is decoration |
-| `StatusPill` | P | Quote and order lifecycle states |
+| `DataTable` | **B** | Desktop table: sortable columns, an explicit actions column (never a click-anywhere row), an empty state. **Mobile treatment is per table, not one blanket rule**: quotes and orders become full cards because each row is a decision, stock and products keep a reduced column table with a detail sheet because those are scanning tables. Filtering and search are the caller's, since they change the row set and that is screen specific. **9 tests** |
+| `StatCard` | **B** | States a number, its comparison, and what it implies. A number with no comparison is decoration. `tone` is `plain`, `attention` (Warm Red, reserved for a figure that needs action today) or `positive` (the functional success token, never the brand red). **5 tests** |
+| `StatusPill` | **B** | Quote and order lifecycle states, coloured by what they mean: `neutral`, `positive` (success token), `attention` (Warm Red, genuinely needs action), `muted` (a closed, no longer active state). The caller supplies the tone; this component knows nothing about `quote_status` or `order_status`. **5 tests** |
 | `LiveUpdateBanner` | P | "3 new quotes, show". **Never inserts rows into a list under the user's finger.** See D46 |
 | `LastUpdated` | P | "Updated 2 minutes ago, Refresh". Honest about staleness and gives control back |
 | `AuditEntry` | P | Before and after, readable by a human |
