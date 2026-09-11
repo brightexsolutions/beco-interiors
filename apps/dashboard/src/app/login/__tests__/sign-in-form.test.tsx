@@ -21,8 +21,8 @@ describe('SignInForm', () => {
   });
 
   it('explains a rejected account rather than a bare failure', () => {
-    render(<SignInForm next="/launch" denied />);
-    expect(screen.getByRole('alert')).toHaveTextContent(/cannot use the launch control/i);
+    render(<SignInForm next="/" denied />);
+    expect(screen.getByRole('alert')).toHaveTextContent(/cannot sign in/i);
   });
 
   it('has no accessibility violations', async () => {

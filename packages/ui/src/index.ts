@@ -16,6 +16,7 @@ export {
   Field, Input, Select, Textarea,
   type FieldProps, type InputProps, type SelectProps, type TextareaProps,
 } from './components/field';
+export { PasswordInput, type PasswordInputProps } from './components/password-input';
 export { WordReveal, type WordRevealProps } from './components/word-reveal';
 export {
   CutoutReveal, type CutoutRevealProps, type CutoutRevealStat,

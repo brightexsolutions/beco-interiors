@@ -284,6 +284,45 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          created_at: string
+          has_permission: boolean
+          id: string
+          is_published: boolean
+          logo: Json | null
+          name: string
+          project: string | null
+          sector: string | null
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          has_permission?: boolean
+          id?: string
+          is_published?: boolean
+          logo?: Json | null
+          name: string
+          project?: string | null
+          sector?: string | null
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          has_permission?: boolean
+          id?: string
+          is_published?: boolean
+          logo?: Json | null
+          name?: string
+          project?: string | null
+          sector?: string | null
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
@@ -825,6 +864,8 @@ export type Database = {
           updated_at: string
           valid_until: string | null
           vat_amount: number
+          wants_installation: boolean
+          wants_samples: boolean
         }
         Insert: {
           assigned_to?: string | null
@@ -854,6 +895,8 @@ export type Database = {
           updated_at?: string
           valid_until?: string | null
           vat_amount?: number
+          wants_installation?: boolean
+          wants_samples?: boolean
         }
         Update: {
           assigned_to?: string | null
@@ -883,6 +926,8 @@ export type Database = {
           updated_at?: string
           valid_until?: string | null
           vat_amount?: number
+          wants_installation?: boolean
+          wants_samples?: boolean
         }
         Relationships: [
           {
@@ -970,9 +1015,14 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_public: boolean
           last_login_at: string | null
           must_change_password: boolean
+          public_phone: string | null
+          public_photo: Json | null
+          public_title: string | null
           role: Database["public"]["Enums"]["user_role"]
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -982,9 +1032,14 @@ export type Database = {
           full_name: string
           id: string
           is_active?: boolean
+          is_public?: boolean
           last_login_at?: string | null
           must_change_password?: boolean
+          public_phone?: string | null
+          public_photo?: Json | null
+          public_title?: string | null
           role: Database["public"]["Enums"]["user_role"]
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -994,9 +1049,14 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          is_public?: boolean
           last_login_at?: string | null
           must_change_password?: boolean
+          public_phone?: string | null
+          public_photo?: Json | null
+          public_title?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [
@@ -1020,6 +1080,7 @@ export type Database = {
       }
     }
     Functions: {
+      complete_first_login: { Args: never; Returns: undefined }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
@@ -1028,6 +1089,26 @@ export type Database = {
       is_brightex_user: { Args: never; Returns: boolean }
       next_order_reference: { Args: never; Returns: string }
       next_quote_reference: { Args: never; Returns: string }
+      record_sign_in: { Args: never; Returns: undefined }
+      slugify: { Args: { input: string }; Returns: string }
+      submit_quote: {
+        Args: {
+          p_budget_note?: string
+          p_company?: string
+          p_customer_email?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_delivery_address?: string
+          p_fulfilment?: Database["public"]["Enums"]["fulfilment"]
+          p_items: Json
+          p_project_details?: string
+          p_project_type?: string
+          p_timeline?: string
+          p_wants_installation?: boolean
+          p_wants_samples?: boolean
+        }
+        Returns: string
+      }
     }
     Enums: {
       announcement_type: "sale" | "clearance" | "notice" | "event"

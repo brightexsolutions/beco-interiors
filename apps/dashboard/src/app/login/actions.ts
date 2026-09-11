@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createRateLimiter, signInSchema } from '@beco/validation';
+import { resolveSessionUser } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
 export interface SignInState {
@@ -25,10 +26,15 @@ async function callerKey(): Promise<string | null> {
 }
 
 /**
- * Password sign in against Supabase Auth. The role check is NOT here: this
- * only proves who you are. `requireAdmin` on the launch page proves you are
- * allowed in, and RLS on `settings` is what actually stops a non admin
- * write. See D80 and rule 7.
+ * Password sign in against Supabase Auth. Proves who you are, then:
+ *
+ *  - a deactivated or unknown account is signed straight back out and told
+ *    nothing that a wrong password would not also produce (A.5)
+ *  - a successful sign in stamps `last_login_at` and writes a `login` audit
+ *    row through `record_sign_in()` (A.4)
+ *
+ * The role check per route is the proxy's job (`lib/access.ts`), and RLS is
+ * the authority underneath. See D80 and rule 7.
  */
 export async function signIn(_prev: SignInState, formData: FormData): Promise<SignInState> {
   const key = await callerKey();
@@ -45,13 +51,24 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
   }
 
   const supabase = await getSupabase();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) {
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error || !data.user) {
     // One message for every failure mode: a wrong password and an unknown
     // email must not be told apart from the outside.
     return { error: 'That email and password do not match an account' };
   }
 
+  const user = await resolveSessionUser(supabase, data.user.id);
+  if (!user || !user.role) {
+    // Deactivated, or no `users` row. End the session that sign-in just
+    // started, and give the same answer as a wrong password.
+    await supabase.auth.signOut();
+    return { error: 'That email and password do not match an account' };
+  }
+
+  // Best effort: a stamp failure must not block a valid sign in.
+  await supabase.rpc('record_sign_in');
+
   const next = formData.get('next');
-  redirect(typeof next === 'string' && next.startsWith('/') ? next : '/launch');
+  redirect(typeof next === 'string' && next.startsWith('/') ? next : '/');
 }

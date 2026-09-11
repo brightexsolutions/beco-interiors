@@ -13,8 +13,15 @@ const redirect = vi.fn();
 vi.mock('next/navigation', () => ({ redirect: (...a: unknown[]) => redirect(...a) }));
 
 const signInWithPassword = vi.fn();
+const signOut = vi.fn();
+const rpc = vi.fn();
 vi.mock('@/lib/supabase', () => ({
-  getSupabase: async () => ({ auth: { signInWithPassword } }),
+  getSupabase: async () => ({ auth: { signInWithPassword, signOut }, rpc }),
+}));
+
+const resolveSessionUser = vi.fn();
+vi.mock('@/lib/session', () => ({
+  resolveSessionUser: (...a: unknown[]) => resolveSessionUser(...a),
 }));
 
 const { signIn } = await import('../actions');
@@ -25,12 +32,20 @@ const form = (fields: Record<string, string>) => {
   return f;
 };
 
-const validCreds = { email: 'admin@beco.co.ke', password: 'correct horse' };
+const validCreds = { email: 'sam.odhiambo@beco.co.ke', password: 'correct horse staple' };
+const activeUser = { userId: 'u1', email: validCreds.email, fullName: 'Sam Odhiambo', role: 'beco_sales', isActive: true, mustChangePassword: false };
+
+/** signInWithPassword's success shape: data.user must be present. */
+const authOk = { data: { user: { id: 'u1' } }, error: null };
+const authFail = { data: { user: null }, error: { message: 'Invalid login credentials' } };
 
 let testId = 0;
 beforeEach(() => {
   clientIp = `ip-${++testId}`;
   signInWithPassword.mockReset();
+  signOut.mockReset();
+  rpc.mockReset().mockResolvedValue({ error: null });
+  resolveSessionUser.mockReset().mockResolvedValue(activeUser);
   redirect.mockReset();
 });
 afterEach(() => vi.restoreAllMocks());
@@ -44,36 +59,46 @@ describe('signIn', () => {
   });
 
   it('gives one message for any auth failure, and does NOT start a session', async () => {
-    signInWithPassword.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
+    signInWithPassword.mockResolvedValue(authFail);
     const result = await signIn({}, form(validCreds));
     expect(result?.error).toMatch(/do not match an account/i);
-    // No redirect means the render never re-runs with new cookies: the
-    // pre-login session, if any, is untouched.
     expect(redirect).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
   });
 
-  it('signs in and redirects on success, so the render re-runs with the new session', async () => {
-    signInWithPassword.mockResolvedValue({ error: null });
+  it('signs a deactivated or unknown account straight back out, with the same message', async () => {
+    signInWithPassword.mockResolvedValue(authOk);
+    resolveSessionUser.mockResolvedValue(null);
+    const result = await signIn({}, form(validCreds));
+    expect(result?.error).toMatch(/do not match an account/i);
+    expect(signOut).toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('records the sign-in and redirects home on success', async () => {
+    signInWithPassword.mockResolvedValue(authOk);
     await signIn({}, form(validCreds));
     expect(signInWithPassword).toHaveBeenCalledWith(validCreds);
-    expect(redirect).toHaveBeenCalledWith('/launch');
+    expect(rpc).toHaveBeenCalledWith('record_sign_in');
+    expect(redirect).toHaveBeenCalledWith('/');
   });
 
   it('honours a local return path', async () => {
-    signInWithPassword.mockResolvedValue({ error: null });
-    await signIn({}, form({ ...validCreds, next: '/launch/settings' }));
-    expect(redirect).toHaveBeenCalledWith('/launch/settings');
+    signInWithPassword.mockResolvedValue(authOk);
+    await signIn({}, form({ ...validCreds, next: '/quotes' }));
+    expect(redirect).toHaveBeenCalledWith('/quotes');
   });
 
-  it('ignores an off-site return path, landing on /launch instead', async () => {
-    signInWithPassword.mockResolvedValue({ error: null });
+  it('ignores an off-site return path, landing home instead', async () => {
+    signInWithPassword.mockResolvedValue(authOk);
     await signIn({}, form({ ...validCreds, next: 'https://evil.example/steal' }));
-    expect(redirect).toHaveBeenCalledWith('/launch');
+    expect(redirect).toHaveBeenCalledWith('/');
   });
 
   it('turns a burst away after the tenth attempt, without asking Supabase again', async () => {
     clientIp = 'burst-ip';
-    signInWithPassword.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
+    signInWithPassword.mockResolvedValue(authFail);
     for (let i = 0; i < 10; i++) {
       const r = await signIn({}, form(validCreds));
       expect(r?.error).toMatch(/do not match/i);

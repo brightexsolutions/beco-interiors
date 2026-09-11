@@ -10,8 +10,12 @@
 -- deterministic, so a failing test means a real regression rather than
 -- someone having edited a row.
 
+-- The second address is the fictional local/staging brightex_admin seeded at
+-- the end of this file. The first is the canonical Brightex address the pgTAP
+-- D42 tests use; keeping both means the seeded account clears the Studio gate
+-- without colliding with the test fixtures in auth.users.
 insert into settings (key, value) values
-  ('brightex_allowed_emails', '["info.brightexsolutions@gmail.com"]'::jsonb),
+  ('brightex_allowed_emails', '["info.brightexsolutions@gmail.com", "beco.brightex.dev@gmail.com"]'::jsonb),
   ('whatsapp_number', '"254722333730"'::jsonb),
   ('business_phone', '"+254722333730"'::jsonb)
 on conflict (key) do update set value = excluded.value;
@@ -65,3 +69,70 @@ values (
   now() + interval '180 days',
   10
 ) on conflict do nothing;
+
+-- Six fictional staff accounts, for local and staging sign-in. NEVER real
+-- people, per rule 6, and staging is seeded from this file rather than
+-- cloned from production. The launch team per BUILD-PLAN A4: one beco_admin,
+-- three beco_sales, one beco_product_manager, one brightex_admin.
+--
+-- Every account starts must_change_password = true, so the M5 forced-change
+-- flow is exercised on first sign-in and no environment inherits a known
+-- password without being made to replace it.
+--
+--   dev password, all six:  beco-dev-pass
+--
+-- This is fixtures, printed on purpose. The REAL staging and production
+-- accounts are created out of band by Brightex and handed to Beco, per
+-- docs/RUNBOOK.md. They are never written here.
+--
+-- The brightex_admin address matches the brightex_allowed_emails entry set
+-- above, so that account also satisfies the D42 Studio gate.
+--
+-- Interdependent inserts across the users -> auth.users foreign key, so this
+-- is three plain statements over a temp list rather than data-modifying CTEs,
+-- which run on one snapshot and would not see each other's rows for the FK
+-- check.
+create temporary table _seed_staff (id uuid, email text, full_name text, role text);
+insert into _seed_staff values
+  ('d5c0ffee-0000-4000-8000-000000000001'::uuid, 'irene.kariuki@beco.co.ke',        'Irene Kariuki', 'beco_admin'),
+  ('d5c0ffee-0000-4000-8000-000000000002'::uuid, 'sam.odhiambo@beco.co.ke',         'Sam Odhiambo',  'beco_sales'),
+  ('d5c0ffee-0000-4000-8000-000000000003'::uuid, 'grace.wanjiru@beco.co.ke',        'Grace Wanjiru', 'beco_sales'),
+  ('d5c0ffee-0000-4000-8000-000000000004'::uuid, 'ken.mutiso@beco.co.ke',           'Ken Mutiso',    'beco_sales'),
+  ('d5c0ffee-0000-4000-8000-000000000005'::uuid, 'aisha.farah@beco.co.ke',          'Aisha Farah',   'beco_product_manager'),
+  ('d5c0ffee-0000-4000-8000-000000000006'::uuid, 'beco.brightex.dev@gmail.com',     'Brightex Ops',  'brightex_admin');
+
+insert into auth.users (
+  id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+)
+select
+  s.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+  s.email, extensions.crypt('beco-dev-pass', extensions.gen_salt('bf')), now(),
+  '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
+  '', '', '', ''
+from _seed_staff s
+on conflict (id) do nothing;
+
+-- auth.identities.email is a generated column (lower(identity_data->>'email')),
+-- so it is not listed here: it follows from identity_data.
+insert into auth.identities (
+  provider_id, user_id, identity_data, provider,
+  last_sign_in_at, created_at, updated_at
+)
+select
+  s.id::text, s.id,
+  jsonb_build_object(
+    'sub', s.id::text, 'email', s.email,
+    'email_verified', true, 'phone_verified', false
+  ),
+  'email', now(), now(), now()
+from _seed_staff s
+on conflict (provider_id, provider) do nothing;
+
+insert into users (id, email, full_name, role, is_active, must_change_password, created_at, updated_at)
+select s.id, s.email, s.full_name, s.role::user_role, true, true, now(), now()
+from _seed_staff s
+on conflict (id) do nothing;
+
+drop table _seed_staff;
