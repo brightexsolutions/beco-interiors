@@ -33,8 +33,12 @@ import { blurProps } from '@/lib/products';
  * What carries over from D30 and D56, married rather than discarded: the
  * real headline, used once, per WordReveal's own rule. The lede
  * crossfading with the active stone, Beco's own first sentence per slab,
- * not written for this hero. The specimen indicator and its progress
- * rail. Pin dropped entirely on mobile.
+ * not written for this hero. Pin dropped entirely on mobile.
+ *
+ * The name-and-counter indicator that used to sit under the lede was
+ * removed on direct feedback: the chip strip on the right already labels
+ * the active stone by name (the `beco-chip-label` span next to it), so the
+ * indicator was a second, redundant place stating the same thing.
  *
  * What does NOT carry over: the prototype's stock Unsplash photography,
  * its fabricated "520+ products" and five star "Client Rated" stats, and
@@ -115,7 +119,6 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
     return () => clearInterval(id);
   }, [slabs.length]);
 
-  const current = slabs[active] ?? slabs[0];
   const lead = slabs[0];
 
   // Beco's own first sentence per stone, trimmed to one sentence: the site's
@@ -263,48 +266,6 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
             >
               See the range
             </Link>
-          </div>
-
-          {/* --- The slab indicator. Sits on a hairline at the foot of the
-                  pinned column, so the type block above never moves as it
-                  updates. Announced politely rather than interrupting.
-                  Desktop only, matching the chip strip on the right: a
-                  design choice for this wider layout, not a functional
-                  need, now that the timer above is what drives it on
-                  every breakpoint alike. --- */}
-          <div
-            className="beco-enter mt-10 hidden border-t border-white/15 pt-5 lg:block"
-            style={{ animationDelay: '900ms' }}
-          >
-            <div className="flex items-baseline justify-between gap-6">
-              <p aria-live="polite" className="font-ui text-sm">
-                {/* Keyed on the active slab so the animation replays as
-                    the name changes, like a specimen label turning. */}
-                <span
-                  key={current?.slug}
-                  className="beco-roll inline-block overflow-hidden font-semibold uppercase tracking-[0.14em] text-high-vis-white"
-                >
-                  {current?.name}
-                </span>
-              </p>
-              <p className="font-ui text-sm font-semibold tabular-nums text-neutral-400">
-                <span className="text-high-vis-white">{String(active + 1).padStart(2, '0')}</span>
-                {' / '}
-                {String(slabs.length).padStart(2, '0')}
-              </p>
-            </div>
-            {/* One rule per slab, the current one drawn in. Cheaper to read
-                at a glance than a counter, and it shows how much is left. */}
-            <ol className="mt-3 flex gap-1.5" aria-hidden>
-              {slabs.map((slab, i) => (
-                <li key={slab.slug} className="h-0.5 flex-1 overflow-hidden bg-white/15">
-                  <span
-                    className="block h-full origin-left bg-high-vis-white transition-transform duration-500 ease-brand motion-reduce:transition-none"
-                    style={{ transform: `scaleX(${i <= active ? 1 : 0})` }}
-                  />
-                </li>
-              ))}
-            </ol>
           </div>
         </div>
 
