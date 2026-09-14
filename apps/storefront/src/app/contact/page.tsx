@@ -62,7 +62,7 @@ export default async function ContactPage() {
           </div>
         ) : null}
 
-        <div className="beco-hero-content-top relative mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-20 sm:pb-24 lg:pb-28">
+        <div className="beco-hero-content-top relative mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-20 sm:pb-24 lg:pb-28">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
@@ -80,9 +80,13 @@ export default async function ContactPage() {
       </section>
 
       {/* --- The three ways in, as equals in shape and ranked in weight, per
-              D26: quote first, WhatsApp second, the business line third. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
-        <div className="grid gap-px overflow-hidden border border-neutral-200 bg-neutral-200 sm:grid-cols-3">
+              D26: quote first, WhatsApp second, the business line third.
+              Three independent cards with real air between them rather than
+              a bordered, hairline-divided grid, on request: the shared-line
+              technique read like a spec table rather than three separate
+              ways to reach a person. --- */}
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20">
+        <div className="grid gap-6 sm:grid-cols-3 sm:gap-5">
           <Channel
             eyebrow="Best for a project"
             title="Request a quote"
@@ -123,9 +127,12 @@ export default async function ContactPage() {
         </p>
       </section>
 
-      {/* --- The showroom itself: address, hours, and Beco's own footage. --- */}
-      <section className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto grid max-w-[1380px] gap-14 px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:grid-cols-[1fr_26rem] lg:gap-20 lg:py-24">
+      {/* --- The showroom itself: address, hours, and Beco's own footage.
+              Reads as its own section against the tint alone, no rule
+              needed above it now that the channel cards no longer carry
+              one either. --- */}
+      <section className="bg-neutral-50">
+        <div className="mx-auto grid max-w-[1380px] gap-14 px-8 sm:px-10 lg:px-14 py-16 sm:py-20 lg:grid-cols-[1fr_32rem] lg:gap-16 lg:py-24">
           <Reveal>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />
@@ -142,12 +149,9 @@ export default async function ContactPage() {
               {SITE.address.city}
             </address>
 
-            <dl className="mt-10 max-w-[34rem] border-t border-neutral-200 font-ui text-base">
+            <dl className="mt-10 flex max-w-[34rem] flex-col gap-3 rounded-[2px] bg-neutral-50 p-6 font-ui text-base">
               {HOURS.map(([day, time]) => (
-                <div
-                  key={day}
-                  className="flex items-baseline justify-between gap-6 border-b border-neutral-200 py-3"
-                >
+                <div key={day} className="flex items-baseline justify-between gap-6">
                   <dt className="text-neutral-500">{day}</dt>
                   <dd className="font-semibold text-charcoal">{time}</dd>
                 </div>
@@ -170,8 +174,12 @@ export default async function ContactPage() {
           </Reveal>
 
           <Reveal delay={80}>
-            <div className="mx-auto w-full max-w-[20rem] overflow-hidden bg-charcoal">
-              <ShowroomFilm className="aspect-[9/16] w-full object-cover" />
+            {/* The source footage is landscape, 1920x1080: aspect-[9/16] here
+                was a leftover from the old portrait footage this replaced,
+                forcing a landscape clip into a tall portrait frame rather
+                than genuinely widening it. Corrected to the real 16:9. */}
+            <div className="mx-auto w-full overflow-hidden bg-charcoal">
+              <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
             </div>
           </Reveal>
         </div>
@@ -199,15 +207,25 @@ function Channel({
 }) {
   const inner = (
     <>
-      <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+      <p
+        className={
+          primary
+            ? 'font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400'
+            : 'font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500'
+        }
+      >
         {eyebrow}
       </p>
-      <p className="mt-4 font-display text-2xl leading-tight text-charcoal">{title}</p>
-      <p className="mt-3 flex-1 text-base leading-[1.6] text-neutral-700">{body}</p>
+      <p className={`mt-4 font-display text-2xl leading-tight ${primary ? 'text-high-vis-white' : 'text-charcoal'}`}>
+        {title}
+      </p>
+      <p className={`mt-3 flex-1 text-base leading-[1.6] ${primary ? 'text-neutral-300' : 'text-neutral-700'}`}>
+        {body}
+      </p>
       <span
         className={
           primary
-            ? 'mt-6 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep'
+            ? 'mt-6 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red'
             : 'mt-6 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-charcoal'
         }
       >
@@ -219,8 +237,13 @@ function Channel({
     </>
   );
 
-  const className =
-    'group flex cursor-pointer flex-col bg-high-vis-white p-8 transition-colors duration-300 hover:bg-neutral-50 sm:p-9';
+  // The primary path, request a quote, takes the same dark card treatment
+  // the "why Beco" cards use to lead with one, rather than a border, so it
+  // is the obvious first move without needing a line around the other two
+  // to say they are secondary.
+  const className = primary
+    ? 'group flex cursor-pointer flex-col bg-charcoal p-8 transition-colors duration-300 hover:bg-charcoal/90 sm:p-9'
+    : 'group flex cursor-pointer flex-col bg-neutral-50 p-8 transition-colors duration-300 hover:bg-neutral-100 sm:p-9';
 
   return external ? (
     <a href={href} data-analytics={analytics} className={className}>

@@ -132,7 +132,7 @@ export function ShopControls({
     // the same behaviour as before, now on a floating panel instead of an
     // edge to edge strip.
     <div className="relative z-40 -mt-10 sm:-mt-12 lg:-mt-16">
-      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
         <div className="sticky top-20 rounded-[2px] border border-neutral-200 bg-high-vis-white px-5 py-4 shadow-[0_24px_64px_rgba(16,24,32,0.18)] sm:px-6 sm:py-5">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

@@ -26,24 +26,48 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
  *
  * Stops on leave and resets to the first frame, so the grid is never left in
  * an arbitrary state. Does nothing at all under reduced motion.
+ *
+ * `autoplay` forces the same always-on behaviour a touch device already
+ * gets, regardless of hover capability: for a card with no pointer
+ * interaction of its own, for example a range overview tile that is not
+ * itself the link, waiting for a hover that will never come left the extra
+ * photographs unseen on a device that could have hovered.
+ *
+ * `startDelayMs` staggers when an autoplaying instance's own cycle begins,
+ * on request: several of these mounted on one page all autoplay on the same
+ * clock by default, so every card's first frame changed in the same instant,
+ * reading as one synchronised effect rather than several independent cards.
+ * A caller showing more than one autoplaying gallery at once should give
+ * each a different offset.
  */
 export function HoverGallery({
-  frames, intervalMs = 1100, className,
-}: { frames: ReactNode[]; intervalMs?: number; className?: string }) {
+  frames, intervalMs = 1100, className, autoplay = false, startDelayMs = 0,
+}: {
+  frames: ReactNode[];
+  intervalMs?: number;
+  className?: string;
+  autoplay?: boolean;
+  startDelayMs?: number;
+}) {
   const [index, setIndex] = useState(0);
-  const [autoCycle, setAutoCycle] = useState(false);
+  const [autoCycle, setAutoCycle] = useState(autoplay);
   const timer = useRef<ReturnType<typeof setInterval>>(undefined);
+  const startTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
+    if (autoplay) return undefined;
     const mq = window.matchMedia?.('(hover: none)');
     if (!mq) return undefined;
     const sync = () => setAutoCycle(mq.matches);
     sync();
     mq.addEventListener?.('change', sync);
     return () => mq.removeEventListener?.('change', sync);
-  }, []);
+  }, [autoplay]);
 
-  useEffect(() => () => clearInterval(timer.current), []);
+  useEffect(() => () => {
+    clearInterval(timer.current);
+    clearTimeout(startTimer.current);
+  }, []);
 
   const start = () => {
     if (frames.length < 2) return;
@@ -62,12 +86,18 @@ export function HoverGallery({
 
   // Runs itself the moment a device with no hover is known, rather than
   // waiting on an enter or a focus event that a touchscreen never sends.
+  // Delayed by `startDelayMs` so several autoplaying instances on one page
+  // do not all take their first step on the same tick.
   useEffect(() => {
     if (!autoCycle) return undefined;
-    start();
-    return () => clearInterval(timer.current);
+    clearTimeout(startTimer.current);
+    startTimer.current = setTimeout(start, startDelayMs);
+    return () => {
+      clearTimeout(startTimer.current);
+      clearInterval(timer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoCycle]);
+  }, [autoCycle, startDelayMs]);
 
   return (
     <div

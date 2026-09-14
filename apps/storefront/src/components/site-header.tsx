@@ -104,7 +104,7 @@ export function SiteHeader() {
             'border-b border-transparent bg-gradient-to-b from-charcoal/75 to-charcoal/55',
       )}
     >
-      <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between gap-6 px-6 sm:px-8 lg:px-12">
+      <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between gap-6 px-8 sm:px-10 lg:px-14">
         {/* The real mark from the brand pack, not a typeset approximation.
             The supplied lockup stacks INTERIORS beneath the square, which at
             this header height would be about four pixels tall, so the mark

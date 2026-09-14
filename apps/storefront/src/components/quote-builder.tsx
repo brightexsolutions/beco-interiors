@@ -194,9 +194,9 @@ export function QuoteBuilder() {
           </button>
         </div>
 
-        <ul className="mt-6 border-t border-neutral-200">
+        <ul className="mt-6 flex flex-col gap-3">
           {lines.map((line) => (
-            <li key={line.slug} className="flex gap-4 border-b border-neutral-200 py-5">
+            <li key={line.slug} className="flex gap-4 rounded-[2px] bg-neutral-50 p-4">
               <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-neutral-100">
                 {line.image ? (
                   <Image src={line.image} alt="" fill sizes="64px" className="object-cover" />

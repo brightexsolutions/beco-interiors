@@ -91,7 +91,7 @@ export function CutoutReveal({
 
   return (
     <section className="bg-high-vis-white text-charcoal">
-      <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:grid-cols-2 lg:gap-20 lg:py-28">
+      <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-8 sm:px-10 lg:px-14 py-16 sm:py-20 lg:grid-cols-2 lg:gap-20 lg:py-28">
         <div className={cn('flex justify-center', reverse ? 'lg:order-2' : undefined)}>
           <div className="relative aspect-square w-full max-w-[22rem]">
             {images.map((img, i) => (

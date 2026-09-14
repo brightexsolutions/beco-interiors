@@ -120,7 +120,7 @@ export function LaunchBanner({ launch }: { launch: LaunchState }) {
           aria-label="Announcement"
           className="relative z-30 bg-charcoal text-high-vis-white"
         >
-          <div className={`mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-2.5 sm:py-3 ${celebrate ? 'beco-launch-reveal' : ''}`}>
+          <div className={`mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-2.5 sm:py-3 ${celebrate ? 'beco-launch-reveal' : ''}`}>
             <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">
               <span className="font-semibold uppercase tracking-[0.12em]">One year in Nairobi.</span>
               <span className="hidden text-neutral-300 sm:inline">Beco is live.</span>
@@ -141,7 +141,7 @@ export function LaunchBanner({ launch }: { launch: LaunchState }) {
 
   return (
     <aside aria-label="Announcement" className="relative z-30 bg-charcoal text-high-vis-white">
-      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-2.5 sm:py-3">
+      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-2.5 sm:py-3">
         <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">
           <span className="font-semibold uppercase tracking-[0.12em]">Beco turns one this October.</span>
           {parts ? (

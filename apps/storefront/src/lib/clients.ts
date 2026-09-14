@@ -21,6 +21,9 @@ export interface PublishedClient {
   logo: Pick<ProductImage, 'path' | 'alt' | 'width' | 'height'> | null;
   project: string | null;
   sector: string | null;
+  /** A short written quote, migration 26. Optional: most credentials carry
+      a project line with no quote attached. */
+  testimonial: string | null;
 }
 
 export const getPublishedClients = async (): Promise<PublishedClient[]> => {
@@ -31,7 +34,7 @@ export const getPublishedClients = async (): Promise<PublishedClient[]> => {
   );
   const { data, error } = await sb
     .from('clients')
-    .select('id,name,slug,logo,project,sector')
+    .select('id,name,slug,logo,project,sector,testimonial')
     .order('sort_order', { ascending: true });
 
   // A credential strip is never important enough to break the page it sits on.

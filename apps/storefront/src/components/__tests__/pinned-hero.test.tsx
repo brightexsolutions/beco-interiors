@@ -39,6 +39,33 @@ describe('PinnedHero, the lede', () => {
     expect(active?.textContent).not.toContain('It is quarried in Italy');
   });
 
+  it('cuts a long sentence to a word boundary even when its first clause is too short to use', () => {
+    // The real bug: a sentence whose first clause (before the first comma)
+    // is under 24 characters fell through the clause heuristic entirely and
+    // rendered in full on the mobile hero, crowding the screen with a
+    // 122 character sentence under the headline.
+    const { container } = render(
+      <PinnedHero
+        thickness="12mm"
+        slabs={[
+          slab({
+            slug: 'delfone', name: 'Delfone',
+            blurb:
+              'Warm taupe, greige and amber tones run in soft vertical layers across the surface, '
+              + 'creating the calm, natural look of onyx.',
+          }),
+        ]}
+      />,
+    );
+    // Single slab: the invisible sizer paragraph duplicates the real lede on
+    // purpose (see the fallback test below), so this scopes to the one
+    // visible crossfade layer rather than matching both.
+    const active = container.querySelector('p.absolute.inset-0[aria-hidden="false"]');
+    expect(active?.textContent).toBeTruthy();
+    expect(active!.textContent!.length).toBeLessThanOrEqual(72);
+    expect(active?.textContent).not.toContain('creating the calm, natural look of onyx');
+  });
+
   it('falls back to the generic sentence for a slab with no description yet', () => {
     render(
       <PinnedHero

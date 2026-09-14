@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { buttonClasses, cn, WordReveal } from '@beco/ui';
 import { blurProps } from '@/lib/products';
+import { RotatingRoomWord } from './rotating-room-word';
 
 /**
  * The hero, per D79. A full bleed photograph again, not the turning
@@ -93,12 +94,12 @@ export interface HeroSlab {
 
 /** Aligns the type column with the 1380px grid, matching every other
     section on the page, while the photograph itself bleeds edge to edge.
-    The lg step adds the section gutter (3rem, matching lg:px-12 elsewhere)
+    The lg step adds the section gutter (3.5rem, matching lg:px-14 elsewhere)
     ON TOP OF the centering margin the 1380px cap produces past that width,
     rather than taking whichever is larger: a max() of the two undershot the
     real gutter once the viewport passed 1380px, since the centering margin
     alone does not include the section's own inner padding. */
-const GRID_INSET = 'pl-6 sm:pl-8 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3rem)]';
+const GRID_INSET = 'pl-8 sm:pl-10 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3.5rem)]';
 
 /** #101820, the real charcoal token, not the prototype's raw near-black.
     Left heavy so the type reads, lighter than the prototype's 0.97 peak,
@@ -150,7 +151,16 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
     // First clause, trailing punctuation stripped so a single period can be
     // put back cleanly rather than doubling one the sentence already had.
     const clause = (sentence.split(/,\s/)[0]?.trim() ?? sentence).replace(/[\s.,;:]+$/, '');
-    return clause.length >= 24 && clause.length <= 88 ? `${clause}.` : sentence;
+    if (clause.length >= 24 && clause.length <= 88) return `${clause}.`;
+    // The clause heuristic does not fit every sentence, for example one
+    // whose first clause lands before "Warm taupe, greige and amber tones
+    // run..." (too short to pass the floor above): this shipped the FULL,
+    // uncut sentence to the mobile hero, which is the exact crowding this
+    // function exists to prevent. Fall back to a hard word boundary cut
+    // instead of the whole sentence.
+    const cut = sentence.slice(0, 72);
+    const lastSpace = cut.lastIndexOf(' ');
+    return (lastSpace > 24 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:]+$/, '');
   };
   const ledes = slabs.map((slab) => (slab.blurb ? shorten(slab.blurb) || FALLBACK_LEDE : FALLBACK_LEDE));
   const longestLede = [...ledes].sort((a, b) => b.length - a.length)[0];
@@ -228,7 +238,13 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </div>
 
           <h1 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
-            <WordReveal text="Surfaces that outlast the room." />
+            {/* "room." lives in RotatingRoomWord now, cycling through the
+                places these surfaces actually go, on request. The static
+                text WordReveal still owns has no trailing period of its
+                own for that reason, and no trailing space either: a real
+                one sits between the two spans below instead, since
+                WordReveal never appends one after its own last word. */}
+            <WordReveal text="Surfaces that outlast the" /> <RotatingRoomWord />
           </h1>
 
           <div
@@ -396,7 +412,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </p>
         </div>
         <h2 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
-          Surfaces that outlast the room.
+          Surfaces that outlast the <RotatingRoomWord />
         </h2>
         <p className="beco-enter mt-5 max-w-[38ch] text-base leading-[1.6] text-neutral-300" style={{ animationDelay: '620ms' }}>
           {ledes[0]}

@@ -9,7 +9,7 @@ import { CompletedInteriors } from '@/components/completed-interiors';
 import {
   getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages,
 } from '@/lib/products';
-import { SITE, SHOWROOM_FILM } from '@/lib/site';
+import { SITE, SITE_SHOTS, SHOWROOM_FILM } from '@/lib/site';
 
 export const revalidate = 3600;
 
@@ -204,7 +204,7 @@ export default async function AboutPage() {
           />
         </div>
 
-        <div className="beco-clip beco-hero-content-top relative mx-auto w-full max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-16 sm:pb-20 lg:pb-24">
+        <div className="beco-clip beco-hero-content-top relative mx-auto w-full max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-16 sm:pb-20 lg:pb-24">
           <div className="beco-wipe flex items-center gap-4">
             <span aria-hidden className="h-px w-10 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.22em] text-neutral-300">
@@ -242,18 +242,32 @@ export default async function AboutPage() {
               running text the full width of the page. Both real, both
               `application` shots, per the guideline's own photography
               direction. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-24">
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20 lg:py-24">
         <Reveal className="beco-clip text-center">
           {/* Centred rather than left set: left aligned inside a section as
               wide as 1380px put most of a short pull quote's own row in
               empty space on anything past a laptop, reported directly as
-              looking unbalanced on a wide screen. */}
-          <p className="beco-wipe mx-auto max-w-[26ch] font-display text-3xl leading-[1.15] text-charcoal sm:text-4xl lg:max-w-[30ch]">
-            Creating spaces through thoughtful materials, intelligent solutions and exceptional
-            service.
-          </p>
+              looking unbalanced on a wide screen. Set as an actual quote
+              now, on request, the same big opening mark ClientShowcase's
+              own testimonials use rather than a plain paragraph: this is
+              Beco's own positioning line, and reading as a quote is what it
+              is. The rule below it is dropped along with the change, no
+              longer needed once the quote mark itself is what separates
+              this from the body copy underneath. */}
+          <div className="beco-wipe relative mx-auto max-w-[30ch]">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 select-none font-display text-[4.5rem] leading-none text-warm-red/15 sm:text-[5.5rem]"
+            >
+              &ldquo;
+            </span>
+            <blockquote className="relative mx-auto max-w-[26ch] font-display text-3xl italic leading-[1.15] text-charcoal sm:text-4xl lg:max-w-[30ch]">
+              Creating spaces through thoughtful materials, intelligent solutions and exceptional
+              service.
+            </blockquote>
+          </div>
         </Reveal>
-        <div className="mt-10 grid gap-x-16 gap-y-14 border-t border-neutral-200 pt-10 lg:grid-cols-[1.05fr_1fr] lg:items-start">
+        <div className="mt-10 grid gap-x-16 gap-y-14 pt-10 lg:grid-cols-[1.05fr_1fr] lg:items-start">
           <div className="space-y-6">
             <Reveal>
               <p className="max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
@@ -314,8 +328,13 @@ export default async function AboutPage() {
       </section>
 
       {/* --- What we sell. The guideline's own four pillars, as a numbered
-              editorial list rather than four cards with icons in circles. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-16 sm:pb-22 lg:pb-30">
+              editorial list rather than four cards with icons in circles.
+              Tinted, on request: three plain white sections ran in a row
+              from the statement above through to the showroom video, and
+              this is the one of the three with real air around it to take
+              a tone change without competing with a photograph. --- */}
+      <section className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -395,48 +414,103 @@ export default async function AboutPage() {
             );
           })}
         </div>
+        </div>
       </section>
 
       {/* --- The showroom's own footage, elsewhere always a small side column
               beside an address block, given one dedicated moment here
               instead: video in view, the sixth effect in D31's vocabulary,
-              and the one this page did not otherwise use. The footage is
-              genuinely portrait, phone shot at Urban Square, so the frame
-              stays portrait rather than force it into a wide band that
-              would crop most of it away: honest to what the file actually
-              is rather than distorting it, in the same spirit as the
-              guideline's own instruction to keep photography authentic. */}
+              and the one this page did not otherwise use.
+
+              Redone on direct feedback that the centred heading over a
+              boxed media block, the previous shape, "did not communicate
+              anything" and needed real design: that stacked, centred
+              layout is close to the exact generic pattern the design rules
+              warn against by name. Rebuilt asymmetric instead, text beside
+              the frame rather than above it, the same device the
+              statement section higher up this page already uses for its
+              own layered photograph, so the page reads as one hand rather
+              than two different treatments.
+
+              `beco-showroom-video`, landscape and purpose shot, replaced
+              the portrait phone clips this used to be built around. Wider
+              now and given the majority column, not full width: it reads
+              as a held photograph of a moment rather than a video player
+              filling the screen. The glow, stronger than its first pass,
+              is the frame's own cinematic cue: a soft blurred halo in the
+              footage's own dark tone, bleeding out past the frame's own
+              edge the way a real screen throws light in a dim room. --- */}
       {SHOWROOM_FILM ? (
         <section className="bg-neutral-950 py-16 sm:py-22 lg:py-30">
-          <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12">
-            <div className="beco-clip mx-auto max-w-[36rem] text-center">
-              <div className="beco-wipe">
-                <div className="flex items-center justify-center gap-4">
-                  <span aria-hidden className="h-px w-8 bg-warm-red" />
-                  <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                    Inside the showroom
+          <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
+            <div className="grid gap-x-16 gap-y-10 lg:grid-cols-[1fr_1.3fr] lg:items-center">
+              <div className="beco-clip">
+                <div className="beco-wipe">
+                  <div className="flex items-center gap-4">
+                    <span aria-hidden className="h-px w-8 bg-warm-red" />
+                    <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                      Inside the showroom
+                    </p>
+                  </div>
+                  <h2 className="mt-4 max-w-[14ch] font-display text-4xl leading-[1.08] text-high-vis-white sm:text-5xl">
+                    A walk through, before you visit.
+                  </h2>
+                  <p className="mt-5 max-w-[36ch] text-base leading-[1.65] text-neutral-400 lg:text-lg">
+                    The full sintered stone range, hung and lit at Urban Square, before you have
+                    even booked a visit.
                   </p>
                 </div>
-                <h2 className="mt-4 font-display text-4xl leading-[1.08] text-high-vis-white sm:text-5xl">
-                  A walk through, before you visit.
-                </h2>
               </div>
+
+              <Reveal delay={140} className="relative w-full">
+                {/* The glow, behind the frame and larger than it, blurred
+                    heavily so it reads as ambient light rather than a
+                    shape. aria-hidden and z-below: pure atmosphere,
+                    nothing a reader or a screen reader needs to resolve. */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-10 -z-10 rounded-[3rem] bg-[radial-gradient(closest-side,rgba(200,170,120,0.4),transparent)] blur-3xl sm:-inset-16"
+                />
+                <div className="relative overflow-hidden bg-neutral-900 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
+                  <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
+                </div>
+                <p className="beco-plate mt-4 font-ui text-xs uppercase tracking-[0.16em] text-neutral-500">
+                  Urban Square, Enterprise Road
+                </p>
+              </Reveal>
             </div>
-            <Reveal delay={140} className="mx-auto mt-12 w-full max-w-[22rem]">
-              <div className="relative overflow-hidden bg-neutral-900 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
-                <ShowroomFilm className="aspect-[9/16] w-full object-cover" />
-              </div>
-            </Reveal>
           </div>
         </section>
       ) : null}
+
+      {/* --- Real projects, proof rather than more description. The same
+              component Home uses, with its own line rather than Home's word
+              for word, since a reader who lands here from Home should not
+              read the identical sentence twice. Sits directly after the
+              showroom video on purpose now: a real photograph grid between
+              two giant-type moments, not beside another one. --- */}
+      <CompletedInteriors
+        products={products}
+        siteShots={SITE_SHOTS}
+        eyebrow="Proof, not renders"
+        heading="This is what the range becomes."
+        body="The stone on the shop floor at Urban Square is the same stone in these rooms. Nothing here is generated."
+      />
 
       {/* --- Where the material goes. A photograph with the room type knocked
               out of it in outline, one real photograph of that actual room
               behind each word, so "KITCHENS" shows a kitchen rather than
               whichever Beco installation happened to be next in line.
               RotatingStatement owns the crossfade itself, see its own note
-              on the two honest ways to pair a word with a photograph. --- */}
+              on the two honest ways to pair a word with a photograph.
+
+              Moved to sit after Real projects rather than directly against
+              the showroom video, reported directly once the video itself
+              gained its own giant centred watermark: two enormous
+              type-over-media moments back to back read as the same effect
+              repeated rather than two different ones, which the six effect
+              vocabulary in D31 rules out. A real photograph grid now sits
+              between them instead. --- */}
       <section aria-label="Where our materials go" className="relative overflow-hidden bg-charcoal">
         <div className="relative h-[46vh] min-h-[20rem] w-full sm:h-[58vh]">
           <div className="absolute inset-0 flex items-center justify-center px-6">
@@ -445,25 +519,227 @@ export default async function AboutPage() {
             </h2>
           </div>
         </div>
-        <p className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
+        <p className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
           Supplied, cut and installed across the city
         </p>
       </section>
 
-      {/* --- Real projects, proof rather than more description. The same
-              component Home uses, with its own line rather than Home's word
-              for word, since a reader who lands here from Home should not
-              read the identical sentence twice. --- */}
-      <CompletedInteriors
-        products={products}
-        eyebrow="Proof, not renders"
-        heading="This is what the range becomes."
-        body="The stone on the shop floor at Urban Square is the same stone in these rooms. Nothing here is generated."
-      />
+      {/* --- How a project actually runs, added on request: the page named
+              what Beco sells and showed proof it works, but never said what
+              working with them is actually like, real content sitting
+              unused in docs/BECO-COMPANY-PROFILE.md's own "The client
+              journey". The full seven steps there run to a paragraph each;
+              condensed to one sentence apiece here, the same discipline the
+              home page's own numbered Process list already holds to, so
+              this reads as the fuller, relationship-wide version of that
+              narrower "how the quote tool works" list rather than a repeat
+              of it. Two columns rather than one long column, the only
+              numbered list on the site with enough steps to want it. No
+              hairline rule under a step, on the same request that removed
+              them from Process: the numeral and the air around it carry the
+              rhythm instead. Tinted, on request, the second of the two
+              white sections either side of it that otherwise ran together
+              with the team section below. */}
+      <section className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
+        <div className="beco-clip">
+          <div className="beco-wipe">
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-px w-8 bg-warm-red" />
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                How it works
+              </p>
+            </div>
+            <h2 className="mt-4 max-w-[20ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+              A project, start to finish.
+            </h2>
+            <p className="mt-5 max-w-[60ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+              Closing a sale is the beginning of delivering on it, not the end of the
+              relationship. This is the same path every project takes, whether it is one vanity
+              or a whole building.
+            </p>
+          </div>
+        </div>
+
+        <ol className="mt-14 grid gap-x-16 gap-y-10 lg:grid-cols-2">
+          {[
+            ['Discovery', 'Every project starts with a conversation: what is being built, the application, and what you actually need from it.'],
+            ['Consultation and selection', 'Real samples, side by side: colours, textures, finishes and thicknesses, weighed against your space and your budget.'],
+            ['Measurement and assessment', 'Where fabrication or installation is involved, a proper measurement or site visit comes before a quotation, not after.'],
+            ['Quotation', 'An itemised quote covering material, fabrication, installation and delivery, clear enough that you know exactly what you are agreeing to.'],
+            ['Decision and closing', 'Once you are ready, we confirm the selection, the payment terms and a realistic timeline for production and installation.'],
+            ['Production, delivery and installation', 'For sintered stone and wall panels we install, the finished result is checked against the same specification the quote promised.'],
+            ['Completion', 'A project ends well when you were listened to and properly looked after the whole way through, not just sold to.'],
+          ].map(([title, body], i) => (
+            <Reveal as="li" key={title} delay={(i % 4) * 60}>
+              <div className="grid gap-4 sm:grid-cols-[4.5rem_1fr] sm:gap-6">
+                <span aria-hidden className="font-display text-3xl leading-none text-neutral-300 sm:text-4xl">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div>
+                  <h3 className="font-display text-xl leading-tight text-charcoal">{title}</h3>
+                  <p className="mt-2 max-w-[42ch] text-sm leading-[1.6] text-neutral-700">{body}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </ol>
+        </div>
+      </section>
+
+      {/* --- The team, requested by Brown 14 September, placed here on
+              purpose: identity, then values, then the range, then proof it
+              is real, and only then who you would actually be talking to.
+              Showroom and address close the page, since "here is how to
+              reach them" belongs after they have been introduced, not
+              before.
+
+              NOT `/team`. That page reads real, published `users` rows for
+              a stated fraud-prevention purpose, "check that the person you
+              are dealing with is actually from Beco", and a check
+              constraint refuses `is_public` on any role but `beco_sales` so
+              a director can never land there even by mistake. Putting
+              placeholder names into that system would put fiction inside
+              the exact page a buyer uses to verify a real transaction. This
+              is a different, editorial section instead, plain content
+              rather than an authenticated account, clearly placeholder
+              until Beco supplies real names, titles and photographs.
+
+              Irene Oketch is real, given by name as Head of Brand and
+              Marketing; the three agents beside her are placeholders
+              standing in the shape a sales team card takes, not claims
+              about who specifically works the counter. Every photo slot is
+              the same charcoal name plate `/team` itself uses for a real
+              agent with no photograph yet, since none of these have one
+              either. Standard section padding now that "How it works" sits
+              directly above it: the earlier special top padding compensated
+              for sitting right under the RotatingStatement band with no
+              section of its own between them, which is no longer the case.
+
+              The intro paragraph below draws on the profile's own "Our
+              team" section: a growing team with different responsibilities
+              but one shared objective, named here in the same order the
+              source document gives them, leadership through installation,
+              since only individual sales roles were otherwise represented
+              on this page despite fabrication and installation being
+              claimed as a real service elsewhere on it. --- */}
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:py-30">
+        <div className="beco-clip">
+          <div className="beco-wipe">
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-px w-8 bg-warm-red" />
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                The team
+              </p>
+            </div>
+            <h2 className="mt-4 max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+              Who you would actually be talking to.
+            </h2>
+            <p className="mt-5 max-w-[62ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+              A growing team with different responsibilities and one shared objective: a smooth,
+              professional experience from the first conversation to handover.
+            </p>
+          </div>
+        </div>
+
+        {/* Redesigned off a plain definition list, reported directly as
+            looking too basic beside how considered the rest of the page
+            is: the same soft, raised card the home page's own "Why Beco"
+            row uses, a short red rule standing in for an icon rather than
+            one in a circle, since there is no individual photograph to
+            give one of these abstract role categories a card of its own. */}
+        <ul className="mt-12 grid gap-6 sm:grid-cols-2">
+          {[
+            ['Leadership and management', 'Strategic direction, operations, marketing, sales and the client experience overall.'],
+            ['The sales team', 'Works directly with clients, designers and contractors to understand a project and recommend what actually fits it.'],
+            ['Field sales agents', 'Take that same conversation out to sites, designers and businesses beyond the showroom floor.'],
+            ['Technical and installation teams', 'Bring an approved selection to life: measurement, fabrication, finishing and installation.'],
+          ].map(([role, body], i) => (
+            <Reveal key={role} delay={(i % 4) * 60} as="li" className="h-full">
+              <div className="h-full bg-high-vis-white p-8 shadow-[0_1px_2px_rgba(16,24,32,0.05),0_16px_32px_-16px_rgba(16,24,32,0.12)]">
+                <span aria-hidden className="block h-px w-8 bg-warm-red" />
+                <h3 className="mt-5 font-display text-xl leading-tight text-charcoal">{role}</h3>
+                <p className="mt-3 max-w-[46ch] text-sm leading-[1.6] text-neutral-700">{body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </ul>
+
+        <p className="mt-12 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+          Who you would meet today
+        </p>
+
+        {/* Redesigned off a uniform four-up grid, on request: Irene is a
+            real, named, senior hire and the three sales seats beside her
+            are not, so a row of four visually identical plates overstated
+            the second group and undersold the first. Irene now gets a
+            featured card of her own weight, the same "one large tile
+            against smaller ones" rule the home page's own range section
+            already uses, and the three open seats sit together as a
+            clearly related, visually lighter set rather than pretending to
+            be three distinct people. Each seat's plate carries its role,
+            "Sales, Urban Square", never an invented name standing in for
+            one, the same honesty the previous "Sales agent" name plate
+            was reaching for but undercut by putting a fake-sounding label
+            in the exact display font and position a real name takes. */}
+        <div className="mt-6 grid gap-8 lg:grid-cols-12">
+          <Reveal className="lg:col-span-5">
+            <article className="flex h-full flex-col">
+              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden bg-charcoal lg:aspect-auto lg:min-h-[24rem]">
+                <div className="beco-wipe absolute inset-0 flex flex-col justify-end p-7 sm:p-8">
+                  <span aria-hidden className="mb-4 block h-px w-8 bg-warm-red" />
+                  <p className="font-display text-4xl leading-[1.05] text-high-vis-white sm:text-5xl">
+                    Irene Oketch
+                  </p>
+                </div>
+                <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+              </div>
+              <p className="mt-5 font-ui text-sm font-semibold uppercase tracking-[0.1em] text-charcoal">
+                Head of Brand and Marketing
+              </p>
+            </article>
+          </Reveal>
+
+          <div className="lg:col-span-7">
+            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              The sales team
+            </p>
+            <div className="mt-5 grid h-[calc(100%-2rem)] gap-6 sm:grid-cols-3">
+              {[
+                'Sales, Urban Square',
+                'Sales, Urban Square',
+                'Sales, field',
+              ].map((seat, i) => (
+                // PLACEHOLDER: standing in for real sales agents pending
+                // real names, titles and photographs from Beco. Not the
+                // same three fictional accounts supabase/seed.sql uses for
+                // local and staging sign-in, kept deliberately distinct so
+                // this content is never mistaken for real, published
+                // `/team` data.
+                <Reveal key={`${seat}-${i}`} delay={(i + 1) * 60} className="h-full">
+                  <article className="flex h-full flex-col">
+                    <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 lg:aspect-auto lg:min-h-[13rem]">
+                      <div className="absolute inset-0 flex items-end p-5">
+                        <p className="font-display text-xl leading-tight text-neutral-500">
+                          {seat}
+                        </p>
+                      </div>
+                      <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/10" />
+                    </div>
+                    <p className="mt-3 font-ui text-xs font-semibold uppercase tracking-[0.1em] text-neutral-400">
+                      Sales person
+                    </p>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* --- The showroom, against real installations. --- */}
       <section className="border-y border-neutral-200 bg-neutral-50">
-        <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-6 sm:px-8 lg:px-12 py-16 sm:py-22 lg:grid-cols-[1fr_24rem] lg:gap-20 lg:py-30">
+        <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:grid-cols-[1fr_24rem] lg:gap-20 lg:py-30">
           <div>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

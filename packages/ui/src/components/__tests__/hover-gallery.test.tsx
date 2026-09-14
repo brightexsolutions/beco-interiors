@@ -47,6 +47,26 @@ describe('HoverGallery, a device that can hover', () => {
   });
 });
 
+describe('HoverGallery, autoplay', () => {
+  beforeEach(() => stubMatchMedia([]));
+
+  it('cycles on its own on a device that CAN hover, when asked to', () => {
+    // The one case matchMedia alone cannot produce: a range tile is not
+    // itself the link a pointer would hover, so it needs to run regardless
+    // of hover capability, not only on a touch device.
+    render(<HoverGallery frames={FRAMES} intervalMs={1000} autoplay />);
+    expect(screen.getByText('A').parentElement).toHaveClass('opacity-100');
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(screen.getByText('B').parentElement).toHaveClass('opacity-100');
+  });
+
+  it('does not wait on a mouseenter it will never need', () => {
+    const { container } = render(<HoverGallery frames={FRAMES} autoplay />);
+    const dots = container.querySelector('[aria-hidden].pointer-events-none');
+    expect(dots).toHaveClass('opacity-100');
+  });
+});
+
 describe('HoverGallery, a touch device with no hover', () => {
   beforeEach(() => stubMatchMedia(['(hover: none)']));
 

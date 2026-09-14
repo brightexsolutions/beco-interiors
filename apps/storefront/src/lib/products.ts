@@ -203,6 +203,84 @@ export const buildCategoryTree = (all: Category[]): CategoryGroup[] => {
 export const getCategoryTree = async (): Promise<CategoryGroup[]> =>
   buildCategoryTree(await getAllCategories());
 
+/**
+ * One real photograph standing in for a whole top level group, an
+ * application shot over a slab or on-stand crop where one exists.
+ *
+ * Pulled here rather than built inline on each page, since About's own four
+ * pillars and the home page's fuller six range overview fill the exact same
+ * slot: a group's name plate replaced by a real installation the moment one
+ * is catalogued. A group with no published products in it yet, or none
+ * photographed, returns undefined, and the caller falls back to the plate
+ * rather than a guessed stock image.
+ */
+export const imageForGroup = (
+  groups: CategoryGroup[], products: CatalogueProduct[], slug: string,
+): ProductImage | undefined => {
+  const group = groups.find((g) => g.slug === slug);
+  if (!group) return undefined;
+  const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+  for (const p of products) {
+    if (!p.category || !inGroup.has(p.category.slug)) continue;
+    const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);
+    if (shot) return shot;
+  }
+  return undefined;
+};
+
+/**
+ * Several real photographs standing in for a whole top level group, one per
+ * distinct product first rather than every role of a single one, so the home
+ * page's range overview can cycle through what is actually IN a range
+ * rather than repeat one stone's own slab, on-stand and bookmatch shots.
+ * `imageForGroup` above answers "one photo", this answers "a few, from
+ * different products, for a card that autoplays through them".
+ *
+ * Backfills from each matched product's OWN remaining photographs when
+ * distinct products alone do not reach the limit: wall panels and several
+ * other ranges brought in by the loose category import are one deep product
+ * with many real photographs rather than several shallow ones, and a card
+ * that autoplays needs more than the single frame the first pass alone
+ * would leave it. Never triggers for a range with enough distinct products
+ * to reach the limit on its own, sintered stone's own 20-plus colours among
+ * them, so that range's "one photo per stone" variety is unchanged.
+ */
+export const imagesForGroup = (
+  groups: CategoryGroup[], products: CatalogueProduct[], slug: string, limit = 4,
+): ProductImage[] => {
+  const group = groups.find((g) => g.slug === slug);
+  if (!group) return [];
+  const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+  const matched = products.filter((p) => p.category && inGroup.has(p.category.slug));
+
+  const shots: ProductImage[] = [];
+  const seenByProduct = new Map<string, Set<string>>();
+  for (const p of matched) {
+    const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);
+    if (!shot) continue;
+    shots.push(shot);
+    seenByProduct.set(p.id, new Set([shot.path]));
+    if (shots.length >= limit) return shots;
+  }
+
+  let addedInRound = true;
+  while (shots.length < limit && addedInRound) {
+    addedInRound = false;
+    for (const p of matched) {
+      if (shots.length >= limit) break;
+      const seen = seenByProduct.get(p.id);
+      if (!seen) continue;
+      const next = orderedImages(p).find((img) => !seen.has(img.path));
+      if (!next) continue;
+      seen.add(next.path);
+      shots.push(next);
+      addedInRound = true;
+    }
+  }
+
+  return shots;
+};
+
 export const getProductsByCategory = async (slug: string): Promise<CatalogueProduct[]> => {
   const { data, error } = await anon()
     .from('products')

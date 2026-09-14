@@ -29,6 +29,10 @@ const csp = [
   // because rule 7 asks for a CSP written out rather than inherited.
   "media-src 'self' https://img.beco.co.ke",
   `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} https://www.google-analytics.com`,
+  // The showroom's map embed, and nothing else: stated explicitly rather
+  // than left to fall back to default-src, per rule 7. No API key embed,
+  // so no additional connect-src or script-src entry is needed for it.
+  "frame-src https://www.google.com",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",

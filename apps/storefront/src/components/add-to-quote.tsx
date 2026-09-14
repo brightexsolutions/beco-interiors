@@ -27,39 +27,48 @@ export function AddToQuote({ line }: { line: Omit<QuoteLine, 'quantity'> }) {
   const [count, setCount] = useState(0);
 
   return (
-    <div className="flex flex-wrap items-stretch gap-3">
-      <QuantityStepper
-        value={quantity}
-        onChange={setQuantity}
-        step={step}
-        floor={floor}
-        label={`Quantity${slab ? ', in half slab steps' : ''}`}
-      />
+    <div className="flex flex-col gap-3">
+      {/* The stepper and the button that acts on it stay in the same row,
+          next to each other, regardless of how much else is on the page:
+          previously a flex sibling, the "sold whole" note, could grow wide
+          enough to push the button away from the control it belongs beside,
+          reported directly as the button ending up oddly placed. That note
+          now sits underneath as a caption instead of competing for the row. */}
+      <div className="flex flex-wrap items-stretch gap-3">
+        <QuantityStepper
+          value={quantity}
+          onChange={setQuantity}
+          step={step}
+          floor={floor}
+          label={`Quantity${slab ? ', in half slab steps' : ''}`}
+        />
+
+        <button
+          type="button"
+          onClick={() => {
+            setCount(lineCount(addLine(line, quantity)));
+            setAdded(true);
+          }}
+          className={cn(buttonClasses({ variant: added ? 'outline' : 'primary' }), 'flex-1 sm:flex-none')}
+        >
+          {added ? 'Add again' : 'Add to quote'}
+        </button>
+
+        {added ? (
+          <Link
+            href="/quote"
+            className={cn(buttonClasses({ variant: 'primary' }), 'flex-1 gap-2 sm:flex-none')}
+          >
+            Review quote
+            <span className="font-semibold tabular-nums">({count})</span>
+          </Link>
+        ) : null}
+      </div>
+
       {slab ? (
-        <p className="flex items-center font-ui text-sm text-neutral-500">
+        <p className="font-ui text-sm text-neutral-500">
           Sold whole. Tell us if a project needs a cut slab.
         </p>
-      ) : null}
-
-      <button
-        type="button"
-        onClick={() => {
-          setCount(lineCount(addLine(line, quantity)));
-          setAdded(true);
-        }}
-        className={cn(buttonClasses({ variant: added ? 'outline' : 'primary' }), 'flex-1 sm:flex-none')}
-      >
-        {added ? 'Add again' : 'Add to quote'}
-      </button>
-
-      {added ? (
-        <Link
-          href="/quote"
-          className={cn(buttonClasses({ variant: 'primary' }), 'flex-1 gap-2 sm:flex-none')}
-        >
-          Review quote
-          <span className="font-semibold tabular-nums">({count})</span>
-        </Link>
       ) : null}
 
       {/* Announced rather than only shown, so the confirmation reaches a

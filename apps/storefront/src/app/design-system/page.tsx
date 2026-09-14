@@ -45,7 +45,7 @@ const Stone = () => (
 
 export default function GalleryPage() {
   return (
-    <main className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16">
+    <main className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16">
       <header className="pb-8">
         <div className="flex items-baseline gap-4">
           <span aria-hidden className="h-px w-8 bg-warm-red" />

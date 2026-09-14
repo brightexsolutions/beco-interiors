@@ -43,7 +43,7 @@ export default async function TeamPage() {
   const team = await getPublicTeam();
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-24">
+    <main className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20 lg:py-24">
       <PageHeader
         className="mb-14"
         eyebrow="Who you are dealing with"

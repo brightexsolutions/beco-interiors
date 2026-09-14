@@ -141,7 +141,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-transparent"
         />
 
-        <div className="relative mx-auto w-full max-w-[1380px] px-6 pb-16 sm:px-8 sm:pb-20 lg:px-12 lg:pb-24">
+        <div className="relative mx-auto w-full max-w-[1380px] px-8 pb-16 sm:px-10 sm:pb-20 lg:px-14 lg:pb-24">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
@@ -183,7 +183,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         />
       ) : null}
 
-      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20">
         <div className="flex items-center gap-4">
           <span aria-hidden className="h-px w-8 bg-warm-red" />
           <h2 className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">

@@ -53,7 +53,14 @@ export function QuantityStepper({
 }: QuantityStepperProps) {
   const id = useId();
   const buttonWidth = compact ? 'w-9' : 'w-11';
-  const inputWidth = compact ? 'w-9' : 'w-14';
+  // A real width, not just a floor: with no `size` attribute a native number
+  // input falls back to the browser's own default intrinsic width, close to
+  // 20 characters in most engines, which is what was actually making this
+  // control read as too wide on the product page, reported directly. Fixed
+  // at the same figure the min-width used to be is safe now that the native
+  // spinner is removed below: that spinner, not the digits, was the reason
+  // an earlier fixed width once clipped a count past two digits.
+  const inputWidth = compact ? 'w-[2.25rem]' : 'w-[3.25rem]';
 
   return (
     <div className={cn('flex items-stretch rounded-[2px] border border-neutral-300', className)}>
@@ -70,13 +77,19 @@ export function QuantityStepper({
       <input
         id={id}
         type="number"
+        inputMode="decimal"
         min={floor}
         step={step}
         value={value}
         onChange={(e) => onChange(Math.max(floor, Number(e.target.value) || floor))}
         className={cn(
-          'h-11 border-x border-neutral-300 text-center font-ui text-base tabular-nums text-charcoal',
+          'h-11 border-x border-neutral-300 bg-transparent px-1 text-center font-ui text-base tabular-nums text-charcoal',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red',
+          // Drops the browser's own up/down spinner, which this control
+          // already provides with its own buttons: left in place, it ate
+          // into the same fixed-width box the digits needed, which is what
+          // was actually clipping a count above one or two digits.
+          '[-moz-appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none',
           inputWidth,
         )}
       />

@@ -48,6 +48,23 @@ describe('QuantityStepper', () => {
     expect(screen.getByDisplayValue('1')).toBeInTheDocument();
   });
 
+  it('does not clip a multi digit count behind a fixed width or the browser spinner', () => {
+    // Reported directly, twice: first that a fixed w-9/w-14 box, plus the
+    // browser's own native up/down spinner on the number input, left too
+    // little room for anything past one or two digits; the spinner is
+    // dropped below for that. Second, once the box moved to a bare
+    // min-width instead, that with no width at all the input fell back to
+    // the browser's own native intrinsic size, wide enough to read as "too
+    // much width" on the product page. Sized explicitly now that the
+    // spinner is gone, since the spinner, not a fixed width itself, was
+    // the original problem.
+    render(<QuantityStepper value={124} onChange={() => {}} step={1} floor={1} compact />);
+    const input = screen.getByDisplayValue('124');
+    expect(input.className).not.toMatch(/\bw-9\b/);
+    expect(input.className).toContain('w-[2.25rem]');
+    expect(input.className).toContain('[&::-webkit-inner-spin-button]:appearance-none');
+  });
+
   it('gives multiple instances on one page distinct, non-colliding ids', () => {
     render(
       <>

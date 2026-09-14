@@ -78,7 +78,7 @@ export function SlabRail({
     >
       <div className={divider ? 'py-16 lg:py-20' : 'py-8 lg:py-10'}>
         <div>
-          <div className="mx-auto w-full max-w-[1380px] px-6 sm:px-8 lg:px-12">
+          <div className="mx-auto w-full max-w-[1380px] px-8 sm:px-10 lg:px-14">
             <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-10">
               <div className="beco-clip">
                 <div className="beco-wipe">
@@ -107,7 +107,7 @@ export function SlabRail({
           {/* The progress bar is gone with the pin it measured. What replaced
               it is a plain instruction, because the row now moves on its own
               and the useful thing to say is that you can stop it. */}
-          <div className="mx-auto mt-6 w-full max-w-[1380px] px-6 sm:px-8 lg:px-12">
+          <div className="mx-auto mt-6 w-full max-w-[1380px] px-8 sm:px-10 lg:px-14">
             <p className="hidden font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500 lg:block">
               Hover to hold a stone still, or use the arrows to move through the range
             </p>

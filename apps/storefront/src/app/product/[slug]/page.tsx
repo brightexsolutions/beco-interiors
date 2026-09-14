@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: Params) {
   const context = `${product.name}${product.sku ? ` (${product.sku})` : ''}`;
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-10">
+    <main className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-10">
       <nav aria-label="Breadcrumb" className="mb-8">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
@@ -166,7 +166,7 @@ export default async function ProductPage({ params }: Params) {
             </a>
           </div>
 
-          <dl className="mt-10 border-t border-neutral-200 font-ui text-base">
+          <dl className="mt-10 flex flex-col gap-1 rounded-[2px] bg-neutral-50 px-6 font-ui text-base">
             {product.sku ? <Spec term="SKU" value={product.sku} /> : null}
             {product.category ? <Spec term="Category" value={product.category.name} /> : null}
             {product.face_type ? (
@@ -264,7 +264,7 @@ export default async function ProductPage({ params }: Params) {
 
 function Spec({ term, value }: { term: string; value: string }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-neutral-200 py-3">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3">
       <dt className="shrink-0 text-neutral-500">{term}</dt>
       <dd className="min-w-0 text-right font-semibold text-charcoal">{value}</dd>
     </div>

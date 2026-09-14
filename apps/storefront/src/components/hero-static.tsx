@@ -22,7 +22,7 @@ import { buttonClasses, cn } from '@beco/ui';
 // Matches PinnedHero's own GRID_INSET so the type column lands in the
 // same place whichever hero renders. See its comment for why the lg step
 // adds the section gutter on top of the 1380px centering margin.
-const GRID_INSET = 'pl-6 sm:pl-8 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3rem)]';
+const GRID_INSET = 'pl-8 sm:pl-10 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3.5rem)]';
 
 export function HeroStatic() {
   return (
