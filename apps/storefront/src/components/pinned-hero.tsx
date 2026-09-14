@@ -83,8 +83,13 @@ export interface HeroSlab {
 }
 
 /** Aligns the type column with the 1380px grid, matching every other
-    section on the page, while the photograph itself bleeds edge to edge. */
-const GRID_INSET = 'pl-6 lg:pl-[max(1.5rem,calc((100vw-1380px)/2))]';
+    section on the page, while the photograph itself bleeds edge to edge.
+    The lg step adds the section gutter (3rem, matching lg:px-12 elsewhere)
+    ON TOP OF the centering margin the 1380px cap produces past that width,
+    rather than taking whichever is larger: a max() of the two undershot the
+    real gutter once the viewport passed 1380px, since the centering margin
+    alone does not include the section's own inner padding. */
+const GRID_INSET = 'pl-6 sm:pl-8 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3rem)]';
 
 /** #101820, the real charcoal token, not the prototype's raw near-black.
     Left heavy so the type reads, lighter than the prototype's 0.97 peak,
@@ -282,7 +287,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                 the crossfade: everything here is either a one time
                 entrance or a quiet accent on a single ring, never a
                 second competing choreography. --- */}
-        <div className="pointer-events-none absolute inset-y-0 right-6 hidden items-center lg:flex xl:right-14">
+        <div className="pointer-events-none absolute inset-y-0 right-12 hidden items-center lg:flex">
           <ul className="pointer-events-auto flex flex-col gap-5">
             {slabs.map((slab, i) => {
               const isActive = i === active;
