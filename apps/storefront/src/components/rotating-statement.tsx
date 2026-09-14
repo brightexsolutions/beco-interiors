@@ -2,8 +2,13 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import type { ProductImage } from '@beco/types';
 import { blurProps } from '@/lib/products';
+
+/** Only what this component actually reads off an image: its own source and
+    an optional blur placeholder. Not `ProductImage`: a caller with words that
+    are not catalogue-tagged room types, About's own "hero the location" set
+    among them, has no real product image to hand it, only a path. */
+type StatementImage = { path: string; blur?: string };
 
 /**
  * A full bleed photograph with one enormous outlined word across it, and both
@@ -19,13 +24,15 @@ import { blurProps } from '@/lib/products';
  * "KITCHENS" and "OFFICES" sat over the exact same picture, which reads as
  * unfinished the moment you notice it.
  *
- * **What the images are NOT claimed to be:** a specific photograph of a
- * specific room type. Nothing in the catalogue tags an installation shot as a
- * kitchen, a bathroom or an office, and inventing that label per photo is
- * exactly the kind of unverifiable claim this project has been burned by
- * before. So the photographs cycle in step with the words, which gives the
- * section real variety and keeps it honest: they are real Beco installations,
- * shown as a set, not captioned as the word above them.
+ * Two honest ways to pair a word with a photograph, and a caller picks
+ * whichever is true of its own words. Real Beco installations, cycled as a
+ * set rather than captioned as the word above any one of them, since nothing
+ * in the catalogue tags a shot as a kitchen or an office specifically and
+ * inventing that label per photo is exactly the unverifiable claim this
+ * project has been burned by before. Or, when the words genuinely ARE room
+ * types rather than places Beco has photographed, a real photograph of that
+ * room, on Brown's direct instruction, sourced and licensed for free
+ * commercial use rather than reached for from the catalogue.
  *
  * `images` is optional and, when given, must be the same length as `words`.
  * Without it the section behaves exactly as before, one still photograph.
@@ -37,7 +44,7 @@ import { blurProps } from '@/lib/products';
  */
 export function RotatingStatement({ words, images, intervalMs = 2600 }: {
   words: string[];
-  images?: ProductImage[];
+  images?: StatementImage[];
   intervalMs?: number;
 }) {
   const [index, setIndex] = useState(0);

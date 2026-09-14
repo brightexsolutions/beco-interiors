@@ -40,7 +40,20 @@ const LAYOUT = [
   { span: 'lg:col-span-8', frame: 'aspect-[16/10]', depth: 'beco-depth-1', offset: 'lg:mt-16' },
 ] as const;
 
-export function CompletedInteriors({ products }: { products: CatalogueProduct[] }) {
+export function CompletedInteriors({
+  products,
+  eyebrow = 'Completed interiors',
+  heading = 'Once it is in, it stops being a sample.',
+  body = 'Real projects, photographed on site. A slab tells you the veining. A room tells you '
+    + 'whether it works.',
+}: {
+  products: CatalogueProduct[];
+  /** Overridable so a second call site, About, can carry its own line rather
+      than repeating Home's word for word. */
+  eyebrow?: string;
+  heading?: string;
+  body?: string;
+}) {
   // One room per product, so four different stones are shown rather than four
   // photographs of the same one.
   const shots: Shot[] = [];
@@ -59,17 +72,16 @@ export function CompletedInteriors({ products }: { products: CatalogueProduct[] 
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />
               <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                Completed interiors
+                {eyebrow}
               </p>
             </div>
             <h2 className="mt-4 max-w-[15ch] font-display text-4xl leading-[1.06] tracking-[-0.015em] text-charcoal sm:text-5xl">
-              Once it is in, it stops being a sample.
+              {heading}
             </h2>
           </div>
         </div>
         <p className="max-w-[42ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-          Real projects, photographed on site. A slab tells you the veining. A room tells you
-          whether it works.
+          {body}
         </p>
       </div>
 
