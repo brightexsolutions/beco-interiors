@@ -6,7 +6,7 @@ import { LaunchBanner } from '@/components/launch-banner';
 import { SiteSplash } from '@/components/site-splash';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
-import { MobileActionBar } from '@/components/mobile-action-bar';
+import { WhatsAppFab } from '@/components/whatsapp-fab';
 import { getLiveAnnouncements, buildAnnouncementItems } from '@/lib/announcements';
 import { getLaunchState } from '@/lib/launch';
 import { SITE } from '@/lib/site';
@@ -52,12 +52,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en">
-      {/* pb on mobile clears the sticky action bar, which is fixed and would
-          otherwise cover the last of the footer. data-announcement is read
-          by the home hero's own CSS, nothing else. */}
+      {/* data-announcement is read by the home hero's own CSS, nothing
+          else. No bottom padding reserved here any more: the mobile action
+          bar this used to clear, a full width fixed dock, is retired in
+          favour of WhatsAppFab, which only ever occupies its own bottom
+          right corner and was never going to cover the footer. */}
       <body
         data-announcement={hasBanner ? '' : undefined}
-        className="bg-high-vis-white font-ui text-base text-charcoal antialiased pb-20 md:pb-0"
+        className="bg-high-vis-white font-ui text-base text-charcoal antialiased"
       >
         <a
           href="#main"
@@ -77,7 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SiteHeader />
         <div id="main">{children}</div>
         <SiteFooter />
-        <MobileActionBar />
+        <WhatsAppFab />
         {/* Drives the entrance animations. Renders nothing. */}
         <ScrollMotion />
       </body>
