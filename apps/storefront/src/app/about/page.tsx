@@ -254,14 +254,14 @@ export default async function AboutPage() {
               is. The rule below it is dropped along with the change, no
               longer needed once the quote mark itself is what separates
               this from the body copy underneath. */}
-          <div className="beco-wipe relative mx-auto max-w-[30ch]">
+          <div className="beco-wipe relative mx-auto max-w-[70ch]">
             <span
               aria-hidden
               className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 select-none font-display text-[4.5rem] leading-none text-warm-red/15 sm:text-[5.5rem]"
             >
               &ldquo;
             </span>
-            <blockquote className="relative mx-auto max-w-[26ch] font-display text-3xl italic leading-[1.15] text-charcoal sm:text-4xl lg:max-w-[30ch]">
+            <blockquote className="relative mx-auto max-w-[58ch] font-display text-3xl italic leading-[1.15] text-charcoal sm:text-4xl lg:max-w-[70ch]">
               Creating spaces through thoughtful materials, intelligent solutions and exceptional
               service.
             </blockquote>
