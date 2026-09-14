@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ProductCard, Reveal, CountUp, CutoutReveal, buttonClasses } from '@beco/ui';
 import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
 import { HeroStatic } from '@/components/hero-static';
+import { QuickAddToQuote } from '@/components/quick-add-to-quote';
 import { SlabRail } from '@/components/slab-rail';
 import { SlabToSurface } from '@/components/slab-to-surface';
 import { RoomStack } from '@/components/room-stack';
@@ -177,6 +178,11 @@ export default async function HomePage() {
                   badge={p.badge}
                   frame={lead ? 'wide' : 'portrait'}
                   imageClassName="beco-zoom beco-drift-slow"
+                  action={
+                    <QuickAddToQuote
+                      line={{ slug: p.slug, name: p.name, unit: p.unit, image: img?.path ?? null }}
+                    />
+                  }
                   image={
                     img ? (
                       <Image

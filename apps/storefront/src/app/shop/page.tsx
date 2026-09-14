@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { EmptyState, buttonClasses } from '@beco/ui';
-import { ProductGrid } from '@/components/product-grid';
-import { RangeBrowse } from '@/components/range-browse';
+import { ProductGridPaginated } from '@/components/product-grid-paginated';
+import { SlabRail } from '@/components/slab-rail';
 import { ShopControls, type Facet, type FacetGroup } from '@/components/shop-controls';
 import {
   getPublishedProducts, getCategoryTree, primaryImage, blurProps,
@@ -101,19 +101,30 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
   const filtered = Boolean(q || range || category || finish);
   const hero = all.map(primaryImage).find((img) => img !== undefined);
-  const ranges = groups.reduce((n, g) => n + Math.max(1, g.children.length), 0);
+
+  // One rail, standing for the whole business rather than the range with the
+  // most photography: up to three products per top level group, badged
+  // stock preferred within each, so sintered stone cannot fill the row on
+  // its own and lighting, panels and accessories actually appear in it. A
+  // second rail per range was tried and reported back as repetitive right
+  // after this one, so this is the only curated row before the general grid.
+  const featured = groups
+    .flatMap((group) => {
+      const inGroup = all.filter((p) => p.category && subtreeSlugs(group).has(p.category.slug));
+      const badged = inGroup.filter((p) => p.badge === 'hot' || p.badge === 'new');
+      return (badged.length > 0 ? badged : inGroup).slice(0, 3);
+    })
+    .slice(0, 12);
 
   return (
     <main>
-      {/* --- A slim banner, not an opening scene. This used to be a full
-              screen eyebrow, heading, lede and stat band, which reads well on
-              a page selling the idea of Beco but works against a reader who
-              already knows they want the shop and is here to find items,
-              reported directly. One line of identity, the facts folded into
-              the same row instead of their own block, and no lede: the value
-              proposition belongs to / and /about, not to a page whose whole
-              job is getting out of the way of the grid. --- */}
-      <section className="relative border-b border-neutral-200 bg-charcoal">
+      {/* --- A real photograph, not the slim identity bar this used to be:
+              reported directly as wanting the shop to open with the same
+              presence the rest of the site has, per the reference shared.
+              Shorter than the home hero, which earns full viewport height by
+              being the first thing anyone sees, but tall enough to give the
+              docked search card below something to sit on. --- */}
+      <section className="relative flex min-h-[24rem] items-end overflow-hidden border-b border-neutral-200 bg-charcoal sm:min-h-[28rem] lg:min-h-[32rem]">
         {hero ? (
           <div className="absolute inset-0">
             <Image
@@ -123,55 +134,66 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               priority
               sizes="100vw"
               {...blurProps(hero)}
-              className="object-cover opacity-20"
+              className="object-cover opacity-45"
             />
           </div>
         ) : null}
-
-        {/* Verified against the charcoal blend rather than assumed, per the
-            design rules: even a near white source photo at this opacity
-            over #101820 still leaves white text at 8+:1, well past the 4.5
-            AA floor. The shadow is a second, independent guarantee, a
-            physical dark halo behind the text that holds regardless of
-            what any given photo or browser does with the blend. text-shadow
-            is inherited, so it is set once here rather than on every child. */}
         <div
-          className="relative mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 sm:px-8 lg:px-12 py-8 sm:py-9"
-          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
-        >
-          <div>
-            <div className="flex items-center gap-2">
-              <span aria-hidden className="h-px w-5 bg-warm-red" />
-              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                Everything in stock
-              </p>
-            </div>
-            <h1 className="mt-1.5 font-display text-2xl leading-tight text-high-vis-white sm:text-3xl">
-              Interior finishing materials.
-            </h1>
-          </div>
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-transparent"
+        />
 
-          <dl className="flex flex-wrap gap-x-6 gap-y-1 font-ui text-sm text-neutral-300">
-            <CompactFact term="Products" value={String(all.length)} />
-            <CompactFact term="Ranges" value={String(ranges)} />
-            <CompactFact term="Collection" value="Urban Square" />
-          </dl>
+        <div className="relative mx-auto w-full max-w-[1380px] px-6 pb-16 sm:px-8 sm:pb-20 lg:px-12 lg:pb-24">
+          <div className="flex items-center gap-4">
+            <span aria-hidden className="h-px w-8 bg-warm-red" />
+            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
+              Everything in stock
+            </p>
+          </div>
+          <h1 className="mt-4 max-w-[16ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-high-vis-white sm:text-5xl">
+            Interior finishing materials.
+          </h1>
+          <p className="mt-4 max-w-[46ch] text-base leading-[1.6] text-neutral-300">
+            Sintered stone, lighting, panels and accessories, stocked in Nairobi and priced the
+            day you ask.
+          </p>
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
-        {/* Browsing comes before filtering. A reader who knows what they want
-            uses the bar; everyone else needs to see the shape of the range. */}
-        <RangeBrowse groups={groups} products={all} className="mb-16" />
+      {/* Docked over the hero's own bottom edge, see the component's own
+          note: the search, the filters and the live count are the one
+          thing every visitor here wants first, so they sit on the hero
+          rather than waiting below it. */}
+      <ShopControls
+        groups={facetGroups}
+        finishes={finishFacets}
+        total={all.length}
+        showing={products.length}
+      />
 
-        <ShopControls
-          groups={facetGroups}
-          finishes={finishFacets}
-          total={all.length}
-          showing={products.length}
+      {/* --- One curated row, only while browsing rather than filtering: a
+              featured rail under a search or a facet is noise about things
+              nobody asked for, the same reasoning ComingSoon below already
+              uses. --- */}
+      {!filtered ? (
+        <SlabRail
+          products={featured}
+          eyebrow="Featured"
+          heading="On the floor right now."
+          viewAllHref="/shop"
+          viewAllLabel="View all"
         />
+      ) : null}
 
-        <div className="mt-12">
+      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
+        <div className="flex items-center gap-4">
+          <span aria-hidden className="h-px w-8 bg-warm-red" />
+          <h2 className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+            {filtered ? 'Matching the filter' : 'The whole catalogue'}
+          </h2>
+        </div>
+
+        <div className="mt-8">
           {products.length === 0 ? (
             <EmptyState
               title="Nothing matches that"
@@ -183,7 +205,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               }
             />
           ) : (
-            <ProductGrid products={products} />
+            <ProductGridPaginated products={products} />
           )}
         </div>
 
@@ -198,16 +220,6 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   );
 }
 
-/** One line each, not the display-scale numerals the old stat band counted
-    up: this banner's whole job now is staying out of the way of the grid. */
-function CompactFact({ term, value }: { term: string; value: string }) {
-  return (
-    <div>
-      <dt className="inline text-neutral-400">{term}</dt>{' '}
-      <dd className="inline font-semibold text-high-vis-white">{value}</dd>
-    </div>
-  );
-}
 
 function ComingSoon({ groups }: { groups: CategoryGroup[] }) {
   const empty = groups

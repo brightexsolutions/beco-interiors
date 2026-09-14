@@ -36,17 +36,47 @@ import type { CatalogueProduct } from '@/lib/products';
  * The advance and the arrow controls both live in `RailTrack`, a small client
  * component, so this file, the section chrome and the heading, stays server
  * rendered. See D57 and D59.
+ *
+ * Eyebrow, heading and the view all link are overridable, so the shop page
+ * can run one of these per category, "Sintered stone" leading to its own
+ * range, without a second copy of the chrome drifting from this one. The
+ * aria-label tracks the eyebrow rather than taking its own prop, since the
+ * two always say the same thing and a caller should not have to state it
+ * twice.
+ *
+ * `divider`, true by default, is what Home's single standalone rail wants:
+ * its own border top and bottom and a washed neutral ground, set apart from
+ * the white either side of it. Several of these stacked back to back, the
+ * shop page's one per range, is a different problem: two full `py-20`
+ * sections meeting border to border reported directly as far too much dead
+ * air at the seam. `divider={false}` drops the border and the tint and
+ * halves the vertical padding, so a run of these reads as one continuous
+ * rhythm on white rather than a stack of separately boxed sections.
  */
 
-export function SlabRail({ products }: { products: CatalogueProduct[] }) {
+export function SlabRail({
+  products,
+  eyebrow = 'The full range',
+  heading = 'Everything on the floor.',
+  viewAllHref = '/shop',
+  viewAllLabel = 'Browse the range',
+  divider = true,
+}: {
+  products: CatalogueProduct[];
+  eyebrow?: string;
+  heading?: string;
+  viewAllHref?: string;
+  viewAllLabel?: string;
+  divider?: boolean;
+}) {
   if (products.length === 0) return null;
 
   return (
     <section
-      aria-label="The full range"
-      className="overflow-hidden border-y border-neutral-200 bg-neutral-50"
+      aria-label={eyebrow}
+      className={divider ? 'overflow-hidden border-y border-neutral-200 bg-neutral-50' : 'overflow-hidden'}
     >
-      <div className="py-16 lg:py-20">
+      <div className={divider ? 'py-16 lg:py-20' : 'py-8 lg:py-10'}>
         <div>
           <div className="mx-auto w-full max-w-[1380px] px-6 sm:px-8 lg:px-12">
             <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-10">
@@ -55,19 +85,19 @@ export function SlabRail({ products }: { products: CatalogueProduct[] }) {
                   <div className="flex items-center gap-4">
                     <span aria-hidden className="h-px w-8 bg-warm-red" />
                     <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                      The full range
+                      {eyebrow}
                     </p>
                   </div>
                   <h2 className="mt-4 max-w-[14ch] font-display text-4xl leading-[1.06] tracking-[-0.015em] text-charcoal sm:text-5xl">
-                    Everything on the floor.
+                    {heading}
                   </h2>
                 </div>
               </div>
               <Link
-                href="/shop"
+                href={viewAllHref}
                 className="pb-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep underline-offset-4 hover:underline"
               >
-                Browse the range
+                {viewAllLabel}
               </Link>
             </div>
           </div>

@@ -124,7 +124,16 @@ export function ShopControls({
   const count = pending ? 'Filtering…' : `${showing} of ${total}`;
 
   return (
-    <div className="sticky top-20 z-40 border-b border-t-2 border-b-neutral-200 border-t-charcoal bg-high-vis-white/95 py-3 backdrop-blur">
+    // Docked over the hero's own bottom edge rather than a flush bar under
+    // it, reported directly as wanting real presence for the one control a
+    // shopper reaches for first. The negative margin here pulls it up over
+    // the photograph; sticky top-20 on the card itself, not this outer
+    // layer, is what still pins it below the header once scrolling starts,
+    // the same behaviour as before, now on a floating panel instead of an
+    // edge to edge strip.
+    <div className="relative z-40 -mt-10 sm:-mt-12 lg:-mt-16">
+      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12">
+        <div className="sticky top-20 rounded-[2px] border border-neutral-200 bg-high-vis-white px-5 py-4 shadow-[0_24px_64px_rgba(16,24,32,0.18)] sm:px-6 sm:py-5">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {/* Search shares the top row with the Filters button on a phone,
@@ -307,6 +316,8 @@ export function ShopControls({
             ) : null}
           </div>
         ) : null}
+      </div>
+        </div>
       </div>
     </div>
   );
