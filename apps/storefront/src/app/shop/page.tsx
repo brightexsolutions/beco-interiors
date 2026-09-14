@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { EmptyState, buttonClasses } from '@beco/ui';
 import { ProductGridPaginated } from '@/components/product-grid-paginated';
 import { SlabRail } from '@/components/slab-rail';
+import { CinematicBackground } from '@/components/cinematic-background';
 import { ShopControls, type Facet, type FacetGroup } from '@/components/shop-controls';
 import {
-  getPublishedProducts, getCategoryTree, primaryImage, blurProps,
+  getPublishedProducts, getCategoryTree,
   type CatalogueProduct, type CategoryGroup,
 } from '@/lib/products';
 
@@ -100,7 +100,15 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   }
 
   const filtered = Boolean(q || range || category || finish);
-  const hero = all.map(primaryImage).find((img) => img !== undefined);
+  // Several real rooms crossfading rather than one static photograph,
+  // reported directly as wanting the same cinematic feel as the home hero.
+  // One per product so the same room never repeats, and held to `application`
+  // shots specifically, wide interior context, per the guideline's own
+  // photography direction, rather than a slab close up standing in as a hero.
+  const heroImages = all
+    .map((p) => p.images?.find((i) => i.role === 'application'))
+    .filter((img): img is NonNullable<typeof img> => img !== undefined)
+    .slice(0, 5);
 
   // One rail, standing for the whole business rather than the range with the
   // most photography: up to three products per top level group, badged
@@ -125,19 +133,9 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               being the first thing anyone sees, but tall enough to give the
               docked search card below something to sit on. --- */}
       <section className="relative flex min-h-[24rem] items-end overflow-hidden border-b border-neutral-200 bg-charcoal sm:min-h-[28rem] lg:min-h-[32rem]">
-        {hero ? (
-          <div className="absolute inset-0">
-            <Image
-              src={hero.path}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              {...blurProps(hero)}
-              className="object-cover opacity-45"
-            />
-          </div>
-        ) : null}
+        <div className="absolute inset-0 opacity-45">
+          <CinematicBackground images={heroImages} />
+        </div>
         <div
           aria-hidden
           className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-transparent"
