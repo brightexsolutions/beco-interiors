@@ -58,15 +58,17 @@ export const renderReport = (plan: ImportPlan): string => {
   if (plan.looseFolders.length) {
     L.push('CATEGORIES WITH NO PRODUCT FOLDERS');
     L.push('----------------------------------');
-    L.push('  Photographs are sitting loose in the category. There is nothing to name a');
-    L.push('  product after, and no way to tell which photographs belong together.');
+    L.push('  Photographs are sitting loose in the category, with no per-item folder to say');
+    L.push('  which belong together. A real category imports as ONE umbrella product; see');
+    L.push('  SKIPPED, AND WHY below for which. A file with no category at all does not.');
     L.push('');
     for (const { folder, count } of plan.looseFolders.sort((a, b) => b.count - a.count)) {
       L.push(`  ${String(count).padStart(4)}  ${folder}`);
     }
     L.push('');
     L.push('  Fix: inside each, create one folder per product named exactly as the product');
-    L.push('  should appear on the site, and move its photographs in.');
+    L.push('  should appear on the site, and move its photographs in, to replace the single');
+    L.push('  umbrella listing with one per item.');
     L.push('');
   }
 

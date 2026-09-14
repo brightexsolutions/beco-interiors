@@ -98,6 +98,10 @@ export const buildPlan = (
   const unknownByProduct = new Map<string, boolean>();
   /** Category folders holding files directly, with no product folder. */
   const looseByFolder = new Map<string, number>();
+  /** Loose folders that were real enough to import as one umbrella product,
+      as opposed to a genuinely stray file at the root with no category at
+      all, which stays reported but unimported. */
+  const looseImported = new Set<string>();
   /** Role bearing filenames per product folder, for the mixed folder check. */
   const namedByFolder = new Map<string, { folderName: string; filenames: string[] }>();
 
@@ -127,6 +131,44 @@ export const buildPlan = (
       // Counted per folder and reported ONCE. Repeating this 157 times for a
       // single folder buries the actual problems in noise.
       looseByFolder.set(top, (looseByFolder.get(top) ?? 0) + 1);
+
+      // A file with no category folder at all, sitting loose at the root
+      // of the whole Drive listing, e.g. a stray .docx: there is nothing
+      // here to name a product after, so this stays skip-only.
+      if (segments.length < 2) continue;
+
+      // A file directly inside a real category folder, one level deep, e.g.
+      // "FURNITURE LEGS/IMG_4517.HEIC", is different: the category itself
+      // is real. Imported on Brown's explicit instruction, 14 September, as
+      // ONE product named after the category, the same shape HANDLES's own
+      // subfolders already take when Beco uploads many individual items
+      // with no per-item folder: real photography of real stock is worth
+      // publishing before it is organised, and withholding every one of
+      // these ranges entirely was worse than one umbrella product per
+      // range. Every photo's role is still resolved normally rather than
+      // guessed: a raw camera filename with no role word still resolves to
+      // `unknown` and is still reported, exactly as it would inside a real
+      // product folder.
+      const filename = segments[1]!;
+      const role = resolveRole(filename, top);
+      const productSlug = slugify(top);
+      if (role === 'unknown') unknownByProduct.set(productSlug, true);
+      if (!slabByProduct.has(productSlug)) slabByProduct.set(productSlug, false);
+      looseImported.add(top);
+
+      files.push({
+        driveFileId: 'id' in c.file ? c.file.id : c.file.driveFileId,
+        md5: c.file.md5 ?? null,
+        path: c.file.path,
+        categorySlug: productSlug,
+        categoryPath: top,
+        productPath: top,
+        productSlug,
+        productName: titleise(top),
+        role,
+        outcome: c.outcome,
+        needsDownload: opts.force || c.outcome === 'new' || c.outcome === 'changed',
+      });
       continue;
     }
 
@@ -195,11 +237,15 @@ export const buildPlan = (
     if (NON_PRODUCT_FOLDERS.has(folder.toUpperCase())) continue;
     issues.push({
       path: folder,
-      reason:
-        `${count} file(s) sit directly in "${folder}" with no product folder, so there is ` +
-        'nothing to name a product after and no way to tell which photographs belong ' +
-        'together. Create one folder per product inside it, named exactly as the product ' +
-        'should appear on the site, and move the photographs in.',
+      reason: looseImported.has(folder)
+        ? `${count} file(s) sit directly in "${folder}" with no product folder, so there is ` +
+          `no way to tell which photographs belong to which item. Imported as ONE product, ` +
+          `"${titleise(folder)}", every photograph carrying the category's own name instead ` +
+          'of its own. Create one folder per product inside it, named exactly as the product ' +
+          'should appear on the site, and move the photographs in, to give each item its own listing.'
+        : `${count} file(s) sit directly in "${folder}" with no category folder to belong to, ` +
+          'so there is nothing to import this against at all. Move the photographs into a real ' +
+          'category folder, then into one folder per product inside it.',
     });
   }
 
