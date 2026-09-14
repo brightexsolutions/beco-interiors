@@ -86,6 +86,15 @@ export function clearList(): void {
 export const lineCount = (lines: QuoteLine[]): number =>
   lines.reduce((total, l) => total + l.quantity, 0);
 
+/** A slab is cut to order, so it is bought in halves. A handle is not, and
+    "2.5 handles" means nothing, so the step and the floor a quantity control
+    allows are a property of what is actually being added, read from the same
+    `unit` the product already carries, never a constant. Shared by the
+    product page's control and the card's, so the two cannot quietly drift
+    apart the way they already had before this was pulled out. */
+export const stepFor = (unit: string | null): { step: number; floor: number } =>
+  unit === 'per slab' ? { step: 0.5, floor: 0.5 } : { step: 1, floor: 1 };
+
 /** Subscribes to changes in this tab and in others. Returns an unsubscribe. */
 export function subscribe(fn: () => void): () => void {
   window.addEventListener(CHANGED_EVENT, fn);
