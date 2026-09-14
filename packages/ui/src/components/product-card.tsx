@@ -110,11 +110,9 @@ export function ProductCard({
       </div>
 
       <div className="pt-4">
-        <h3 className={cn('font-display leading-tight text-charcoal',
+        <h3 className={cn('relative z-10 font-display leading-tight text-charcoal',
                           frame === 'wide' ? 'text-2xl' : 'text-xl')}>
-          {/* The stretched link: the whole card navigates, while the action
-              below sits above it and does not. */}
-          <a href={href} className="relative inline-block after:absolute after:inset-0 focus:outline-none focus-visible:underline focus-visible:decoration-warm-red focus-visible:underline-offset-4">
+          <a href={href} className="relative inline-block focus:outline-none focus-visible:underline focus-visible:decoration-warm-red focus-visible:underline-offset-4">
             {name}
             {/* The hover affordance: a hairline draws in, nothing moves. */}
             <span
@@ -123,7 +121,7 @@ export function ProductCard({
             />
           </a>
         </h3>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="relative z-10 mt-2 flex flex-wrap items-center gap-3">
           <PriceDisplay
             priceDisplayMode={priceDisplayMode}
             price={price}
@@ -138,6 +136,22 @@ export function ProductCard({
             navigates. */}
         {action ? <div className="relative z-10 mt-4">{action}</div> : null}
       </div>
+
+      {/* The actual stretched link: an `after:inset-0` on the name anchor
+          above only ever covered that anchor's own inline-block box, title
+          text sized, because `relative` on that same element made it the
+          containing block for its own pseudo-element rather than letting the
+          card's outer `relative` take that role. Reported directly as
+          shoppers trying to tap the photograph and missing. This is a
+          dedicated element sized to the whole card instead, sitting behind
+          the price row and the action slot (both lifted to z-10 above), so
+          the image, the frame and the name all navigate and a click on the
+          action still only adds. Hidden from assistive tech and out of tab
+          order: the name anchor above is the one link a screen reader or a
+          keyboard user needs. */}
+      <a href={href} aria-hidden tabIndex={-1} className="absolute inset-0 z-0">
+        <span className="sr-only">{name}</span>
+      </a>
     </div>
   );
 }

@@ -96,11 +96,16 @@ export default async function BlogIndexPage({ searchParams }: { searchParams: Pr
 
 function BlogCard({ post }: { post: BlogPostSummary }) {
   return (
-    <article className="group">
-      <Link
-        href={`/blog/${post.slug}`}
-        className="relative block aspect-[4/3] overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15"
-      >
+    // The cover photograph used to carry its own separate Link, and the
+    // title's `after:inset-0` was dead weight copied from ProductCard's own
+    // stretched link, which had the identical bug there: `relative` on an
+    // inline-block anchor makes it the containing block for its own
+    // pseudo-element, so it never stretched past the title text. Two working
+    // links looked like enough until the gap between them, the excerpt, the
+    // reading time, was checked directly and turned out to be dead space.
+    // One real overlay now covers the whole card; see ProductCard's own note.
+    <article className="group relative">
+      <div className="relative block aspect-[4/3] overflow-hidden bg-neutral-100 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
         {post.cover_image ? (
           <Image
             src={post.cover_image.path}
@@ -110,9 +115,9 @@ function BlogCard({ post }: { post: BlogPostSummary }) {
             className="object-cover transition-transform duration-[600ms] ease-brand group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : null}
-      </Link>
+      </div>
 
-      <div className="pt-4">
+      <div className="relative z-10 pt-4">
         {post.category ? (
           <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
             {post.category}
@@ -121,7 +126,7 @@ function BlogCard({ post }: { post: BlogPostSummary }) {
         <h2 className="mt-2 font-display text-2xl leading-tight text-charcoal">
           <Link
             href={`/blog/${post.slug}`}
-            className="relative inline-block after:absolute after:inset-0 focus:outline-none focus-visible:underline focus-visible:decoration-warm-red focus-visible:underline-offset-4"
+            className="relative inline-block focus:outline-none focus-visible:underline focus-visible:decoration-warm-red focus-visible:underline-offset-4"
           >
             {post.title}
           </Link>
@@ -135,6 +140,15 @@ function BlogCard({ post }: { post: BlogPostSummary }) {
           </p>
         ) : null}
       </div>
+
+      <Link
+        href={`/blog/${post.slug}`}
+        aria-hidden
+        tabIndex={-1}
+        className="absolute inset-0 z-0"
+      >
+        <span className="sr-only">{post.title}</span>
+      </Link>
     </article>
   );
 }
