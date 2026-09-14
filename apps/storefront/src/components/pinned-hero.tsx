@@ -74,6 +74,15 @@ export interface HeroSlab {
   height: number;
   blur?: string | undefined;
   /**
+   * The chip rail's own image, a slab or material shot, deliberately NOT
+   * `src`. The big background already sells the finished room; a chip
+   * showing that same room again was reported directly as redundant with
+   * what is sitting right behind it. Falls back to `src` only for a stone
+   * with no slab photography at all, so a chip is never blank.
+   */
+  thumbSrc: string;
+  thumbBlur?: string | undefined;
+  /**
    * The stone's own first sentence, from Beco's descriptions document, not
    * written for this hero. Null for a slab with no description yet, Cyprus
    * Grey and a few others: the fallback sentence covers those rather than
@@ -275,24 +284,34 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
         </div>
 
         {/* --- The rest of the range, on the right where the gradient
-                lightens, reported directly as too basic and needing real
-                design and motion. Real links to each product, not a
-                second orbit. Frame first (beco-pop-in), photograph
-                wiping up into it a beat later (beco-chip-wipe), the same
-                two stage assembly the gallery already uses reused at
-                chip scale rather than invented fresh. Only TRANSFORM and
-                OPACITY change on the active state, scale rather than a
-                width change, so a stone becoming active never reflows
-                its neighbours in the column. Still one section effect,
-                the crossfade: everything here is either a one time
-                entrance or a quiet accent on a single ring, never a
-                second competing choreography. --- */}
+                lightens. A straight column of rectangular photos read as
+                basic even with the motion below already on it, reported
+                directly a second time, so the shape changed rather than
+                the animation: round material samples, the way an actual
+                stone chip is handed across a counter, lifted off the photo
+                with a real shadow rather than a hairline ring, and loosely
+                staggered side to side instead of stacked in a rigid line.
+                Each carries its own slab shot, distinct from the big
+                background beside it, see HeroSlab's own note on `thumbSrc`.
+                Real links to each product, not a second orbit. Frame first
+                (beco-pop-in), photograph wiping up into it a beat later
+                (beco-chip-wipe), the same two stage assembly the gallery
+                already uses. Only TRANSFORM and OPACITY change on the
+                active state, so a stone becoming active never reflows its
+                neighbours in the column. --- */}
         <div className="pointer-events-none absolute inset-y-0 right-12 hidden items-center lg:flex">
-          <ul className="pointer-events-auto flex flex-col gap-5">
+          <ul className="pointer-events-auto flex flex-col gap-6">
             {slabs.map((slab, i) => {
               const isActive = i === active;
               return (
-                <li key={slab.slug} className="relative">
+                <li
+                  key={slab.slug}
+                  className="relative"
+                  // A loose scatter instead of a rigid column: alternating
+                  // a few pixels left and right so the set reads as samples
+                  // set down beside each other rather than filed in a line.
+                  style={{ marginInlineStart: `${(i % 2) * 14}px` }}
+                >
                   {isActive ? (
                     <span
                       key={`${slab.slug}-label`}
@@ -306,20 +325,21 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                   <Link
                     href={`/product/${slab.slug}`}
                     className={cn(
-                      'beco-pop-in group relative block aspect-[4/5] w-16 overflow-hidden bg-neutral-800 transition-transform duration-500 ease-brand sm:w-20',
+                      'beco-pop-in group relative block aspect-square w-14 overflow-hidden rounded-full bg-neutral-800',
+                      'shadow-[0_10px_28px_rgba(0,0,0,0.45)] transition-transform duration-500 ease-brand sm:w-16',
                       isActive
                         ? 'scale-110'
-                        : 'opacity-70 ring-1 ring-inset ring-white/25 hover:scale-105 hover:opacity-100',
+                        : 'opacity-80 ring-1 ring-inset ring-white/30 hover:scale-105 hover:opacity-100',
                     )}
                     style={{ animationDelay: `${1000 + i * 130}ms` }}
                   >
-                    <span className="beco-clip absolute inset-0">
+                    <span className="beco-clip absolute inset-0 rounded-full">
                       <Image
-                        src={slab.src}
+                        src={slab.thumbSrc}
                         alt=""
                         fill
-                        sizes="96px"
-                        {...blurProps(slab)}
+                        sizes="64px"
+                        {...blurProps({ blur: slab.thumbBlur })}
                         className="beco-chip-wipe object-cover"
                         style={{ animationDelay: `${1150 + i * 130}ms` }}
                       />
@@ -327,7 +347,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                     {isActive ? (
                       <span
                         aria-hidden
-                        className="beco-chip-active-ring pointer-events-none absolute inset-0 ring-2 ring-inset ring-high-vis-white"
+                        className="beco-chip-active-ring pointer-events-none absolute inset-0 rounded-full ring-2 ring-inset ring-high-vis-white"
                       />
                     ) : null}
                     <span className="sr-only">

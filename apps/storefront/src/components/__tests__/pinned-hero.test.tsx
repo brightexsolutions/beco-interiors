@@ -10,7 +10,7 @@ import { PinnedHero, type HeroSlab } from '../pinned-hero';
  * device per D23, not by an automated test.
  */
 const slab = (over: Partial<HeroSlab> & Pick<HeroSlab, 'slug' | 'name'>): HeroSlab => ({
-  category: 'Sintered stone', src: '/img/a.webp', alt: over.name,
+  category: 'Sintered stone', src: '/img/a.webp', thumbSrc: '/img/a-slab.webp', alt: over.name,
   width: 1600, height: 1200, ...over,
 });
 

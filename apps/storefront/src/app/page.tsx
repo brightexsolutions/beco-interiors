@@ -68,10 +68,17 @@ export default async function HomePage() {
       const img =
         p.images.find((i) => i.role === 'application') ??
         p.images.find((i) => i.role === 'slab')!;
+      // The chip rail's own image: a slab shot, distinct from the big
+      // background it sits beside. Showing the same application photo in
+      // both places was reported directly as redundant, the background
+      // already being the finished room. Falls back to `img` only for a
+      // stone with no slab photography at all.
+      const thumb = p.images.find((i) => i.role === 'slab') ?? img;
       return {
         name: p.name, slug: p.slug, src: img.path, alt: img.alt,
         category: p.category?.name ?? 'Sintered stone',
         width: img.width, height: img.height, blur: img.blur,
+        thumbSrc: thumb.path, thumbBlur: thumb.blur,
         // Beco's own first sentence for this stone, so the hero's lede can
         // change with the slab instead of one generic sentence for all four.
         blurb: p.short_description ?? null,
