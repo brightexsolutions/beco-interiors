@@ -141,7 +141,7 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
       {/* Clipped and fixed height, so the roll never spills or moves the page.
           The reduced-motion reset in tokens.css collapses both animations, and
           the rotation itself does not arm under reduced motion anyway. */}
-      <div className="relative mx-auto flex min-h-[2.75rem] max-w-[1380px] items-center justify-center overflow-hidden px-6 py-2.5 sm:py-3">
+      <div className="relative mx-auto flex min-h-[2.75rem] max-w-[1380px] items-center justify-center overflow-hidden px-6 sm:px-8 lg:px-12 py-2.5 sm:py-3">
         <Line key={i} item={item} className="beco-bar-in relative" />
         {leaving !== null && leaving !== i ? (
           <Line

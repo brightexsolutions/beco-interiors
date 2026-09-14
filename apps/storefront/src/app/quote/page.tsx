@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function QuotePage() {
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
+    <main className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-24">
       <PageHeader
         className="mb-14"
         eyebrow="Your list"

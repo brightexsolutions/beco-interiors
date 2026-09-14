@@ -136,7 +136,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             what any given photo or browser does with the blend. text-shadow
             is inherited, so it is set once here rather than on every child. */}
         <div
-          className="relative mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-8 sm:py-9"
+          className="relative mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 sm:px-8 lg:px-12 py-8 sm:py-9"
           style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
         >
           <div>
@@ -159,7 +159,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
         {/* Browsing comes before filtering. A reader who knows what they want
             uses the bar; everyone else needs to see the shape of the range. */}
         <RangeBrowse groups={groups} products={all} className="mb-16" />

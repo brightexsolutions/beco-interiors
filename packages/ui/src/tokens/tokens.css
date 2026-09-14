@@ -84,11 +84,18 @@
      screen. This also repairs a real inversion: `--text-5xl` and above
      were never defined, so Tailwind's own 3rem default meant
      `text-4xl sm:text-5xl` shrank the heading at the sm breakpoint
-     instead of growing it. Now the scale is monotonic at every width. */
-  --text-4xl: clamp(2.5rem, 1.9rem + 3vw, 3.5rem);      /* 40 -> 56 */
-  --text-5xl: clamp(2.75rem, 1.85rem + 4.25vw, 4.5rem); /* 44 -> 72 */
-  --text-6xl: clamp(3.25rem, 2rem + 6.25vw, 5.75rem);   /* 52 -> 92 */
-  --text-7xl: clamp(3.75rem, 2.2rem + 7.75vw, 7rem);    /* 60 -> 112 */
+     instead of growing it. Now the scale is monotonic at every width.
+
+     Ceilings brought down slightly on 14 September, on direct review of the
+     desktop hero: the ramp reaches its ceiling by roughly 900-1000px wide,
+     so anything above that, every laptop and desktop screen, was always
+     showing the flat maximum rather than something that kept scaling with
+     the viewport. Floors and the ramp's shape are untouched, so mobile is
+     unaffected; only the wide-screen maximum moved down. */
+  --text-4xl: clamp(2.5rem, 1.9rem + 2.3vw, 3.125rem);   /* 40 -> 50 */
+  --text-5xl: clamp(2.75rem, 1.85rem + 3.45vw, 4rem);    /* 44 -> 64 */
+  --text-6xl: clamp(3.25rem, 2rem + 5vw, 5rem);          /* 52 -> 80 */
+  --text-7xl: clamp(3.75rem, 2.2rem + 6.15vw, 6rem);     /* 60 -> 96 */
 
   /* --- Spacing.
      `--spacing` is Tailwind's STEP UNIT, not the grid. It is the value every

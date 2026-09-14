@@ -75,7 +75,7 @@ export default async function CategoryPage({ params }: Params) {
           would apply both twice. When nothing sits between them the two
           halves are plain stacked siblings and the page reads exactly as it
           did as one wrapper, per normal margin collapse. */}
-      <div className="mx-auto max-w-[1380px] px-6 pt-16 sm:pt-20 lg:pt-24">
+      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pt-16 sm:pt-20 lg:pt-24">
       <nav aria-label="Breadcrumb" className="mb-10">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
@@ -205,7 +205,7 @@ export default async function CategoryPage({ params }: Params) {
         />
       ) : null}
 
-      <div className="mx-auto max-w-[1380px] px-6 pb-16 sm:pb-20 lg:pb-24">
+      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-16 sm:pb-20 lg:pb-24">
       <div className="mt-16">
         {products.length === 0 ? (
           <EmptyState

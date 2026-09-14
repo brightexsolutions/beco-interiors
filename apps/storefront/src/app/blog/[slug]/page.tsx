@@ -90,7 +90,7 @@ export default async function BlogPostPage({ params }: Params) {
   const promoImage = products.map(primaryImage).find((img) => img !== undefined);
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-10">
+    <main className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-10">
       <nav aria-label="Breadcrumb" className="mb-8">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>

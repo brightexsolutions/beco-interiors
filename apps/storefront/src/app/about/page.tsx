@@ -168,7 +168,7 @@ export default async function AboutPage() {
           />
         </div>
 
-        <div className="beco-clip beco-hero-content-top relative mx-auto w-full max-w-[1380px] px-6 pb-12 sm:pb-16">
+        <div className="beco-clip beco-hero-content-top relative mx-auto w-full max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-12 sm:pb-16">
           <div className="beco-wipe flex items-center gap-4">
             <span aria-hidden className="h-px w-10 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.22em] text-neutral-300">
@@ -200,7 +200,7 @@ export default async function AboutPage() {
 
       {/* --- The statement of intent, on white, straight after the photograph.
               Beco's own positioning line, given room to be read. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
+      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-24">
         <Reveal className="beco-clip">
           <p className="beco-wipe max-w-[24ch] font-display text-3xl leading-[1.15] text-charcoal sm:text-4xl">
             Creating spaces through thoughtful materials, intelligent solutions and exceptional
@@ -228,7 +228,7 @@ export default async function AboutPage() {
 
       {/* --- What we sell. The guideline's own four pillars, as a numbered
               editorial list rather than four cards with icons in circles. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 pb-16 sm:pb-22 lg:pb-30">
+      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-16 sm:pb-22 lg:pb-30">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -318,7 +318,7 @@ export default async function AboutPage() {
               </h2>
             </div>
           </div>
-          <p className="mx-auto max-w-[1380px] px-6 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
+          <p className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
             Supplied, cut and installed across the city
           </p>
         </section>
@@ -326,7 +326,7 @@ export default async function AboutPage() {
 
       {/* --- The showroom, against real installations. --- */}
       <section className="border-y border-neutral-200 bg-neutral-50">
-        <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-6 py-16 sm:py-22 lg:grid-cols-[1fr_24rem] lg:gap-20 lg:py-30">
+        <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-6 sm:px-8 lg:px-12 py-16 sm:py-22 lg:grid-cols-[1fr_24rem] lg:gap-20 lg:py-30">
           <div>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

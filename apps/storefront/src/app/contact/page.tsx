@@ -62,7 +62,7 @@ export default async function ContactPage() {
           </div>
         ) : null}
 
-        <div className="beco-hero-content-top relative mx-auto max-w-[1380px] px-6 pb-20 sm:pb-24 lg:pb-28">
+        <div className="beco-hero-content-top relative mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-20 sm:pb-24 lg:pb-28">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
@@ -81,7 +81,7 @@ export default async function ContactPage() {
 
       {/* --- The three ways in, as equals in shape and ranked in weight, per
               D26: quote first, WhatsApp second, the business line third. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20">
+      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
         <div className="grid gap-px overflow-hidden border border-neutral-200 bg-neutral-200 sm:grid-cols-3">
           <Channel
             eyebrow="Best for a project"
@@ -125,7 +125,7 @@ export default async function ContactPage() {
 
       {/* --- The showroom itself: address, hours, and Beco's own footage. --- */}
       <section className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto grid max-w-[1380px] gap-14 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_26rem] lg:gap-20 lg:py-24">
+        <div className="mx-auto grid max-w-[1380px] gap-14 px-6 sm:px-8 lg:px-12 py-16 sm:py-20 lg:grid-cols-[1fr_26rem] lg:gap-20 lg:py-24">
           <Reveal>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

@@ -52,7 +52,7 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
       className="beco-stage relative h-[200vh] lg:h-[240vh]"
     >
       <div className="sticky top-20 h-[calc(100dvh-5rem)] overflow-hidden bg-charcoal">
-        <div className="mx-auto flex h-full w-full max-w-[1380px] flex-col justify-center gap-6 px-6 py-8 lg:grid lg:grid-cols-[1.75fr_1fr] lg:items-center lg:gap-16 lg:py-0">
+        <div className="mx-auto flex h-full w-full max-w-[1380px] flex-col justify-center gap-6 px-6 sm:px-8 lg:px-12 py-8 lg:grid lg:grid-cols-[1.75fr_1fr] lg:items-center lg:gap-16 lg:py-0">
 
           {/* --- The parting frame. Grows to fill the leftover height on a
                   phone; a fixed tall panel on desktop. Nothing reflows either

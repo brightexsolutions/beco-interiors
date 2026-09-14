@@ -52,7 +52,7 @@ export function CompletedInteriors({ products }: { products: CatalogueProduct[] 
   if (shots.length < 2) return null;
 
   return (
-    <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
+    <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-22 lg:py-30">
       <div className="flex flex-wrap items-end justify-between gap-x-16 gap-y-6">
         <div className="beco-clip">
           <div className="beco-wipe">

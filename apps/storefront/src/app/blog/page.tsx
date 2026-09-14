@@ -37,7 +37,7 @@ export default async function BlogIndexPage({ searchParams }: { searchParams: Pr
   const stoneSlides = stoneSlidesFrom(products);
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20">
+    <main className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
       {/* Grid rather than PageHeader's own aside slot, the same fix and the
           same reason as the About page: a short one-line aside bottom-aligns
           against the heading correctly, a 360px image does not. Reported

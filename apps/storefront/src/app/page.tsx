@@ -114,7 +114,7 @@ export default async function HomePage() {
               figure, on a hairline, so it reads as a specification rather
               than as three numbers floating in a lot of air. --- */}
       <section className="border-b border-neutral-200">
-        <div className="mx-auto max-w-[1380px] px-6">
+        <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12">
           <dl className="grid divide-y divide-neutral-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <Stat value={stones.length} label="Stone colours on the floor" suffix="" />
             <Stat value={12} label="Slab thickness" suffix="mm" />
@@ -131,7 +131,7 @@ export default async function HomePage() {
       {/* --- The range. One large tile against smaller ones, per the design
               direction, which rules out the even four across grid that treats
               the page as a container to fill. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
+      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
           <div className="flex items-center gap-4">
@@ -201,7 +201,7 @@ export default async function HomePage() {
 
       {/* --- Process. A numbered editorial list on hairline rules, which is
               what goes where three icon-in-a-circle cards would have. --- */}
-      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-22 lg:py-30">
+      <section className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
             {/* No eyebrow here on purpose: the numbered list below names the
@@ -249,7 +249,7 @@ export default async function HomePage() {
               the picture. It also removes the card that used to hang below a
               wide image with empty space beside it. --- */}
       <section aria-label="The showroom" className="bg-charcoal text-high-vis-white">
-        <div className="mx-auto grid max-w-[1380px] items-center gap-12 px-6 py-16 sm:py-22 lg:grid-cols-[1fr_28rem] lg:gap-20 lg:py-30">
+        <div className="mx-auto grid max-w-[1380px] items-center gap-12 px-6 sm:px-8 lg:px-12 py-16 sm:py-22 lg:grid-cols-[1fr_28rem] lg:gap-20 lg:py-30">
           <div>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

@@ -102,7 +102,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
           so the full py-16..24 rhythm every other section opens on stacked
           a second helping of empty space on top of that and read as a gap
           rather than a considered break between sections. */}
-      <div className="mx-auto max-w-[1380px] px-6 pb-16 pt-10 sm:pb-20 sm:pt-12 lg:pb-24 lg:pt-14">
+      <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 pb-16 pt-10 sm:pb-20 sm:pt-12 lg:pb-24 lg:pt-14">
         <PageHeader
           className="mb-16"
           eyebrow="Project gallery"

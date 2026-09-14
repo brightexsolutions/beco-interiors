@@ -19,7 +19,7 @@ export default async function CataloguePage() {
   const products = await getPublishedProducts();
 
   return (
-    <main className="mx-auto max-w-[1380px] px-6 py-16">
+    <main className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-12 py-16">
       <header className="mb-12">
         <div className="flex items-baseline gap-4">
           <span aria-hidden className="h-px w-8 bg-warm-red" />
