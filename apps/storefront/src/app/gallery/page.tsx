@@ -85,6 +85,27 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
   const facets = projectTypeFacets(allShots);
   const shots = type ? allShots.filter((shot) => shot.projectType === type) : allShots;
 
+  // One tile per real installation, not one per photograph of it. Every
+  // application shot of a product produced its own entry here, each
+  // carrying the SAME set of siblings starting from a different frame, so a
+  // product with ten real photographs, Delfone once had exactly that,
+  // produced ten near-duplicate tiles of the same room rather than ten
+  // distinct projects. Reported directly as reading like "images rendered"
+  // rather than a set of finished work. Kept at whichever photo the
+  // interleave placed first for a product, then sorted so the most fully
+  // documented installations, several real angles rather than one lucky
+  // shot, lead the grid: the strongest proof of craft this data actually has
+  // without inventing a residential or commercial split nothing has
+  // classified yet.
+  const seenProduct = new Set<string>();
+  const projects = shots
+    .filter((shot) => {
+      if (seenProduct.has(shot.productSlug)) return false;
+      seenProduct.add(shot.productSlug);
+      return true;
+    })
+    .sort((a, b) => b.siblings.length - a.siblings.length);
+
   return (
     <main>
       {/* No eyebrow: the original, "Filmed in the showroom", was true when
@@ -109,7 +130,9 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
           title="Finished, and in use."
           aside={
             allShots.length > 0 ? (
-              <p className="font-ui text-sm text-neutral-500">{shots.length} photographs</p>
+              <p className="font-ui text-sm text-neutral-500">
+                {projects.length} real {projects.length === 1 ? 'installation' : 'installations'}
+              </p>
             ) : undefined
           }
           lede="Real interiors in Nairobi, photographed on site. A slab tells you the veining. A room tells you whether it works."
@@ -157,8 +180,8 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
           </p>
         ) : (
           <div className="grid gap-x-8 gap-y-12 lg:grid-cols-12 lg:gap-x-10">
-            {shots.map((shot, i) => (
-              <div key={`${shot.productSlug}-${shot.path}`} className={SPAN[i % SPAN.length]}>
+            {projects.map((shot, i) => (
+              <div key={shot.productSlug} className={SPAN[i % SPAN.length]}>
                 <Link href={`/product/${shot.productSlug}`} className="group block">
                   {/* The frame is drawn first and never moves, so nothing here
                     can shift layout. beco-clip is what the wipe rises from
