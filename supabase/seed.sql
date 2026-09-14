@@ -65,3 +65,44 @@ values (
   now() + interval '180 days',
   10
 ) on conflict do nothing;
+
+-- PLACEHOLDER client credentials, requested by Brown 14 September so the
+-- ClientShowcase section, and its testimonial quote from migration 26,
+-- render as something rather than nothing while real ones are pending.
+--
+-- Named like real businesses rather than "Sample X", on request, so the
+-- section reads naturally rather than announcing itself as a placeholder.
+-- That makes the comment here the only thing keeping these honest: neither
+-- name is a real company, Beco has not supplied real project names,
+-- sectors or quotes yet, and has not recorded permission for any real
+-- client per migration 10's own consent gate. Replace every row, not just
+-- the names, the moment Beco sends real credentials and signs off on
+-- naming them, and never let this seed run anywhere but local and staging.
+insert into clients (name, slug, project, sector, testimonial, has_permission, is_published, sort_order)
+values
+  (
+    'Amberline Hospitality', 'amberline-hospitality',
+    'Sintered stone counters and wall panels across three outlets.',
+    'Hospitality',
+    'Beco fitted our counters on schedule, and the material has held up to daily service without a mark on it.',
+    true, true, 10
+  ),
+  (
+    'Greenridge Developments', 'greenridge-developments',
+    'Kitchen and vanity worktops for a 40 unit residential development.',
+    'Residential development',
+    'The sales team understood what we needed for a project this size and priced it fast enough to keep our own schedule.',
+    true, true, 20
+  ),
+  -- A third, an individual homeowner rather than a company, requested
+  -- 14 September so the section shows the residential side of the client
+  -- base too, not only corporate work.
+  (
+    'David Mwangi', 'david-mwangi',
+    'Kitchen and bathroom worktops for a family home in Kileleshwa.',
+    'Homeowner',
+    'I visited the showroom undecided and left with a slab I actually love. The team was patient through three changes of mind.',
+    true, true, 30
+  )
+on conflict (slug) do update
+  set project = excluded.project, sector = excluded.sector, testimonial = excluded.testimonial;

@@ -1,6 +1,6 @@
 -- The two rules Beco actually asked for, proven rather than assumed.
 begin;
-select plan(9);
+select plan(10);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
                         email_confirmed_at, created_at, updated_at)
@@ -45,6 +45,12 @@ select lives_ok(
   'a client with permission can be published'
 );
 
+-- The testimonial column added in migration 26 rides the same row, so it
+-- needs no policy of its own: proven here by reading it back through the
+-- same gate as every other column on a published, permitted client.
+update clients set testimonial = 'Beco fitted our counters on schedule.'
+  where slug = 'consented-corp';
+
 insert into clients (name, slug, is_published, has_permission)
   values ('Quiet Corp', 'quiet-corp', false, true);
 insert into clients (name, slug, is_published, has_permission)
@@ -63,9 +69,20 @@ select is_empty(
   'anon cannot see the director at all'
 );
 
+-- Not an exact count: seed.sql carries its own published, permitted
+-- clients for the live ClientShowcase, and this test's own fixture
+-- coexists with them inside the same transaction. Targeted at the one
+-- row this test actually controls instead, so it stays true regardless
+-- of how many real clients seed.sql adds.
 select results_eq(
-  $$select count(*)::int from clients$$, ARRAY[1],
-  'anon sees only the published, permitted client'
+  $$select count(*)::int from clients where slug = 'consented-corp'$$, ARRAY[1],
+  'anon sees the published, permitted client'
+);
+
+select results_eq(
+  $$select testimonial from clients where slug = 'consented-corp'$$,
+  ARRAY['Beco fitted our counters on schedule.'],
+  'anon reads the testimonial through the same gate as the rest of the row'
 );
 
 select is_empty(

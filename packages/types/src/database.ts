@@ -284,6 +284,48 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          created_at: string
+          has_permission: boolean
+          id: string
+          is_published: boolean
+          logo: Json | null
+          name: string
+          project: string | null
+          sector: string | null
+          slug: string
+          sort_order: number
+          testimonial: string | null
+        }
+        Insert: {
+          created_at?: string
+          has_permission?: boolean
+          id?: string
+          is_published?: boolean
+          logo?: Json | null
+          name: string
+          project?: string | null
+          sector?: string | null
+          slug: string
+          sort_order?: number
+          testimonial?: string | null
+        }
+        Update: {
+          created_at?: string
+          has_permission?: boolean
+          id?: string
+          is_published?: boolean
+          logo?: Json | null
+          name?: string
+          project?: string | null
+          sector?: string | null
+          slug?: string
+          sort_order?: number
+          testimonial?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
