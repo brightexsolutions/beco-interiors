@@ -65,14 +65,25 @@ jobs:
       - run: pnpm test:dashboard
 
       # Everything that needs Postgres, against a LOCAL ephemeral database.
-      # Nothing in CI ever connects to staging or production.
+      # Nothing in CI ever connects to staging or production. Left running
+      # past the integration tests now: the build below does real,
+      # server side data fetching at build time for every statically
+      # generated product and category page, and stopping Supabase before
+      # that build step, which this job used to do right here, made every
+      # one of those pages fail with "supabaseUrl is required" since there
+      # was nothing listening at that URL by the time the build asked for
+      # it. Stopped at the very end instead, once nothing else needs it.
       - uses: supabase/setup-cli@v1
-      - name: Database-backed tests, local only
+      - name: Start Supabase and export its local URL and anon key
         run: |
           supabase start
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(supabase status -o json | jq -r '.API_URL')" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(supabase status -o json | jq -r '.ANON_KEY')" >> "$GITHUB_ENV"
+
+      - name: Database-backed tests, local only
+        run: |
           supabase test db
           pnpm test:integration
-          supabase stop
 
       - run: pnpm build
 
@@ -88,6 +99,9 @@ jobs:
           echo "$csp" | grep -q "unsafe-eval" && { echo "unsafe-eval in production CSP"; exit 1; }
           echo "$csp" | grep -q "upgrade-insecure-requests" || { echo "missing upgrade-insecure-requests"; exit 1; }
           echo "production CSP correct"
+
+      - if: always()
+        run: supabase stop
 
   # Separate job: a production build measured with the motion live, per
   # CLAUDE.md's performance budgets. The catalogue is seeded but has no
@@ -106,7 +120,10 @@ jobs:
 
       - uses: supabase/setup-cli@v1
       - name: Seed a local catalogue for the run
-        run: supabase start
+        run: |
+          supabase start
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(supabase status -o json | jq -r '.API_URL')" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(supabase status -o json | jq -r '.ANON_KEY')" >> "$GITHUB_ENV"
 
       - run: pnpm build
       - name: Lighthouse CI
