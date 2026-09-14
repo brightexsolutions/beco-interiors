@@ -33,6 +33,17 @@ export type { AnnouncementBarItem };
  *
  * Sits BELOW the header in z-order (`z-30`). The header is `z-50` and its own
  * stacking context, so the mobile menu panel inside it stays above this.
+ *
+ * Dismissible, on request, and the dismissal is `sessionStorage`, not
+ * `localStorage`: it should return in a fresh tab, only staying closed for
+ * the tab a reader actually closed it in. Read in a `useEffect`, after the
+ * server's own markup has already painted with the bar showing, rather than
+ * gated on first render: a state initializer reading `sessionStorage` would
+ * make the CLIENT's first render disagree with what the SERVER sent, which
+ * is a hydration mismatch, not a clean hide. The brief flash this trades for
+ * on a reload of an already-dismissed tab is the standard, accepted cost of
+ * that fix, and only ever happens on a reload of a tab that already asked
+ * to not see this.
  */
 
 const TONE = {
@@ -41,6 +52,7 @@ const TONE = {
 } as const;
 
 const ROTATE_MS = 5500;
+const DISMISS_KEY = 'beco-announcement-dismissed';
 
 /** One announcement line: label, then its body, then its call to action. */
 function Line({
@@ -86,6 +98,18 @@ function Line({
   );
 }
 
+/** Removed from `<body>` on dismissal too: it is what the hero's own fixed
+    top padding keys off, see `.beco-hero-content-top` in tokens.css, and
+    leaving it set after the bar is actually gone would reserve space for a
+    strip that no longer renders. */
+const clearAnnouncementSpacing = () => {
+  try {
+    document.body.removeAttribute('data-announcement');
+  } catch {
+    // Best effort. A stray gap above the hero is not worth failing over.
+  }
+};
+
 export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
   const clean = useMemo(() => items.filter((i) => i.label?.trim()), [items]);
   const [index, setIndex] = useState(0);
@@ -94,6 +118,34 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
   // and the new one arriving from below rather than a straight cut.
   const [leaving, setLeaving] = useState<number | null>(null);
   const paused = useRef(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  // Starts false, matching what the server sent, then checks sessionStorage
+  // once mounted: reading it in a state initializer instead would make the
+  // client's first render disagree with the server's, a hydration mismatch
+  // rather than a clean hide. See the component doc comment above.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(DISMISS_KEY) === 'true') {
+        setDismissed(true);
+        clearAnnouncementSpacing();
+      }
+    } catch {
+      // Private browsing or a blocked store: the bar just stays visible,
+      // which is the safe direction to fail in.
+    }
+  }, []);
+
+  const dismiss = () => {
+    setDismissed(true);
+    clearAnnouncementSpacing();
+    try {
+      sessionStorage.setItem(DISMISS_KEY, 'true');
+    } catch {
+      // Best effort: worst case it reappears on the next navigation in this
+      // same tab, which is not a broken feature, just a quieter one.
+    }
+  };
 
   useEffect(() => {
     if (clean.length < 2) return;
@@ -116,7 +168,7 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
     };
   }, [clean.length]);
 
-  if (clean.length === 0) return null;
+  if (clean.length === 0 || dismissed) return null;
   const i = Math.min(index, clean.length - 1);
   const item = clean[i]!;
   const tone = TONE[item.tone ?? 'charcoal'];
@@ -151,6 +203,16 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
             onAnimationEnd={() => setLeaving(null)}
           />
         ) : null}
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Dismiss announcement"
+          className="absolute right-6 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center sm:right-8 lg:right-12"
+        >
+          <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 stroke-current" fill="none" strokeWidth="1.8">
+            <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />
+          </svg>
+        </button>
       </div>
     </aside>
   );
