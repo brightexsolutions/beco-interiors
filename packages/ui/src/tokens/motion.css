@@ -1,0 +1,709 @@
+/* ============================================================
+   SCROLL DRIVEN MOTION
+
+   Effects that must track scroll POSITION rather than fire once
+   on entry. Written as CSS scroll driven animations, per D32:
+   they run off the main thread, cost nothing in INP, and need no
+   scroll event handler and no library.
+
+   Everything here is behind @supports, so a browser without
+   `animation-timeline` gets a still image rather than a broken
+   one, and behind prefers-reduced-motion, so it is absent
+   entirely for anyone who has asked for that.
+
+   Transform and opacity only. Never a layout property.
+   ============================================================ */
+
+/* --- The hero headline, word by word, once, on load.
+       Outside the @supports block because it needs no scroll timeline, and
+       outside JavaScript because the most important sentence on the site
+       should not wait for hydration to become visible. --- */
+@keyframes beco-word-rise {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- The rail declares its own timeline, so its progress bar can track
+       how far through the pinned run the reader is. A pinned section with
+       no progress indicator is the one that feels stuck: the page stops
+       moving and nothing says for how long. --- */
+/* --- The signature stage declares a named view timeline, which its
+       descendants inside the sticky frame reference. Declared outside the
+       reduced-motion block because naming a timeline is not itself motion. --- */
+.beco-stage {
+  view-timeline-name: --beco-stage;
+  view-timeline-axis: block;
+}
+
+/* The opening caption is hidden by default and only exists where the scroll
+   timeline can hand it over to the main one. Without timelines the section
+   shows its finished state, which is the room and its caption. */
+.beco-stage-intro { opacity: 0; }
+
+/* Static state: PARTED. Anything that cannot run the animation shows the
+   finished room, never a slab stuck across it. */
+.beco-part-left  { transform: translateX(-101%); }
+.beco-part-right { transform: translateX(101%); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion gets the destination, not the journey. */
+  .beco-part-left  { transform: translateX(-101%); }
+  .beco-part-right { transform: translateX(101%); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* --- The default reveal, and section headings.
+         Driven by `data-inview`, which ScrollMotion sets as an element
+         arrives. Deliberately NOT inside the @supports block below:
+         `animation-timeline` is Chromium only, and the reveals are most
+         of the page's character, so they must not depend on it.
+
+         The default state is VISIBLE. An element that never gets the
+         attribute is simply still, never blank. --- */
+  .beco-reveal[data-inview],
+  .beco-rise[data-inview] {
+    animation: beco-rise-in 950ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-rise-in {
+    from { opacity: 0; transform: translateY(52px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Headings wipe up from behind their own baseline, which is the
+         same gesture as the hero's word reveal at section scale. The
+         parent must clip, so this pairs with .beco-clip. --- */
+  .beco-clip { overflow: hidden; }
+
+  .beco-wipe[data-inview] {
+    animation: beco-wipe-up 1000ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-wipe-up {
+    from { opacity: 0; transform: translateY(100%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- The announcement bar's rotating line. The outgoing line lifts up and
+         out of the clipped bar as the incoming one rises into its place, so a
+         change reads as a roll rather than a cut. The bar's min-height is
+         fixed and it clips, so nothing spills or moves the page. Outside this
+         block, under reduced motion, both lines just settle in place, and the
+         rotation does not arm anyway. --- */
+  .beco-bar-in {
+    animation: beco-bar-in 460ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .beco-bar-out {
+    animation: beco-bar-out 460ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes beco-bar-in {
+    from { opacity: 0; transform: translateY(85%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes beco-bar-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-85%); }
+  }
+
+  /* --- Photographs settle out of an oversized crop rather than fading.
+         The frame never moves, so this costs no layout. --- */
+  .beco-zoom[data-inview] > img,
+  .beco-zoom[data-inview] > * > img {
+    animation: beco-zoom-out 1400ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-zoom-out {
+    from { transform: scale(1.16); }
+    to   { transform: scale(1); }
+  }
+
+  /* --- The hero slab leans, and straightens when you reach for it.
+         A sample board propped against a wall rather than a picture
+         hung flat on one. The straightening on hover is the whole
+         gesture: it reads as the slab being turned toward you.
+
+         Kept off the LCP card's ENTRANCE: this is a resting state and a
+         hover, not an entry animation, so it cannot delay first paint. --- */
+  .beco-lean {
+    transform: perspective(1600px) rotateY(-7deg) rotateX(1.2deg) rotateZ(-0.5deg);
+    transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .beco-lean:hover {
+    transform: perspective(1600px) rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1.01);
+  }
+
+  /* --- A single light sweep across a slab as its card settles.
+         Motivated, not decoration: sintered stone is a polished surface
+         and this is what a polished surface does when it turns under a
+         light. Once, on arrival, at low opacity, and never again. --- */
+  /* ::before, deliberately. The card frames carry their hairline edge on
+     ::after via Tailwind's `after:ring-*`, and an element has only one of
+     each, so claiming ::after here would silently delete the edge that makes
+     a white stone on a white page read as a photograph at all. */
+  .beco-sheen[data-inview]::before {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    pointer-events: none;
+    background: linear-gradient(
+      104deg,
+      transparent 34%,
+      rgba(255, 255, 255, 0.30) 47%,
+      transparent 60%
+    );
+    animation: beco-sheen-sweep 1500ms cubic-bezier(0.16, 1, 0.3, 1) 260ms backwards;
+  }
+
+  @keyframes beco-sheen-sweep {
+    from { transform: translateX(-115%); }
+    to   { transform: translateX(115%); }
+  }
+
+  /* --- The name plate rises out from under its photograph as the card
+         settles, so the card assembles rather than appearing whole. --- */
+  .beco-plate[data-inview] {
+    animation: beco-plate-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 420ms backwards;
+  }
+
+  @keyframes beco-plate-up {
+    from { opacity: 0; transform: translateY(-100%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Rail cards arriving from the right as the track brings them in.
+         The rail's own translate is the section's effect, but without
+         this the cards themselves are inert: they slide past and nothing
+         happens to them, which reads as the section not working.
+
+         Turned about their RIGHT edge, because that is the edge they
+         enter from. The hero's cards turn about their left for the same
+         reason, and the two must not be the same animation applied
+         thoughtlessly to opposite situations. --- */
+  .beco-rail-card[data-inview] {
+    animation: beco-rail-card-in 850ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transform-origin: right center;
+  }
+
+  @keyframes beco-rail-card-in {
+    from {
+      opacity: 0;
+      transform: perspective(1300px) rotateY(16deg) translateX(8%) scale(.94);
+    }
+    to {
+      opacity: 1;
+      transform: perspective(1300px) rotateY(0) translateX(0) scale(1);
+    }
+  }
+
+  /* --- The range rail's row.
+
+         RailTrack drives the advance itself now, via `scrollLeft` in a
+         `requestAnimationFrame` loop rather than a CSS transform, because an
+         arrow button needs somewhere to attach a discrete "move by one
+         screen" action and a `@keyframes` animation mid flight has no such
+         hook. See D59.
+
+         What is still pure CSS is the hover choreography below: reaching for
+         one card puts the rest behind it. --- */
+  @media (min-width: 1024px) {
+    /* --- Reaching for one card puts the rest behind it.
+
+           The lift is small and the dim is not: the card barely moves while
+           everything around it recedes, so attention lands on the stone
+           rather than on the animation. `z-index` so a raised card is not
+           clipped by the one after it in the row. --- */
+    .beco-marquee-item {
+      transition:
+        opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .beco-marquee-viewport:hover .beco-marquee-item,
+    .beco-marquee-viewport:focus-within .beco-marquee-item {
+      opacity: 0.42;
+    }
+
+    .beco-marquee-viewport .beco-marquee-item:hover,
+    .beco-marquee-viewport .beco-marquee-item:focus-within {
+      opacity: 1;
+      transform: translateY(-0.7rem) scale(1.035);
+      z-index: 1;
+    }
+  }
+
+  /* --- Slab cards turning toward the reader as they arrive, like a
+         sample lifted off a stack, settling square. --- */
+  .beco-card-flip[data-inview] {
+    animation: beco-card-in 900ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transform-origin: left center;
+  }
+
+  @keyframes beco-card-in {
+    from {
+      opacity: 0;
+      transform: perspective(1400px) rotateY(-22deg) translateY(48px) scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: perspective(1400px) rotateY(0) translateY(0) scale(1);
+    }
+  }
+
+  /* --- A hand of room photographs that deals itself.
+         Fanned like cards held in a hand rather than squared into a pile,
+         the front card swiped away to the RIGHT, and the swiped card
+         returning to the BACK of the fan.
+
+         Four cards share one description, each offset by a quarter of the
+         cycle, so the deck cycles with a single animation.
+
+         The return leg happens at opacity 0 and only becomes visible once
+         the card is already at the back and behind the others. An earlier
+         version faded it in while it travelled, and the half transparent
+         card showed through the ones in front of it. --- */
+  .beco-stack-card {
+    animation: beco-stack-cycle var(--stack-cycle, 14s) cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    animation-delay: var(--stack-delay, 0s);
+  }
+
+  @keyframes beco-stack-cycle {
+    /* Slot 0, the front of the fan. */
+    0%, 17%  { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);                    opacity: 1; z-index: 40; }
+    /* Swiped away to the right, lifting as it goes. */
+    23%      { transform: translate3d(145%, -8%, 0) rotate(20deg) scale(1.02);           opacity: 0; z-index: 40; }
+    /* Behind everything, and still invisible while it gets there. */
+    23.5%    { transform: translate3d(-7%, 3.3rem, 0) rotate(-9deg) scale(.91);          opacity: 0; z-index: 10; }
+    26%, 45% { transform: translate3d(-7%, 3.3rem, 0) rotate(-9deg) scale(.91);          opacity: 1; z-index: 10; }
+    /* Advancing up the fan as the cards in front of it leave. */
+    50%, 70% { transform: translate3d(-4.6%, 2.2rem, 0) rotate(-6deg) scale(.94);        opacity: 1; z-index: 20; }
+    75%, 95% { transform: translate3d(-2.3%, 1.1rem, 0) rotate(-3deg) scale(.97);        opacity: 1; z-index: 30; }
+    100%     { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);                    opacity: 1; z-index: 40; }
+  }
+
+  /* --- The entrance.
+         The hero assembles itself on load rather than arriving finished:
+         the rule draws out, the headline rises word by word, then the
+         supporting type and the actions follow it up. A first screen that
+         composes itself is the single biggest impression the site makes,
+         and it costs one keyframe each.
+
+         `backwards` fill means each element holds its starting state
+         until its delay elapses, so nothing flashes in before its turn.
+
+         NOT applied to the hero photograph. The LCP element is never
+         animated on entry, because animating the largest contentful paint
+         is a direct way to delay it. --- */
+  .beco-enter {
+    animation: beco-enter-up 900ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-enter-up {
+    from { opacity: 0; transform: translateY(26px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- The hero's stone chips, per D79: a smaller, more deliberate rise
+         than beco-enter, scale added so they read as arriving rather than
+         only fading, for a handful of small specimens rather than a whole
+         section. Still one entrance, on load, never repeating: the same
+         restraint every other use of beco-enter already holds to. --- */
+  .beco-pop-in {
+    animation: beco-pop-in 650ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-pop-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.88); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* --- The chip's own photograph, wiping up into the frame beco-pop-in
+         already drew, a beat later: the same two stage assembly the
+         gallery and completed interiors already use, frame first,
+         photograph second, reused here at chip scale rather than
+         inventing a second entrance language for one small element.
+         Shares beco-wipe-up's own keyframe, not beco-wipe itself, since
+         that class is gated on [data-inview] from ScrollMotion and these
+         chips are part of the hero, always above the fold, animating on
+         load like the rest of it rather than on scroll arrival. --- */
+  .beco-chip-wipe {
+    animation: beco-wipe-up 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* --- The active chip's ring, a slow breathing opacity loop so the
+         "showing now" chip reads as alive rather than merely labelled,
+         without moving or resizing anything: opacity alone, so it never
+         competes with the crossfade behind the whole hero as a second
+         effect, only ever a quiet accent on one small ring. --- */
+  .beco-chip-active-ring {
+    animation: beco-chip-pulse 2600ms ease-in-out infinite;
+  }
+
+  @keyframes beco-chip-pulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+
+  /* --- The floating name label beside whichever chip is currently
+         showing, replayed by remounting on change, the same technique
+         beco-roll already uses for the specimen indicator's own name. --- */
+  .beco-chip-label {
+    animation: beco-chip-label-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes beco-chip-label-in {
+    from { opacity: 0; transform: translateX(6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* --- The splash: mark, rule, strapline, each a beat apart. No
+         `[data-inview]` gate anywhere in this sequence: this overlay is
+         fixed and full screen the instant it mounts, so mounting IS the
+         trigger, not scrolling into view. See site-splash.tsx for why this
+         exists at all and what keeps it from costing LCP.
+
+         The mark comes into FOCUS rather than just fading or scaling: it
+         starts soft and slightly large, blurred, and settles sharp. Nothing
+         else on the site uses a blur transition, which is deliberate. This
+         is the one moment where the logo is the entire content of the
+         screen, and it gets a gesture nothing else on the site borrows,
+         the same reasoning that keeps WordReveal to the hero alone.
+
+         The rule draws under it, the same `beco-rule-draw` every page
+         opening uses, so the splash reads as the FIRST instance of the
+         site's own pattern rather than a one-off. Then the strapline's four
+         pillars step in one after another rather than as one block, tied to
+         the brand's own four part strapline instead of to individual words,
+         which is what keeps this visually distinct from WordReveal. --- */
+  .beco-splash-mark {
+    animation: beco-splash-focus 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes beco-splash-focus {
+    from { opacity: 0; transform: scale(1.14); filter: blur(10px); }
+    60%  { opacity: 1; filter: blur(0); }
+    to   { opacity: 1; transform: scale(1); filter: blur(0); }
+  }
+
+  .beco-splash-rule {
+    animation: beco-rule-out 600ms cubic-bezier(0.16, 1, 0.3, 1) 620ms backwards;
+    transform-origin: center;
+  }
+
+  .beco-splash-pillar {
+    display: inline-block;
+    animation: beco-enter-up 500ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* The eyebrow rule draws out from nothing. */
+  .beco-rule-draw {
+    animation: beco-rule-out 800ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transform-origin: left center;
+  }
+
+  @keyframes beco-rule-out {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* --- Ambient drift on the hero slab. Very slow, and DELAYED past first
+         paint so it cannot affect the LCP measurement. Stone is the only
+         thing on the page with any colour in it, so it earns being alive
+         rather than perfectly still. --- */
+  /* Descendant, not direct child: the hero crossfade wraps each photograph
+     in a scale-settle layer, so the image is one level deeper now. Every
+     existing direct-child case still matches, the same widening as D64. A
+     transition and an animation cannot both drive `transform` on one
+     element, so the settle lives on the wrapper and this drift on the
+     image, per the D77 lesson. */
+  .beco-ambient img,
+  .beco-ambient video {
+    animation: beco-ambient-drift 28s ease-in-out 1600ms infinite alternate;
+  }
+
+  @keyframes beco-ambient-drift {
+    from { transform: scale(1.01); }
+    to   { transform: scale(1.07) translateY(-1.5%); }
+  }
+
+  /* --- The stone's name rolls over as the slab behind it changes, like a
+         specimen label being turned. Replayed by remounting on change. --- */
+  .beco-roll {
+    animation: beco-roll-in 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  @keyframes beco-roll-in {
+    from { opacity: 0; transform: translateY(0.7em); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* A slow travelling tick under the hero indicator. Says the page moves
+     without a bouncing chevron, which is the generic version of this. */
+  .beco-scroll-cue {
+    animation: beco-cue 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    transform-origin: top center;
+  }
+
+  @keyframes beco-cue {
+    0%        { transform: scaleY(0); opacity: 0; }
+    30%       { transform: scaleY(1); opacity: 1; }
+    70%       { transform: scaleY(1); opacity: 1; }
+    100%      { transform: scaleY(0) translateY(100%); opacity: 0; }
+  }
+
+  .beco-word {
+    animation: beco-word-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* --- D80: the launch banner's own reveal, when the countdown gives way to
+         "we are live". This is `reveal` per D31 applied to a strip of the
+         chrome instead of a section entering the viewport on scroll, the
+         same category with a different trigger, played once on the switch
+         flipping rather than looping. --- */
+  .beco-launch-reveal {
+    animation: beco-launch-reveal 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes beco-launch-reveal {
+    from { opacity: 0; transform: scale(0.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* --- Confetti. A textural detail alongside that one reveal, not a seventh
+         effect and not a persistent one: each piece falls once and settles
+         at opacity 0, `both` rather than `infinite`, so nothing on this
+         page loops forever in a peripheral vision the way a decorative
+         animation would. It falls from the banner over the header and the
+         top of the hero, roughly 2.5s end to end, then the overlay unmounts.
+         Warm Red is rationed to three or four appearances a page per the
+         brand system, so only one of every four pieces uses it; the rest
+         are Charcoal and High-Vis White, which is also what keeps this
+         reading as the site's own moment rather than a generic party
+         popper. --- */
+  .beco-confetti-piece {
+    animation: beco-confetti-fall 2400ms cubic-bezier(0.4, 0, 0.35, 1) both;
+  }
+
+  @keyframes beco-confetti-fall {
+    from { opacity: 1; transform: translateY(-16px) rotate(0deg); }
+    75%  { opacity: 1; }
+    to   { opacity: 0; transform: translateY(210px) rotate(190deg); }
+  }
+
+  @supports (animation-timeline: view()) {
+
+    /* --- The hero slabs ride an ORBIT, not a scroll.
+
+           The cards used to travel straight up the right hand column, which
+           is a list that happens to contain photographs. They now move on a
+           circle whose axis stands off the right edge of the screen, so a
+           slab swings in from below on the far side of that axis, turns to
+           face the reader as it reaches the middle, and turns away again as
+           it leaves. Coverflow, driven by scroll position rather than by a
+           timer, so it is the reader moving the range past themselves.
+
+           The geometry, so the numbers are not arbitrary. A point orbiting a
+           vertical axis at distance R sits at x = R - R·cos(phi) and
+           z = R·sin(phi), and faces the reader rotated by phi. At the near
+           point, phi = 0, it is leftmost, closest and square on, which is why
+           the focused slab keeps exactly the position it has always had. At
+           the extremes it is pushed toward the axis on the right and turned
+           away, which is the arc.
+
+           One deliberate cheat: both ends recede rather than one swinging in
+           FRONT of the reader as the true circle would have it. A slab
+           looming over the type column on its way out is a distraction, and
+           things that leave should get smaller.
+
+           The dwell between 38% and 62% is the designed part. Without it the
+           card is fully lit for an instant at a single scroll position and
+           the range reads as a strobe. With it, each slab holds the middle
+           long enough to actually be looked at, and the fade either side is
+           what makes the ones below read as waiting their turn.
+
+           `perspective-origin` sits at the right edge, on the axis, so the
+           recession converges where the orbit is rather than at the middle
+           of the screen.
+
+           No blur anywhere: depth is carried by scale, opacity and real Z,
+           which stay on the compositor. Transform and opacity only. --- */
+    .beco-orbit-stage {
+      perspective: 1800px;
+      perspective-origin: 100% 50%;
+    }
+
+    .beco-orbit {
+      animation: beco-orbit linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      will-change: transform, opacity;
+    }
+
+    @keyframes beco-orbit {
+      from {
+        opacity: 0.12;
+        transform: translate3d(15%, 30%, -300px) rotateY(30deg) rotate(3.5deg);
+      }
+      38% {
+        opacity: 1;
+        transform: translate3d(2.5%, 6%, -50px) rotateY(6deg) rotate(0.6deg);
+      }
+      50% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotateY(0deg) rotate(0deg);
+      }
+      62% {
+        opacity: 1;
+        transform: translate3d(2.5%, -6%, -50px) rotateY(-6deg) rotate(-0.6deg);
+      }
+      to {
+        opacity: 0.12;
+        transform: translate3d(15%, -30%, -300px) rotateY(-30deg) rotate(-3.5deg);
+      }
+    }
+
+    /* --- Parallax on the hero slabs. Capped at 8% travel, per the
+           motion rules, so it reads as depth rather than as a trick.
+           The image is oversized so the drift never exposes an edge. --- */
+    .beco-parallax > img {
+      animation: beco-drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    @keyframes beco-drift {
+      from { transform: translateY(-9%) scale(1.2); }
+      to   { transform: translateY(9%)  scale(1.2); }
+    }
+
+    /* --- Parallax at depth, per D31.
+           Three rates, so a group of photographs sits at three distances
+           rather than on one flat plane. The frames never move, only the
+           images inside them, so none of this costs layout. --- */
+    /* A DESCENDANT selector, not a direct child one: the gallery's hover
+       cycling cards nest their `img` two levels deeper, inside HoverGallery's
+       own per-frame wrapper, and `>` would have silently stopped matching for
+       exactly those cards. Widened rather than narrowed, so every existing
+       direct-child case, which is still most of them, keeps working exactly
+       as before. */
+    .beco-depth-1 img { animation: beco-depth-near linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    .beco-depth-2 img { animation: beco-depth-mid  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    .beco-depth-3 img { animation: beco-depth-far  linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+
+    @keyframes beco-depth-near { from { transform: translateY(-11%) scale(1.26); } to { transform: translateY(11%) scale(1.26); } }
+    @keyframes beco-depth-mid  { from { transform: translateY(-7%)  scale(1.17); } to { transform: translateY(7%)  scale(1.17); } }
+    @keyframes beco-depth-far  { from { transform: translateY(-3.5%) scale(1.09); } to { transform: translateY(3.5%) scale(1.09); } }
+
+    /* --- A cutout drifts on its own, no frame to clip against.
+           `beco-depth-N` needs a clipping frame to hide the overscan a
+           scaled photograph produces, because a photograph is a rectangle
+           with edges to hide. A cutout has none: its background is already
+           transparent, so there is nothing to reveal by moving inside its
+           own box, and no frame is needed to hide it either. Same range as
+           beco-depth-2, its own name so CutoutReveal does not depend on an
+           unrelated component's class staying the same shape. --- */
+    .beco-cutout-drift {
+      animation: beco-depth-mid linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    /* --- Grid photographs drift against their frames as they pass, so a
+           wall of cards has depth rather than being a flat sheet. --- */
+    .beco-drift-slow > img {
+      animation: beco-drift-small linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    @keyframes beco-drift-small {
+      from { transform: translateY(-5%) scale(1.12); }
+      to   { transform: translateY(5%)  scale(1.12); }
+    }
+
+    /* --- Bookmatch Open, per D43.
+           The two halves of a bookmatched pair part along their own
+           mirror seam and the finished room is behind them. That parting
+           could only be a stone company's moment: it is the thing the
+           material actually does, and it is why the slab is sold in
+           pairs.
+
+           Driven by a NAMED timeline declared on the tall section, so
+           elements inside the sticky frame can track the section's
+           progress. A sticky element's own view does not change while it
+           is pinned, so `view()` on the element itself would sit still.
+
+           The static state below the @supports block is PARTED, so a
+           browser without scroll timelines shows the room rather than a
+           slab covering it forever. --- */
+    .beco-stage .beco-part-left {
+      animation: beco-part-left linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 62%;
+    }
+
+    .beco-stage .beco-part-right {
+      animation: beco-part-right linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 62%;
+    }
+
+    @keyframes beco-part-left  { from { transform: translateX(0); } to { transform: translateX(-101%); } }
+    @keyframes beco-part-right { from { transform: translateX(0); } to { transform: translateX(101%); } }
+
+    /* The room settles out of an oversized crop as it is uncovered, so it
+       reads as arriving rather than as having been there all along. */
+    .beco-stage .beco-room {
+      animation: beco-room-settle linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 85%;
+    }
+
+    @keyframes beco-room-settle {
+      from { transform: scale(1.18); }
+      to   { transform: scale(1); }
+    }
+
+    /* The opening state, before anything has parted. It holds the right
+       hand column while the pair is still closed, then hands over to the
+       caption as the room appears. Without it the column is empty charcoal
+       and the section looks unfinished until you scroll. */
+    .beco-stage .beco-stage-intro {
+      animation: beco-fade-away linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 0% contain 34%;
+    }
+
+    @keyframes beco-fade-away {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-24px); }
+    }
+
+    /* The caption arrives only once the room is actually visible. */
+    .beco-stage .beco-stage-caption {
+      animation: beco-rise-in linear both;
+      animation-timeline: --beco-stage;
+      animation-range: contain 45% contain 70%;
+    }
+
+    /* --- Scale and crop. A full bleed photograph contracts into a
+           framed panel as it passes, which is the one effect on the
+           page that changes an image's shape rather than its
+           position. --- */
+    .beco-scale-crop {
+      animation: beco-contract linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 60%;
+      transform-origin: center;
+    }
+
+    @keyframes beco-contract {
+      from { transform: scale(1.25); }
+      to   { transform: scale(1); }
+    }
+
+  }
+}

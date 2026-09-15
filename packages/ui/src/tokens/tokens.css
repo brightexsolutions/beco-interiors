@@ -1,0 +1,333 @@
+@import 'tailwindcss';
+@import '../fonts/fonts.css';
+@import './motion.css';
+
+/* ============================================================
+   SOURCES
+
+   Tailwind 4 detects sources automatically, starting from the
+   directory the build runs in. That is `apps/storefront`, so
+   `packages/ui` was never scanned and EVERY class used only
+   inside the design system was silently dropped from the
+   output.
+
+   It failed loudly in exactly one place and invisibly
+   everywhere else: the primary button carries
+   `bg-warm-red-deep text-high-vis-white`, and with the
+   background missing it rendered white text on white. The
+   main "Request a quote" call to action was present in the
+   HTML, correctly classed, and impossible to see.
+
+   So the design system names itself as a source. Without this
+   line, a component can only use classes that some app
+   happens to use too, which defeats the point of having a
+   component package at all.
+   ============================================================ */
+@source "../";
+
+/* ============================================================
+   BECO DESIGN TOKENS
+
+   Single source of truth. Tailwind generates its utilities from
+   the @theme block below, so `bg-charcoal` and `var(--color-charcoal)`
+   are the same value. Nothing hardcodes a colour, size or spacing.
+
+   Palette from the April 2025 brand guideline, not the prototype.
+   THREE colours, no secondary, deliberately: the guideline calls the
+   palette "intentionally narrow" as a stated position, so a fourth
+   colour contradicts the brand rather than filling a gap. The
+   prototype's gold is retired. See docs/BRAND-GUIDELINE-NOTES.md.
+
+   Values mirror packages/ui/src/tokens/palette.ts, asserted by test.
+   ============================================================ */
+
+@theme {
+  /* --- Brand. Three, and only three. --- */
+  --color-warm-red: #ed1c24;
+  /* Warm Red carries white text at only 4.38:1, below the 4.5 AA floor.
+     Pure warm-red is for FILLS, RULES and BADGES. Anything with white text
+     on it uses warm-red-deep, which measures 5.88:1. Verified, not assumed. */
+  --color-warm-red-deep: #c81419;
+  --color-charcoal: #101820;
+  --color-high-vis-white: #ffffff;
+
+  /* --- Neutrals, generated from the COOL charcoal, never a warm grey. --- */
+  --color-neutral-950: #0b1119;
+  --color-neutral-900: #101820;
+  --color-neutral-700: #333d47;
+  --color-neutral-500: #6b757f;
+  --color-neutral-300: #b9c0c7;
+  --color-neutral-200: #d7dce0;
+  --color-neutral-100: #eceef0;
+  --color-neutral-50: #f6f7f8;
+
+  /* --- Functional. Never brand colours. --- */
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-whatsapp: #25d366;
+
+  /* --- Type. Self hosted. F1 Display is NEVER deployed, see D3. --- */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Titillium Web', system-ui, sans-serif;
+
+  /* Type floor is 16px EVERYWHERE, dashboard included. */
+  --text-xs: 0.875rem;      /* 14px, small print floor, used rarely */
+  --text-sm: 1rem;          /* 16px, absolute floor */
+  --text-base: 1.0625rem;   /* 17px, body on desktop */
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+  /* Display sizes scale with the viewport rather than stepping at
+     breakpoints. The floor keeps a seven word headline to two or three
+     lines on a 375px phone; the ceiling is the poster size on a wide
+     screen. This also repairs a real inversion: `--text-5xl` and above
+     were never defined, so Tailwind's own 3rem default meant
+     `text-4xl sm:text-5xl` shrank the heading at the sm breakpoint
+     instead of growing it. Now the scale is monotonic at every width.
+
+     Ceilings brought down slightly on 14 September, on direct review of the
+     desktop hero: the ramp reaches its ceiling by roughly 900-1000px wide,
+     so anything above that, every laptop and desktop screen, was always
+     showing the flat maximum rather than something that kept scaling with
+     the viewport. Floors and the ramp's shape are untouched, so mobile is
+     unaffected; only the wide-screen maximum moved down. */
+  --text-4xl: clamp(2.5rem, 1.9rem + 2.3vw, 3.125rem);   /* 40 -> 50 */
+  --text-5xl: clamp(2.75rem, 1.85rem + 3.45vw, 4rem);    /* 44 -> 64 */
+  --text-6xl: clamp(3.25rem, 2rem + 5vw, 5rem);          /* 52 -> 80 */
+  --text-7xl: clamp(3.75rem, 2.2rem + 6.15vw, 6rem);     /* 60 -> 96 */
+
+  /* --- Spacing.
+     `--spacing` is Tailwind's STEP UNIT, not the grid. It is the value every
+     numeric spacing utility multiplies, so `p-4` is 4 steps.
+
+     This was set to 0.5rem to mean "8px base". That doubled the entire
+     system: h-11 became 88px instead of the 44px touch target, px-6 became
+     48px, and section padding py-28 became 224px. It is the reason the
+     navbar looked oversized and the pages read as acres of empty white.
+
+     The 8px grid comes from using EVEN steps against a 4px unit, which is
+     the convention the utility names assume: p-2 is 8px, p-4 is 16px,
+     py-14 is 56px. --- */
+  --spacing: 0.25rem;
+
+  --radius-card: 4px;
+  --radius-button: 2px;
+
+  /* --- Motion. Long expo out, settled rather than snappy. --- */
+  --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================
+   BASE
+
+   Tailwind 4 changed the default cursor on buttons from
+   `pointer` to `default`, matching the browser's own UA
+   stylesheet. Every button in the site inherited that, so
+   controls did not announce themselves as clickable.
+
+   Restored here once rather than adding `cursor-pointer` to
+   each control, which is the kind of thing that gets missed
+   on the next component someone writes.
+   ============================================================ */
+/* Knocked out type: the photograph reads through the letterforms. A solid
+   fill at display size is a bar of colour across the image, which is the
+   opposite of the effect. */
+.beco-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.9);
+  paint-order: stroke fill;
+}
+
+@media (min-width: 640px) {
+  .beco-outline { -webkit-text-stroke-width: 2px; }
+}
+
+/* --- The home hero's full bleed photograph, per D79, pulled up to start
+       behind the header and the announcement bar rather than below them.
+       AnnouncementBar and SiteHeader sit in normal document flow, ABOVE
+       `{children}` in the root layout, so without this the hero's photo
+       only ever began after their combined height, leaving the
+       transparent header with nothing behind it but the page's own white
+       background. Reported directly as "the image slide is not started
+       from that level."
+
+       Two fixed heights, not a measured one: the header is always 5rem,
+       `h-20`, and the announcement bar's own padding bounds it to roughly
+       3rem even with its longest real content. `data-announcement` on
+       `<body>` is set server side in the root layout from the same query
+       that decides whether the bar renders at all, so this never
+       needs a client side measurement, and never causes a layout shift
+       once JavaScript catches up: the server already knows the answer. */
+.beco-hero-bleed {
+  margin-top: -5rem;
+}
+body[data-announcement] .beco-hero-bleed {
+  margin-top: -8rem;
+}
+
+/* --- The hero's own TEXT, as opposed to its background photograph above:
+       vertically centering it in a box that now starts at the true top of
+       the page, per .beco-hero-bleed, put it uncomfortably close to the
+       header, reported directly as "sintered stone, stocked in nairobi is
+       almost touching the top." The photograph is allowed to run all the
+       way up; the reading content still needs a real safe area below the
+       header and the announcement bar, so this pads the text column down
+       by the same two fixed heights rather than letting flex centering,
+       or a bottom anchored flex box's own top edge, decide how close is
+       too close.
+
+       The mobile block is bottom anchored, not centred, but it is a
+       CHILD of the same pulled up section, so its own top edge moved up
+       exactly as far as the desktop box's did. Assumed at first not to
+       need this, on the theory that anchoring content to the bottom of
+       its own box was enough on its own: checked directly against the
+       real layout rather than left as an assumption, and the eyebrow
+       measured 64px INTO the header's own space. Both breakpoints need
+       the same safe area; only the exact amount differs, since the
+       header and announcement bar's own heights do not change by
+       breakpoint but the surrounding padding this replaces did. */
+.beco-hero-content-top {
+  padding-top: 5.5rem;
+}
+body[data-announcement] .beco-hero-content-top {
+  padding-top: 8.5rem;
+}
+
+@media (min-width: 1024px) {
+  .beco-hero-content-top {
+    padding-top: 7rem;
+  }
+  body[data-announcement] .beco-hero-content-top {
+    padding-top: 10rem;
+  }
+}
+
+@layer base {
+  /* The page never scrolls sideways.
+     `clip` rather than `hidden`: hidden makes the element a scroll container,
+     which silently breaks every `position: sticky` on the page, and this site
+     is built on sticky. clip does not.
+
+     Needed because several effects deliberately move outside their own box:
+     the room stack fans and swipes a card to 145% of its width, and the rail
+     translates a track wider than the viewport. Those are contained here
+     rather than by hunting each one. */
+  html {
+    overflow-x: clip;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  /* The surfaces a design system usually forgets. Themed once here so the
+     page reads as built rather than assembled: the selection colour, the
+     caret, the scrollbar, the list marker and the focus ring all come
+     from the palette instead of the browser default. */
+  ::selection {
+    background: var(--color-charcoal);
+    color: var(--color-high-vis-white);
+  }
+  /* On a charcoal section the same rule would be invisible, so it flips. */
+  .bg-charcoal ::selection,
+  .text-high-vis-white ::selection {
+    background: var(--color-high-vis-white);
+    color: var(--color-charcoal);
+  }
+
+  input,
+  textarea {
+    caret-color: var(--color-warm-red);
+  }
+
+  /* One narrow scrollbar, cool grey on the page ground, tracking the
+     neutral ramp rather than the OS default slab. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-300) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-300);
+    border: 3px solid var(--color-high-vis-white);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-500);
+  }
+
+  /* A single consistent focus ring for anything that does not draw its
+     own. Warm Red is the site's one instruction colour and this is an
+     instruction: it is where the keyboard is. */
+  :focus-visible {
+    outline: 2px solid var(--color-warm-red);
+    outline-offset: 2px;
+  }
+
+  ::marker {
+    color: var(--color-warm-red);
+  }
+
+  /* Underlines sit off the baseline and take their weight from the face,
+     so a hover underline never crowds the descenders. */
+  a {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: from-font;
+  }
+
+  /* Cormorant sets a touch loose at display size. A hair of negative
+     tracking is what makes a large headline read as set rather than as
+     typed. Body Cormorant is rare on this site, so the floor is safe. */
+  .font-display {
+    letter-spacing: -0.015em;
+  }
+}
+
+:root {
+  --leading-body: 1.6;
+  --leading-display: 1.15;
+  --measure: 68ch;
+  --touch-target: 2.75rem;   /* 44px minimum */
+  --max-width: 1380px;
+  --reveal-duration: 500ms;
+  --reveal-stagger: 60ms;
+  /* Deliberately more generous than the prototype's 88/64/52. */
+  --section-y: 7.5rem;       /* 120px desktop */
+}
+
+@media (max-width: 1024px) { :root { --section-y: 5.5rem; } }  /* 88px */
+@media (max-width: 640px)  { :root { --section-y: 4rem; } }    /* 64px */
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--color-charcoal);
+  background: var(--color-high-vis-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every interactive element meets the 44px touch target. */
+button, a[role='button'], input, select, textarea {
+  min-height: var(--touch-target);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

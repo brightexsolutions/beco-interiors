@@ -1,1 +1,61 @@
+# Raw, unprocessed source material. Never committed.
+# One category of Drive photography is already over 1GB.
+_incoming/
+*.zip
+
+# Internal Brightex reference material: build plan, client brief,
+# technical build doc, proposal. Not for client distribution.
+files/
+
+# Agent and editor state
 .codex
+.DS_Store
+
+# Secrets. Values live in a password manager, names in docs/ENVIRONMENT.md
+.env
+.env.*
+!.env.example
+*.pem
+service-account*.json
+
+# Build output and dependencies
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# Note: docs/ is deliberately NOT ignored. It holds the committed
+# documentation set and travels with the code.
+.playwright-mcp/
+
+# Third-party agent skills, added locally via `npx skills` and `npx impeccable`
+# as design tooling for the post-M5 storefront passes (see DECISIONS.md D82).
+# Machine-local only: not reviewed for a client repo, not a milestone deliverable,
+# and CI must not depend on them. Delete these lines to vendor them deliberately.
+.agents/
+.impeccable/
+skills-lock.json
+.claude/settings.local.json
+.claude/agents/
+.github/agents/
+.github/skills/
+# The M0 skill set stays committed; anything added on top does not.
+/.claude/skills/*
+!/.claude/skills/blog-content/
+!/.claude/skills/component/
+!/.claude/skills/design-system/
+!/.claude/skills/drive-import/
+!/.claude/skills/git-commit/
+!/.claude/skills/quote-document/
+!/.claude/skills/rls-policy/
+!/.claude/skills/seo-checklist/
+!/.claude/skills/supabase-migration/
+!/.claude/skills/testing/

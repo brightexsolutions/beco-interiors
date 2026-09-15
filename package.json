@@ -1,0 +1,47 @@
+{
+  "name": "beco-platform",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "postinstall": "node tools/setup/link-env.mjs",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:component": "vitest run --project component",
+    "test:dashboard": "vitest run --project dashboard",
+    "test:integration": "vitest run --project integration",
+    "test:watch": "vitest",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --local > packages/types/src/database.ts",
+    "drive:import": "tsx tools/drive-import/src/cli.ts",
+    "backup:verify": "tsx tools/backup/src/verify.ts",
+    "check:secrets": "tsx tools/backup/src/secret-scan.ts",
+    "check:type-floor": "node tools/setup/assert-type-floor.mjs",
+    "lighthouse": "lhci autorun"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.6",
+    "@types/node": "^22.0.0",
+    "dotenv": "^17.4.2",
+    "jsdom": "^25.0.1",
+    "prettier": "^3.4.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.19.0",
+    "turbo": "^2.10.12",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11",
+    "vitest-axe": "^0.1.0"
+  }
+}

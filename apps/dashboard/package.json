@@ -1,0 +1,23 @@
+{
+  "name": "@beco/dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^16.3.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "@beco/ui": "workspace:*",
+    "@beco/types": "workspace:*",
+    "@beco/validation": "workspace:*",
+    "@beco/supabase-client": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18"
+  }
+}
