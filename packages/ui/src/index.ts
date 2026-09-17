@@ -17,6 +17,8 @@ export {
   type FieldProps, type InputProps, type SelectProps, type TextareaProps,
 } from './components/field';
 export { PasswordInput, type PasswordInputProps } from './components/password-input';
+export { QuantityStepper, type QuantityStepperProps } from './components/quantity-stepper';
+export { Notice, type NoticeProps } from './components/notice';
 export { StatusPill, type StatusPillProps, type StatusTone } from './components/status-pill';
 export { StatCard, type StatCardProps, type StatCardTone } from './components/stat-card';
 export { DataTable, type DataTableProps, type DataTableColumn } from './components/data-table';

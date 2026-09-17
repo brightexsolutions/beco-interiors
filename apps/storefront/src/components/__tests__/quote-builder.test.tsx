@@ -133,6 +133,21 @@ describe('QuoteBuilder, on success', () => {
   });
 });
 
+describe('QuoteBuilder, removing a line', () => {
+  it('removes the line from the stored list, not just from the screen', async () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([line]));
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+
+    await user.click(
+      await screen.findByRole('button', { name: `Remove ${line.name} from your quote list` }),
+    );
+
+    expect(screen.queryByText(line.name)).not.toBeInTheDocument();
+    expect(readList()).toEqual([]);
+  });
+});
+
 describe('QuoteBuilder, the per-line quantity stepper', () => {
   const handleLine = {
     slug: 'gold-bar-handle', name: 'Gold Bar Handle', unit: 'per piece',

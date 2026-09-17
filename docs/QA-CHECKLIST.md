@@ -132,7 +132,7 @@ screen where the automated coverage stops short of the thing that matters.**
 | Control | What it does | Status |
 |---|---|---|
 | Quantity steppers per line | Change the line quantity, persisted | Test |
-| Remove line | Removes it, behind a `ConfirmDialog` | Test on the dialog |
+| Remove line | Removes it immediately, no `ConfirmDialog`: a single line is recoverable by adding the product again, unlike clearing the whole list | Test |
 | Clear list | Empties the list, behind a `ConfirmDialog` naming what will happen | Test |
 | Name, phone, email, company, project fields | Carry their values to the server action | Test, on the labels and the `name` attributes |
 | Collection or delivery radios | Reveal the delivery address field and the delivery charge note | **NOT CONFIRMED** by test |

@@ -30,8 +30,8 @@ describe('AddToQuote, a discrete item', () => {
   it('steps by one whole unit at a time', async () => {
     const user = userEvent.setup();
     render(<AddToQuote line={handleLine} />);
-    await user.click(screen.getByRole('button', { name: 'Increase quantity' }));
-    await user.click(screen.getByRole('button', { name: 'Increase quantity' }));
+    await user.click(screen.getByRole('button', { name: 'Increase quantity of Gold Bar Handle' }));
+    await user.click(screen.getByRole('button', { name: 'Increase quantity of Gold Bar Handle' }));
     await user.click(screen.getByRole('button', { name: 'Add to quote' }));
     expect(readList()[0]?.quantity).toBe(3);
   });
@@ -39,7 +39,7 @@ describe('AddToQuote, a discrete item', () => {
   it('never goes below one whole unit', async () => {
     const user = userEvent.setup();
     render(<AddToQuote line={handleLine} />);
-    const decrease = screen.getByRole('button', { name: 'Decrease quantity' });
+    const decrease = screen.getByRole('button', { name: 'Decrease quantity of Gold Bar Handle' });
     expect(decrease).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Add to quote' }));
     expect(readList()[0]?.quantity).toBe(1);
@@ -69,7 +69,7 @@ describe('AddToQuote, a slab', () => {
   it('steps in halves, because a slab is cut to order', async () => {
     const user = userEvent.setup();
     render(<AddToQuote line={slabLine} />);
-    await user.click(screen.getByRole('button', { name: 'Increase quantity' }));
+    await user.click(screen.getByRole('button', { name: 'Increase quantity of Amber Jade' }));
     await user.click(screen.getByRole('button', { name: 'Add to quote' }));
     expect(readList()[0]?.quantity).toBe(1.5);
   });
@@ -77,7 +77,7 @@ describe('AddToQuote, a slab', () => {
   it('can be brought down to a half slab, not just to a whole one', async () => {
     const user = userEvent.setup();
     render(<AddToQuote line={slabLine} />);
-    const decrease = screen.getByRole('button', { name: 'Decrease quantity' });
+    const decrease = screen.getByRole('button', { name: 'Decrease quantity of Amber Jade' });
     // A whole slab is not the floor for this product, so the control is not
     // disabled at the quantity it opens on.
     expect(decrease).not.toBeDisabled();
@@ -89,7 +89,7 @@ describe('AddToQuote, a slab', () => {
   it('stops at half a slab and cannot reach zero or a negative amount', async () => {
     const user = userEvent.setup();
     render(<AddToQuote line={slabLine} />);
-    const decrease = screen.getByRole('button', { name: 'Decrease quantity' });
+    const decrease = screen.getByRole('button', { name: 'Decrease quantity of Amber Jade' });
     await user.click(decrease);
     expect(decrease).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Add to quote' }));

@@ -4,8 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import {
-  Button, ConfirmDialog, EmptyState, Input, Textarea, buttonClasses,
-  Field as UiField,
+  Button, ConfirmDialog, EmptyState, Input, Notice, QuantityStepper, Textarea,
+  buttonClasses, Field as UiField,
 } from '@beco/ui';
 import {
   clearList, lineCount, readList, removeLine, setQuantity, subscribe,
@@ -102,7 +102,7 @@ export function QuoteBuilder() {
         </div>
 
         <div className="bg-charcoal p-8 text-high-vis-white lg:p-10">
-          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
             While you wait
           </p>
           <p className="mt-4 max-w-[36ch] font-display text-2xl leading-snug">
@@ -110,11 +110,11 @@ export function QuoteBuilder() {
           </p>
           <dl className="mt-8 space-y-5 border-t border-white/15 pt-6">
             <div>
-              <dt className="font-ui text-sm text-neutral-400">Opening hours</dt>
+              <dt className="font-ui text-sm text-neutral-300">Opening hours</dt>
               <dd className="mt-1 font-ui text-base">{SITE.hours}</dd>
             </div>
             <div>
-              <dt className="font-ui text-sm text-neutral-400">Prefer to call</dt>
+              <dt className="font-ui text-sm text-neutral-300">Prefer to call</dt>
               <dd className="mt-1">
                 <a
                   href={SITE.phoneHref}
@@ -126,7 +126,7 @@ export function QuoteBuilder() {
               </dd>
             </div>
             <div>
-              <dt className="font-ui text-sm text-neutral-400">Showroom</dt>
+              <dt className="font-ui text-sm text-neutral-300">Showroom</dt>
               <dd className="mt-1 font-ui text-base">
                 {SITE.address.line1}, {SITE.address.line2}, {SITE.address.city}
               </dd>
@@ -178,93 +178,124 @@ export function QuoteBuilder() {
     !result?.ok && result?.fieldErrors?.[name]?.[0] ? result.fieldErrors[name][0] : undefined;
 
   return (
-    <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
-      {/* --- The list --- */}
-      <section aria-labelledby="list-heading">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 id="list-heading" className="font-display text-2xl text-charcoal">
-            {lineCount(lines)} item{lineCount(lines) === 1 ? '' : 's'}
+    // items-start, not the grid default of stretch: a three item list next to
+    // a nine field form otherwise forces the charcoal panel to inflate to the
+    // form's height, leaving a dead void of plain charcoal below the last row.
+    // Confirmed directly by screenshot, not assumed. Each column now ends
+    // where its own content ends.
+    <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+      {/* --- The list ---
+          A charcoal panel, not a third white block beside the form: the same
+          surface the confirmation screen already uses below. Two columns of
+          white on white read as one undifferentiated form, reported directly
+          as the cart having no designed layout of its own. No entrance motion
+          on the rows: this is a task the reader is already mid way through,
+          not a marketing section arriving on scroll, and a fade stepped
+          across every row is the generic stagger every list like this
+          reaches for. */}
+      <section aria-labelledby="list-heading" className="bg-charcoal p-8 text-high-vis-white lg:p-10">
+        {/* No "Your list" eyebrow here: the page's own PageHeader already
+            claims that exact phrase above the title. A second eyebrow one
+            beat later was the page repeating itself, so the count carries
+            the panel's identity instead, the way a number in the confirmation
+            panel below already does with the reference. */}
+        <div className="flex items-start justify-between gap-4">
+          <h2 id="list-heading" className="flex items-baseline gap-3">
+            <span className="font-display text-6xl leading-none tabular-nums">
+              {lineCount(lines)}
+            </span>
+            <span className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-300">
+              item{lineCount(lines) === 1 ? '' : 's'} listed
+            </span>
           </h2>
           <button
             type="button"
             onClick={() => setConfirmClear(true)}
-            className="font-ui text-sm font-semibold text-neutral-500 underline-offset-4 hover:text-warm-red-deep hover:underline"
+            className="flex min-h-11 shrink-0 items-center font-ui text-sm font-semibold text-neutral-300 underline-offset-4 hover:text-high-vis-white hover:underline"
           >
             Clear the list
           </button>
         </div>
 
-        <ul className="mt-6 border-t border-neutral-200">
+        <ul className="mt-8 border-t border-white/15">
           {lines.map((line) => (
-            <li key={line.slug} className="flex gap-4 border-b border-neutral-200 py-5">
-              <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-neutral-100">
+            <li key={line.slug} className="flex gap-6 border-b border-white/15 py-8">
+              <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-neutral-100 sm:h-32 sm:w-28 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
                 {line.image ? (
-                  <Image src={line.image} alt="" fill sizes="64px" className="object-cover" />
-                ) : null}
+                  <Image src={line.image} alt="" fill sizes="112px" className="object-cover" />
+                ) : (
+                  // No photograph yet. A single hairline read as an empty,
+                  // broken chip once actually rendered, confirmed by
+                  // screenshot: it needs enough presence to read as a mark
+                  // rather than nothing. A square outline keeps the site's
+                  // sharp, unrounded language and reads as a swatch still to
+                  // be photographed, not as a person's avatar or a missing
+                  // file icon. aria-hidden since the link below already
+                  // carries the name as the accessible text.
+                  <span aria-hidden className="flex h-full w-full items-center justify-center">
+                    <span className="h-8 w-8 border border-charcoal/30" />
+                  </span>
+                )}
               </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-3">
-                <div className="flex items-start justify-between gap-4">
-                  <Link
-                    href={`/product/${line.slug}`}
-                    className="font-display text-xl leading-tight text-charcoal hover:text-warm-red-deep"
-                  >
-                    {line.name}
-                  </Link>
+              <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 py-1">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="font-display text-xl leading-tight sm:text-2xl">
+                    <Link
+                      href={`/product/${line.slug}`}
+                      className="group relative inline-block focus:outline-none focus-visible:underline focus-visible:decoration-warm-red focus-visible:underline-offset-4"
+                    >
+                      {line.name}
+                      {/* The same hairline-draws-in hover ProductCard uses,
+                          rather than a text colour change: white is already
+                          the brightest this text goes, so a colour swap has
+                          nowhere to move to on this panel. */}
+                      <span
+                        aria-hidden
+                        className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-warm-red transition-transform duration-300 ease-brand group-hover:scale-x-100 motion-reduce:transition-none"
+                      />
+                    </Link>
+                  </h3>
                   <button
                     type="button"
                     onClick={() => removeLine(line.slug)}
                     aria-label={`Remove ${line.name} from your quote list`}
-                    className="shrink-0 font-ui text-sm text-neutral-500 underline-offset-4 hover:text-warm-red-deep hover:underline"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center text-neutral-300 transition-colors duration-200 ease-brand hover:bg-white/10 hover:text-high-vis-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-warm-red"
                   >
-                    Remove
+                    <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
                   </button>
                 </div>
-                <div className="flex items-center gap-3">
-                  {/* Half slab steps for anything sold "per slab", since a
-                      slab is cut to order. Whole steps otherwise: "2.5
-                      handles" is not a thing Beco can price. */}
-                  <div className="flex items-stretch rounded-[2px] border border-neutral-300">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(line.slug, line.quantity - (line.unit === 'per slab' ? 0.5 : 1))}
-                      aria-label={`Decrease quantity of ${line.name}`}
-                      className="flex h-11 w-11 items-center justify-center text-xl text-charcoal"
-                    >
-                      &minus;
-                    </button>
-                    <span className="flex h-11 w-12 items-center justify-center border-x border-neutral-300 font-ui text-base tabular-nums">
-                      {line.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(line.slug, line.quantity + (line.unit === 'per slab' ? 0.5 : 1))}
-                      aria-label={`Increase quantity of ${line.name}`}
-                      className="flex h-11 w-11 items-center justify-center text-xl text-charcoal"
-                    >
-                      +
-                    </button>
-                  </div>
-                  {line.unit ? (
-                    <span className="font-ui text-sm text-neutral-500">{line.unit}</span>
-                  ) : null}
-                </div>
+                {/* Half slab steps for anything sold "per slab", since a
+                    slab is cut to order. Whole steps otherwise: "2.5
+                    handles" is not a thing Beco can price. A solid white
+                    control on the dark panel by design: QuantityStepper
+                    never adapts to its surroundings, so it reads the same
+                    way everywhere it is used. */}
+                <QuantityStepper
+                  value={line.quantity}
+                  onChange={(next) => setQuantity(line.slug, next)}
+                  label={line.name}
+                  step={line.unit === 'per slab' ? 0.5 : 1}
+                  unit={line.unit}
+                />
               </div>
             </li>
           ))}
         </ul>
 
-        <p className="mt-6 max-w-[58ch] font-ui text-sm text-neutral-500">
+        <Notice className="mt-8 max-w-[52ch] text-neutral-300">
           Everything here is priced on request, so there is no total to show yet. We will send an
           itemised quote with delivery or collection set out.
-        </p>
+        </Notice>
       </section>
 
       {/* --- The form --- */}
       <section aria-labelledby="details-heading">
-        <h2 id="details-heading" className="font-display text-2xl text-charcoal">
+        <h2 id="details-heading" className="font-display text-3xl text-charcoal">
           Where should we send it?
         </h2>
-        <p className="mt-2 max-w-[52ch] font-ui text-sm text-neutral-500">
+        <p className="mt-3 max-w-[52ch] font-ui text-sm text-neutral-500">
           Your name and phone number are all we genuinely need. Everything else just helps us
           price it faster.
         </p>
@@ -309,10 +340,10 @@ export function QuoteBuilder() {
                 is 65,000 and a customer who reads that as the delivered price
                 is a customer surprised by the invoice. */}
             {fulfilment === 'delivery' ? (
-              <p className="mt-3 border-l-2 border-warm-red bg-neutral-50 py-3 pl-4 pr-3 font-ui text-sm text-neutral-700">
+              <Notice className="mt-3">
                 Delivery is charged separately and depends on where the site is. We will put it
                 on the quote as its own line so you can see it.
-              </p>
+              </Notice>
             ) : null}
           </fieldset>
 

@@ -19,7 +19,8 @@ Status: **B** built, **S** stubbed, **P** planned.
 | `Field` | **B** | Label, hint, error. The CONTROL is passed in, so one wrapper serves an input, a select, a textarea or a radio group without a variant for each. Errors carry `role="alert"`, so they are announced rather than only coloured. Written twice before this, in the quote form and the shop filter bar |
 | `Input` `Textarea` `Select` | **B** | 44px minimum, `text-base` so iOS does not zoom on focus. `Select` is NATIVE with `appearance-none` and a drawn chevron, not Radix: it needs `optgroup` to carry the two level taxonomy, and a native menu is better on a phone than a rebuilt one. All three forward refs. **10 tests** |
 | `PasswordInput` | **B** | `Input` plus a show/hide toggle. A `'use client'` island because the visibility is local state. The toggle is `type="button"` so it never submits, its label names the action it will perform ("Show password" while hidden), and it is a 44px target. **6 tests**: the type actually flips both ways, mouse and keyboard, ref and props pass through, axe clean in both states. Used on the dashboard auth screens |
-| `QuantityStepper` | P | **The 12 tap budget depends on this.** Big targets, no keyboard needed |
+| `QuantityStepper` | **B** | **The 12 tap budget depends on this.** Big 44px targets throughout. Static value by default, an editable number field where typing is worth it, its native spinner dropped since it ate into the same box the digits needed. The unit label inherits its colour and dims it rather than a fixed grey, since no one neutral tone clears AA on both a white page and the quote list's charcoal panel. Written twice before this, on the product page and in the quote list, and the two copies had already drifted. Used by `AddToQuote` and `QuoteBuilder`. **13 tests** |
+| `Notice` | **B** | States a fact at the moment it matters in weight, not a box: `info` inherits the ambient text colour, `alert` (announced) draws from the functional error token. A coloured left border on a tinted fill was tried first and dropped, it is a recognised generic default and it could not carry one accent colour safely across both the quote page's white form and its charcoal list panel. **4 tests** |
 
 ## Domain
 
@@ -77,7 +78,7 @@ this project lives in it for weeks.
 
 | Component | Status | Notes |
 |---|---|---|
-| `EmptyState` | P | A designed page, never a broken one. Empty categories use this |
+| `EmptyState` | **B** | A designed page, never a broken one. Empty categories and the empty quote list use this |
 | `LoadingState` | **B** | Skeletons matching final layout, so nothing shifts. `animate-pulse motion-reduce:animate-none`: the shape without the breathing for a reader who asked for no motion |
 | `ErrorState` | P | Says what happened and what to do next |
 
