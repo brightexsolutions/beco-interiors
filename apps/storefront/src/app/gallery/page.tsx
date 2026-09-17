@@ -214,8 +214,12 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
                       aria-hidden
                       className="ml-3 inline-block h-px w-0 bg-warm-red align-middle transition-all duration-500 ease-brand group-hover:w-8"
                     />
+                    {/* Only true on a device that can actually hover: HoverGallery
+                        cycles on its own for a touch reader instead, per its own
+                        note, so telling that reader to "hover" describes an
+                        action they have no way to perform. */}
                     {shot.siblings.length > 1 ? (
-                      <span className="ml-3 font-normal normal-case tracking-normal text-neutral-500">
+                      <span className="ml-3 hidden font-normal normal-case tracking-normal text-neutral-500 [@media(hover:hover)]:inline">
                         hover for more
                       </span>
                     ) : null}

@@ -16,16 +16,42 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
  *
  * Stops on leave and resets to the first frame, so the grid is never left in
  * an arbitrary state. Does nothing at all under reduced motion.
+ *
+ * Touch has no hover event at all, so a phone reader could never trigger this
+ * and the sibling photographs were simply unreachable there, no matter what
+ * the caption beside the card said. `(hover: none)` identifies that reader
+ * on mount and starts the same cycle unprompted, the same auto-advance
+ * PinnedHero already runs on mobile, rather than inventing a second, tap
+ * driven mechanism a reader would have to discover.
  */
 export function HoverGallery({
   frames, intervalMs = 1100, className,
 }: { frames: ReactNode[]; intervalMs?: number; className?: string }) {
   const [index, setIndex] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval>>(undefined);
+  // Also gates whether the tick row below stays visible without a hover
+  // state to reveal it: a touch reader has no group-hover to opt into.
+  const [touch, setTouch] = useState(false);
 
-  useEffect(() => () => clearInterval(timer.current), []);
+  useEffect(() => {
+    clearInterval(timer.current);
+    if (frames.length < 2) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    if (!window.matchMedia?.('(hover: none)').matches) return;
+    setTouch(true);
+    timer.current = setInterval(
+      () => setIndex((i) => (i + 1) % frames.length),
+      intervalMs,
+    );
+    return () => clearInterval(timer.current);
+    // frames.length, not frames itself: the array is a fresh ReactNode[] on
+    // every render of the caller, which would otherwise restart the timer
+    // on every tick it causes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frames.length, intervalMs]);
 
   const start = () => {
+    if (touch) return;
     if (frames.length < 2) return;
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     clearInterval(timer.current);
@@ -36,6 +62,7 @@ export function HoverGallery({
   };
 
   const stop = () => {
+    if (touch) return;
     clearInterval(timer.current);
     setIndex(0);
   };
@@ -65,11 +92,15 @@ export function HoverGallery({
       ))}
 
       {/* Which frame, as a row of ticks. Only worth showing while there is
-          more than one, and only once cycling has actually moved. */}
+          more than one. Always on for the touch reader driving this itself,
+          since there is no hover state to reveal it on that device. */}
       {frames.length > 1 ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-3 bottom-3 flex gap-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className={[
+            'pointer-events-none absolute inset-x-3 bottom-3 flex gap-1 transition-opacity duration-300',
+            touch ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+          ].join(' ')}
         >
           {frames.map((_, i) => (
             <span
