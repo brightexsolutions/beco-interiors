@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { buttonClasses, Reveal } from '@beco/ui';
+import { buttonClasses, Reveal, RangePillarList } from '@beco/ui';
 import { RoomStack } from '@/components/room-stack';
 import { RotatingStatement } from '@/components/rotating-statement';
 import {
-  getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages,
+  getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages, imageForGroup,
 } from '@/lib/products';
 import { SITE } from '@/lib/site';
 
@@ -101,18 +101,9 @@ export default async function AboutPage() {
   // than a hand maintained list of category slugs, so it stays correct if a
   // range moves groups. A pillar with no photography yet, Lighting and
   // Panels today, gets a charcoal plate in the markup below instead of a
-  // guessed stock image.
-  const shotForGroup = (slug: string) => {
-    const group = groups.find((g) => g.slug === slug);
-    if (!group) return undefined;
-    const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
-    for (const p of products) {
-      if (!p.category || !inGroup.has(p.category.slug)) continue;
-      const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);
-      if (shot) return shot;
-    }
-    return undefined;
-  };
+  // guessed stock image. `imageForGroup` also backs the home page's own
+  // range overview, so this match logic lives in one place.
+  const shotForGroup = (slug: string) => imageForGroup(groups, products, slug);
 
   // The rotating statement's photographs. One real application shot per
   // product, cycled if there are fewer products with one than there are
@@ -243,62 +234,29 @@ export default async function AboutPage() {
           </div>
         </div>
 
-        <ol className="mt-14 border-t border-neutral-200">
-          {PILLARS.map((pillar, i) => {
-            const shot = shotForGroup(pillar.groupSlug);
-            return (
-              <Reveal as="li" key={pillar.title} delay={i * 60}>
-                <Link
-                  href={pillar.href}
-                  className="group grid items-center gap-6 border-b border-neutral-200 py-8 sm:grid-cols-[6rem_1fr_11rem] sm:gap-10 lg:grid-cols-[6rem_1fr_15rem]"
-                >
-                  <span aria-hidden className="font-display text-4xl leading-none text-neutral-300 sm:text-5xl">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div>
-                    <h3 className="font-display text-2xl leading-tight text-charcoal">
-                      {pillar.title}
-                      <span
-                        aria-hidden
-                        className="ml-3 inline-block h-px w-0 bg-warm-red align-middle transition-all duration-500 ease-brand group-hover:w-8"
-                      />
-                    </h3>
-                    <p className="mt-2 max-w-[58ch] text-base leading-[1.65] text-neutral-700">
-                      {pillar.body}
-                    </p>
-                  </div>
-                  {/* The photograph, or a charcoal plate naming the range if
-                      it has none yet. Filling the white space to the right of
-                      the copy with a real installation rather than leaving it
-                      as air, and giving the row somewhere for the eye to land
-                      per stone rather than only per line of text. */}
-                  <div className="relative hidden aspect-[4/3] w-full overflow-hidden bg-charcoal transition-transform duration-500 ease-brand group-hover:scale-[1.03] sm:block">
-                    {shot ? (
-                      <Image
-                        src={shot.path}
-                        alt=""
-                        fill
-                        sizes="(max-width: 1024px) 176px, 240px"
-                        {...blurProps(shot)}
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-end p-4">
-                        <p className="font-display text-xl leading-tight text-high-vis-white/70">
-                          {pillar.title}
-                        </p>
-                      </div>
-                    )}
-                    <span
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
-                    />
-                  </div>
-                </Link>
-              </Reveal>
-            );
-          })}
-        </ol>
+        <Reveal>
+          <RangePillarList
+            className="mt-14"
+            items={PILLARS.map((pillar) => {
+              const shot = shotForGroup(pillar.groupSlug);
+              return {
+                title: pillar.title,
+                body: pillar.body,
+                href: pillar.href,
+                image: shot ? (
+                  <Image
+                    src={shot.path}
+                    alt=""
+                    fill
+                    sizes="(max-width: 1024px) 176px, 240px"
+                    {...blurProps(shot)}
+                    className="object-cover"
+                  />
+                ) : undefined,
+              };
+            })}
+          />
+        </Reveal>
       </section>
 
       {/* --- Where the material goes. A photograph with the room type knocked

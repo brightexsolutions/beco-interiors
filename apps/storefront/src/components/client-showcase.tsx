@@ -53,6 +53,11 @@ export function ClientShowcase({ clients }: { clients: PublishedClient[] }) {
             {client.project ? (
               <p className="mt-2 max-w-[42ch] text-sm text-neutral-700">{client.project}</p>
             ) : null}
+            {client.testimonial ? (
+              <blockquote className="mt-4 max-w-[42ch] border-l-2 border-warm-red pl-4 font-display text-lg italic leading-snug text-charcoal">
+                &ldquo;{client.testimonial}&rdquo;
+              </blockquote>
+            ) : null}
           </li>
         ))}
       </ul>

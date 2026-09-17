@@ -296,6 +296,7 @@ export type Database = {
           sector: string | null
           slug: string
           sort_order: number
+          testimonial: string | null
         }
         Insert: {
           created_at?: string
@@ -308,6 +309,7 @@ export type Database = {
           sector?: string | null
           slug: string
           sort_order?: number
+          testimonial?: string | null
         }
         Update: {
           created_at?: string
@@ -320,6 +322,7 @@ export type Database = {
           sector?: string | null
           slug?: string
           sort_order?: number
+          testimonial?: string | null
         }
         Relationships: []
       }

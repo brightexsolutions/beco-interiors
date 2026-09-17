@@ -6,7 +6,7 @@ import type { PublishedClient } from '@/lib/clients';
 
 const client = (overrides: Partial<PublishedClient> = {}): PublishedClient => ({
   id: overrides.id ?? 'a', name: 'Art Caffe', slug: 'art-caffe',
-  logo: null, project: null, sector: null,
+  logo: null, project: null, sector: null, testimonial: null,
   ...overrides,
 });
 
@@ -36,6 +36,16 @@ describe('ClientShowcase', () => {
     })]} />);
     expect(screen.getByText('Hospitality')).toBeInTheDocument();
     expect(screen.getByText('Sintered stone worktops across three outlets.')).toBeInTheDocument();
+  });
+
+  it('shows the testimonial as a quote when one is set', () => {
+    render(<ClientShowcase clients={[client({ testimonial: 'Beco fitted our counters on schedule.' })]} />);
+    expect(screen.getByText('“Beco fitted our counters on schedule.”')).toBeInTheDocument();
+  });
+
+  it('renders no quote block when there is no testimonial', () => {
+    const { container } = render(<ClientShowcase clients={[client()]} />);
+    expect(container.querySelector('blockquote')).toBeNull();
   });
 
   it('has no accessibility violations', async () => {

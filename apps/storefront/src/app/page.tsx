@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ProductCard, Reveal, CountUp, CutoutReveal, buttonClasses } from '@beco/ui';
+import {
+  ProductCard, Reveal, CountUp, CutoutReveal, RangePillarList, buttonClasses, cn,
+} from '@beco/ui';
 import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
 import { HeroStatic } from '@/components/hero-static';
 import { SlabRail } from '@/components/slab-rail';
@@ -8,11 +10,52 @@ import { SlabToSurface } from '@/components/slab-to-surface';
 import { RoomStack } from '@/components/room-stack';
 import { CompletedInteriors } from '@/components/completed-interiors';
 import { ShowroomFilm } from '@/components/showroom-film';
+import { ClientShowcase } from '@/components/client-showcase';
 import {
-  getPublishedProducts, getCategoriesWithProducts, primaryImage,
+  getPublishedProducts, getCategoriesWithProducts, getCategoryTree, primaryImage, imageForGroup,
   type CatalogueProduct, blurProps,
 } from '@/lib/products';
+import { getPublishedClients } from '@/lib/clients';
 import { SITE } from '@/lib/site';
+
+/**
+ * The six ranges Beco actually deals in, per docs/BECO-COMPANY-PROFILE.md
+ * ("What we do"): sintered stone, wall panels, kitchen accessories, cabinet
+ * handles, SPC flooring and furniture accessories. Grouped here the same way
+ * migration 19 groups the taxonomy, Kitchen and furniture accessories both
+ * landing under the editorial "Accessories" group alongside office fittings.
+ *
+ * `href` is resolved per group against real product counts below, not
+ * written here, so a range that is still empty is never linked from the
+ * home page. See `imageForGroup` and `getCategoriesWithProducts`'s own note
+ * on why an empty category stays off a high traffic page.
+ */
+const RANGE_GROUPS = [
+  {
+    slug: 'sintered-stone', title: 'Sintered stone',
+    body: 'Large format slabs for worktops, feature walls, vanities and flooring, in 12mm and 15mm.',
+  },
+  {
+    slug: 'lighting', title: 'Lighting',
+    body: 'Decorative and architectural fittings, specified alongside the surfaces they sit in.',
+  },
+  {
+    slug: 'wall-panels', title: 'Wall panels',
+    body: 'Acoustic, bamboo veneer and SPC panelling, for a wall that goes up quickly and cleanly.',
+  },
+  {
+    slug: 'flooring', title: 'SPC flooring',
+    body: 'A rigid core plank that sits over most existing floors and clicks together without adhesive.',
+  },
+  {
+    slug: 'hardware', title: 'Hardware',
+    body: 'Handles, hinges, door locks and furniture legs, in finishes chosen to sit with the surfaces we supply.',
+  },
+  {
+    slug: 'accessories', title: 'Accessories',
+    body: 'Kitchen organisers, floating shelf fittings and office accessories that finish a piece of joinery properly.',
+  },
+] as const;
 
 /**
  * The home page.
@@ -36,10 +79,36 @@ const imageFor = (p: CatalogueProduct, role?: string) => {
 };
 
 export default async function HomePage() {
-  const [products, categories] = await Promise.all([
+  const [products, categories, groups, clients] = await Promise.all([
     getPublishedProducts(),
     getCategoriesWithProducts(),
+    getCategoryTree(),
+    getPublishedClients(),
   ]);
+
+  // A range only gets a link once it has something behind it: the same
+  // `product_count > 0` rule `getCategoriesWithProducts` already enforces,
+  // applied here to the editorial groups rather than the flat category list.
+  const rangeItems = RANGE_GROUPS.map((range) => {
+    const group = groups.find((g) => g.slug === range.slug);
+    const hasStock = (group?.total_count ?? 0) > 0;
+    const shot = imageForGroup(groups, products, range.slug);
+    return {
+      title: range.title,
+      body: range.body,
+      href: hasStock ? `/shop/${range.slug}` : null,
+      image: shot ? (
+        <Image
+          src={shot.path}
+          alt=""
+          fill
+          sizes="(max-width: 1024px) 176px, 240px"
+          {...blurProps(shot)}
+          className="object-cover"
+        />
+      ) : undefined,
+    };
+  });
 
   // The hero, the "Stone that behaves like a finished surface" grid and the
   // pinned rail are all about the SINTERED STONE range specifically, so they
@@ -109,6 +178,87 @@ export default async function HomePage() {
           to run it, a static charcoal hero with the same words when there is
           not, never nothing. */}
       {slabs.length > 0 ? <PinnedHero slabs={slabs} thickness="12mm" /> : <HeroStatic />}
+
+      {/* --- Who Beco is, straight after the hero. Reported directly: the
+              hero and every section after it read as a sintered stone
+              catalogue with nowhere on the page actually saying who is
+              selling it. docs/BECO-COMPANY-PROFILE.md is the source, the
+              same document /about already draws its own copy from, so
+              nothing here is written fresh for this section. --- */}
+      <section className="mx-auto max-w-[1380px] px-6 py-16 sm:py-20 lg:py-24">
+        <Reveal className="beco-clip">
+          <div className="beco-wipe flex items-center gap-4">
+            <span aria-hidden className="h-px w-8 bg-warm-red" />
+            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              About Beco
+            </p>
+          </div>
+        </Reveal>
+        <Reveal delay={60}>
+          <p className="mt-5 max-w-[30ch] font-display text-3xl leading-[1.15] text-charcoal sm:text-4xl">
+            Creating spaces through thoughtful materials, intelligent solutions and exceptional
+            service.
+          </p>
+        </Reveal>
+        <div className="mt-8 grid gap-x-16 gap-y-6 border-t border-neutral-200 pt-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <Reveal delay={100}>
+            <p className="max-w-[58ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+              A Kenyan interior solutions company, bringing quality products, practical solutions
+              and a seamless client experience together, from the first conversation to the day a
+              project is finished.
+            </p>
+          </Reveal>
+          <Reveal delay={140}>
+            <Link
+              href="/about"
+              className="inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep underline-offset-8 hover:underline"
+            >
+              More about Beco
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* --- What we deal in. The same reported gap: a reader landing after
+              the hero had no way to tell Beco sells anything beyond stone.
+              Every range gets a row, a real photograph where one is
+              catalogued, an honest plate where one is not, and a link only
+              where there is real stock behind it, per RangePillarList's own
+              rule. --- */}
+      <section className="mx-auto max-w-[1380px] px-6 pb-16 sm:pb-20 lg:pb-24">
+        <div className="beco-clip">
+          <div className="beco-wipe">
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-px w-8 bg-warm-red" />
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                What we deal in
+              </p>
+            </div>
+            <h2 className="mt-4 max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+              Six ranges, one supplier.
+            </h2>
+          </div>
+        </div>
+        <RangePillarList className="mt-14" items={rangeItems} />
+      </section>
+
+      {/* --- Named, permitted clients, moved up to sit right after the
+              breadth of the range rather than buried near the foot of the
+              page: reported directly that trust signals (who Beco has
+              delivered for) belong in the same early stretch as who Beco is
+              and what Beco sells, not after it. Reuses the exact component
+              and gate the gallery page already ships: renders nothing until
+              a real row is published with permission recorded, per
+              migration 10, so this is safe to wire in ahead of Beco
+              actually publishing one. The wrapping section is gated on the
+              same length check, not just the component's own null return,
+              so an empty catalogue of clients never leaves a padded gap in
+              the flow. --- */}
+      {clients.length > 0 ? (
+        <section className="mx-auto max-w-[1380px] px-6 pb-16 sm:pb-20 lg:pb-24">
+          <ClientShowcase clients={clients} />
+        </section>
+      ) : null}
 
       {/* --- Stat band. Counts up once on entry, then still. Label above
               figure, on a hairline, so it reads as a specification rather
@@ -268,7 +418,13 @@ export default async function HomePage() {
               <Link href="/contact" className={buttonClasses({ variant: 'primary' })}>
                 Directions and hours
               </Link>
-              <Link href="/gallery" className={buttonClasses({ variant: 'outline' })}>
+              <Link
+                href="/gallery"
+                className={cn(
+                  buttonClasses({ variant: 'outline' }),
+                  'border-high-vis-white text-high-vis-white hover:bg-high-vis-white hover:text-charcoal',
+                )}
+              >
                 See finished projects
               </Link>
             </div>
@@ -327,6 +483,47 @@ export default async function HomePage() {
               what made the section feel like the page had stuck. Not adjacent
               to the hero, which is the other pinned section. --- */}
       <SlabRail products={stones.slice(8, 16)} />
+
+      {/* --- The close. A strong open deserves a strong close: the page
+              used to run straight from the pinned rail into the footer,
+              which is fine as a rail's exit but reads as the page trailing
+              off rather than ending on purpose. The line is the gallery
+              page's own closing statement, reused rather than written
+              fresh, so the site closes on one voice wherever a reader lands
+              on it. Type only, no photograph: the giant wordmark behind the
+              words is the one new visual idea here, kept to opacity and
+              transform so it costs nothing over the site's own motion
+              rules, and aria-hidden since it repeats the brand name a
+              screen reader already has from the page landmark. --- */}
+      <section className="relative overflow-hidden border-t border-neutral-800 bg-charcoal py-20 sm:py-28 lg:py-32">
+        <p
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 select-none text-center font-display text-[26vw] leading-none tracking-[-0.02em] text-high-vis-white/5 sm:text-[20vw]"
+        >
+          BECO
+        </p>
+        <div className="relative mx-auto max-w-[1380px] px-6 text-center">
+          <Reveal className="beco-clip">
+            <p className="beco-wipe mx-auto max-w-[24ch] font-display text-4xl leading-[1.12] text-high-vis-white sm:text-5xl">
+              Bring us the drawing. We will price it.
+            </p>
+          </Reveal>
+          <Reveal delay={80} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/quote" className={buttonClasses({ variant: 'primary' })}>
+              Request a quote
+            </Link>
+            <Link
+              href="/contact"
+              className={cn(
+                buttonClasses({ variant: 'outline' }),
+                'border-high-vis-white text-high-vis-white hover:bg-high-vis-white hover:text-charcoal',
+              )}
+            >
+              Visit the showroom
+            </Link>
+          </Reveal>
+        </div>
+      </section>
 
       <LocalBusinessSchema />
     </main>

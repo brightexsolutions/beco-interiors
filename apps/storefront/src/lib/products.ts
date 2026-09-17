@@ -203,6 +203,31 @@ export const buildCategoryTree = (all: Category[]): CategoryGroup[] => {
 export const getCategoryTree = async (): Promise<CategoryGroup[]> =>
   buildCategoryTree(await getAllCategories());
 
+/**
+ * One real photograph standing in for a whole top level group, an
+ * application shot over a slab or on-stand crop where one exists.
+ *
+ * Pulled here rather than built inline on each page, since About's own four
+ * pillars and the home page's fuller six range overview fill the exact same
+ * slot: a group's name plate replaced by a real installation the moment one
+ * is catalogued. A group with no published products in it yet, or none
+ * photographed, returns undefined, and the caller falls back to the plate
+ * rather than a guessed stock image.
+ */
+export const imageForGroup = (
+  groups: CategoryGroup[], products: CatalogueProduct[], slug: string,
+): ProductImage | undefined => {
+  const group = groups.find((g) => g.slug === slug);
+  if (!group) return undefined;
+  const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+  for (const p of products) {
+    if (!p.category || !inGroup.has(p.category.slug)) continue;
+    const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);
+    if (shot) return shot;
+  }
+  return undefined;
+};
+
 export const getProductsByCategory = async (slug: string): Promise<CatalogueProduct[]> => {
   const { data, error } = await anon()
     .from('products')
