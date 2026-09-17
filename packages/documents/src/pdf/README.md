@@ -3,6 +3,9 @@
 `@react-pdf/renderer` in a Node serverless function. No headless browser, which a free tier
 cannot afford.
 
+Fonts are TTF copies of Titillium and Cormorant. The site's woff2 subsets embed with empty
+outlines, so a quote would print the logo and rules and no letters.
+
 **Page breaks are pinned by snapshot test on a 15 line quote**, which is the case that actually
 breaks. A line item split across a page boundary looks worse than no PDF at all.
 

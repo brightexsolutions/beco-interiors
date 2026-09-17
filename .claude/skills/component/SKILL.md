@@ -13,6 +13,11 @@ hydrates.
 
 Tokens from `packages/ui` only, per the `design-system` skill.
 
+Dashboard hard widgets (dropdown, popover, tabs, combobox) start from shadcn's
+Radix copy-paste into `@beco/ui`, then get restyled until they no longer look
+like shadcn. See D88 and `dropdown-menu.tsx`. Do not paste them into an app.
+The storefront does not use this path.
+
 ## Every component ships with
 
 1. A test in Vitest plus React Testing Library, jsdom, **no browser**

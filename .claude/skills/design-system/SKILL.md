@@ -35,26 +35,41 @@ targets 44px minimum, 8px apart.
 
 ## Radix and shadcn
 
-We use **Radix primitives via shadcn's copy paste approach** for behaviour: dialog, dropdown,
-select, combobox, popover, tabs, toast, and the dashboard data table. Those are the components
-where accessibility is genuinely hard, meaning focus trapping, keyboard navigation, ARIA
-relationships and escape handling, and Radix solves them properly.
+**Dashboard only.** The storefront never starts from shadcn, never imports a
+shadcn-origin widget, and never runs the CLI. It stays bespoke editorial
+layout. Shared primitives (`Button`, `Field`, `PriceDisplay`) are still
+`@beco/ui`; they are not a licence to drop Radix menus onto www.beco.co.ke.
 
-**shadcn is a starting point you overwrite, not a look you adopt.**
+On the dashboard we use **Radix primitives via shadcn's copy paste approach**
+for hard accessibility widgets: dropdown, combobox, popover, tabs, and similar.
+Those need focus trapping, keyboard navigation, ARIA relationships and escape
+handling, and Radix solves them properly.
 
-Section 11.1 of the brief forbids "the default admin template look", and unstyled shadcn *is*
-that look. It is recognisable at a glance from its radius, its muted greys and its button
-treatment, which is why so many dashboards look identical.
+**shadcn is a starting point you overwrite, not a look you adopt.** New copies
+land in `@beco/ui`, never in `apps/dashboard` and never in `apps/storefront`.
+Do not run the shadcn CLI against either app.
 
-**The rule: if a component looks like default shadcn, it is not finished.** No shadcn default
-colour, radius, shadow or spacing survives into a shipped component. Restyle every one against
-the tokens below.
+Section 11.1 of the brief forbids "the default admin template look", and unstyled
+shadcn *is* that look. It is recognisable at a glance from its radius, its muted
+greys and its button treatment, which is why so many dashboards look identical.
 
-`packages/ui/src/components/button.tsx` is the reference. Follow its shape: `cva` for variants,
-`cn` for merging, tokens for every value.
+**The rule: if a component looks like default shadcn, it is not finished.** No
+shadcn default colour, radius, shadow or spacing survives into a shipped
+component. Restyle every one against the tokens below.
 
-The storefront uses far less of this than the dashboard. It is bespoke editorial layout, where
-a component library helps least, and the signature scroll section is entirely custom.
+Some widgets stay off Radix on purpose so they remain testable in jsdom or
+honest on a phone: `ConfirmDialog` and `Dialog` are plain elements; `Select` is
+native (`optgroup`, no rebuilt menu). Do not rip those out to "be more shadcn".
+`@beco/ui` may already list Radix packages that nothing imports yet. Add an
+import when a new dashboard widget needs it, do not install a second copy in an
+app.
+
+`packages/ui/src/components/button.tsx` is the reference. Follow its shape: `cva`
+for variants, `cn` for merging, tokens for every value.
+
+The storefront is bespoke editorial layout. A component library helps it
+least, and the signature scroll section is entirely custom. Do not import
+dashboard shadcn widgets there.
 
 ## Tailwind
 

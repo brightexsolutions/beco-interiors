@@ -857,11 +857,15 @@ export type Database = {
           finalized_at: string | null
           fulfilment: Database["public"]["Enums"]["fulfilment"] | null
           id: string
+          lost_at: string | null
           lost_reason: string | null
           project_details: string | null
           project_type: string | null
+          quoted_at: string | null
           reference_number: string
+          reopened_at: string | null
           requires_approval: boolean
+          reviewing_at: string | null
           source: Database["public"]["Enums"]["quote_source"]
           status: Database["public"]["Enums"]["quote_status"]
           subtotal: number
@@ -872,6 +876,7 @@ export type Database = {
           vat_amount: number
           wants_installation: boolean
           wants_samples: boolean
+          won_at: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -891,11 +896,15 @@ export type Database = {
           finalized_at?: string | null
           fulfilment?: Database["public"]["Enums"]["fulfilment"] | null
           id?: string
+          lost_at?: string | null
           lost_reason?: string | null
           project_details?: string | null
           project_type?: string | null
+          quoted_at?: string | null
           reference_number?: string
+          reopened_at?: string | null
           requires_approval?: boolean
+          reviewing_at?: string | null
           source?: Database["public"]["Enums"]["quote_source"]
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
@@ -906,6 +915,7 @@ export type Database = {
           vat_amount?: number
           wants_installation?: boolean
           wants_samples?: boolean
+          won_at?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -925,11 +935,15 @@ export type Database = {
           finalized_at?: string | null
           fulfilment?: Database["public"]["Enums"]["fulfilment"] | null
           id?: string
+          lost_at?: string | null
           lost_reason?: string | null
           project_details?: string | null
           project_type?: string | null
+          quoted_at?: string | null
           reference_number?: string
+          reopened_at?: string | null
           requires_approval?: boolean
+          reviewing_at?: string | null
           source?: Database["public"]["Enums"]["quote_source"]
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
@@ -940,6 +954,7 @@ export type Database = {
           vat_amount?: number
           wants_installation?: boolean
           wants_samples?: boolean
+          won_at?: string | null
         }
         Relationships: [
           {
@@ -1127,6 +1142,95 @@ export type Database = {
           p_wants_samples?: boolean
         }
         Returns: string
+      }
+      claim_quote: {
+        Args: { p_quote_id: string; p_expected_updated_at: string }
+        Returns: undefined
+      }
+      assign_quote: {
+        Args: {
+          p_quote_id: string
+          p_assignee_id: string
+          p_expected_updated_at: string
+        }
+        Returns: undefined
+      }
+      create_counter_quote: {
+        Args: {
+          p_customer_name: string
+          p_customer_phone: string
+          p_source: Database["public"]["Enums"]["quote_source"]
+          p_items: Json
+          p_customer_email?: string
+        }
+        Returns: string
+      }
+      update_quote_line: {
+        Args: {
+          p_quote_id: string
+          p_line_id: string
+          p_quantity: number
+          p_unit_price: number
+          p_expected_updated_at: string
+        }
+        Returns: undefined
+      }
+      update_quote_lines: {
+        Args: {
+          p_quote_id: string
+          p_items: Json
+          p_expected_updated_at: string
+        }
+        Returns: undefined
+      }
+      add_custom_quote_line: {
+        Args: {
+          p_quote_id: string
+          p_description: string
+          p_quantity: number
+          p_unit_price: number
+          p_expected_updated_at: string
+        }
+        Returns: undefined
+      }
+      add_catalogue_quote_line: {
+        Args: {
+          p_quote_id: string
+          p_product_id: string
+          p_quantity: number
+          p_unit_price: number
+          p_expected_updated_at: string
+        }
+        Returns: undefined
+      }
+      add_catalogue_quote_lines: {
+        Args: {
+          p_quote_id: string
+          p_items: Json
+          p_expected_updated_at: string
+        }
+        Returns: undefined
+      }
+      set_quote_status: {
+        Args: {
+          p_quote_id: string
+          p_status: Database["public"]["Enums"]["quote_status"]
+          p_lost_reason: string | null
+          p_expected_updated_at: string
+        }
+        Returns: undefined
+      }
+      approve_quote: {
+        Args: { p_quote_id: string; p_expected_updated_at: string }
+        Returns: undefined
+      }
+      reissue_quote: {
+        Args: { p_quote_id: string; p_expected_updated_at: string }
+        Returns: undefined
+      }
+      reopen_quote: {
+        Args: { p_quote_id: string; p_expected_updated_at: string }
+        Returns: undefined
       }
     }
     Enums: {

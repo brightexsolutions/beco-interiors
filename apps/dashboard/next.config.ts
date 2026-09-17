@@ -25,15 +25,17 @@ const csp = [
   "font-src 'self'",
   "img-src 'self' data: blob: https://img.beco.co.ke",
   `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''}`,
+  "frame-src 'self' blob:",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",
-  "object-src 'none'",
+  "object-src 'self' blob:",
   ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
 const config: NextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ['@react-pdf/renderer', 'fontkit', 'yoga-layout'],
   images: {
     // Custom loader points at R2, so Vercel image optimization is never invoked
     // and its quota is never spent. See D16.
@@ -51,8 +53,14 @@ const config: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-          // Admin surfaces are never indexed. Header AND robots.txt, not either.
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      {
+        source: '/quotes/:reference/pdf',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "default-src 'none'; frame-ancestors 'self'" },
         ],
       },
     ];

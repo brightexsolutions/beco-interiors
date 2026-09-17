@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@beco/supabase-client';
 import { CHANGE_PASSWORD_PATH, ROLE_LANDING, canAccess } from '@/lib/access';
+import { isForcedPasswordChangeEnforced } from '@/lib/dev-quick-login';
 import { resolveSessionUser } from '@/lib/session';
 
 /**
@@ -11,7 +12,9 @@ import { resolveSessionUser } from '@/lib/session';
  *
  *   - no session               -> /login, carrying a return path
  *   - inactive or unknown user  -> session ended here, -> /login?denied=1
- *   - flagged for a password change -> /change-password, and nothing else
+ *   - flagged for a password change -> /change-password, and nothing else,
+ *     except under `next dev` where that step is skipped so a `db reset` is
+ *     not six password changes before any work
  *   - signed in, wrong role for the path -> that role's own landing
  *
  * RLS in Postgres is LAYER 2 and the authority: it holds even if this is
@@ -40,7 +43,11 @@ export async function proxy(request: NextRequest) {
   // lingering with a live cookie.
   if (!user || !user.role) return endSession(request);
 
-  if (user.mustChangePassword && pathname !== CHANGE_PASSWORD_PATH) {
+  if (
+    user.mustChangePassword &&
+    isForcedPasswordChangeEnforced() &&
+    pathname !== CHANGE_PASSWORD_PATH
+  ) {
     return redirectTo(request, CHANGE_PASSWORD_PATH);
   }
 

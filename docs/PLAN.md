@@ -13,7 +13,7 @@ Brightex material.
 | M2 Drive import pipeline | 3.5 | Not started |
 | M3 Design system | 2.0 | Not started, overlaps M2 |
 | M4 Storefront, SEO, conversion, motion | 8.5 | Not started |
-| M5 Operations dashboard | 6.5 | Not started |
+| M5 Operations dashboard | 6.5 | **WIP.** Quotes, PDF, email and dashboard home figures landed 17 September on `m5-quotes`. Next screen: products editor. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
 | M6 Launch | 3.5 | Not started |
 | M7 Brightex Studio | 3.5 | After launch, unbilled. Inside the dashboard per D9, gated per D42 |
 
@@ -58,6 +58,14 @@ showroom booking CTA, dual homeowner/professional pathways, technical spec field
 WhatsApp button). That feedback was explicitly routed to a different chat session; check with
 Brown before assuming it is unclaimed.
 
+**Dashboard, 17 September, branch `m5-quotes`:** the quotes surface is the
+reference admin screen (list, `/quotes/new`, detail, PDF, email). Dashboard
+home figures come from `dashboard_summary()`. `/products` is still a
+placeholder. Next session owns the products editor. Read
+`docs/milestones/M5-QUOTES-HANDOVER.md` before opening a new chat. Do not
+edit quotes, AppShell or the storefront from that session. Live beco.co.ke is
+still WordPress until launch.
+
 ## Agreed cut order, if the date is held
 
 Stop when it fits.
@@ -80,7 +88,7 @@ Anything cut or deferred is recorded here with a reason, never silently dropped.
 
 | Item | Milestone | Reason | Revisit |
 |---|---|---|---|
-| Receipt PDF and its email template | M5 | Agreed cut order item 1: quotes only at launch, receipts the week after. `document_type` already carries `receipt`, so this defers the renderer and template, not schema | Week after launch |
+| ~~Receipt PDF and its email template~~ **No longer deferred, 17 September** | M5 | Brown reversed cut order item 1: receipts are to be built in full, not left to the week after launch. A receipt is proof of payment, so it is sequenced behind the order payment state (mark an order paid, stamp `paid_at`) and is built with the orders screen rather than with quotes. Renderer decided at the same time: `@react-pdf/renderer`, shared by the quote and receipt templates per the `quote-document` skill | Building in M5, with orders |
 | Audit log viewer (`/dashboard/audit`) | M5 | Agreed cut order item 3: audit *writing* is live from day one via the trigger, *reading* it through a screen waits. Admin roles can still query the table directly meanwhile | M6 or first retainer cycle |
 | `/dashboard/imports` screen | M5 | Agreed cut order item 4: the `drive:import` CLI and the `import_runs` / `import_issues` tables carry the same information until the screen exists | Post-launch retainer |
 | Automatic stock decrement on order status change | M5 | 0.1 resolved to option B (manual quantity). Auto-decrement needs a non-racing, non-negative decrement path, a put-back on cancellation, and a decision on whether a `quoted` quote reserves stock, none of which should be designed before the order flow has been used for real | After the order flow has real usage |

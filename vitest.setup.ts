@@ -26,9 +26,62 @@ expect.extend(axeMatchers);
 HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;
 
 /**
+ * Radix menus (DropdownMenu and later Popover) dispatch PointerEvents and
+ * call setPointerCapture. jsdom has neither, so a passing click in the
+ * browser becomes a silent no-op in tests and looks like the control is
+ * decorative. Stub only what the primitive needs; do not fake a full
+ * pointer implementation.
+ */
+if (typeof window !== 'undefined') {
+  if (typeof window.PointerEvent === 'undefined') {
+    class PointerEventStub extends MouseEvent {
+      pointerId: number;
+      pointerType: string;
+      isPrimary: boolean;
+      constructor(type: string, params: MouseEventInit & { pointerId?: number; pointerType?: string; isPrimary?: boolean } = {}) {
+        super(type, params);
+        this.pointerId = params.pointerId ?? 1;
+        this.pointerType = params.pointerType ?? 'mouse';
+        this.isPrimary = params.isPrimary ?? true;
+      }
+    }
+    window.PointerEvent = PointerEventStub as typeof PointerEvent;
+  }
+}
+
+if (typeof Element !== 'undefined') {
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!Element.prototype.setPointerCapture) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+}
+
+if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as typeof ResizeObserver;
+}
+
+/**
  * Testing Library auto-cleans only when `globals: true`. We keep globals off,
  * so unmount explicitly. Without this, renders accumulate in the document and
  * a later query finds elements from an earlier test, which fails in a way that
  * looks like a component bug rather than a harness one.
  */
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  // Radix menus lock the body. If a test fails while one is open, jsdom
+  // keeps `pointer-events: none` and the next userEvent.click waits forever.
+  document.body.style.pointerEvents = '';
+  document.body.removeAttribute('data-scroll-locked');
+});

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit"
@@ -15,6 +15,7 @@
     "@beco/ui": "workspace:*",
     "@beco/types": "workspace:*",
     "@beco/validation": "workspace:*",
+    "@beco/documents": "workspace:*",
     "@beco/supabase-client": "workspace:*",
     "@supabase/supabase-js": "^2.112.4"
   },

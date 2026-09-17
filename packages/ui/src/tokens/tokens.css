@@ -343,6 +343,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Auth form column. Quiet paper: a charcoal wash from the showroom seam
+   into cool stone, no grid, no blob. Colour only from the palette. */
+.beco-auth-form-ground {
+  background-color: var(--color-neutral-50);
+  background-image:
+    radial-gradient(
+      ellipse 70% 55% at 52% 38%,
+      var(--color-high-vis-white) 0%,
+      transparent 68%
+    ),
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--color-charcoal) 7%, var(--color-neutral-50)) 0%,
+      var(--color-neutral-50) 38%,
+      var(--color-neutral-100) 100%
+    );
+}
+
 /* Every interactive element meets the 44px touch target. */
 button, a[role='button'], input, select, textarea {
   min-height: var(--touch-target);

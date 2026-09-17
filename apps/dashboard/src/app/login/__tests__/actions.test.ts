@@ -24,7 +24,7 @@ vi.mock('@/lib/session', () => ({
   resolveSessionUser: (...a: unknown[]) => resolveSessionUser(...a),
 }));
 
-const { signIn } = await import('../actions');
+const { signIn, devSignIn } = await import('../actions');
 
 const form = (fields: Record<string, string>) => {
   const f = new FormData();
@@ -54,6 +54,7 @@ describe('signIn', () => {
   it('rejects a malformed email before reaching Supabase', async () => {
     const result = await signIn({}, form({ ...validCreds, email: 'nope' }));
     expect(result?.error).toMatch(/email/i);
+    expect(result?.field).toBe('email');
     expect(signInWithPassword).not.toHaveBeenCalled();
     expect(redirect).not.toHaveBeenCalled();
   });
@@ -62,6 +63,7 @@ describe('signIn', () => {
     signInWithPassword.mockResolvedValue(authFail);
     const result = await signIn({}, form(validCreds));
     expect(result?.error).toMatch(/do not match an account/i);
+    expect(result?.field).toBeUndefined();
     expect(redirect).not.toHaveBeenCalled();
     expect(rpc).not.toHaveBeenCalled();
   });
@@ -107,5 +109,48 @@ describe('signIn', () => {
     const eleventh = await signIn({}, form(validCreds));
     expect(eleventh?.error).toMatch(/too many attempts/i);
     expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+});
+
+describe('devSignIn', () => {
+  it('refuses outside development, without touching Supabase', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const result = await devSignIn({}, form({ email: 'sam.odhiambo@beco.co.ke' }));
+    expect(result?.error).toMatch(/do not match an account/i);
+    expect(signInWithPassword).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+
+  it('refuses an address that is not a seeded account, even in development', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    const result = await devSignIn({}, form({ email: 'stranger@beco.co.ke' }));
+    expect(result?.error).toMatch(/do not match an account/i);
+    expect(signInWithPassword).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+
+  it('signs in with the seed password and redirects', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    signInWithPassword.mockResolvedValue(authOk);
+    await devSignIn({}, form({ email: 'sam.odhiambo@beco.co.ke', next: '/quotes' }));
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: 'sam.odhiambo@beco.co.ke',
+      password: 'beco-dev-pass',
+    });
+    expect(rpc).toHaveBeenCalledWith('record_sign_in');
+    expect(redirect).toHaveBeenCalledWith('/quotes');
+    vi.unstubAllEnvs();
+  });
+
+  it('leaves must_change_password alone, so the real flow survives a dev sign in', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    signInWithPassword.mockResolvedValue(authOk);
+    await devSignIn({}, form({ email: 'sam.odhiambo@beco.co.ke' }));
+    // The forced-change screen is skipped by the gate, not by destroying the
+    // flag. Clearing it here would make DEV_FORCE_PASSWORD_CHANGE=1 useless
+    // for any account that had ever used a quick login button.
+    expect(rpc).not.toHaveBeenCalledWith('complete_first_login');
+    vi.unstubAllEnvs();
   });
 });

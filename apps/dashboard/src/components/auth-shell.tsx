@@ -1,7 +1,8 @@
 /**
  * The frame every pre-authentication screen sits in: sign in, and the forced
  * password change. A charcoal brand panel over Beco's own showroom footage,
- * and a white form panel. No gradient, no card shadow, no dark-sidebar
+ * and a paper form panel: a charcoal wash from the seam into cool stone, not
+ * a blank white slab and not a grid. No card shadow, no dark-sidebar
  * dashboard look, per the design-system skill.
  *
  * The video is the licensed interior clip (`GALLERY_FILM`, D69), muted and
@@ -67,10 +68,10 @@ export function AuthShell({
         </p>
       </aside>
 
-      <main className="flex flex-col justify-center px-6 py-16 sm:px-10 lg:items-center lg:px-16">
-        <div className="w-full max-w-sm">
+      <main className="beco-auth-form-ground relative isolate flex flex-col justify-center px-6 py-16 sm:px-10 lg:items-center lg:px-16 lg:border-l lg:border-charcoal/10">
+        <div className="relative w-full max-w-[26rem]">
           {eyebrow ? (
-            <p className="mb-3 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+            <p className="mb-3 font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
               {eyebrow}
             </p>
           ) : null}

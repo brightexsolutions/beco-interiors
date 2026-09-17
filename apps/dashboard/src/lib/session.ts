@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createServerClient } from '@beco/supabase-client';
 import type { UserRole } from '@beco/types';
 import { CHANGE_PASSWORD_PATH, ROLE_LANDING, canAccess } from './access';
+import { isForcedPasswordChangeEnforced } from './dev-quick-login';
 import { getSupabase } from './supabase';
 
 export type AdminRole = Extract<UserRole, 'beco_admin' | 'brightex_admin'>;
@@ -91,10 +92,15 @@ export const requireSignedIn = async (): Promise<ActiveSession> => {
  * "checks in two places": a server component or action that calls this is
  * safe even if the proxy was bypassed, because RLS is still underneath and
  * this re-reads `users`.
+ *
+ * The change is skipped under `next dev`, see `isForcedPasswordChangeEnforced`.
+ * That is a convenience gate and nothing more: it decides which SCREEN you
+ * land on, never what you may read or write, which is RLS's answer and is
+ * unchanged.
  */
 export const requireUser = async (): Promise<ActiveSession> => {
   const user = await requireSignedIn();
-  if (user.mustChangePassword) redirect(CHANGE_PASSWORD_PATH);
+  if (user.mustChangePassword && isForcedPasswordChangeEnforced()) redirect(CHANGE_PASSWORD_PATH);
   return user;
 };
 

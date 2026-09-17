@@ -159,7 +159,8 @@ former slug 301s to the current one. From `docs/REVIEW.md` 2.3.
 | `subtotal`, `vat_amount`, `total_amount` | numeric(12,2) | |
 | `currency` | text default 'KES' | |
 | `valid_until` | date | |
-| `finalized_at` | timestamptz null | Stamped on reaching won |
+| `finalized_at` | timestamptz null | Stamped on reaching won or lost. Cleared if the quote leaves those states |
+| `reviewing_at`, `quoted_at`, `won_at`, `lost_at`, `reopened_at` | timestamptz null | Lifecycle dates for the Dates rail. Persist after reopen. Trigger `stamp_quote_milestones`, migration 37 |
 | `lost_reason` | text null | |
 | `converted_order_id` | uuid FK orders null | |
 | `updated_at` | timestamptz | **Optimistic locking.** Compared on save, refused if stale, so two salespeople cannot silently overwrite each other |
@@ -347,6 +348,17 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `current_user_role()` | Reads the caller's role for policies. Null for an inactive account |
 | `audit_trigger()` | Writes `audit_log` on insert, update and soft delete |
 | `submit_quote(...)` | The public quote write, one atomic transaction, `security definer`. Products, descriptions and prices resolved from the catalogue, never the request. Enforces the D68 half-slab rule per product |
+| `add_catalogue_quote_line(...)` | Dashboard. Adds a published product to an existing quote, snapshots name and `list_price`, optimistic lock. Unpublished or deleted products are refused |
+| `add_catalogue_quote_lines(...)` | Dashboard. Adds several published products under one lock so a second add cannot race `updated_at`. Unpublished or deleted products refuse the whole batch |
+| `update_quote_lines(...)` | Dashboard. Saves every dirty line in one lock so a second row cannot race `updated_at` |
+| `add_custom_quote_line(...)` | Dashboard. Adds a line with `product_id` null and a description snapshot |
+| `create_counter_quote(...)` | Dashboard. Walk-in or phone quote in one transaction. `created_by` and `assigned_to` are the salesperson. Refuses `web` |
+| `claim_quote(...)` | Dashboard. Salesperson takes an unassigned quote. Optimistic lock |
+| `assign_quote(...)` | Dashboard. Admin assigns to a Beco salesperson or Beco admin. Refuses `brightex_admin`. Migration 34 |
+| `set_quote_status(...)` | Dashboard. Moves a quote through reviewing, quoted, won or lost. Lost requires a reason. Cannot quietly un-lose; that is `reopen_quote` |
+| `reopen_quote(...)` | Dashboard. Lost to reviewing when the client comes back. Clears `lost_reason` and `finalized_at`. Won stays closed. Same owner or admin, optimistic lock |
+| `reissue_quote(...)` | Dashboard. Stamps a fresh `valid_until` on an expired open quote |
+| `dashboard_summary()` | Dashboard home. One jsonb round trip, Africa/Nairobi boundaries, security invoker so RLS decides who sees which figures. Migration 31 |
 | `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
 | `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
 

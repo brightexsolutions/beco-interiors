@@ -1,5 +1,17 @@
 export { Button, buttonClasses, type ButtonProps } from './components/button';
+export { Fab, fabClasses, type FabProps } from './components/fab';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
+export { Dialog, type DialogProps } from './components/dialog';
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './components/dropdown-menu';
+
 export { PriceDisplay, formatPrice, type PriceDisplayProps } from './components/price-display';
 export { AvailabilityBadge, type AvailabilityBadgeProps } from './components/availability-badge';
 export { ProductCard, type ProductCardProps } from './components/product-card';
@@ -8,6 +20,10 @@ export {
   type ProductGalleryProps, type GalleryImage, type GalleryRole,
 } from './components/product-gallery';
 export { EmptyState, LoadingState, ErrorState } from './components/states';
+export { Skeleton, SkeletonScreen } from './components/skeleton';
+export { Panel } from './components/panel';
+export { Pagination } from './components/pagination';
+export { paginate, DASHBOARD_LIST_PAGE_SIZE } from './lib/paginate';
 export { Reveal, type RevealProps } from './components/reveal';
 export { ScrollMotion } from './components/scroll-motion';
 export { HoverGallery } from './components/hover-gallery';
@@ -19,6 +35,8 @@ export {
 export { PasswordInput, type PasswordInputProps } from './components/password-input';
 export { QuantityStepper, type QuantityStepperProps } from './components/quantity-stepper';
 export { Notice, type NoticeProps } from './components/notice';
+export { Toaster, toast, useActionToast, type ToastTone } from './components/toaster';
+export { BackLink, type BackLinkProps } from './components/back-link';
 export { StatusPill, type StatusPillProps, type StatusTone } from './components/status-pill';
 export { StatCard, type StatCardProps, type StatCardTone } from './components/stat-card';
 export { DataTable, type DataTableProps, type DataTableColumn } from './components/data-table';

@@ -35,6 +35,13 @@ describe('StatCard', () => {
     expect(value.className).not.toContain('warm-red');
   });
 
+  it('the inverse tone is charcoal, so a featured figure does not spend Warm Red', () => {
+    const { container } = render(<StatCard label="In this view" value="5" tone="inverse" />);
+    expect(container.firstElementChild?.className).toContain('bg-charcoal');
+    expect(screen.getByText('5').className).toContain('text-high-vis-white');
+    expect(screen.getByText('5').className).not.toContain('warm-red');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(
       <StatCard label="Invoiced" value="KES 480,000" comparison="Collected: KES 210,000" tone="plain" />,

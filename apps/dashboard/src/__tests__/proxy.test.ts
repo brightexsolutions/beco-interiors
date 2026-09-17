@@ -40,6 +40,7 @@ const location = (res: Response) =>
 afterEach(() => {
   getUser.mockReset();
   resolveSessionUser.mockReset();
+  vi.unstubAllEnvs();
 });
 
 describe('dashboard proxy: session gate', () => {
@@ -101,6 +102,32 @@ describe('dashboard proxy: forced password change', () => {
     const res = await proxy(requestFor('/change-password', AUTHED));
     expect(location(res)).toBeNull();
     expect(res.status).toBe(200);
+  });
+
+  it('lets a flagged user straight through under next dev', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    resolveSessionUser.mockResolvedValue(user({ mustChangePassword: true }));
+    const res = await proxy(requestFor('/quotes', AUTHED));
+    expect(location(res)).toBeNull();
+    expect(res.status).toBe(200);
+  });
+
+  it('still applies the role gate in development, which the skip must not loosen', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    resolveSessionUser.mockResolvedValue(user({ mustChangePassword: true }));
+    const res = await proxy(requestFor('/users', AUTHED));
+    expect(location(res)?.pathname).toBe('/quotes');
+  });
+
+  it('honours DEV_FORCE_PASSWORD_CHANGE, so the real flow can be walked locally', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('DEV_FORCE_PASSWORD_CHANGE', '1');
+    getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    resolveSessionUser.mockResolvedValue(user({ mustChangePassword: true }));
+    const res = await proxy(requestFor('/quotes', AUTHED));
+    expect(location(res)?.pathname).toBe('/change-password');
   });
 });
 

@@ -15,10 +15,11 @@ import { cn } from '../lib/cn';
 const button = cva(
   [
     'inline-flex items-center justify-center gap-2',
-    'font-ui font-semibold uppercase tracking-[0.09em]',
+    'font-ui font-semibold uppercase tracking-[0.09em] leading-none whitespace-nowrap',
     'text-sm', // 16px floor, never smaller
-    'rounded-[2px] px-6 py-3.5',
-    'min-h-[2.75rem]', // 44px touch target
+    // Fixed 44px, same as Input `h-11`. py-3.5 plus body line-height 1.6
+    // grew past the input and wrapped labels like SAVE LINE.
+    'h-11 rounded-[2px] px-4',
     'transition-colors duration-200 ease-brand',
     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px]',
     'focus-visible:outline-warm-red',
@@ -37,7 +38,7 @@ const button = cva(
       },
       size: {
         default: '',
-        large: 'px-8 py-4 text-base',
+        large: 'h-12 px-8 text-base',
       },
     },
     defaultVariants: { variant: 'primary', size: 'default' },

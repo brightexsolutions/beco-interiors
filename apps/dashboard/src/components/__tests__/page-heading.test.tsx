@@ -15,9 +15,15 @@ describe('PageHeading', () => {
     expect(screen.getByText('Everything awaiting a price.')).toBeInTheDocument();
   });
 
-  it('renders an actions slot', () => {
-    render(<PageHeading title="Quotes" actions={<button type="button">New quote</button>} />);
-    expect(screen.getByRole('button', { name: 'New quote' })).toBeInTheDocument();
+  it('keeps actions on the same row as the title, to the right', () => {
+    const { container } = render(
+      <PageHeading title="BEC-Q-00001" actions={<button type="button">View</button>} />,
+    );
+    const row = container.querySelector('h1')?.parentElement;
+    expect(row?.className).toContain('justify-between');
+    expect(row?.className).toContain('items-center');
+    expect(row?.className).not.toContain('flex-col');
+    expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument();
   });
 
   it('has no accessibility violations', async () => {

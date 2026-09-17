@@ -27,8 +27,23 @@ export function AppShell({
   const name = user.fullName || user.email;
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="mx-auto max-w-[1440px] px-4 pt-4 lg:px-8 lg:pt-6">
+    // Charcoal carries the brand, not Warm Red, which is rationed to three or
+    // four marks a page. The band behind the chrome is the same licensed
+    // showroom still the login panel uses (`gallery-ambient-poster`, D69),
+    // sat well back under a charcoal wash so it reads as slow texture rather
+    // than a cropped scene. A flat charcoal fill remains underneath, so a
+    // slow image is never a blank strip. The content panel still floats on
+    // the off-white ground below, so the hierarchy is band, ground, panel.
+    <div className="relative min-h-screen bg-neutral-50">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 overflow-hidden bg-charcoal lg:h-48">
+        <img
+          src="/video/gallery-ambient-poster.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-[center_38%]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/55 to-charcoal/90" />
+      </div>
+      <div className="relative mx-auto max-w-[1440px] px-4 pt-4 lg:px-8 lg:pt-6">
         <header className="flex items-center gap-3 rounded-panel bg-high-vis-white p-2 shadow-panel lg:gap-5 lg:p-2.5">
           <Link
             href="/"
@@ -69,7 +84,7 @@ export function AppShell({
         </header>
       </div>
 
-      <main className="mx-auto max-w-[1440px] px-4 py-4 lg:px-8 lg:py-6">
+      <main className="relative mx-auto max-w-[1440px] px-4 py-4 lg:px-8 lg:py-6">
         <div className="rounded-panel bg-high-vis-white p-6 shadow-panel lg:p-9">{children}</div>
       </main>
     </div>

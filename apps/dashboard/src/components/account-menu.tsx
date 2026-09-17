@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from '@/app/actions';
 
 const initials = (name: string) =>
   name
@@ -16,7 +15,11 @@ const initials = (name: string) =>
 /**
  * The account control: a round initials button that opens a flat panel with
  * "Change password" and "Sign out". Closes on Escape, on a click outside, and
- * on navigation. Sign out is a server action, not a link.
+ * on navigation. Sign out is a POST, never a link, because a link would let a
+ * prefetch or a crawler end someone's session.
+ *
+ * Stays a plain element (D88): Radix DropdownMenu cannot be clicked reliably
+ * in jsdom, and this control already has tests proving it works.
  */
 export function AccountMenu({ name }: { name: string }) {
   const [open, setOpen] = useState(false);
@@ -67,7 +70,10 @@ export function AccountMenu({ name }: { name: string }) {
           >
             Change password
           </Link>
-          <form action={signOut}>
+          {/* A plain POST to the route handler, not a server action: see
+              `app/sign-out/route.ts` for why the action could not survive its
+              own redirect out of this layout. */}
+          <form action="/sign-out" method="post">
             <button
               role="menuitem"
               type="submit"

@@ -1,0 +1,102 @@
+# One local Supabase project for the whole monorepo.
+#
+# This file exists because it was missing, and its absence was a real bug.
+# Without it the CLI derives `project_id` from the directory it is run in, so
+# a second git worktree of this repo started a SECOND stack under a different
+# container name. Whichever one came up first took ports 54321 and 54322 and
+# the other failed, which meant `supabase db reset` and `supabase test db`
+# could not reach the database the apps were actually reading. Migrations
+# then had to be applied to a foreign container by hand, which is exactly how
+# two environments drift apart.
+#
+# Pinning `project_id` makes the stack belong to the REPOSITORY rather than to
+# a directory name. Every worktree, and therefore `apps/storefront` and
+# `apps/dashboard` together, resolves to one database. A quote raised in the
+# dashboard is visible to the storefront immediately because there is only one
+# place it could have been written.
+#
+# The ports below are not decoration. `.env.local` in both apps hardcodes
+# 127.0.0.1:54321, so changing the api port here silently breaks both.
+project_id = "beco-interiors-website"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = true
+# Fictional customers only, per rule 6. Never cloned from production.
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+# Local mail catcher. Quote and receipt email is checked here rather than sent,
+# so a test run cannot post to a real customer.
+[local_smtp]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+# The storefront. The dashboard runs on 3001 and is listed below it, because
+# both surfaces sign in against this one GoTrue.
+site_url = "http://localhost:3000"
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3001",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# Staff accounts are created by an admin, never self service. See D80.
+enable_signup = false
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+minimum_password_length = 8
+
+[auth.email]
+# This is NOT the self-service registration switch, despite the name. It maps
+# to GOTRUE_EXTERNAL_EMAIL_ENABLED, so setting it false turns the email
+# provider off outright and every sign in is refused with
+# "email_provider_disabled". Email and password IS how staff sign in, so it
+# stays true. The switch that actually closes registration is
+# `enable_signup` under [auth] above.
+enable_signup = true
+enable_confirmations = false
+secure_password_change = false
+max_frequency = "1s"
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+
+[analytics]
+enabled = true
+port = 54327

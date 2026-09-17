@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, isExpired } from '../quotes';
+import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, isExpired, quoteMilestones } from '../quotes';
 
 describe('isExpired', () => {
   const today = new Date('2026-09-10T12:00:00Z');
@@ -40,7 +40,42 @@ describe('QUOTE_STATUS', () => {
 
 describe('QUOTE_SOURCE_LABEL', () => {
   it('has a human label for every source', () => {
+    expect(QUOTE_SOURCE_LABEL.web).toBe('Website');
     expect(QUOTE_SOURCE_LABEL.walk_in).toBe('Walk in');
     expect(QUOTE_SOURCE_LABEL.whatsapp).toBe('WhatsApp');
+  });
+});
+
+describe('quoteMilestones', () => {
+  const raised = '2026-09-16T13:28:00.000Z';
+
+  it('lists only Raised on a brand new quote', () => {
+    expect(
+      quoteMilestones({
+        createdAt: raised,
+        reviewingAt: null,
+        quotedAt: null,
+        approvedAt: null,
+        wonAt: null,
+        lostAt: null,
+        reopenedAt: null,
+        validUntil: null,
+      }).map((row) => row.label),
+    ).toEqual(['Raised']);
+  });
+
+  it('keeps Lost after reopen so the rail still shows the client walked away', () => {
+    expect(
+      quoteMilestones({
+        createdAt: raised,
+        reviewingAt: raised,
+        quotedAt: raised,
+        approvedAt: null,
+        wonAt: null,
+        lostAt: '2026-09-17T10:00:00.000Z',
+        reopenedAt: '2026-09-17T17:40:00.000Z',
+        validUntil: '2026-10-07',
+      }).map((row) => row.label),
+    ).toEqual(['Raised', 'Reviewed', 'Quoted', 'Valid until', 'Lost', 'Reopened']);
   });
 });

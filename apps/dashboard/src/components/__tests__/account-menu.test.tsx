@@ -5,9 +5,6 @@ import { axe } from 'vitest-axe';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/quotes' }));
 
-const signOut = vi.fn();
-vi.mock('@/app/actions', () => ({ signOut: (...a: unknown[]) => signOut(...a) }));
-
 const { AccountMenu } = await import('../account-menu');
 
 describe('AccountMenu', () => {
@@ -33,12 +30,17 @@ describe('AccountMenu', () => {
     expect(screen.getByRole('menuitem', { name: /sign out/i })).toHaveAttribute('type', 'submit');
   });
 
-  it('signs out through the server action, not a link', async () => {
+  it('signs out by POSTing to the route handler, never by a link', async () => {
     const user = userEvent.setup();
     render(<AccountMenu name="Irene Kariuki" />);
     await user.click(screen.getByRole('button', { name: /irene kariuki/i }));
-    await user.click(screen.getByRole('menuitem', { name: /sign out/i }));
-    expect(signOut).toHaveBeenCalled();
+
+    const form = screen.getByRole('menuitem', { name: /sign out/i }).closest('form');
+    // A GET, or an anchor, would let a link prefetch or a crawler end the
+    // session. The method is the control here, so it is asserted directly.
+    expect(form).toHaveAttribute('method', 'post');
+    expect(form).toHaveAttribute('action', '/sign-out');
+    expect(screen.queryByRole('link', { name: /sign out/i })).toBeNull();
   });
 
   it('closes on Escape', async () => {

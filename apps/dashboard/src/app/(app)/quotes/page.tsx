@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PageHeading } from '@/components/page-heading';
+import { NewQuoteFab } from '@/components/new-quote-fab';
 import { QuoteFilters, type OwnerOption } from '@/components/quote-filters';
 import { QuoteResults } from '@/components/quote-results';
 import { fetchQuotes, type QuoteListItem, type QuoteOwnerFilter } from '@/lib/quotes';
@@ -53,7 +54,7 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
         title="Quotes"
         lede={
           owner === 'unassigned'
-            ? 'Web submissions nobody has claimed yet.'
+            ? 'Website submissions nobody has claimed yet.'
             : owner === 'preparing'
               ? 'Started, not yet assigned to anyone.'
               : undefined
@@ -64,7 +65,12 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
         <QuoteFilters ownerOptions={ownerOptions} />
       </div>
 
-      <QuoteResults quotes={quotes} />
+      {/* Bottom padding keeps the last card out from under the FAB. */}
+      <div className="pb-24">
+        <QuoteResults quotes={quotes} />
+      </div>
+
+      <NewQuoteFab />
     </>
   );
 }

@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { AuthShell } from '@/components/auth-shell';
+import { PageHeading } from '@/components/page-heading';
+import { isDevQuickLoginEnabled } from '@/lib/dev-quick-login';
 import { getSupabase } from '@/lib/supabase';
 import { SignInForm } from './sign-in-form';
+import { DevQuickLogin } from './dev-quick-login';
 
 export const metadata: Metadata = {
   title: 'Sign in',
@@ -28,10 +31,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <AuthShell eyebrow="Sign in">
-      <h1 className="font-ui text-2xl font-semibold text-charcoal">Welcome back</h1>
-      <p className="mb-8 mt-2 font-ui text-base text-neutral-500">Sign in to continue.</p>
+    <AuthShell>
+      <PageHeading title="Sign in" />
       <SignInForm next={next} denied={denied} />
+      {isDevQuickLoginEnabled() ? <DevQuickLogin next={next} /> : null}
     </AuthShell>
   );
 }

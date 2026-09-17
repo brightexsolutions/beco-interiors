@@ -10,10 +10,24 @@ import { cn } from '../lib/cn';
  */
 
 export function EmptyState({
-  title, description, action, className,
-}: { title: string; description?: ReactNode; action?: ReactNode; className?: string | undefined }) {
+  title, description, action, className, fill = false,
+}: {
+  title: string;
+  description?: ReactNode;
+  action?: ReactNode;
+  className?: string | undefined;
+  /** Fill the parent instead of sitting in a short py-16 block. Dashboard
+   *  queues use this so an empty filter still occupies the list pane. */
+  fill?: boolean | undefined;
+}) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-16 text-center', className)}>
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center text-center',
+        fill ? 'h-full min-h-0 px-6 py-10' : 'py-16',
+        className,
+      )}
+    >
       <span aria-hidden className="mb-4 block h-px w-12 bg-warm-red" />
       <h2 className="font-display text-2xl text-charcoal">{title}</h2>
       {description ? (

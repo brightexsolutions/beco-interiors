@@ -1,19 +1,26 @@
 # M5: Operations dashboard
 
-> **Starting a new session? Read this whole file, then `docs/ARCHITECTURE.md` sections 4 to 7,
-> 10, 11, 12 and 17, and `docs/DECISIONS.md` from D50.** The quotation flow is the product.
-> Test it more thoroughly than anything else on the platform.
+> **Starting a new session on the next admin page?** Quotes is handed off.
+> Read `docs/milestones/M5-QUOTES-HANDOVER.md` first, then section G below,
+> `docs/DASHBOARD-UI.md`, and `docs/DECISIONS.md` from D50 (D54, D88). Do not
+> reopen quotes, AppShell, or the storefront.
+>
+> Cold start on the whole milestone: this file, `docs/ARCHITECTURE.md`
+> sections 4 to 7, 10, 11, 12 and 17, and `docs/DECISIONS.md` from D50. The
+> quotation flow is the product. Test it more thoroughly than anything else
+> on the platform.
 
 Per CLAUDE.md rule 8. **Ticked only when checked against reality, not when written.**
 
 Status key: `[x]` verified against reality / `[~]` built, not yet verified / `[ ]` not started
 
-Nothing below is `[x]` yet. This list is the plan, written before feature code, per rule 8.
 Items are added as they are discovered rather than remembered.
 
-Branch: `m5-dashboard`, off `m4-closeout` at `a5783b6`. M4's own tail (real phone QA walk,
-first green Lighthouse PR run, ESLint once typescript-eslint supports TS 7) stays on
-`m4-closeout` and is not M5 work.
+Branch: `m5-quotes`, off `m5-dashboard` at `a6d784d` (`m5-dashboard` itself is
+off `m4-closeout` at `a5783b6`). Quotes (D, E) and dashboard home figures (H)
+are built as of 17 September. Next screen: section G, products editor.
+M4's own tail (real phone QA walk, first green Lighthouse PR run, ESLint once
+typescript-eslint supports TS 7) stays on `m4-closeout` and is not M5 work.
 
 ---
 
@@ -279,9 +286,10 @@ server with real sessions per role, and unit plus integration tested (`lib/__tes
 `lib/quotes.integration.test.ts`, `components/__tests__/quote-filters.test.tsx`).
 
 - [x] `/dashboard/quotes`: full cards on mobile (D38, each row is a decision), table on desktop
-- [~] Filters that actually change the result set and its count: status, owner, source built and
+- [x] Filters that actually change the result set and its count: status, owner, source built and
       verified live (`?owner=unassigned`, `?status=quoted`, `?search=` all narrow correctly).
-      **`age` not built yet**
+      Paginated, eight a page. **`age` not built yet**, left for a later pass
+- [x] Mobile FAB: charcoal labelled New quote, stays on screen while the list scrolls. `NewQuoteFab`
 - [x] The unassigned queue: web quotes arrive `created_by` null and `assigned_to` null. `owner=unassigned`
 - [x] Per-agent view vs admin assignment, per Brown 4 September: built to the literal spec,
       `beco_sales` gets "Assigned to me" / "I'm preparing" (`created_by = me`, `assigned_to`
@@ -292,81 +300,85 @@ server with real sessions per role, and unit plus integration tested (`lib/__tes
 - [ ] Realtime: a new row shows a **banner, never an insertion** (D46). Deferred to section L,
       unchanged
 - [x] Expired-quote presentation per 0.2: a muted "Expired" badge from `isExpired()`, Nairobi
-      date boundary, string compared so there is no Date/timezone parsing ambiguity. The
-      **Re-issue action is not built**, that is section E (the document)
+      date boundary, string compared so there is no Date/timezone parsing ambiguity. Re-issue
+      on an expired open quote stamps a fresh `valid_until` (`reissue_quote`)
 
 ### The detail
 
-- [~] `/dashboard/quotes/[reference]`: **read-only view built** 10 September, customer, project
-      details, line items with the discount struck through, status, owner, the approval state.
-      Verified live: a discounted quote, an unpriced one, and an unknown reference (real 404).
-      **Not yet built:** the audit trail inline, and every mutation below
-- [ ] **Optimistic locking**, `docs/REVIEW.md` 2.2 and the migration 5 comment: compare
-      `updated_at` on every save, refuse a stale write with "this quote changed while you were
-      editing" and reload. This is currently a column with nothing enforcing it. Enforce it in
-      the update path (server action and/or a guarded RPC), test the concurrent-save race
-- [ ] Claim: `beco_sales` sets `assigned_to = self` on an unassigned quote. Audited
-      (`audit_action` `assign` exists)
-- [ ] Assign and reassign: admin only, audited, `before`/`after` on `assigned_to`
-- [ ] Add a line item not in the catalogue: `product_id` null plus a `description` snapshot.
-      Schema is ready (`quote_items.product_id` nullable on purpose)
+**Mutations built 17 September** on `m5-quotes`. Handoff:
+`docs/milestones/M5-QUOTES-HANDOVER.md`. Do not reopen this section for the
+products editor.
+
+- [x] `/dashboard/quotes/[reference]`: customer, project, line items with the discount struck
+      through, status, owner, approval, Dates rail. Verified live: a discounted quote, an
+      unpriced one, and an unknown reference (real 404). **Not built:** the audit trail inline
+- [x] **Optimistic locking**: every mutation RPC compares `updated_at`, refuses a stale write
+      with "this quote changed while you were editing". `15` and `16` pgTAP cover the race
+- [x] Claim: `beco_sales` sets `assigned_to = self` on an unassigned quote (`claim_quote`)
+- [x] Assign: admin only, select change assigns immediately, Beco sales and Beco admin, never
+      `brightex_admin` (`assign_quote`, migration 34)
+- [x] Add several catalogue products from a dialog: `add_catalogue_quote_lines` under one lock.
+      Search focused, list on open, multi-select, unpublished products refuse the whole batch.
+      Range select lists empty folders, not only stone
+- [x] Add a line item not in the catalogue: `add_custom_quote_line`, `product_id` null plus a
+      description snapshot
+- [x] One Save on the Line items heading writes every dirty line through `update_quote_lines`.
+      Unsaved pill and Changed mark. View / Download / Email flush dirty lines first
 - [x] Price override, D7: any `beco_sales` sets any `unit_price`. `list_price` is stored beside
       it. Every override writes `audit_log` with before and after (the `quotes` trigger already
       covers it via `requires_approval`/`approved_by`/`approved_at`)
 - [x] **Revised by D86, 10 September:** a quote that deviates from the catalogue (a discount, a
       markup, or a priced custom line) needs `is_admin()` approval before it can reach
-      `quoted`/`won`/`lost`. Enforced by a `check` constraint plus a `quote_items` trigger
-      (migration 27), not only in the UI. A catalogue-priced quote never waits. List and detail
-      UI for the "awaiting approval" state and the Approve action are still to build
+      `quoted`/`won`/`lost`. List and detail show Needs approval. Approve is an admin action
 - [ ] Deleted product on a line: a graceful state, not a crash (`docs/REVIEW.md` 2.8).
-      `product_id` goes null on delete, the `description` and prices are snapshots and survive
-- [ ] Status lifecycle new  to  reviewing  to  quoted  to  won or lost. Won stamps `finalized_at`.
-      Lost requires `lost_reason` and goes through `ConfirmDialog` ("Mark lost", the verb)
-- [ ] Totals: `subtotal`, `vat_amount`, `total_amount` computed by **backing 16% out of the
-      VAT-inclusive line totals** per D50, never adding it on top. One money helper, shared,
-      property-tested against the D50 worked example (65,000 slab  to  8,965.52 VAT inside, not
-      10,400 on top). `vat_rate` and `prices_include_vat` from `settings`
-- [ ] Unpriced and mixed quotes per 0.3
+      `product_id` goes null on delete, the `description` and prices are snapshots and survive.
+      Falls out of the products editor (section G) more than quotes
+- [x] Status lifecycle new to reviewing to quoted to won or lost. Won stamps `finalized_at`.
+      Lost requires `lost_reason` and goes through `ConfirmDialog` ("Mark lost", the verb).
+      A lost quote can be reopened to reviewing (`reopen_quote`) if the client comes back. Won cannot
+- [x] Totals: `subtotal`, `vat_amount`, `total_amount` computed by **backing 16% out of the
+      VAT-inclusive line totals** per D50, never adding it on top. `@beco/validation` `splitVatInclusive`,
+      property-tested against the D50 worked example (65,000 slab to 8,965.52 VAT inside, not
+      10,400 on top)
+- [x] Unpriced and mixed quotes per 0.3: Pricing on application, never `KES 0.00`
 
 ### The counter flow
 
 `docs/ARCHITECTURE.md` section 5. Speed matters more than polish. Someone is waiting.
 
-- [ ] `/dashboard/quotes/new`: search field autofocused, no tap spent reaching it
-- [ ] After adding an item, keep focus in the search field and clear it, so the next product is
-      type then tap with nothing between (`docs/REVIEW.md` 1.4)
-- [ ] `QuantityStepper`: steps by half a slab for a `per slab` line, by one for everything else,
-      reading `products.unit`, matching D68 and the two storefront steppers
-- [ ] Inline price override
-- [ ] One transaction on save: `quotes` (`source` `walk_in` or `phone`, `created_by` and
-      `assigned_to` both the salesperson) plus `quote_items`
+- [x] `/dashboard/quotes/new`: Add from catalogue opens a dialog; search is focused on open
+- [x] After adding, the dialog can be opened again. Search clears on close
+- [x] `QuantityStepper`: steps by half a slab for a `per slab` line, by one for everything else
+- [x] Inline price override on the line
+- [x] One transaction on save: `create_counter_quote` (`source` `walk_in` or `phone`, `created_by` and
+      `assigned_to` both the salesperson) plus `quote_items`. Refuses `web`
 - [ ] **12-tap budget**, `docs/ARCHITECTURE.md` section 5 and the build plan: dashboard home to a sent
       PDF for three products, 12 taps and 3 typed fields. Counted out loud on a real phone before
       the milestone closes. Over 12 and the milestone does not close. Treated as a design target
       that forces the flow to be good, renegotiated only against a real device (`docs/REVIEW.md`
       1.4), never waved through
-- [ ] Tests: every step asserts the data changed. The crafted-request cases from `submit_quote`
+- [x] Tests: every step asserts the data changed. The crafted-request cases from `submit_quote`
       carry over: a counter caller cannot smuggle its own line price past the override audit
 
 ## E. Quote document: PDF and send
 
-`quote-document` skill. `@react-pdf/renderer` is already a dependency; `packages/documents/src/pdf`
-has only a README.
+`quote-document` skill. Built 17 September on `m5-quotes`.
 
-- [ ] Quote PDF: logo, restrained brand colour, Titillium and Cormorant embedded, tabular
+- [x] Quote PDF: logo, restrained brand colour, Titillium and Cormorant embedded, tabular
       lines, subtotal, **VAT as its own line, backed out per D50**, total, reference, validity
-      from `quote_validity_days`, bank or till details and footer from `settings`
-- [ ] Page breaks pinned by snapshot test on a 15-line quote. A line split across a page is
+      from `quote_validity_days`, bank or till details and footer from `settings`. From block
+      is **Beco Interiors Limited**
+- [x] Page breaks pinned by test on a 15-line quote. A line split across a page is
       worse than no PDF
-- [ ] Unpriced document variant per 0.3
-- [ ] Every generate and every send writes a `documents` row and an `audit_log` entry, so "did
-      we send them the quote, and when" is answerable from the dashboard
-- [ ] Preview in the dashboard before sending. Download. Share over WhatsApp prefilled with the
-      reference. Email to the stored address or one typed at send time
-- [ ] Customer email template: React Email, plain-text fallback from the same source, short,
-      plain, no marketing voice, no em dashes. Reuses the `@beco/documents` neighbourhood.
-      Snapshot pinned, one manual Gmail and Outlook check
-- [ ] Receipt PDF and template: **deferred per 0.7 item 1**, recorded in `docs/PLAN.md`
+- [x] Unpriced document variant per 0.3
+- [x] Download writes a `documents` row. Preview does not, so opening View is not a send
+- [x] Preview in the dashboard before sending. Download. Email to the stored address or one
+      typed at send time. WhatsApp is "download then send": `quoteWhatsAppLink` exists in tests
+      but is not on the panel
+- [x] Customer email template: short, plain, no marketing voice, no em dashes, in
+      `@beco/documents`. **Manual Gmail and Outlook check still to do**
+- [ ] Receipt PDF and template: **with orders**, recorded in `docs/PLAN.md` (Brown reversed the
+      original cut on 17 September)
 - [ ] If this introduces a server-side Resend key or the service role key in the dashboard,
       the CI secret scan and the bundle scan must stay green (rule 7)
 
@@ -393,6 +405,9 @@ has only a README.
 
 ## G. Products editor
 
+**Next session.** `/dashboard/products` is an EmptyState placeholder. Start from
+`docs/milestones/M5-QUOTES-HANDOVER.md`. Do not edit quotes to get this done.
+
 D54: from M5 the editor becomes the ongoing way to change prices and specs. Migrations 15 and 20
 stay as the historical seed.
 
@@ -417,18 +432,18 @@ stay as the historical seed.
 D37, `files/BUILD-PLAN.md` section 11.1, A10. **Every card states a number, what it is measured
 against, and what it implies.** A number with no comparison is decoration.
 
-- [ ] `StatCard` in `@beco/ui`: value, comparison, implication. `component` skill
-- [ ] Quotes awaiting response, with the age of the oldest, red past `quote_response_sla_hours`
-      (per 0.4)
-- [ ] Quotes won this month, count and value, against last month
-- [ ] Quote to won conversion rate, against last month
-- [ ] Invoiced against collected, this month. Two figures, kept honestly separate per D8
-- [ ] Leads today: quote submissions plus `whatsapp_click` plus `call_click` from
+- [x] `StatCard` in `@beco/ui`: value, comparison, implication. `component` skill
+- [x] Quotes awaiting response, with the age of the oldest, red past `quote_response_sla_hours`
+      (per 0.4). Warm Red only when the SLA is actually breached
+- [x] Quotes won this month, count and value, against last month
+- [x] Quote to won conversion rate, against last month
+- [x] Invoiced against collected, this month. Two figures, kept honestly separate per D8
+- [x] Leads today: quote submissions plus `whatsapp_click` plus `call_click` from
       `analytics_events`. The only view that counts the leads that left into WhatsApp
-- [ ] Low or out of stock count, per 0.1 and 0.5
-- [ ] **All date boundaries computed in `Africa/Nairobi` explicitly** (`docs/REVIEW.md` 1.6).
-      "This month" in UTC starts at 3am EAT and a director's own count will not match. Unit-test
-      the boundary with a quote timestamped 00:30 EAT on the first of the month
+- [~] Catalogue card counts published / unavailable / POA / draft. **Low-stock from
+      `stock_quantity` waits on section F**
+- [x] **All date boundaries computed in `Africa/Nairobi` explicitly** (`docs/REVIEW.md` 1.6),
+      inside `dashboard_summary()`. pgTAP in `13_dashboard_summary.test.sql`
 - [ ] Charts only where a shape answers what a number cannot: quotes and revenue over time,
       salesperson comparison. Nothing else gets one. Never "four sparkline tiles over a table"
 
@@ -495,26 +510,29 @@ authoring UI, `beco_admin`.
 Per rule 5, each gets the `component` skill treatment: test, accessibility baseline, proof the
 controls work. `docs/COMPONENTS.md` lists these as planned.
 
-- [ ] `DataTable` (desktop table; the per-table mobile treatment lives in the call sites, D38)
-- [ ] `StatCard`
-- [ ] `StatusPill` (quote and order lifecycle states)
+- [x] `DataTable` (desktop table; the per-table mobile treatment lives in the call sites, D38)
+- [x] `StatCard`
+- [x] `StatusPill` (quote and order lifecycle states)
 - [ ] `LiveUpdateBanner`
 - [ ] `LastUpdated`
 - [ ] `AuditEntry` (before and after, readable by a human; used inline on quote and order detail
       even though the standalone audit viewer is deferred per 0.7)
-- [ ] `toast()` (replaces `window.alert`, announced to screen readers)
-- [ ] `Dialog` / `Sheet` (Radix; sheet on mobile, dialog on desktop; the detail sheets in D38
-      depend on it)
-- [ ] `QuantityStepper` (the 12-tap budget depends on it; half-slab aware per D68)
-- [ ] `EmptyState`, `ErrorState` (states are required on anything that loads; the dashboard
-      lives in the partially populated state for weeks)
-- [ ] `docs/COMPONENTS.md` updated to **B** as each lands
+- [x] `toast()` (replaces `window.alert`, announced to screen readers)
+- [x] `Dialog` (plain elements, jsdom-testable). Sheet still planned for D38
+      detail sheets. Do not swap Dialog for Radix to "be more shadcn" (D88)
+- [x] `DropdownMenu` (Radix via D88, restyled). Reference for new dashboard
+      menus. AccountMenu stays plain (jsdom). Popover and Tabs next when a
+      screen needs them
+- [x] `Panel`, `Pagination`, `Fab`, `Skeleton` / `SkeletonScreen`, `BackLink`
+- [x] `QuantityStepper` (the 12-tap budget depends on it; half-slab aware per D68)
+- [x] `EmptyState`. `ErrorState` still planned
+- [~] `docs/COMPONENTS.md` updated to **B** as each lands. Quotes widgets are **B**
 
 ## N. Mobile
 
 Rule "everything works on a phone" is a hard requirement, not a courtesy (PRD section 4.2, section 5).
 
-- [ ] Quotes and orders become full cards on mobile (D38)
+- [x] Quotes become full cards on mobile (D38). Orders still to do
 - [ ] Stock, products, users and (deferred viewer aside) audit keep a reduced-column table with
       a tap-through detail sheet (D38)
 - [ ] Action buttons never sit under the on-screen keyboard (PRD section 5)

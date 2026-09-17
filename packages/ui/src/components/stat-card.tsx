@@ -12,12 +12,37 @@ import { cn } from '../lib/cn';
  * functional success token, not the brand red, so a good number being
  * green never spends the page's Warm Red budget.
  */
-export type StatCardTone = 'plain' | 'attention' | 'positive';
+export type StatCardTone = 'plain' | 'attention' | 'positive' | 'inverse';
+export type StatCardSize = 'default' | 'compact';
 
-const TONES: Record<StatCardTone, { card: string; value: string }> = {
-  plain: { card: 'border-neutral-200 bg-high-vis-white', value: 'text-charcoal' },
-  attention: { card: 'border-warm-red-deep/20 bg-warm-red-deep/[0.04]', value: 'text-warm-red-deep' },
-  positive: { card: 'border-success/20 bg-success/[0.04]', value: 'text-success' },
+const TONES: Record<StatCardTone, { card: string; value: string; label: string; meta: string }> = {
+  plain: {
+    card: 'border-neutral-200 bg-high-vis-white',
+    value: 'text-charcoal',
+    label: 'text-neutral-500',
+    meta: 'text-neutral-500',
+  },
+  attention: {
+    card: 'border-warm-red-deep/20 bg-warm-red-deep/[0.04]',
+    value: 'text-warm-red-deep',
+    label: 'text-neutral-500',
+    meta: 'text-neutral-700',
+  },
+  positive: {
+    card: 'border-success/20 bg-success/[0.04]',
+    value: 'text-success',
+    label: 'text-neutral-500',
+    meta: 'text-neutral-500',
+  },
+  /** Charcoal carries the brand. One inverse card on a row of pale ones is
+   *  the featured figure, without spending Warm Red on a number that is not
+   *  actually late. */
+  inverse: {
+    card: 'border-charcoal bg-charcoal',
+    value: 'text-high-vis-white',
+    label: 'text-neutral-300',
+    meta: 'text-neutral-300',
+  },
 };
 
 export interface StatCardProps {
@@ -28,21 +53,28 @@ export interface StatCardProps {
   /** What the number means in one short sentence, not a repeat of the label. */
   implication?: string;
   tone?: StatCardTone;
+  size?: StatCardSize;
   className?: string | undefined;
 }
 
-export function StatCard({ label, value, comparison, implication, tone = 'plain', className }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  comparison,
+  implication,
+  tone = 'plain',
+  size = 'default',
+  className,
+}: StatCardProps) {
   const t = TONES[tone];
   return (
-    <div className={cn('rounded-panel border p-5', t.card, className)}>
-      <p className="font-ui text-sm font-semibold text-neutral-500">{label}</p>
-      <p className={cn('mt-1.5 font-display text-3xl leading-none', t.value)}>{value}</p>
-      {comparison ? (
-        <p className="mt-2 font-ui text-sm text-neutral-500">{comparison}</p>
-      ) : null}
-      {implication ? (
-        <p className="mt-1 font-ui text-sm text-neutral-700">{implication}</p>
-      ) : null}
+    <div className={cn('rounded-panel border', size === 'compact' ? 'p-4' : 'p-5', t.card, className)}>
+      <p className={cn('font-ui text-sm font-semibold', t.label)}>{label}</p>
+      <p className={cn('mt-1.5 font-display leading-none', size === 'compact' ? 'text-2xl' : 'text-3xl', t.value)}>
+        {value}
+      </p>
+      {comparison ? <p className={cn('mt-2 font-ui text-sm', t.meta)}>{comparison}</p> : null}
+      {implication ? <p className={cn('mt-1 font-ui text-sm', t.meta)}>{implication}</p> : null}
     </div>
   );
 }

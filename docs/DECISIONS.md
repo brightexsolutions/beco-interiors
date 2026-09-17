@@ -1404,3 +1404,29 @@ Migration 28 names the three roles that should read customer names, phone number
 the read side only. `11_quotes_orders_read_gap.test.sql`, 12 pgTAP assertions, proving the
 negative for both roles on all four tables and a regression check that sales and admin still
 read both.
+
+## D88, 17 September 2026: shadcn is the dashboard construction standard, not a look
+
+The dashboard needs focus trapping, keyboard menus and ARIA relationships that
+are expensive to get right by hand. shadcn's copy-paste of Radix is how those
+widgets are built. The storefront stays bespoke editorial layout and never
+imports them.
+
+What this is not: installing shadcn in `apps/dashboard`, running the CLI
+against an app, adopting New York radius and muted greys, or shipping lucide
+icons in the chrome. Unstyled shadcn is the default admin template look that
+section 11.1 of the brief forbids. If a component looks like default shadcn,
+it is not finished.
+
+Rules that follow:
+
+- New copies land in `@beco/ui`. `packages/ui/components.json` is the only
+  config. Never a `components.json` in either app.
+- Restyle onto Beco tokens before it ships. `DropdownMenu` is the reference.
+- `ConfirmDialog`, `Dialog`, `AccountMenu` and native `Select` stay off
+  Radix so they remain testable in jsdom or honest on a phone.
+- Tests stay Vitest plus RTL in jsdom (D23).
+
+*Reverses if:* a later pass proves Radix cannot be asserted in jsdom for a
+widget we need. That widget stays a plain implementation. The dashboard does
+not drop the standard for the widgets that do work.

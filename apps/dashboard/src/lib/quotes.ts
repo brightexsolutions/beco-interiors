@@ -49,7 +49,7 @@ export const QUOTE_STATUS: Record<QuoteStatus, { label: string; tone: StatusTone
 };
 
 export const QUOTE_SOURCE_LABEL: Record<QuoteSource, string> = {
-  web: 'Web',
+  web: 'Website',
   walk_in: 'Walk in',
   phone: 'Phone',
   whatsapp: 'WhatsApp',
@@ -68,6 +68,37 @@ export const isExpired = (validUntil: string | null, status: QuoteStatus, now = 
   if (status === 'won' || status === 'lost') return false;
   return validUntil < nairobiToday(now);
 };
+
+export type QuoteMilestoneKind = 'datetime' | 'date';
+
+export interface QuoteMilestone {
+  label: string;
+  at: string;
+  kind: QuoteMilestoneKind;
+}
+
+/** Dates the detail rail lists. Absent stamps are omitted, so a new quote
+ *  shows Raised only. Lost and Reopened stay after a reopen. */
+export function quoteMilestones(input: {
+  createdAt: string;
+  reviewingAt: string | null;
+  quotedAt: string | null;
+  approvedAt: string | null;
+  wonAt: string | null;
+  lostAt: string | null;
+  reopenedAt: string | null;
+  validUntil: string | null;
+}): QuoteMilestone[] {
+  const rows: QuoteMilestone[] = [{ label: 'Raised', at: input.createdAt, kind: 'datetime' }];
+  if (input.reviewingAt) rows.push({ label: 'Reviewed', at: input.reviewingAt, kind: 'datetime' });
+  if (input.approvedAt) rows.push({ label: 'Approved', at: input.approvedAt, kind: 'datetime' });
+  if (input.quotedAt) rows.push({ label: 'Quoted', at: input.quotedAt, kind: 'datetime' });
+  if (input.validUntil) rows.push({ label: 'Valid until', at: input.validUntil, kind: 'date' });
+  if (input.wonAt) rows.push({ label: 'Won', at: input.wonAt, kind: 'datetime' });
+  if (input.lostAt) rows.push({ label: 'Lost', at: input.lostAt, kind: 'datetime' });
+  if (input.reopenedAt) rows.push({ label: 'Reopened', at: input.reopenedAt, kind: 'datetime' });
+  return rows;
+}
 
 /** PostgREST `.or()` uses `,` and `()` as its own syntax. Strip them from a
  *  search term so a customer name typed with a comma cannot reshape the

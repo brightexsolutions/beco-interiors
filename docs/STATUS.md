@@ -5,13 +5,11 @@
 Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, `BLOCKED`
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
-Last updated: 10 September 2026. M0 through M4 done; M4's Codex review ran 9 Sept (7 of 8
-resolved). M5 (operations dashboard) was scoped into `docs/milestones/M5-TODO.md` on branch
-`m5-dashboard`, then paused at the plan stage: Beco asked for a temporary storefront link to
-review, so a storefront modernisation pass (D82) is running on branch `storefront-revamp`
-instead. That pass is uncommitted working-tree at time of writing, all tests green. **M5
-resumes from `m5-dashboard`**, which carries only the M5 plan and the D82 / gitignore
-housekeeping, so it starts clean.
+Last updated: 17 September 2026. M0 through M4 done. M5 (operations dashboard)
+is **WIP** on branch `m5-quotes`. Quotes, the quote PDF, priced-quote email and
+the admin home figures are built. Next admin page is the products editor.
+Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md`. Live beco.co.ke is still
+WordPress; that is expected until the storefront launches.
 
 **Both external dependencies confirmed against real infrastructure**, since 31 August.
 
@@ -40,7 +38,7 @@ copy, hours (Mon to Fri 8am to 4pm, Sat 8am to 2pm) and the two live social acco
 | M2 | Drive import pipeline | 3.5 | **DONE**, live against real Drive and R2, incremental, reports rather than guesses |
 | M3 | Design system | 2.0 | **DONE**, tokens, contrast verified, `@beco/ui` built out through M4 |
 | M4 | Storefront, SEO, conversion, motion | 8.5 | **DONE**, Codex review ran 9 Sept. A modernisation pass (D82) followed 9 to 10 Sept on branch `storefront-revamp`: real photography imported, fluid type scale, craft floor, specimen plates, the home hero and `SlabToSurface` reworked, a rotating announcement bar, a transparent header across the dark-hero pages, the `/shop` filter rebuilt for mobile, `/about` opened on Beco's own copy, confirmed hours and social. Uncommitted working-tree, all green. Follow-ups deferred in `docs/PLAN.md`: portrait video sections, `/about` lower sections, the import pipeline EXIF fix |
-| M5 | Operations dashboard | 6.5 | **TODO, planned.** `docs/milestones/M5-TODO.md` expands the milestone; section 0 records the resolved decisions (stock = manual half-slab quantity, quote expiry display-only, unpriced totals as "Pricing on application", the agreed cuts). Build resumes from branch `m5-dashboard`. `apps/dashboard` has the D80 launch slice (Supabase Auth sign in, `proxy.ts`, `requireAdmin`, one admin-gated page); quotes, orders, stock, products, team, reports are unstarted |
+| M5 | Operations dashboard | 6.5 | **WIP.** Auth, shell, quotes (list, create, detail, PDF, email) and admin home figures are on `m5-quotes`. `/products` is a placeholder. Orders, stock, team, announcements and reports are unstarted. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
 | M6 | Launch | 3.5 | TODO. Depends on M4, M5, and the old URL list, still not received and the largest ranking risk in the project |
 | M7 | Studio, inside the dashboard | 3.5 | After launch, unbilled |
 

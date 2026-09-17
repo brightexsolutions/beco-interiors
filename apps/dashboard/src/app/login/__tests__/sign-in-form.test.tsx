@@ -25,6 +25,12 @@ describe('SignInForm', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/cannot sign in/i);
   });
 
+  it('does not offer a password reset', () => {
+    render(<SignInForm next="/" denied={false} />);
+    expect(screen.queryByText(/forgot/i)).toBeNull();
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<SignInForm next="/launch" denied={false} />);
     expect(await axe(container)).toHaveNoViolations();

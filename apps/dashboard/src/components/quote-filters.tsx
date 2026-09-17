@@ -32,7 +32,7 @@ const STATUS_OPTIONS = [
 
 const SOURCE_OPTIONS = [
   { value: '', label: 'Any source' },
-  { value: 'web', label: 'Web' },
+  { value: 'web', label: 'Website' },
   { value: 'walk_in', label: 'Walk in' },
   { value: 'phone', label: 'Phone' },
   { value: 'whatsapp', label: 'WhatsApp' },
@@ -53,6 +53,7 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
+    params.delete('page');
     startTransition(() => router.push(`${pathname}?${params.toString()}`));
   };
 

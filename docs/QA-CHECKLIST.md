@@ -209,10 +209,10 @@ real phone** (M5 section D).
 
 | Control | What it does | Status |
 |---|---|---|
-| Email + password fields | Uncontrolled, read from FormData by the `signIn` action | `SignInForm` tested. `signInSchema` unit tested |
+| Email + password fields | Uncontrolled, read from FormData by the `signIn` action | `SignInForm` tested. `signInSchema` unit tested. Heading is `PageHeading` "Sign in", Cormorant, no "Welcome back" |
 | Show / hide password | `PasswordInput` flips the field between `password` and `text` | **Server** confirmed on the running dev server: the value showed and hid, mouse and keyboard. `PasswordInput` tested, 6 tests |
 | Sign in | `signInWithPassword`, then `resolveSessionUser`; an inactive or unknown account is signed straight back out with the same message; a valid one calls `record_sign_in` and redirects to `next` or `/` | **Server** confirmed: signed in as each seeded role against local GoTrue, `last_login_at` moved, `login` audit row written, landed per role. Burst limit (D81) unit tested |
-| Denied notice (`?denied=1`) | Renders, does not auto-forward, so no redirect loop | **Server** confirmed: a deactivated account lands here with cleared cookies |
+| Denied notice (`?denied=1`) | `Notice` alert, does not auto-forward, so no redirect loop | **Server** confirmed: a deactivated account lands here with cleared cookies |
 
 ### `/change-password`
 
@@ -230,7 +230,7 @@ real phone** (M5 section D).
 | Section nav | Text links, role-scoped via `navItemsFor`. The current section is charcoal with a Warm Red underline; a nested path keeps its section highlighted | **Server** confirmed: signed in as each role, the nav listed exactly that role's sections, `/quotes` and `/quotes/...` both underlined Quotes. `TopNav` tested, 6 tests |
 | Mobile section strip | Horizontal scroll, no hamburger, right-edge fade | **Server** confirmed at 390px: the strip scrolls, Quotes stays first. **Real-device swipe still to walk** |
 | New-quote count | Warm Red badge on Quotes when positive | Styled and tested; **wired to 0** until realtime (section L / M) |
-| Account menu | Name opens a flat panel: Change password (link) and Sign out (server action). Closes on Escape, outside click, navigation | **Server** confirmed: opened, "Sign out" returned to `/login` with the session gone. `AccountMenu` tested, 5 tests |
+| Account menu | Name opens a flat panel: Change password (link) and Sign out (POST to `/sign-out`). Closes on Escape, outside click, navigation | **Server** confirmed: opened, "Sign out" returned to `/login` with the session gone. `AccountMenu` tested, 5 tests |
 | `PageHeading` | Every screen opens with a Warm Red rule, eyebrow, Cormorant title, lede | **Server** confirmed on `/`, `/quotes`, `/products`. Tested, 4 tests |
 
 ### Proxy and role landing
@@ -245,21 +245,51 @@ real phone** (M5 section D).
 
 | Control | What it does | Status |
 |---|---|---|
+| New quote (FAB) | Fixed charcoal pill, bottom right. Navigates to `/quotes/new`. Stays on screen while the list scrolls | `NewQuoteFab` tested, 3 tests. `Fab` in `@beco/ui`, 5 tests |
 | Search | Debounced, narrows to a matching name, phone or reference | **Server** confirmed: `?search=Mutua` returned exactly that quote |
-| Status / source filters | Narrow the row set via the URL | **Server** confirmed: `?status=quoted`, `?owner=unassigned` each returned the right subset and count. `QuoteFilters` tested, 6 tests |
+| Status / source filters | Narrow the row set via the URL. The `web` source is labelled Website | **Server** confirmed: `?status=quoted`, `?owner=unassigned` each returned the right subset and count. `QuoteFilters` tested |
 | Owner filter, per role | `beco_sales` gets Mine / I'm preparing / Unassigned; admins additionally get Everyone | **Server** confirmed for both a sales and an admin session |
-| Row / card "View" | Navigates to the real quote detail, not a placeholder | **Server** confirmed |
+| Row / card "View" | Navigates to the real quote detail. Desktop: underlined quote number plus a View control in the last column. Phone: the card itself is the View link | `QuoteResults` tested |
+| Pagination | Previous / Next. Eight quotes a page. Page lives in `?page=`. Hidden when everything fits on one page. Changing a filter returns to page 1 | `QuoteResults` and `QuoteFilters` tested |
 | Needs approval / Expired badges | Show exactly when `requires_approval` and `isExpired()` say so | **Server** confirmed against the seeded discounted and expired fixtures |
 | Empty state | Renders when a filter matches nothing | **Server** confirmed: `?search=nonexistentxyz` |
+
+### `/quotes/new`
+
+| Control | What it does | Status |
+|---|---|---|
+| Add from catalogue | Opens a dialog of published products across every range. Range select includes empty folders. Search is focused, tick several, then Add | `NewQuoteForm` and `CataloguePicker` tested |
+| Custom item | Adds a named custom line, not an empty catalogue row | Tested |
+| Qty / unit price / Remove | Edit or drop a line before save. Phone: two-row compact card, list scrolls in the panel. Desktop: columns under Item / Qty / Unit / Line | Same controls as quote detail, 44px stepper |
+| Customer fields | Name and phone required, email optional, source Walk in or Phone | Written into `create_counter_quote` |
+| Save quote | Disabled until there is a line, reason shown. Primary in the heading on desktop, in the customer panel on a phone | Tested disabled-until-line |
 
 ### `/quotes/[reference]`
 
 | Control | What it does | Status |
 |---|---|---|
 | Line items | Lists every line, a discount struck through against the catalogue price | **Server** confirmed on the discounted seed quote |
+| Save | One control on the Line items heading. Disabled until a qty or price changes, reason shown. Writes every dirty line through `update_quote_lines`. Unsaved + Changed mark the dirty state | `QuoteLines` tested |
 | Totals / Pricing on application | Shows a real total once every line is priced, the 0.3 line otherwise | **Server** confirmed both states |
 | Unknown reference | A real 404, not a broken render | **Server** confirmed |
-| Claim, assign, edit, status, Approve, the document | **Not built yet.** This screen is read only so far |
+| Claim | Claims an unassigned quote for the signed-in salesperson | `QuoteActions` tested. RPC `claim_quote` |
+| Assign | Admin picks a Beco salesperson or Beco admin. Changing the select assigns immediately. No Reassign button. Brightex admin is not in the list | `QuoteActions` and `fetchAssignees` tested. RPC `assign_quote` refuses `brightex_admin` |
+| Approve | Admin only, on a quote that `requires_approval`. Unlocks Quoted / Won / Lost | `QuoteActions` tested |
+| Mark lost | ConfirmDialog names the quote, requires a reason, confirm verb Mark lost | `QuoteActions` tested |
+| Reopen | On a lost quote the viewer can mutate. ConfirmDialog named for the quote, confirm verb Reopen. Writes `reopen_quote`, status becomes reviewing | `QuoteActions` tested. RPC `reopen_quote` |
+| Re-issue | On an expired open quote. Stamps a fresh `valid_until` | `QuoteActions` tested. RPC `reissue_quote` |
+| Dates | Raised, Reviewed, Approved, Quoted, Valid until, Won, Lost, Reopened. Only stamps that exist. Lost and Reopened survive a reopen | `QuoteDates` tested |
+| Add from catalogue | Opens a dialog of published products across every range. Range select, search focused, tick several, Add writes them through `add_catalogue_quote_lines` under one lock | `QuoteLines` and `CataloguePicker` tested. RPC `add_catalogue_quote_lines` |
+| Not in the catalogue | Adds a named custom line, not an empty catalogue row | `QuoteLines` tested. RPC `add_custom_quote_line` |
+| View | Compact heading action, top right, labelled View with a right arrow. Writes unsaved qty/price first, then opens a dialog with the live PDF | `QuoteDocumentPanel` tested |
+| Download | Real file link `?download=1`, filename includes the quote number and client name | Tested href and Content-Disposition |
+| Email | Form in the preview dialog, prefilled, submits `sendQuoteEmail` | Tested |
+| WhatsApp | Copy in the preview: download the file to send it. `quoteWhatsAppLink` is tested but not on this panel | Helper unit tested |
+
+### `/products`
+
+Placeholder EmptyState until the products editor (M5 section G). See `docs/milestones/M5-QUOTES-HANDOVER.md`.
+
 
 ### `/launch` (D80)
 

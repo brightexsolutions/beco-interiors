@@ -25,6 +25,16 @@ beforeEach(() => {
 });
 
 describe('QuoteFilters', () => {
+  it('offers Website as the source label, still filtering on the stored web value', async () => {
+    const user = userEvent.setup();
+    render(<QuoteFilters ownerOptions={ownerOptions} />);
+    const source = screen.getByLabelText(/filter by source/i);
+    expect(screen.getByRole('option', { name: 'Website' })).toHaveValue('web');
+    expect(screen.queryByRole('option', { name: 'Web' })).toBeNull();
+    await user.selectOptions(source, 'web');
+    expect(push).toHaveBeenCalledWith('/quotes?source=web');
+  });
+
   it('changing status pushes it into the URL, so the result set actually changes', async () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
@@ -60,6 +70,14 @@ describe('QuoteFilters', () => {
     expect(push).not.toHaveBeenCalled();
     // But it does land, once the debounce settles.
     await waitFor(() => expect(push).toHaveBeenCalledWith('/quotes?search=Wanjiku'), { timeout: 1000 });
+  });
+
+  it('changing a filter drops page so the new result set starts at the first page', async () => {
+    params = new URLSearchParams('page=2');
+    const user = userEvent.setup();
+    render(<QuoteFilters ownerOptions={ownerOptions} />);
+    await user.selectOptions(screen.getByLabelText(/filter by status/i), 'quoted');
+    expect(push).toHaveBeenCalledWith('/quotes?status=quoted');
   });
 
   it('has no accessibility violations', async () => {

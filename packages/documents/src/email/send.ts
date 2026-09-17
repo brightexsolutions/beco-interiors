@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { buildQuoteConfirmationEmail, type QuoteConfirmationInput } from './quote-confirmation';
+import { buildPricedQuoteEmail, type PricedQuoteEmailInput } from './quote-priced';
 
 /**
  * Sending the quote confirmation.
@@ -48,6 +49,37 @@ export async function sendQuoteConfirmation(
     return { sent: true, id: data.id };
   } catch (cause) {
     console.error('sendQuoteConfirmation: threw', cause);
+    return { sent: false, reason: 'error', detail: cause instanceof Error ? cause.message : undefined };
+  }
+}
+
+export async function sendPricedQuote(
+  input: PricedQuoteEmailInput & { to: string; pdf: Buffer; filename: string },
+): Promise<SendResult> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    console.warn('sendPricedQuote: RESEND_API_KEY not set, skipping the email');
+    return { sent: false, reason: 'no-api-key' };
+  }
+
+  const { subject, text, html } = buildPricedQuoteEmail(input);
+
+  try {
+    const { data, error } = await new Resend(key).emails.send({
+      from: process.env.QUOTE_FROM_EMAIL ?? DEFAULT_FROM,
+      to: input.to,
+      subject,
+      text,
+      html,
+      attachments: [{ filename: input.filename, content: input.pdf }],
+    });
+    if (error || !data) {
+      console.error('sendPricedQuote: Resend returned an error', error);
+      return { sent: false, reason: 'error', detail: error?.message };
+    }
+    return { sent: true, id: data.id };
+  } catch (cause) {
+    console.error('sendPricedQuote: threw', cause);
     return { sent: false, reason: 'error', detail: cause instanceof Error ? cause.message : undefined };
   }
 }

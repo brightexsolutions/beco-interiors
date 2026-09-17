@@ -3,11 +3,15 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createRateLimiter, signInSchema } from '@beco/validation';
+import { DEV_QUICK_ACCOUNTS, DEV_SEED_PASSWORD, isDevQuickLoginEnabled } from '@/lib/dev-quick-login';
 import { resolveSessionUser } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
 export interface SignInState {
   error?: string;
+  /** Set only for client-side shape failures, never for an auth miss, so a
+   *  wrong password is not blamed on the email field. */
+  field?: 'email' | 'password';
 }
 
 // Supabase Auth rate limits sign in on its own side; this is a thin layer
@@ -47,7 +51,12 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
     password: formData.get('password'),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Check the form and try again' };
+    const issue = parsed.error.issues[0];
+    const path = issue?.path[0];
+    return {
+      error: issue?.message ?? 'Check the form and try again',
+      field: path === 'email' || path === 'password' ? path : undefined,
+    };
   }
 
   const supabase = await getSupabase();
@@ -67,6 +76,55 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
   }
 
   // Best effort: a stamp failure must not block a valid sign in.
+  await supabase.rpc('record_sign_in');
+
+  const next = formData.get('next');
+  redirect(typeof next === 'string' && next.startsWith('/') ? next : '/');
+}
+
+const DEV_EMAILS = new Set<string>(DEV_QUICK_ACCOUNTS.map((account) => account.email));
+
+/**
+ * Development only. Signs in as a seeded local account with the fixture
+ * password. Refuses outside `development`, and refuses any email that is not
+ * on the seeded allowlist. Still a real session: RLS is the authority, same
+ * as the password form.
+ *
+ * It does NOT clear `must_change_password`. The forced-change screen is
+ * skipped by `isForcedPasswordChangeEnforced` instead, so the seeded flag
+ * survives and the real first-login flow can be put back with
+ * DEV_FORCE_PASSWORD_CHANGE=1 rather than a database reset.
+ */
+export async function devSignIn(_prev: SignInState, formData: FormData): Promise<SignInState> {
+  if (!isDevQuickLoginEnabled()) {
+    return { error: 'That email and password do not match an account' };
+  }
+
+  const email = String(formData.get('email') ?? '');
+  if (!DEV_EMAILS.has(email)) {
+    return { error: 'That email and password do not match an account' };
+  }
+
+  const key = await callerKey();
+  if (key && !limiter.check(`dev:${key}`).ok) {
+    return { error: 'Too many attempts. Please wait a minute and try again.' };
+  }
+
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: DEV_SEED_PASSWORD,
+  });
+  if (error || !data.user) {
+    return { error: 'That email and password do not match an account' };
+  }
+
+  const user = await resolveSessionUser(supabase, data.user.id);
+  if (!user || !user.role) {
+    await supabase.auth.signOut();
+    return { error: 'That email and password do not match an account' };
+  }
+
   await supabase.rpc('record_sign_in');
 
   const next = formData.get('next');

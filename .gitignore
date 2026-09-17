@@ -18,6 +18,9 @@ files/
 *.pem
 service-account*.json
 
+# pnpm's local content-addressable store if someone set store-dir here
+.pnpm-store/
+
 # Build output and dependencies
 node_modules/
 .next/

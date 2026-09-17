@@ -17,9 +17,10 @@ map, the forced first-login flow, `record_sign_in()` / `complete_first_login()`,
 seeded staff, and `PasswordInput`. See the Dashboard section below and
 `09_dashboard_first_login.test.sql`.
 
-M5 section D (quotes) so far: the approval gate (D86, `10_quote_pricing_approval.test.sql`),
-a real RLS gap closed on quotes and orders (D87, `11_quotes_orders_read_gap.test.sql`), and the
-quotes list plus a read-only detail screen.
+M5 section D (quotes) on `m5-quotes`, 17 September: list, counter create, detail
+mutations, catalogue picker, PDF, priced-quote email, and dashboard home
+figures. Next screen is the products editor, see
+`docs/milestones/M5-QUOTES-HANDOVER.md`.
 
 The storefront modernisation pass (D82) rebuilt or extended these suites: `announcement-bar`
 (now a rotating client component, `buildAnnouncementItems` plus roll and reduced-motion
@@ -66,6 +67,14 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `09_dashboard_first_login.test.sql` | `record_sign_in()` stamps `last_login_at` and writes exactly one `login` audit row per sign-in, and it advances on the next sign-in. `complete_first_login()` clears `must_change_password` once and audits the transition once. A user cannot re-arm their own flag, deactivate themselves, or change their own email or role by hand (the narrowed `users_update_self_safe`), but CAN still edit their own `full_name`. Both functions are a no-op for a deactivated user and cannot be executed by anon. See D83, migration 26 |
 | `10_quote_pricing_approval.test.sql` | A catalogue priced line needs no approval; a discount flips `requires_approval`; a priced custom line does too, an unpriced one does not. `beco_sales` cannot approve their own quote or move it to `quoted` while unapproved (a database `check`, not only RLS), but can still edit everything else on it. `beco_admin` can approve, after which `quoted` succeeds and the approver is recorded. Editing a line on an already quoted, approved quote is refused outright. See D86, migration 27 |
 | `11_quotes_orders_read_gap.test.sql` | `beco_product_manager` and `beco_editor` cannot read `quotes`, `quote_items`, `orders` or `order_items`, closing a gap where any active role could. `beco_sales` and `beco_admin` still can, checked as a regression. See D87, migration 28 |
+| `12_quote_claim_assign.test.sql` | Claim takes an unassigned quote. Assign is admin only and refuses `brightex_admin`. Stale lock refused. Anon cannot execute |
+| `13_dashboard_summary.test.sql` | Nairobi month and day boundaries. Awaiting, won, conversion and leads figures. A role that cannot read orders contributes zero sales rather than an error |
+| `14_quote_finalized_at.test.sql` | Won and lost stamp `finalized_at`. A later status change off those states clears it. The stamp is the decision time, not `created_at` |
+| `15_quote_mutations.test.sql` | Counter quote, line edit, custom line, catalogue add on an existing quote, stale lock, someone else's quote, unpublished product, approval, reissue. Anon cannot execute the RPCs |
+| `16_update_quote_lines.test.sql` | Batch save of two dirty lines under one lock. Other-owner refused. Stale lock refused |
+| `17_reopen_quote.test.sql` | Lost to reviewing. Clears lost_reason and finalized_at. Other-owner refused. Won refused. set_quote_status cannot un-lose. Anon cannot execute |
+| `18_quote_milestones.test.sql` | reviewing_at on insert. quoted_at and lost_at on status change. lost_at kept after reopen. reopened_at stamped |
+| `19_add_catalogue_quote_lines.test.sql` | Two published products under one lock. Other-owner refused. Unpublished product refuses the whole batch. Stale lock refused. Empty selection refused. Product manager and anon cannot execute |
 
 ## Storefront
 
@@ -99,9 +108,23 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Forced-change action | `app/change-password/__tests__/actions.test.ts` | Rejects a short password and a mismatch before Supabase. A Supabase rejection is one generic message and does not clear the flag. An RPC failure is reported, not hidden. On success `complete_first_login` runs and the role lands on its home |
 | Sign-in form | `app/login/__tests__/sign-in-form.test.tsx` | Labels reach both controls, the return path is carried, the denied notice renders, axe clean |
 | Change-password form | `app/change-password/__tests__/change-password-form.test.tsx` | Both fields labelled, a hidden `username` field for password managers, the length hint reaches the browser, axe clean |
-| Quote helpers | `lib/__tests__/quotes.test.ts` | `isExpired`'s Nairobi day boundary (string compared, no Date/timezone parsing), a won or lost quote is never shown as expired. Every `quote_status` has a label and tone |
+| Quote helpers | `lib/__tests__/quotes.test.ts` | `isExpired`'s Nairobi day boundary (string compared, no Date/timezone parsing), a won or lost quote is never shown as expired. Every `quote_status` has a label and tone. `quoteMilestones` lists Raised only until later stamps exist, and keeps Lost after reopen |
+| `QuoteDates` | `components/__tests__/quote-dates.test.tsx` | Raised only when new. Lost and Reopened both show after a come-back. Axe clean |
 | Quotes query | `lib/quotes.integration.test.ts` | Against the real database with real signed-in sessions, not a mock: a salesperson's `mine` and `unassigned` filters return exactly the right rows, an admin's `all` sees everyone's (D87's read policy), search narrows to a match, a comma in a search term cannot reshape the filter into an `or` clause, `value`/`isPriced` are computed from the real `quote_items`, not a stored total. 6 tests |
 | `QuoteFilters` | `components/__tests__/quote-filters.test.tsx` | Status, owner and search each push into the URL, so the result set actually changes; clearing a filter removes the param rather than setting it empty; search is debounced, not fired on every keystroke; the owner control hides itself when there is only one option; axe clean |
+| `QuoteLines` | `components/__tests__/quote-lines.test.tsx` | One Save on the heading writes dirty lines through `updateQuoteLines`. Unsaved + Changed appear when qty or price change. Add from catalogue opens a dialog, multi-select submits `addCatalogueLines`. Custom form is present. Read-only hides the picker. Axe clean |
+| `QuoteDocumentPanel` | `components/__tests__/quote-document-panel.test.tsx` | View opens the dialog, loads the PDF blob, Download is a real file link, Email is a real form. Dirty quantities are written through `updateQuoteLines` before the PDF fetch. Axe clean |
+| `CataloguePicker` | `components/__tests__/catalogue-picker.test.tsx` | Button opens a dialog. Search is focused. Range select lists Hardware and Lighting, not only stone. Multi-select, Add disabled until a tick, filter by typing, disabled reason shown. Axe clean |
+| Catalogue search helpers | `lib/__tests__/catalogue-search.test.ts` | Ranges split into ungrouped pillars and Drive folders under Hardware. Hits group by category so handles are not dumped under stone |
+| `QuoteActions` | `components/__tests__/quote-actions.test.tsx` | Claim, Quoted, Mark lost ConfirmDialog, Approve gated, Assign on select change, Reopen ConfirmDialog on lost, axe |
+| Quote mutations | `app/(app)/quotes/__tests__/actions.test.ts` | Session re-check, stale lock sentence, lost-reason before the RPC, counter path refuses `web`, catalogue add goes through `add_catalogue_quote_line`, batch add through `add_catalogue_quote_lines`, reopen goes through `reopen_quote` |
+| Quote PDF helper | `lib/__tests__/quote-pdf.test.ts` | Download uploads bytes and writes a `documents` row. Preview does not |
+| PDF route | `app/(app)/quotes/[reference]/pdf/__tests__/route.test.ts` | Preview is inline. `?download=1` is an attachment. Unauthenticated is bounced |
+| Dashboard summary | `lib/__tests__/dashboard-summary.test.ts` | Card wording and tone. Warm Red only on a breached SLA, never on a merely non-zero number |
+| WhatsApp link | `lib/__tests__/whatsapp.test.ts` | Kenyan mobiles to `wa.me`. Helper exists; the document panel does not yet use it |
+| `NewQuoteForm` | `components/__tests__/new-quote-form.test.tsx` | Catalogue dialog, custom item, Save disabled until a line, axe |
+| `NewQuoteFab` | `components/__tests__/new-quote-fab.test.tsx` | Link to `/quotes/new`, stays labelled |
+| Quote mutations (db) | `lib/quote-mutations.integration.test.ts` | Counter quote against local Supabase: row, items, lock |
 | Nav items | `lib/__tests__/nav-items.test.ts` | The role -> section list, and that it never lists a path the access map would then deny |
 | `TopNav` | `components/__tests__/top-nav.test.tsx` | Only the current section carries `aria-current`, a nested path keeps its section, a shared stem does not, the Warm Red count shows on Quotes only and only when positive, axe clean. 6 tests |
 | `AccountMenu` | `components/__tests__/account-menu.test.tsx` | Closed until clicked, offers exactly Change password and Sign out, Sign out goes through the server action not a link, Escape closes, axe clean open and closed. 5 tests |
@@ -122,13 +145,21 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `LoadingState` | The skeleton keeps its shape but stops pulsing under `motion-reduce` |
 | Tokens | Contrast verified by script, never assumed. Caught white on pure Warm Red at 4.38:1, below the AA floor |
 | `cn` | `twMerge` actually resolves conflicting same-property utilities, for example `opacity-50` then `opacity-0`, which a raw string join did not: the D67 bug shape |
+| `DropdownMenu` | Trigger pointerdown asks to open. Items fire `onSelect`. `asChild` keeps a real link. Escape asks to close. Rows are `min-h-11`. The panel is `rounded-panel` with no shadow and no `animate-in`. Asserted in controlled `open` state because a Radix trigger click hangs in jsdom. Axe on the closed trigger. 7 tests. D88 |
+| `Dialog` | Escape, backdrop, focus return, optional `initialFocusRef`. 7 tests. Stays plain for jsdom |
+| `Fab` | Labelled charcoal pill, `fabClasses` for genuine links. 5 tests |
+| `Panel` `Pagination` `Skeleton` `BackLink` `EmptyState` | Shape of list / create / loading screens. Pagination hidden on one page |
+| `toast()` | Done / Failed / Note. `useActionToast` for `{ ok }` / `{ error }` |
 
 ## Shared packages
 
 | Package | File | Proves |
 |---|---|---|
 | `@beco/validation` | `__tests__/rate-limit.test.ts` | The sliding-window limiter: allows up to the limit then denies, per key, frees a slot as the oldest hit ages out, reports the exact wait, shares a store when given one. 7 tests. See D81 |
-| `@beco/documents` | `email/__tests__/*.ts` | `buildQuoteConfirmationEmail` carries the reference and no totals, escapes the name, no em dashes. `sendQuoteConfirmation` no-ops without a key, sends with one, and reports a provider or transport error without throwing. 10 tests |
+| `@beco/validation` | `__tests__/money.test.ts` | D50 split: 65,000 contains 8,965.52 VAT inside, not 10,400 on top. Rounds after every operation |
+| `@beco/validation` | `__tests__/dashboard-quote.test.ts` | Counter create, line batch, catalogue add, lost-reason schemas |
+| `@beco/documents` | `email/__tests__/*.ts` | Storefront confirmation plus `buildPricedQuoteEmail`: reference, no marketing voice, no em dashes. Send no-ops without a key |
+| `@beco/documents` | `pdf/__tests__/quote-document.test.ts` | Bytes are a PDF. Unpriced never prints `KES 0.00`. From block is Beco Interiors Limited. 15 lines span pages. No em dashes |
 
 ## Import pipeline, `tools/drive-import`
 

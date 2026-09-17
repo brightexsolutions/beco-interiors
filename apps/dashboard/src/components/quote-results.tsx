@@ -1,7 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { DataTable, EmptyState, StatusPill, type DataTableColumn } from '@beco/ui';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTransition } from 'react';
+import {
+  DataTable,
+  EmptyState,
+  Pagination,
+  StatusPill,
+  buttonClasses,
+  cn,
+  paginate,
+  type DataTableColumn,
+} from '@beco/ui';
 import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, isExpired, type QuoteListItem } from '@/lib/quotes';
 
 /**
@@ -17,6 +28,16 @@ const money = (n: number) =>
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', timeZone: 'Africa/Nairobi' });
+
+/** The hour a quote came in is what tells a salesperson whether it is still
+ *  warm, so "16 Sept" alone is not enough on the queue. Africa/Nairobi
+ *  explicitly, like every other boundary on this dashboard. */
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-KE', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Nairobi',
+  });
 
 function ValueCell({ quote }: { quote: QuoteListItem }) {
   if (!quote.isPriced) return <span className="text-neutral-500">Pricing on application</span>;
@@ -48,7 +69,10 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     sortable: true,
     sortValue: (q) => q.referenceNumber,
     render: (q) => (
-      <Link href={`/quotes/${q.referenceNumber}`} className="font-semibold text-charcoal hover:underline">
+      <Link
+        href={`/quotes/${q.referenceNumber}`}
+        className="font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
+      >
         {q.referenceNumber}
       </Link>
     ),
@@ -79,7 +103,12 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     header: 'Raised',
     sortable: true,
     sortValue: (q) => q.createdAt,
-    render: (q) => formatDate(q.createdAt),
+    render: (q) => (
+      <span className="whitespace-nowrap">
+        {formatDate(q.createdAt)}
+        <span className="ml-1.5 tabular-nums text-neutral-500">{formatTime(q.createdAt)}</span>
+      </span>
+    ),
   },
   {
     key: 'value',
@@ -89,9 +118,75 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     sortValue: (q) => q.value,
     render: (q) => <ValueCell quote={q} />,
   },
+  {
+    key: 'view',
+    header: 'View',
+    align: 'right',
+    render: (q) => (
+      <Link
+        href={`/quotes/${q.referenceNumber}`}
+        aria-label={`View ${q.referenceNumber}`}
+        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
+      >
+        View
+      </Link>
+    ),
+  },
 ];
 
+function QuoteCard({ quote }: { quote: QuoteListItem }) {
+  return (
+    <li>
+      <Link
+        href={`/quotes/${quote.referenceNumber}`}
+        aria-label={`View ${quote.referenceNumber}`}
+        className="block rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="font-ui text-base font-semibold text-charcoal">{quote.referenceNumber}</span>
+          <span className="shrink-0 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
+            View
+          </span>
+        </div>
+        <div className="mt-1 flex items-baseline justify-between gap-3">
+          <p className="min-w-0 truncate font-ui text-base text-charcoal">
+            {quote.customerName}
+            <span className="ml-2 text-neutral-500">{quote.customerPhone}</span>
+          </p>
+          <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
+            <ValueCell quote={quote} />
+          </p>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <BadgeRow quote={quote} />
+          <p className="font-ui text-sm text-neutral-500">
+            <OwnerLine quote={quote} />
+            <span className="ml-2 whitespace-nowrap tabular-nums">
+              {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
+            </span>
+          </p>
+        </div>
+      </Link>
+    </li>
+  );
+}
+
 export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const requestedPage = Number(searchParams.get('page') ?? 1);
+  const paged = paginate(quotes, requestedPage);
+
+  const setPage = (next: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next <= 1) params.delete('page');
+    else params.set('page', String(next));
+    const query = params.toString();
+    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+  };
+
   if (quotes.length === 0) {
     return (
       <EmptyState
@@ -106,43 +201,29 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
       {/* Desktop: the sortable table. Per D38, quotes are a decision per
           row, so mobile gets full cards instead, not a squeezed table. */}
       <div className="hidden lg:block">
-        <DataTable caption={`${quotes.length} quotes`} columns={columns} rows={quotes} getRowKey={(q) => q.id} />
+        <DataTable
+          caption={`${paged.total} quotes`}
+          columns={columns}
+          rows={paged.items}
+          getRowKey={(q) => q.id}
+        />
       </div>
 
-      <ul className="grid gap-3 lg:hidden">
-        {quotes.map((q) => (
-          <li key={q.id} className="rounded-panel border border-neutral-200 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <Link
-                  href={`/quotes/${q.referenceNumber}`}
-                  className="font-ui text-base font-semibold text-charcoal hover:underline"
-                >
-                  {q.referenceNumber}
-                </Link>
-                <p className="font-ui text-sm text-neutral-700">{q.customerName}</p>
-                <p className="font-ui text-sm text-neutral-500">{q.customerPhone}</p>
-              </div>
-              <p className="font-ui text-sm font-semibold text-charcoal">
-                <ValueCell quote={q} />
-              </p>
-            </div>
-            <div className="mt-3">
-              <BadgeRow quote={q} />
-            </div>
-            <div className="mt-3 flex items-center justify-between font-ui text-sm text-neutral-500">
-              <OwnerLine quote={q} />
-              <span>{formatDate(q.createdAt)}</span>
-            </div>
-            <Link
-              href={`/quotes/${q.referenceNumber}`}
-              className="mt-4 flex min-h-11 items-center justify-center rounded-full border border-neutral-300 font-ui text-sm font-semibold text-charcoal"
-            >
-              View quote
-            </Link>
-          </li>
+      <ul className="grid gap-2 lg:hidden">
+        {paged.items.map((q) => (
+          <QuoteCard key={q.id} quote={q} />
         ))}
       </ul>
+
+      <Pagination
+        className="mt-4"
+        page={paged.page}
+        pageCount={paged.pageCount}
+        from={paged.from}
+        to={paged.to}
+        total={paged.total}
+        onPageChange={setPage}
+      />
     </>
   );
 }
