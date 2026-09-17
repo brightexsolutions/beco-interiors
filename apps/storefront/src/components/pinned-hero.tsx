@@ -133,7 +133,16 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
     // First clause, trailing punctuation stripped so a single period can be
     // put back cleanly rather than doubling one the sentence already had.
     const clause = (sentence.split(/,\s/)[0]?.trim() ?? sentence).replace(/[\s.,;:]+$/, '');
-    return clause.length >= 24 && clause.length <= 88 ? `${clause}.` : sentence;
+    if (clause.length >= 24 && clause.length <= 88) return `${clause}.`;
+    // The clause heuristic does not fit every sentence, for example one
+    // whose first clause lands before "Warm taupe, greige and amber tones
+    // run..." (too short to pass the floor above): this shipped the FULL,
+    // uncut sentence to the mobile hero, which is the exact crowding this
+    // function exists to prevent. Fall back to a hard word boundary cut
+    // instead of the whole sentence.
+    const cut = sentence.slice(0, 72);
+    const lastSpace = cut.lastIndexOf(' ');
+    return (lastSpace > 24 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:]+$/, '');
   };
   const ledes = slabs.map((slab) => (slab.blurb ? shorten(slab.blurb) || FALLBACK_LEDE : FALLBACK_LEDE));
   const longestLede = [...ledes].sort((a, b) => b.length - a.length)[0];
