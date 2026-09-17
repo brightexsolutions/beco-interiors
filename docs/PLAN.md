@@ -25,6 +25,39 @@ one day slip rather than cutting into the storefront.
 pages after the dashboard closes, each an M4 revision, inside the brand guideline and the
 performance budgets. Not a rebrand and not a milestone in its own right unless Beco asks for one.
 
+**Landed so far, 2026-09-17** (multiple sessions have been working this pass concurrently in
+the same working tree; this list is what is actually committed on `m5-dashboard`, not a plan):
+
+- `/quote`: the item list is now a charcoal panel rather than sitting on the same white surface
+  as the form beside it, matching the confirmation screen's own existing treatment. Fixed two
+  real bugs the redesign surfaced (the panel forcing itself to the form's height and leaving a
+  dead void below the last row; a "no photo yet" mark subtle enough to read as broken rather
+  than deliberate). `QuantityStepper` and `Notice` moved into `@beco/ui`, closing drift between
+  the copies on the product page and the quote list, and between the quote page's two notes and
+  the dashboard's sign-in denial respectively.
+- Home page: an "About Beco" strip and a "What we deal in" section covering all six ranges now
+  sit right after the hero, addressing the gap that the home page read as a sintered stone
+  catalogue with nowhere saying Beco sells six ranges or who Beco is. New `RangePillarList` in
+  `@beco/ui` backs this and `/about`'s own four pillars, replacing two copies of the same row
+  that had started to drift. Client credentials moved up the page and can now carry a written
+  testimonial (migration 29).
+- `/about`: the pillars section now reuses `RangePillarList` (see above). The rotating
+  statement and showroom block still carry their pre pass design, unchanged, see the deferred
+  row below.
+- `HoverGallery` auto cycles on a device with no hover event instead of leaving sibling
+  photographs permanently unreachable there, `/gallery`'s own "hover for more" label now hidden
+  under `@media(hover:hover)` to match.
+- `PinnedHero`'s lede truncation had a real bug: a sentence whose first clause was under 24
+  characters fell through the heuristic entirely and shipped uncut to the mobile hero. Fixed.
+
+Not touched this pass, still open: `/quote`'s form column beside the new charcoal panel, the
+showroom video and background image on `/about`, the shop page's catalogue-by-category section,
+the home page hero copy, pricing prominence, and the wider Beco team feedback (broader offering
+messaging, "Why Beco", real project photography replacing supplier renders on `/gallery`, a
+showroom booking CTA, dual homeowner/professional pathways, technical spec fields, a floating
+WhatsApp button). That feedback was explicitly routed to a different chat session; check with
+Brown before assuming it is unclaimed.
+
 ## Agreed cut order, if the date is held
 
 Stop when it fits.
@@ -54,7 +87,7 @@ Anything cut or deferred is recorded here with a reason, never silently dropped.
 | MFA enrolment for admin roles (TOTP + a challenge on admin sign-in) | M5 | 0.6 and D83: forced first-login password change ships in M5 and closes the issued-password hole. TOTP enrolment is self-contained Supabase Auth work that blocks no other M5 screen, so it moves to the M6 security pass unless Beco wants it at launch | M6 security pass |
 | Import pipeline EXIF auto-orient | Storefront revamp (D82) | Some rescued DELFONE-folder room photos render rotated 90 degrees: `tools/drive-import/src/images.ts` reads metadata without auto-orienting, so stored `width/height` are pre-rotation and a ratio guard cannot catch them. Worked around in `SlabToSurface` and `/about`; the real fix is `.rotate()` before `.metadata()`, or recording `orientation` | Next import pipeline pass |
 | Portrait video sections to landscape stock | Storefront revamp (D82) | Beco approved the licensed landscape clip on `/gallery` (D69) and wants the portrait `SHOWROOM_FILM` sections (home, `/contact`) done the same way. Sourcing and licence-verifying a specific clip needs a session with web access | Next revamp session |
-| `/about` lower sections | Storefront revamp (D82) | The opening hero and statement section were rebuilt; the pillars, rotating statement and showroom block still carry their pre-pass design | Follow-up revamp pass |
+| `/about` lower sections | Storefront revamp (D82) | The opening hero and statement section were rebuilt, and the pillars now reuse `RangePillarList` (2026-09-17). The rotating statement and showroom block still carry their pre-pass design; the showroom block's background image and video sizing are specifically flagged as weak | Follow-up revamp pass |
 
 ## External dependencies
 
