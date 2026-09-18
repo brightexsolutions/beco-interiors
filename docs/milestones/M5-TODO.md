@@ -18,8 +18,8 @@ Status key: `[x]` verified against reality / `[~]` built, not yet verified / `[ 
 
 Items are added as they are discovered rather than remembered.
 
-Branch: `m5-quotes`, off `m5-dashboard` at `a6d784d` (`m5-dashboard` itself is
-off `m4-closeout` at `a5783b6`). Quotes (D, E), dashboard home figures (H) and
+Branch: `m5-dashboard` (dashboard work via `m5-quotes`, storefront via
+`storefront-revamp`, both merged). Quotes (D, E), dashboard home figures (H) and
 the catalogue editor (F, G, D89, including create and photographs) are built
 as of 18 September. Orders (K) and reports (I) have shipped. Users (B) and
 announcements (J) shipped 18 September. Settings (V), blog (W), audit (X)

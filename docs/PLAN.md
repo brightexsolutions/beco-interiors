@@ -58,13 +58,14 @@ showroom booking CTA, dual homeowner/professional pathways, technical spec field
 WhatsApp button). That feedback was explicitly routed to a different chat session; check with
 Brown before assuming it is unclaimed.
 
-**Dashboard, 18 September, branch `m5-quotes`:** quotes, catalogue editor and
+**Dashboard, 18 September, branch `m5-dashboard`:** quotes, catalogue editor and
 dashboard home figures are in. `/orders` converts a won quote, walks pending
 to confirmed to fulfilled, marks paid, and issues a receipt. `/reports` is
 the salesperson leaderboard and conversion funnel for admins. `/users` is
 Brightex admin only. Announcements authoring is Beco admin. Settings, blog authoring and the audit
 log viewer shipped next. Blog write and audit read are Brightex unless
-Brightex assigns the grant on that user.
+Brightex assigns the grant on that user. The photography-led storefront
+revamp is on the same branch.
 Live beco.co.ke is still WordPress until launch.
 
 ## Agreed cut order, if the date is held
