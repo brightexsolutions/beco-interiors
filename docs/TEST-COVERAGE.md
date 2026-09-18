@@ -28,6 +28,9 @@ mark paid, receipt PDF and email) and `/reports` (salesperson leaderboard and
 conversion funnel, Nairobi month). pgTAP is **266 tests** across 22 files.
 Integration is **26 tests** across 5 files.
 
+M5 sections B and J (18 September): `/users` (Brightex admin, D38 lookup table
+plus sheet) and `/announcements` (Beco admin authoring UI). Migration 45.
+
 The storefront modernisation pass (D82) rebuilt or extended these suites: `announcement-bar`
 (now a rotating client component, `buildAnnouncementItems` plus roll and reduced-motion
 behaviour), `add-to-quote` (the "Review quote" route after an add), `shop-controls` (the
@@ -87,6 +90,8 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `23_person_sales_review.test.sql` | Per-person invoiced and collected are that salesperson, not the team. Team invoiced still sums. Uses a custom range so live this-month orders cannot leak in. 3 tests. Migration 42 |
 | `24_report_custom_range.test.sql` | Custom start and end dates include a quote inside the window and exclude one outside it. Inverted dates fall back to this month. Conversion uses the same bounds. 5 tests. Migration 43 |
 | `25_refresh_order_money.test.sql` | A priced line writes the quote header. An unpriced line does not zero priced ones. Convert copies line money, not a stale 0. Reports invoiced follows the confirmed order. 6 tests. Migration 44 |
+| `26_users_staff.test.sql` | Sales, product manager and editor cannot write `users`. Allowlisted Brightex can. Self role and self deactivate refused. Last `beco_admin` cannot be deactivated. Created user has `must_change_password`. Anon cannot execute `end_user_sessions`. Migration 45 |
+| `27_announcements_admin.test.sql` | Anon sees a live row and not one that starts tomorrow. Once the window includes `now()`, anon can read it. Sales and product manager cannot write. Beco admin can, and the write is audited |
 
 ## Storefront
 
@@ -106,7 +111,7 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | Client showcase | `components/__tests__/client-showcase.test.tsx` | Renders nothing until a client is published and permitted; logo, name fallback, sector and project line. 5 tests |
 | Launch banner | `components/__tests__/launch-banner.test.tsx` | Countdown to the date, reveal on the switch, confetti once per browser and skipped under reduced motion. 9 tests |
 | Blog JSON-LD | `app/blog/[slug]/__tests__/blog-posting-schema.test.tsx` | Both ld+json blocks parse; headline, description, absolute image URL, author, publisher, omit-not-null, breadcrumb. 5 tests |
-| Revalidate API | `app/api/revalidate/__tests__/route.test.ts` | Wrong secret is 401. Named product and category tags plus matching paths are revalidated. A path that is not site-relative is ignored |
+| Revalidate API | `app/api/revalidate/__tests__/route.test.ts` | Wrong secret is 401. Named product and category tags plus matching paths are revalidated. A path that is not site-relative is ignored. `/` revalidates as a layout so the announcement bar refreshes |
 
 ## Dashboard, `apps/dashboard`
 
@@ -165,13 +170,29 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Product list query | `lib/products.integration.test.ts` | Against local Postgres: product manager sets half-slab stock, SEO and a rename (old slug lands in `product_slugs`). Sales cannot write stock. Product manager can insert an unpublished draft. Soft delete leaves the quote line and its price. 4 tests |
 | Product actions | `app/(app)/products/__tests__/actions.test.ts` | Session re-check. POA with a price is refused before the write. Save writes stock and SEO then POSTs storefront revalidation. Stale lock named. Soft delete unpublishes and stamps `deleted_at`. Create inserts an unpublished draft. Add photograph without a file is refused |
 | Product photographs | `lib/__tests__/product-photo.test.ts` | Sharp writes 400/800/1600 webp plus a blur placeholder. A non-image buffer is refused |
-| Storefront revalidate | `lib/__tests__/storefront-revalidate.test.ts` | Always refreshes the dashboard list. Posts tags and paths when the secret is set. Skips the HTTP call when it is missing so a local save still works |
+| R2 image proxy | `app/api/img/__tests__/route.test.ts`, `lib/__tests__/product-storage.test.ts` | Dashboard `/api/img` streams a webp. Traversal keys are refused |
+| Storefront revalidate | `lib/__tests__/storefront-revalidate.test.ts` | Always refreshes the dashboard list. Posts tags and paths when the secret is set. Skips the HTTP call when it is missing so a local save still works. `revalidateStorefrontPaths` busts `/announcements` and the storefront root |
 | `ProductFilters` | `components/__tests__/product-filters.test.tsx` | Availability, published and stock each push into the URL. Clearing a filter removes the param. One row from lg. Axe clean |
 | `ProductResults` | `components/__tests__/product-results.test.tsx` | Desktop table plus phone cards, explicit Edit, POA and low-stock, SKU, create and edit sheets, axe. 7 tests |
 | `ProductEditor` | `components/__tests__/product-editor.test.tsx` | Delete ConfirmDialog names the product and says quotes keep their line. Add spec is a real control. SKU field present. Save submits the lock token. Axe clean. 5 tests |
 | `ProductCreate` | `components/__tests__/product-create.test.tsx` | Slug fills from the name. Create product submits. Axe clean |
 | `ProductImages` | `components/__tests__/product-images.test.tsx` | Remove ConfirmDialog names the product. Add photograph is a real file control. Axe clean |
 | `NewProductFab` | `components/__tests__/new-product.test.tsx` | Charcoal FAB to `/products?new=1` on desktop and on a phone |
+| User helpers | `lib/__tests__/users.test.ts` | Issued password length. Duplicate email, last-admin, sales-only website sentences. `parseStaffPublicPhoto` |
+| Users query | `lib/users.integration.test.ts` | Seeded Brightex admin inserts a flagged sales row and can set `is_public` plus `public_photo`. Product manager cannot deactivate anyone |
+| User actions | `app/(app)/users/__tests__/actions.test.ts` | Session re-check. Password not stored on the profile insert. Duplicate email cleans up the auth user. Self role refused. Deactivate revokes sessions. Director cannot be listed on `/team`. Photograph without a file is refused |
+| `UserFilters` | `components/__tests__/user-filters.test.tsx` | Role writes the URL. One row from lg. Axe |
+| `UserResults` | `components/__tests__/user-results.test.tsx` | Explicit View, Actions column, sheet from `?user=`, axe |
+| `UserEditor` | `components/__tests__/user-editor.test.tsx` | Deactivate ConfirmDialog names the person. Own row hides those controls. Photograph file control and named remove. Show on /team hidden for a director. Axe |
+| `UserCreate` | `components/__tests__/user-create.test.tsx` | Issued password shown once, Copy password writes the clipboard |
+| `NewUserFab` | `components/__tests__/new-user.test.tsx` | Charcoal FAB to `/users?new=1` |
+| Announcement helpers | `lib/__tests__/announcements.test.ts` | Live / scheduled / ended / off. Nairobi datetime-local round trip |
+| Announcements query | `lib/announcements.integration.test.ts` | Tomorrow is hidden from anon, then visible once the window includes now. Product manager cannot insert |
+| Announcement actions | `app/(app)/announcements/__tests__/actions.test.ts` | Session re-check. Nairobi instants. Storefront root revalidated |
+| `AnnouncementFilters` | `components/__tests__/announcement-filters.test.tsx` | Type writes the URL. One row from lg. Axe |
+| `AnnouncementResults` | `components/__tests__/announcement-results.test.tsx` | Explicit Edit, sheet from `?edit=`, axe |
+| `AnnouncementEditor` | `components/__tests__/announcement-editor.test.tsx` | Preview updates from the title. FormSections present. Save submits. Axe |
+| `NewAnnouncementFab` | `components/__tests__/new-announcement.test.tsx` | Charcoal FAB to `/announcements?new=1` |
 | `TopNav` | `components/__tests__/top-nav.test.tsx` | Only the current section carries `aria-current`, a nested path keeps its section, a shared stem does not, the Warm Red count shows on Quotes only and only when positive, axe clean. 6 tests |
 | `AccountMenu` | `components/__tests__/account-menu.test.tsx` | Closed until clicked, offers exactly Change password and Sign out, Sign out goes through the server action not a link, Escape closes, axe clean open and closed. 5 tests |
 | `PageHeading` | `components/__tests__/page-heading.test.tsx` | Title is the `h1`, eyebrow and lede show when given, the actions slot renders, axe clean. 4 tests |

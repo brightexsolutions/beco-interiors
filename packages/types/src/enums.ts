@@ -10,6 +10,9 @@ export const USER_ROLES = [
 ] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+export const ANNOUNCEMENT_TYPES = ['sale', 'clearance', 'notice', 'event'] as const;
+export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
+
 export const PRICE_DISPLAY_MODES = ['fixed', 'poa'] as const;
 export type PriceDisplayMode = (typeof PRICE_DISPLAY_MODES)[number];
 

@@ -52,6 +52,10 @@ created them.
 | `is_active` | boolean default true | False ends the session and blocks login. **Never delete a user**, it orphans audit history and quote attribution |
 | `must_change_password` | boolean default true | Forced change on first login |
 | `last_login_at` | timestamptz | |
+| `is_public` | boolean default false | Storefront `/team` only. Check `users_only_sales_are_public` refuses the flag on any role but `beco_sales` |
+| `public_title`, `public_phone` | text null | Shown on `/team` |
+| `public_photo` | jsonb null | Catalogue stem plus alt, width, height, blur. Derivatives at 400/800/1600 webp on R2 |
+| `sort_order` | int | `/team` listing order |
 | `created_by` | uuid FK users | |
 
 **RLS.** A user reads their own row. `beco_admin` reads all Beco users. `brightex_admin` reads
@@ -297,7 +301,9 @@ audit trail.
 ### testimonials, announcements
 
 `announcements` carries `starts_at`, `ends_at`, `priority`, `is_active`, so a mid year sale
-appears and retires on its own and nobody has to remember to take it down.
+appears and retires on its own and nobody has to remember to take it down. Anonymous reads are
+only live rows inside the window. Staff read all. `beco_admin` and `brightex_admin` write.
+Dashboard authoring is `/announcements`. Audit trigger already on the table.
 
 ### settings
 
@@ -379,6 +385,9 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `refresh_order_money(p_order_id)` | Same for an order. Triggered from `order_items`. Leaves a header-only order alone when it has no lines. Migration 44 |
 | `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
 | `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
+| `end_user_sessions(p_user_id)` | `security definer`. Deletes that user's GoTrue sessions and refresh tokens. `is_brightex_user()` gated. Called after deactivation and password reset. `execute` to `authenticated` only. Migration 45 |
+
+Migration 45 adds `guard_users_staff`: even an allowlisted `brightex_admin` cannot change their own `role`, `is_active` or `email`, and cannot deactivate or demote the last active `beco_admin` or `brightex_admin`.
 
 Migration 26 also narrowed `users_update_self_safe`: a self-update may change `full_name`, but
 `role`, `is_active`, `email`, `must_change_password` and `last_login_at` are each pinned to

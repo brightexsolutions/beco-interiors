@@ -54,4 +54,10 @@ describe('POST /api/revalidate', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/shop');
     expect(revalidatePath).not.toHaveBeenCalledWith('https://example.com');
   });
+
+  it('revalidates the root as a layout so the announcement bar refreshes', async () => {
+    vi.stubEnv('REVALIDATE_SECRET', 'right-secret');
+    await post({ paths: ['/'] }, 'right-secret');
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+  });
 });

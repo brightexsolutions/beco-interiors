@@ -9,3 +9,5 @@ export * from './dashboard-quote';
 export * from './dashboard-product';
 export * from './dashboard-order';
 export * from './dashboard-report';
+export * from './dashboard-user';
+export * from './dashboard-announcement';

@@ -44,3 +44,27 @@ export async function revalidateStorefront(input: {
     // A storefront outage must not roll back the catalogue write.
   }
 }
+
+export async function revalidateStorefrontPaths(paths: string[]): Promise<void> {
+  revalidatePath('/announcements');
+
+  const origin = process.env.STOREFRONT_URL;
+  const secret = process.env.REVALIDATE_SECRET;
+  if (!origin || !secret) return;
+
+  const safe = paths.filter((path) => path.startsWith('/'));
+  if (safe.length === 0) return;
+
+  try {
+    await fetch(`${origin.replace(/\/$/, '')}/api/revalidate`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${secret}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ tags: [], paths: safe }),
+    });
+  } catch {
+    // A storefront outage must not roll back the announcement write.
+  }
+}

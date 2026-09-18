@@ -1197,6 +1197,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       dashboard_summary: { Args: never; Returns: Json }
+      end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
       is_brightex_user: { Args: never; Returns: boolean }
       mark_order_paid: {

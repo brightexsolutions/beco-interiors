@@ -2,7 +2,7 @@
 
 > **Starting a new session on the next admin page?** Quotes and the catalogue
 > editor are handed off. Read `docs/milestones/M5-QUOTES-HANDOVER.md` first
-> (section 7: `/users` then announcements), then `docs/DASHBOARD-UI.md`, and
+> (section 8: settings next), then `docs/DASHBOARD-UI.md`, and
 > `docs/DECISIONS.md` from D50 (D54, D88, D89). Do not reopen quotes, AppShell,
 > the charcoal band, or the catalogue editor.
 >
@@ -21,7 +21,8 @@ Branch: `m5-quotes`, off `m5-dashboard` at `a6d784d` (`m5-dashboard` itself is
 off `m4-closeout` at `a5783b6`). Quotes (D, E), dashboard home figures (H) and
 the catalogue editor (F, G, D89, including create and photographs) are built
 as of 18 September. Orders (K) and reports (I) have shipped. Next screens:
-users (section B) then announcements (section J). M4's own tail (real phone QA walk,
+users (section B) and announcements (section J) shipped 18 September.
+Next: settings. M4's own tail (real phone QA walk,
 first green Lighthouse PR run, ESLint once typescript-eslint supports TS 7)
 stays on `m4-closeout` and is not M5 work.
 
@@ -238,21 +239,67 @@ running dev server with real Supabase sessions for every seeded role.
 
 ## B. `/dashboard/users`, per D6
 
-`brightex_admin` only. `users_write_brightex` RLS already exists.
+`brightex_admin` only (`beco.brightex.dev@gmail.com`). Product manager
+(`aisha.farah@beco.co.ke`) cannot load `/users`. Proxy and `requirePath`
+already gate the route. `users_write_brightex` RLS already exists.
+`beco_admin` may still SELECT users (existing `users_read_all_admin`);
+writes stay Brightex.
 
-- [ ] List Beco users: name, email, role, active, last login
-- [ ] Create: email, full name, role. Sets `must_change_password = true`, `is_active = true`,
-      `created_by`. Issues the initial password out of band (shown once, not stored)
-- [ ] Reset password: reissues and re-arms `must_change_password`
-- [ ] Deactivate and reactivate, via `ConfirmDialog` naming the person and what happens to their
-      sessions and their quote attribution (nothing is deleted)
-- [ ] Change role, via `ConfirmDialog`. Nobody can change their own role: `users_update_self_safe`
-      enforces it in Postgres, verify the UI never lets them try
-- [ ] Every action writes `audit_log` (trigger already on `users`)
-- [ ] Mobile: reduced-column table with a detail sheet (D38, a lookup table)
-- [ ] pgTAP: no non-`brightex_admin` role can read or write `users`; self role change refused;
-      created user arrives with the forced-change flag. Component and integration tests for each
-      action, failure paths included (duplicate email, last active admin deactivated)
+Written 18 September before coding, from handover section 7. D38 lookup:
+reduced-column table plus a detail sheet, **not** quote-style cards. FAB
+because create is in the plan.
+
+### Schema
+
+- [x] Trigger: refuse changing your own `role` or `is_active` even through
+      `users_write_brightex`. `record_sign_in` / `complete_first_login` still
+      move `last_login_at` and `must_change_password`
+- [x] Trigger: refuse deactivating or demoting the last active `beco_admin`
+      or the last active `brightex_admin`
+- [x] `end_user_sessions(p_user_id)` security definer, `is_brightex_user()`
+      gated. Deletes `auth.sessions` / `auth.refresh_tokens` so a deactivated
+      account is out, not waiting for JWT expiry
+- [x] `users_touch_updated_at`. Audit trigger already on `users`
+
+### List `/users`
+
+- [x] Heading Users, no lede. Charcoal labelled FAB New user, desktop and phone
+- [x] Filters from `lg`: search plus Role and Status on one row. Phone: search
+      full width, selects under it. No Search label. URL is the source of truth
+- [x] Desktop `DataTable`: Name, Email, Role, Status, Last login, Actions.
+      Actions is icon plus View
+- [x] Phone: reduced-column table (Name, Status, Actions), no horizontal
+      scroll, not cards. View opens the sheet
+- [x] Paginate. Empty state. Skeleton matches the shape
+
+### Create and detail sheet
+
+- [x] Create: email, full name, role. `must_change_password = true`,
+      `is_active = true`, `created_by`. Auth user via service role, profile
+      via the Brightex session so RLS still applies. Issued password shown
+      once, copyable, not stored. Duplicate email refused
+- [x] Sheet `FormSection`s. Close uses the x icon
+- [x] Reset password: ConfirmDialog, reissues, re-arms `must_change_password`,
+      shows the new secret once
+- [x] Deactivate / Reactivate via ConfirmDialog naming the person. Sessions
+      end. Quotes keep their attribution. Nothing is deleted
+- [x] Change role via ConfirmDialog. UI never offers it on your own row
+- [x] Last active admin of that role cannot be deactivated or demoted
+- [x] Sales sheet: photograph upload (same R2 400/800/1600 pipeline as products),
+      public title, public phone, Show on /team. Constraint still refuses
+      `is_public` on any role but `beco_sales`. Storefront `/team` revalidated.
+      Dashboard preview reads `/api/img` on this app, not the storefront origin
+
+### Tests and docs
+
+- [x] pgTAP: sales, product manager and editor cannot write `users`; Brightex
+      on the allowlist can; self role / self deactivate refused; last admin
+      refused; created row has `must_change_password`; anon cannot execute
+      `end_user_sessions`
+- [x] Vitest: list, filters, reduced table vs desktop, sheet actions,
+      ConfirmDialog verbs, issued password shown once, server actions,
+      integration against local Postgres. No Playwright
+- [x] QA inventory and TEST-COVERAGE
 
 ## C. Dashboard shell and chrome
 
@@ -489,14 +536,29 @@ already sits in `ROUTE_RULES`; redirect it here. No sparkline tiles. No FAB.
 
 ## J. Announcements admin
 
-D36. The storefront already renders the live one and gates the window by RLS. This is the
-authoring UI, `beco_admin`.
+D36. The storefront already renders the live one and gates the window by RLS.
+Authoring UI is `beco_admin` (`irene.kariuki@beco.co.ke`). `brightex_admin`
+may also load the route (existing access map). Writes use `announcements_write`
+(`is_admin()`). Audit trigger already on the table.
 
-- [ ] `/dashboard/announcements`: create and edit title, body, type, CTA label and URL,
-      `starts_at`, `ends_at`, `priority`, `is_active`. Preview
-- [ ] Test from the build plan: schedule one to start tomorrow, confirm it is absent on the
-      storefront today and present tomorrow
-- [ ] Audit logging on write
+Written 18 September before coding. List/FAB pattern. Cards on a phone.
+Preview in the sheet, do not restyle the storefront bar.
+
+- [x] `/announcements`: heading Announcements, no lede. Charcoal FAB New
+      announcement. Filters from `lg` on one row (search, type, window)
+- [x] Desktop `DataTable`: Title, Type, Window, Priority, Status, Actions
+      (icon plus Edit). Phone: cards, the card is Edit
+- [x] Sheet `FormSection`s: copy, schedule, call to action, preview of the
+      charcoal (or clearance) bar line. Create and edit title, body, type,
+      CTA label and URL, `starts_at`, `ends_at`, `priority`, `is_active`
+- [x] Dates are Nairobi. `ends_at > starts_at` stays the database check
+- [x] Writes bust the storefront layout so the bar updates
+- [x] pgTAP: anon sees only live rows inside the window; a row that starts
+      tomorrow is absent from anon today and visible once its window includes
+      `now()`; sales and product manager cannot write; admin can; write is
+      audited
+- [x] Vitest: list, filters, cards vs table, sheet preview, actions,
+      validation. Integration against local Postgres. QA inventory
 
 ## K. Orders
 

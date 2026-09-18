@@ -10,8 +10,9 @@ tokens.
 
 Quotes is the reference implementation. Copy its list / create / detail
 shape, not a new one. Cold start: `docs/milestones/M5-QUOTES-HANDOVER.md`.
-Next page is `/users` then announcements. Leave quotes, `AppShell`, the
-charcoal band, `/products`, `/orders` and `/reports` alone.
+Next page is settings. Leave quotes, `AppShell`, the
+charcoal band, `/products`, `/orders`, `/reports`, `/users` and announcements
+alone.
 
 **Locked catalogue decisions (18 Sept, Brown).** Do not reopen or "improve"
 these unless Brown asks:

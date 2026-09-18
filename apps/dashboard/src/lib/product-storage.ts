@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PRODUCT_IMAGE_WIDTHS } from '@/lib/product-photo';
 
 const missingStorageMessage =
@@ -30,6 +30,24 @@ export function isProductStorageConfigured(): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/** Keys the image proxy will fetch. Rejects traversal even though R2 would. */
+export const isSafeR2Key = (key: string): boolean =>
+  key.length > 0 && !key.includes('..') && !key.startsWith('/') && !key.includes('\\');
+
+export async function getProductObject(
+  key: string,
+): Promise<{ body: Uint8Array; contentType: string } | null> {
+  if (!isSafeR2Key(key)) return null;
+  try {
+    const { bucket } = credentials();
+    const obj = await client().send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const body = await obj.Body!.transformToByteArray();
+    return { body, contentType: obj.ContentType ?? 'image/webp' };
+  } catch {
+    return null;
   }
 }
 

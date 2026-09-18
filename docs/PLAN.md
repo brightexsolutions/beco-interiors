@@ -61,8 +61,9 @@ Brown before assuming it is unclaimed.
 **Dashboard, 18 September, branch `m5-quotes`:** quotes, catalogue editor and
 dashboard home figures are in. `/orders` converts a won quote, walks pending
 to confirmed to fulfilled, marks paid, and issues a receipt. `/reports` is
-the salesperson leaderboard and conversion funnel for admins. Next: users,
-then announcements. Live beco.co.ke is still WordPress until launch.
+the salesperson leaderboard and conversion funnel for admins. `/users` is
+Brightex admin only. Announcements authoring is Beco admin. Next: settings.
+Live beco.co.ke is still WordPress until launch.
 
 ## Agreed cut order, if the date is held
 

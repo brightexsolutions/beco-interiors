@@ -50,3 +50,19 @@ describe('revalidateStorefront', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe('revalidateStorefrontPaths', () => {
+  it('refreshes the announcements list and posts the storefront root', async () => {
+    vi.stubEnv('STOREFRONT_URL', 'http://localhost:3000');
+    vi.stubEnv('REVALIDATE_SECRET', 's3cret');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    const { revalidateStorefrontPaths } = await import('../storefront-revalidate');
+    await revalidateStorefrontPaths(['/']);
+    expect(revalidatePath).toHaveBeenCalledWith('/announcements');
+    const body = JSON.parse(String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body)) as {
+      paths: string[];
+    };
+    expect(body.paths).toEqual(['/']);
+  });
+});

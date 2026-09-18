@@ -180,7 +180,7 @@ NAP matches the footer and the JSON-LD character for character. **Server confirm
 |---|---|---|
 | Call the business line | Opens the dialler | Server on href |
 | Visit the showroom | Navigates | Server |
-| Per agent call and WhatsApp | Open external channels | **NEVER RENDERED.** Nobody is flagged public, so the agent branch has no real data behind it |
+| Per agent call and WhatsApp | Open external channels | Rendered once a sales row is `is_public` with a phone. Photograph comes from dashboard `/users` upload |
 
 Renders the empty state and carries `noindex`, and is absent from the sitemap, under the same
 gate as an empty category. **Server confirmed.**
@@ -345,6 +345,40 @@ The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (
 | Products / Categories | Funnel and most-viewed bars, then the conversion table. n/a when the denominator is zero | Test: `ReportResults`. RPC `conversion_report` |
 | Empty states | Per view, not stacked on the page | Test: `ReportResults` |
 | Sales at `/reports` | Proxy bounces to `/quotes` | `access.test.ts` |
+
+### `/users`
+
+`brightex_admin` only (`beco.brightex.dev@gmail.com`). D38 lookup: reduced-column table plus a detail sheet, not quote-style cards. Product manager cannot load this route.
+
+| Control | What it does | Status |
+|---|---|---|
+| Search | Debounced, rewrites `?search=`, list re-filters by name or email | Test: `UserFilters` |
+| Role / Status | Narrow the row set via the URL | Test: `UserFilters` |
+| Desktop table | Name, Email, Role, Status, Last login, Actions. Actions is icon plus View | Test: `UserResults` |
+| Phone table | Name, Status, Actions. No cards. No horizontal scroll | Test: `UserResults` |
+| View | Opens the detail sheet at `?user=id` | Test: `UserResults` |
+| New user | Charcoal labelled FAB, desktop and phone. Opens `?new=1` | Test: `NewUserFab`, `UserCreate` |
+| Create user | Email, name, role. Issues a password once, copyable. Forced change on first sign in | Test: `UserCreate`, `createStaffUser` |
+| Change role | ConfirmDialog names the person. Hidden on your own row | Test: `UserEditor`. Trigger `guard_users_staff` |
+| Deactivate / Reactivate | ConfirmDialog names the person. Sessions end. Quotes keep attribution. Nothing is deleted | Test: `UserEditor`, `setStaffActive` |
+| Reset password | ConfirmDialog. Shows a new secret once. Re-arms `must_change_password` | Test: `resetStaffPassword` |
+| Show on /team | Sales only. Writes `is_public`. Directors cannot be listed | Test: `UserEditor`, `saveStaffPublicProfile`. Constraint `users_only_sales_are_public` |
+| Upload / replace photograph | JPEG, PNG or WebP. 400/800/1600 webp on R2. Preview loads from dashboard `/api/img`. Busts storefront `/team` | Test: `UserEditor`, `uploadStaffPhoto`, img route |
+| Remove photograph | ConfirmDialog names the person. Deletes the R2 objects | Test: `UserEditor`, `removeStaffPhoto` |
+| Product manager at `/users` | Proxy bounces to `/products` | `access.test.ts`. **Server** still to walk as Aisha |
+
+### `/announcements`
+
+`beco_admin` (`irene.kariuki@beco.co.ke`) and `brightex_admin`. Storefront bar already exists.
+
+| Control | What it does | Status |
+|---|---|---|
+| Search / Type / Window | URL filters. One row from `lg` | Test: `AnnouncementFilters` |
+| Desktop table | Title, Type, Dates, Priority, Status, Actions. Actions is icon plus Edit | Test: `AnnouncementResults` |
+| Cards | Phone only. The card is Edit | Test: `AnnouncementResults` |
+| New announcement | Charcoal labelled FAB | Test: `NewAnnouncementFab` |
+| Editor | FormSections for copy, schedule (Nairobi), CTA, preview. Save writes the row and busts the storefront layout | Test: `AnnouncementEditor`, create/update actions |
+| Live window | A row that starts tomorrow is absent from anon today, present once the window includes now | pgTAP `27_announcements_admin`. Integration against local Postgres |
 
 ### `/launch` (D80)
 

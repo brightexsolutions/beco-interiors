@@ -7,12 +7,12 @@ band, or `/products` unless Brown asks.
 `docs/milestones/M5-TODO.md` is the full ticked list. This file is only what
 the next agent needs to start cold.
 
-**State, 18 September 2026:** quotes, catalogue editor, `/orders` and
-`/reports` are on branch `m5-quotes`, off `m5-dashboard` at `a6d784d`.
-`/stock` redirects to `/products`. Receipt PDF ships with orders. Quote,
-receipt and report PDFs preview as canvas pages with zoom. Live
-beco.co.ke is still WordPress; that is expected until the storefront
-launches.
+**State, 18 September 2026:** quotes, catalogue editor, `/orders`,
+`/reports`, `/users` and announcements are on branch `m5-quotes`, off
+`m5-dashboard` at `a6d784d`. `/stock` redirects to `/products`. Receipt PDF
+ships with orders. Quote, receipt and report PDFs preview as canvas pages
+with zoom. Live beco.co.ke is still WordPress; that is expected until the
+storefront launches.
 
 **Local stack:** `pnpm db:reset` then `pnpm drive:import` if you need
 photographs. After a plain reset the local catalogue is 24 published 12mm
@@ -27,8 +27,9 @@ ranges on purpose. Migration 39 adds `stock_quantity` and
 
 Branch: `m5-quotes`. Dashboard: `http://localhost:3001/`.
 
-Own `/users` then announcements next (M5 sections B and J). Do not start a
-second products, quotes, orders or reports pass unless Brown asks.
+Own settings next. Do not start a
+second products, quotes, orders, reports, users or announcements pass unless
+Brown asks.
 
 Do not start a second products pass, and do not edit quotes, AppShell, the
 charcoal band, `ShellContext`, `/orders` or `/reports` unless Brown says so.
@@ -38,6 +39,8 @@ them on `/orders`, `/reports` or later screens:**
 
 - List screens: `DataTable` on desktop, cards on a phone. Desktop must keep
   the table. A phone must not get a table that scrolls left and right.
+  **Exception:** `/users` is a D38 lookup: reduced-column table plus a
+  detail sheet, not cards.
 - Filter bars from `lg`: search and the selects share **one row**. Compact
   on a phone (search full width, selects under it).
 - Page headings: no lede under the title on operations lists. The primary
@@ -71,9 +74,13 @@ new write genuinely has to call them.
   `components/new-product.tsx`
 - `apps/dashboard/src/app/(app)/orders/**` and `components/order-*`
 - `apps/dashboard/src/app/(app)/reports/**` and `components/report-*`
+- `apps/dashboard/src/app/(app)/users/**` and `components/user-*`
+- `apps/dashboard/src/app/(app)/announcements/**` and `components/announcement-*`
+- `apps/dashboard/src/app/api/img/**` (dashboard R2 preview proxy)
 - Stock columns, product photographs and `dashboard_summary` low-stock
   (migration 39)
 - Order and report RPCs, migrations 40 and 41, receipt and report PDFs
+- Migration 45 (`guard_users_staff`, `end_user_sessions`) and pgTAP 26 / 27
 
 Storefront availability and `POST /api/revalidate` already landed for
 catalogue writes. Do not restyle the storefront to get the next screen done.
@@ -174,16 +181,28 @@ copies that onto the order. Do not reopen that unless Brown asks.
 Convert lives on a won quote detail (`QuoteActions`). That is the only
 quote-surface write from this pass. Do not restyle quotes to change it.
 
-**Leave for later, not for `/users`:** installation and delivery lines are
+**Leave for later, not for settings:** installation and delivery lines are
 still VAT-inclusive in the quote UI (D50 is products only). `top-nav.tsx`
 has a known hydration warning from locale dates.
 
-**Next:** `/users` then announcements. Do not reopen orders, reports,
-quotes, AppShell, the charcoal band or `/products` unless Brown asks.
+## 8. Users and announcements have shipped
 
-Users is `brightex_admin` only (`beco.brightex.dev@gmail.com`). Copy quotes
-for list / create / detail, except users is a D38 lookup: reduced-column
-table plus a detail sheet, not quote-style cards. Announcements are
-`beco_admin` (`irene.kariuki@beco.co.ke`). PM stays
-`aisha.farah@beco.co.ke` and cannot load `/users`.
+`/users` is Brightex admin only (`beco.brightex.dev@gmail.com`). D38 lookup:
+reduced-column table on a phone, not cards. Create issues a password once.
+Role, deactivate and reset sit behind `ConfirmDialog`. Sales rows can carry
+a `/team` portrait (R2 `team/{id}/{hex}-400|800|1600.webp`), title, phone
+and Show on /team. Only `beco_sales` can be public. Dashboard preview uses
+this app's `/api/img`, same `NEXT_PUBLIC_IMAGE_HOST=/api/img` as the
+storefront.
+
+`/announcements` is `beco_admin` (`irene.kariuki@beco.co.ke`) and
+`brightex_admin`. Nairobi datetime-local. Writes bust storefront `/` so the
+bar updates. Do not restyle the storefront bar.
+
+**Next:** settings (`beco_admin` and `brightex_admin`). Key/value in
+`settings`: VAT rate, quote validity, bank and till, notification
+recipients, WhatsApp number, quote footer, `brightex_allowed_emails`.
+Launch date stays on `/launch`. No FAB unless the plan names create.
+Do not reopen orders, reports, quotes, AppShell, the charcoal band,
+`/products`, `/users` or announcements unless Brown asks.
 

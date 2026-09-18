@@ -30,7 +30,10 @@ export async function POST(request: Request) {
     : [];
 
   for (const tag of tags) revalidateTag(tag, 'max');
-  for (const path of paths) revalidatePath(path);
+  for (const path of paths) {
+    if (path === '/') revalidatePath('/', 'layout');
+    else revalidatePath(path);
+  }
 
   return NextResponse.json({ ok: true, tags, paths });
 }
