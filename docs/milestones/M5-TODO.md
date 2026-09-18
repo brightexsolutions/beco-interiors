@@ -1,10 +1,10 @@
 # M5: Operations dashboard
 
 > **Starting a new session on the next admin page?** Quotes and the catalogue
-> editor are handed off. Read `docs/milestones/M5-QUOTES-HANDOVER.md` first,
-> then the next unbuilt section, `docs/DASHBOARD-UI.md`, and `docs/DECISIONS.md`
-> from D50 (D54, D88, D89). Do not reopen quotes, AppShell, the charcoal band,
-> or the catalogue editor.
+> editor are handed off. Read `docs/milestones/M5-QUOTES-HANDOVER.md` first
+> (section 7: orders then reports), then `docs/DASHBOARD-UI.md`, and
+> `docs/DECISIONS.md` from D50 (D54, D88, D89). Do not reopen quotes, AppShell,
+> the charcoal band, or the catalogue editor.
 >
 > Cold start on the whole milestone: this file, `docs/ARCHITECTURE.md`
 > sections 4 to 7, 10, 11, 12 and 17, and `docs/DECISIONS.md` from D50. The
@@ -20,8 +20,8 @@ Items are added as they are discovered rather than remembered.
 Branch: `m5-quotes`, off `m5-dashboard` at `a6d784d` (`m5-dashboard` itself is
 off `m4-closeout` at `a5783b6`). Quotes (D, E), dashboard home figures (H) and
 the catalogue editor (F, G, D89, including create and photographs) are built
-as of 18 September. Next screen: users (section B). Then announcements,
-orders, reports. M4's own tail (real phone QA walk,
+as of 18 September. Next screens: orders (section K) then reports
+(section I). Users and announcements wait. M4's own tail (real phone QA walk,
 first green Lighthouse PR run, ESLint once typescript-eslint supports TS 7)
 stays on `m4-closeout` and is not M5 work.
 

@@ -13,7 +13,7 @@ Brightex material.
 | M2 Drive import pipeline | 3.5 | Not started |
 | M3 Design system | 2.0 | Not started, overlaps M2 |
 | M4 Storefront, SEO, conversion, motion | 8.5 | Not started |
-| M5 Operations dashboard | 6.5 | **WIP.** Quotes, PDF, email, dashboard home figures and the catalogue editor are on `m5-quotes`. Next screen: users. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
+| M5 Operations dashboard | 6.5 | **WIP.** Quotes, PDF, email, dashboard home figures and the catalogue editor are on `m5-quotes`. Next: orders, then reports. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
 | M6 Launch | 3.5 | Not started |
 | M7 Brightex Studio | 3.5 | After launch, unbilled. Inside the dashboard per D9, gated per D42 |
 
@@ -63,7 +63,7 @@ reference admin screen (list, `/quotes/new`, detail, PDF, email). Dashboard
 home figures come from `dashboard_summary()`. The catalogue editor lives at
 `/products` (nav label Catalogue; `/stock` redirects there): stock, create,
 photographs. Stock quantity is typed by hand on that sheet, never decremented
-from an order. Next screen: users. Then announcements, orders, reports. Live
+from an order. Next: orders, then reports. Users and announcements wait. Live
 beco.co.ke is still WordPress until launch.
 
 ## Agreed cut order, if the date is held

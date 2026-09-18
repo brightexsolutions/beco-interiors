@@ -27,15 +27,14 @@ ranges on purpose. Migration 39 adds `stock_quantity` and
 
 Branch: `m5-quotes`. Dashboard: `http://localhost:3001/`.
 
-Own `/users` next (M5 section B, `brightex_admin` only). After that:
-announcements, orders, reports. The catalogue editor is no longer a
-placeholder.
+Own `/orders` then `/reports` next (M5 sections K and I). Users and
+announcements wait. The catalogue editor is no longer a placeholder.
 
 Do not start a second products pass, and do not edit quotes, AppShell or the
 charcoal band unless Brown says so.
 
 **Locked with Brown, 18 September. Carry these forward. Do not re-argue
-them on `/users` or later screens:**
+them on `/orders`, `/reports` or later screens:**
 
 - List screens: `DataTable` on desktop, cards on a phone. Desktop must keep
   the table. A phone must not get a table that scrolls left and right.
@@ -151,3 +150,48 @@ Pattern for later list / create / detail screens: `docs/DASHBOARD-UI.md`.
 - Shared widgets in `@beco/ui`. shadcn copy-paste is allowed there only
   (D88). Never a `components.json` in an app
 - RLS and the proxy both gate writes
+
+## 7. Start orders, then reports, with this
+
+Brown, 18 September: skip users and announcements. Build `/orders` (section K)
+then `/reports` (section I). Receipt PDF rides orders, not a later week
+(`docs/PLAN.md` reversed cut item 1).
+
+**Orders first**
+
+- Schema and RLS exist: `supabase/migrations/00000000000006_orders.sql`.
+  `docs/ARCHITECTURE.md` sections 6 and 7. `docs/SCHEMA.md` Orders.
+- There is no `/orders` route yet. Nav already has the item. `beco_sales`
+  and admins. Product manager does not.
+- First write: `convert_quote_to_order` RPC per 0.9. Atomic. Line prices
+  copied unchanged. Stamps `finalized_at` and `converted_order_id`. Sets
+  `salesperson_id` to the quote owner. Carries `source`. A quote cannot
+  convert twice. Sales converts own only.
+- List like quotes: table on desktop, cards on a phone, last column
+  Actions, charcoal FAB only if there is a create action (conversion
+  happens from a won quote, not a blank FAB unless the plan names one).
+- Detail: status pending to confirmed to fulfilled, or cancelled behind
+  `ConfirmDialog`. Mark paid stamps `paid_at`, also `ConfirmDialog`.
+  Constraint `orders_paid_at_matches_status`.
+- Receipt PDF and email when paid. `@react-pdf/renderer`, `quote-document`
+  skill. Payments stay offline. D8: invoiced (confirmed) and collected
+  (paid) are two figures.
+- Stock still does not auto-decrement. D89.
+- Realtime on orders is section L. Do not block the screen on it. A banner,
+  never a silent row insert.
+
+**Reports second**
+
+- `beco_admin` and `brightex_admin` only. `/reports` and `/leaderboard`
+  are already in `ROUTE_RULES`.
+- Leaderboard: quotes raised, won count, won value, conversion, per person.
+- Conversion report from `analytics_events`: view to add to cart to quote
+  submitted, plus WhatsApp and call clicks, per product and category.
+- Nairobi date boundaries, same as `dashboard_summary()`.
+- Deeper reports stay deferred.
+- Charts only where a shape answers what a number cannot. No sparkline
+  tiles over a table.
+
+Copy quotes for list / create / detail. Leave quotes, AppShell, the charcoal
+band and `/products` alone.
+

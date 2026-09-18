@@ -10,8 +10,9 @@ tokens.
 
 Quotes is the reference implementation. Copy its list / create / detail
 shape, not a new one. Cold start: `docs/milestones/M5-QUOTES-HANDOVER.md`.
-Next page is `/users` (M5 section B, `brightex_admin` only). Leave quotes,
-`AppShell`, the charcoal band, and `/products` alone.
+Next page is `/orders` then `/reports` (M5 sections K and I). Users and
+announcements wait. Leave quotes, `AppShell`, the charcoal band, and
+`/products` alone.
 
 **Locked catalogue decisions (18 Sept, Brown).** Do not reopen or "improve"
 these unless Brown asks:
