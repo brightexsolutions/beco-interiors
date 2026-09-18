@@ -837,7 +837,7 @@ screen. Verify the editor override path against a live storefront render at mile
 
 ## S. Documentation
 
-- [ ] `docs/STATUS.md` M5 row and headline numbers
+- [x] `docs/STATUS.md` M5 row and headline numbers
 - [ ] `docs/COMPONENTS.md`: dashboard components to **B**
 - [ ] `docs/DECISIONS.md`: new D-numbers for the stock model (0.1), quote expiry (0.2),
       unpriced totals (0.3), the SLA setting (0.4), the convert RPC (0.9), and anything
