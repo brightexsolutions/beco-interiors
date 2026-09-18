@@ -31,6 +31,13 @@ const productSlug = z
 
 const productName = z.string().trim().min(2, 'Name the product').max(120);
 
+const productSku = z.preprocess((value) => {
+  if (value === '' || value === null || value === undefined) return null;
+  if (typeof value !== 'string') return value;
+  const next = value.trim().replace(/\s+/g, ' ');
+  return next === '' ? null : next;
+}, z.union([z.null(), z.string().min(1, 'Need a product code').max(80)]));
+
 export const isValidStockAmount = (value: number, unit: string | null | undefined): boolean => {
   if (!(value >= 0) || !Number.isFinite(value)) return false;
   const step = stockStepFor(unit);
@@ -66,6 +73,7 @@ export const updateProductSchema = z
     updatedAt: z.string().min(1, 'Missing lock token'),
     name: productName,
     slug: productSlug,
+    sku: productSku,
     categoryId: z.preprocess(emptyToNull, z.uuid().nullable()),
     unit: z.preprocess(emptyToNull, z.enum(PRODUCT_UNITS).nullable()),
     priceDisplayMode: z.enum(PRICE_DISPLAY_MODES),
@@ -136,6 +144,7 @@ export const createProductSchema = z
   .object({
     name: productName,
     slug: productSlug,
+    sku: productSku,
     categoryId: z.uuid(),
     unit: z.enum(PRODUCT_UNITS),
     priceDisplayMode: z.enum(PRICE_DISPLAY_MODES),

@@ -1,20 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'vitest-axe';
-import { NewProductButton, NewProductFab } from '../new-product';
-
-describe('NewProductButton', () => {
-  it('goes to /products?new=1, not a hash and not a no-op', () => {
-    render(<NewProductButton />);
-    expect(screen.getByRole('link', { name: 'New product' })).toHaveAttribute('href', '/products?new=1');
-  });
-});
+import { NewProductFab } from '../new-product';
 
 describe('NewProductFab', () => {
-  it('floats rather than sitting in the heading', () => {
+  it('goes to /products?new=1, floats on desktop and on a phone', () => {
     render(<NewProductFab />);
-    expect(screen.getByRole('link', { name: 'New product' })).toHaveAttribute('href', '/products?new=1');
-    expect(screen.getByRole('link').className).toContain('fixed');
+    const link = screen.getByRole('link', { name: 'New product' });
+    expect(link).toHaveAttribute('href', '/products?new=1');
+    expect(link.className).toContain('fixed');
+    expect(link.className).toContain('bg-charcoal');
+    expect(link.className).not.toContain('lg:hidden');
   });
 
   it('has no accessibility violations', async () => {

@@ -36,6 +36,11 @@ describe('ProductFilters', () => {
     expect(push).toHaveBeenCalledWith('/products?published=draft');
   });
 
+  it('puts search and the three filters on one row from lg', () => {
+    const { container } = render(<ProductFilters />);
+    expect(container.firstChild).toHaveClass('lg:flex', 'lg:items-end');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<ProductFilters />);
     expect(await axe(container)).toHaveNoViolations();

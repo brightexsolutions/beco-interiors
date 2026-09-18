@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { CatalogueProduct } from '@/lib/products';
 
@@ -81,6 +80,17 @@ describe('ProductResults', () => {
     }
   });
 
+  it('keeps a sortable table on desktop and cards on a phone, so the list cannot scroll sideways', () => {
+    render(<ProductResults products={[product()]} editing={null} creating={false} categories={[]} />);
+    expect(screen.getByRole('table', { name: '1 products' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
+    expect(screen.getByRole('list')).toBeInTheDocument();
+    expect(screen.getAllByText('In stock').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('4').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/75,000/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('12mm Sintered Stones').length).toBeGreaterThan(0);
+  });
+
   it('shows POA rather than inventing a price, and flags low stock', () => {
     render(
       <ProductResults
@@ -99,6 +109,18 @@ describe('ProductResults', () => {
     );
     expect(screen.getAllByText('Price on application').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Low stock').length).toBeGreaterThan(0);
+  });
+
+  it('shows a supplier code under the product name', () => {
+    render(
+      <ProductResults
+        products={[product({ sku: '537 160 BLACK' })]}
+        editing={null}
+        creating={false}
+        categories={[]}
+      />,
+    );
+    expect(screen.getAllByText(/537 160 BLACK/).length).toBeGreaterThan(0);
   });
 
   it('opens the editor sheet when a product is being edited', () => {

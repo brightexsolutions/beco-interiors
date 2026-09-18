@@ -6,12 +6,13 @@ import { useTransition } from 'react';
 import {
   DataTable,
   EmptyState,
+  Icon,
   Pagination,
-  Panel,
   Sheet,
   StatusPill,
   buttonClasses,
   cn,
+  formatPrice,
   paginate,
   type DataTableColumn,
 } from '@beco/ui';
@@ -24,27 +25,37 @@ import {
   type ProductCategoryOption,
 } from '@/lib/products';
 
-const money = (n: number) =>
-  new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
-
-function PriceCell({ product }: { product: CatalogueProduct }) {
+function PriceLine({ product }: { product: CatalogueProduct }) {
   if (product.priceDisplayMode === 'poa' || product.price == null) {
     return <span className="text-neutral-500">Price on application</span>;
   }
-  return <span className="tabular-nums">{money(product.price)}</span>;
+  return <span className="tabular-nums">{formatPrice(product.price)}</span>;
 }
 
-function StockCell({ product }: { product: CatalogueProduct }) {
+function StockLine({ product }: { product: CatalogueProduct }) {
   if (product.stockQuantity == null) return <span className="text-neutral-500">Uncounted</span>;
   return <span className="tabular-nums">{product.stockQuantity}</span>;
 }
 
-function FlagCell({ product }: { product: CatalogueProduct }) {
+function FlagRow({ product }: { product: CatalogueProduct }) {
   if (isLowStock(product.stockQuantity, product.lowStockThreshold)) {
     return <StatusPill label="Low stock" tone="attention" />;
   }
   if (!product.isPublished) return <StatusPill label="Draft" tone="muted" />;
-  return <span className="text-neutral-500">—</span>;
+  return null;
+}
+
+function EditAction({ href, name }: { href: string; name: string }) {
+  return (
+    <Link
+      href={href}
+      aria-label={`Edit ${name}`}
+      className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
+    >
+      <Icon name="pencil" />
+      Edit
+    </Link>
+  );
 }
 
 const desktopColumns = (editHref: (slug: string) => string): DataTableColumn<CatalogueProduct>[] => [
@@ -56,7 +67,9 @@ const desktopColumns = (editHref: (slug: string) => string): DataTableColumn<Cat
     render: (product) => (
       <div>
         <p className="font-semibold text-charcoal">{product.name}</p>
-        {product.categoryName ? <p className="text-neutral-500">{product.categoryName}</p> : null}
+        {product.sku || product.categoryName ? (
+          <p className="text-neutral-500">{[product.sku, product.categoryName].filter(Boolean).join(' · ')}</p>
+        ) : null}
       </div>
     ),
   },
@@ -71,7 +84,7 @@ const desktopColumns = (editHref: (slug: string) => string): DataTableColumn<Cat
     align: 'right',
     sortable: true,
     sortValue: (product) => product.price ?? -1,
-    render: (product) => <PriceCell product={product} />,
+    render: (product) => <PriceLine product={product} />,
   },
   {
     key: 'stock',
@@ -79,61 +92,61 @@ const desktopColumns = (editHref: (slug: string) => string): DataTableColumn<Cat
     align: 'right',
     sortable: true,
     sortValue: (product) => product.stockQuantity ?? -1,
-    render: (product) => <StockCell product={product} />,
+    render: (product) => <StockLine product={product} />,
   },
   {
-    key: 'flag',
-    header: 'Flag',
-    render: (product) => <FlagCell product={product} />,
+    key: 'status',
+    header: 'Status',
+    render: (product) => <FlagRow product={product} />,
   },
   {
-    key: 'edit',
-    header: 'Edit',
+    key: 'actions',
+    header: 'Actions',
     align: 'right',
-    render: (product) => (
-      <Link
-        href={editHref(product.slug)}
-        aria-label={`Edit ${product.name}`}
-        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
-      >
-        Edit
-      </Link>
-    ),
+    render: (product) => <EditAction href={editHref(product.slug)} name={product.name} />,
   },
 ];
 
-const mobileColumns = (editHref: (slug: string) => string): DataTableColumn<CatalogueProduct>[] => [
-  {
-    key: 'name',
-    header: 'Product',
-    render: (product) => <span className="font-semibold text-charcoal">{product.name}</span>,
-  },
-  {
-    key: 'availability',
-    header: 'Availability',
-    render: (product) => productAvailabilityLabel(product),
-  },
-  {
-    key: 'stock',
-    header: 'Stock',
-    align: 'right',
-    render: (product) => <StockCell product={product} />,
-  },
-  {
-    key: 'edit',
-    header: 'Edit',
-    align: 'right',
-    render: (product) => (
+function ProductCard({ product, href }: { product: CatalogueProduct; href: string }) {
+  const meta = [product.sku, product.categoryName].filter(Boolean).join(' · ');
+  const flagged =
+    isLowStock(product.stockQuantity, product.lowStockThreshold) || !product.isPublished;
+
+  return (
+    <li className="min-w-0">
       <Link
-        href={editHref(product.slug)}
+        href={href}
         aria-label={`Edit ${product.name}`}
-        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
+        className="block min-w-0 overflow-hidden rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
       >
-        Edit
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 break-words font-ui text-base font-semibold text-charcoal">{product.name}</p>
+          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
+            <Icon name="pencil" />
+            Edit
+          </span>
+        </div>
+        {meta ? <p className="mt-1 min-w-0 truncate font-ui text-base text-neutral-500">{meta}</p> : null}
+        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <p className="min-w-0 font-ui text-base text-charcoal">
+            {productAvailabilityLabel(product)}
+            <span className="ml-2 text-neutral-500">
+              <StockLine product={product} />
+            </span>
+          </p>
+          <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
+            <PriceLine product={product} />
+          </p>
+        </div>
+        {flagged ? (
+          <div className="mt-2">
+            <FlagRow product={product} />
+          </div>
+        ) : null}
       </Link>
-    ),
-  },
-];
+    </li>
+  );
+}
 
 export function ProductResults({
   products,
@@ -182,9 +195,19 @@ export function ProductResults({
 
   const sheetOpen = Boolean(editing) || creating;
   const sheetTitle = creating ? 'New product' : (editing?.name ?? 'Product');
+  const sheetDescription = creating
+    ? 'Unpublished draft. Photographs and availability come next.'
+    : editing?.isPublished
+      ? 'On the website'
+      : 'Draft, hidden on the website';
 
   const sheet = (
-    <Sheet open={sheetOpen} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle}>
+    <Sheet
+      open={sheetOpen}
+      onOpenChange={(open) => !open && closeSheet()}
+      title={sheetTitle}
+      description={sheetDescription}
+    >
       {creating ? (
         <ProductCreate categories={categories} returnTo={withParam('new', null)} />
       ) : editing ? (
@@ -213,24 +236,22 @@ export function ProductResults({
 
   return (
     <>
-      <Panel>
-        <div className="px-4 py-2 lg:hidden">
-          <DataTable
-            caption={`${paged.total} products`}
-            columns={mobileColumns(editHref)}
-            rows={paged.items}
-            getRowKey={(product) => product.id}
-          />
-        </div>
-        <div className="hidden px-5 py-2 lg:block">
-          <DataTable
-            caption={`${paged.total} products`}
-            columns={desktopColumns(editHref)}
-            rows={paged.items}
-            getRowKey={(product) => product.id}
-          />
-        </div>
-      </Panel>
+      {/* Desktop keeps the sortable table. Phone gets cards so the list
+          cannot scroll sideways. Do not collapse desktop to cards. */}
+      <div className="hidden min-w-0 lg:block">
+        <DataTable
+          caption={`${paged.total} products`}
+          columns={desktopColumns(editHref)}
+          rows={paged.items}
+          getRowKey={(product) => product.id}
+        />
+      </div>
+
+      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden lg:hidden">
+        {paged.items.map((product) => (
+          <ProductCard key={product.id} product={product} href={editHref(product.slug)} />
+        ))}
+      </ul>
 
       <Pagination
         className="mt-4"

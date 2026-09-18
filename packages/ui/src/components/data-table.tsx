@@ -5,8 +5,8 @@ import { cn } from '../lib/cn';
 
 /**
  * The desktop table. Per D38 the mobile treatment is per screen, built at
- * the call site (full cards for quotes and orders, a reduced-column table
- * plus a detail sheet for stock, products and users), so this component is
+ * the call site (full cards for quotes, orders and products, a reduced-column
+ * table plus a detail sheet for users), so this component is
  * wrapped in a `hidden lg:block` there and never asked to be both.
  *
  * Sorting lives here, because every table needs it and a column is either

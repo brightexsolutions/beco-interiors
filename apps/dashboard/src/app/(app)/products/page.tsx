@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { PageHeading } from '@/components/page-heading';
-import { NewProductButton, NewProductFab } from '@/components/new-product';
+import { NewProductFab } from '@/components/new-product';
 import { ProductFilters } from '@/components/product-filters';
 import { ProductResults } from '@/components/product-results';
 import { fetchProductBySlug, fetchProductCategories, fetchProducts, type ProductListFilters } from '@/lib/products';
@@ -39,16 +39,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeading
-        eyebrow="Catalogue"
-        title="Products"
-        lede="Prices, photographs, specs, SEO and stock. Quotes that already include a product keep their line if you remove it."
-        actions={<NewProductButton />}
-      />
-      <div className="mb-6">
+      <PageHeading eyebrow="Catalogue" title="Products" />
+      <div className="mb-4">
         <ProductFilters />
       </div>
-      <div className="pb-24 lg:pb-0">
+      <div className="pb-24">
         <ProductResults products={products} editing={editing} creating={creating} categories={categories} />
       </div>
       <NewProductFab />

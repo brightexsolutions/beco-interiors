@@ -129,11 +129,12 @@ describe('updateProduct', () => {
     maybeSingle
       .mockResolvedValueOnce({ data: { slug: 'limestone-ivory', categories: { slug: '12mm-sintered-stones' } } })
       .mockResolvedValueOnce({ data: { id: '11111111-1111-4111-8111-111111111111' }, error: null });
-    const result = await updateProduct({}, formFrom({ metaTitle: 'Limestone Ivory in Nairobi' }));
+    const result = await updateProduct({}, formFrom({ metaTitle: 'Limestone Ivory in Nairobi', sku: 'LIM-IVORY-12' }));
     expect(result.ok).toBe('Saved.');
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
         meta_title: 'Limestone Ivory in Nairobi',
+        sku: 'LIM-IVORY-12',
         stock_quantity: 4,
         specs: { Finish: 'Soft Matte' },
       }),
@@ -183,12 +184,14 @@ describe('createProduct', () => {
     form.set('unit', 'per slab');
     form.set('priceDisplayMode', 'fixed');
     form.set('price', '89000');
+    form.set('sku', '537 160 BLACK');
     const result = await createProduct({}, form);
     expect(requirePath).toHaveBeenCalledWith('/products');
     expect(insert).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Calacatta Gold',
         slug: 'calacatta-gold',
+        sku: '537 160 BLACK',
         is_published: false,
         images: [],
       }),

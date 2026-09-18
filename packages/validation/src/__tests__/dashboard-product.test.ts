@@ -96,6 +96,15 @@ describe('updateProductSchema', () => {
     }
   });
 
+  it('accepts a handle code as the SKU, and treats a blank as none', () => {
+    const parsed = updateProductSchema.safeParse({ ...base, sku: '  537  160  BLACK  ' });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.sku).toBe('537 160 BLACK');
+    const blank = updateProductSchema.safeParse({ ...base, sku: '   ' });
+    expect(blank.success).toBe(true);
+    if (blank.success) expect(blank.data.sku).toBeNull();
+  });
+
   it('reads the published checkbox from form strings', () => {
     const parsed = updateProductSchema.safeParse({ ...base, isPublished: 'on' });
     expect(parsed.success).toBe(true);
@@ -131,6 +140,13 @@ describe('createProductSchema', () => {
 
   it('accepts an unpublished draft payload', () => {
     expect(createProductSchema.safeParse(create).success).toBe(true);
+  });
+
+  it('keeps an optional SKU on a draft, including a handle code', () => {
+    const parsed = createProductSchema.safeParse({ ...create, sku: '6832 64 BLACK' });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.sku).toBe('6832 64 BLACK');
+    expect(createProductSchema.safeParse({ ...create, sku: '' }).success).toBe(true);
   });
 
   it('still requires a price on a fixed product', () => {

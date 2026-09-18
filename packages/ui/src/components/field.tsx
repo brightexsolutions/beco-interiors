@@ -105,7 +105,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   ref,
 ) {
   return (
-    <span className="relative block">
+    <span className="relative block w-full min-w-0">
       <select
         ref={ref}
         className={cn(CONTROL, 'h-11 cursor-pointer appearance-none pl-3 pr-9', className)}

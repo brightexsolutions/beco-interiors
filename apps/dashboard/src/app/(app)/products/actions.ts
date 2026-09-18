@@ -72,6 +72,7 @@ export async function updateProduct(_prev: ProductActionState, form: FormData): 
     updatedAt: formString(form, 'updatedAt'),
     name: formString(form, 'name'),
     slug: formString(form, 'slug'),
+    sku: formString(form, 'sku'),
     categoryId: formString(form, 'categoryId'),
     unit: formString(form, 'unit'),
     priceDisplayMode: formString(form, 'priceDisplayMode'),
@@ -107,6 +108,7 @@ export async function updateProduct(_prev: ProductActionState, form: FormData): 
     .update({
       name: parsed.data.name,
       slug: parsed.data.slug,
+      sku: parsed.data.sku,
       category_id: parsed.data.categoryId,
       unit: parsed.data.unit,
       price_display_mode: parsed.data.priceDisplayMode,
@@ -146,6 +148,7 @@ export async function createProduct(_prev: ProductActionState, form: FormData): 
   const parsed = createProductSchema.safeParse({
     name: formString(form, 'name'),
     slug: formString(form, 'slug'),
+    sku: formString(form, 'sku'),
     categoryId: formString(form, 'categoryId'),
     unit: formString(form, 'unit'),
     priceDisplayMode: formString(form, 'priceDisplayMode'),
@@ -161,6 +164,7 @@ export async function createProduct(_prev: ProductActionState, form: FormData): 
     .insert({
       name: parsed.data.name,
       slug: parsed.data.slug,
+      sku: parsed.data.sku,
       category_id: parsed.data.categoryId,
       unit: parsed.data.unit,
       price_display_mode: parsed.data.priceDisplayMode,

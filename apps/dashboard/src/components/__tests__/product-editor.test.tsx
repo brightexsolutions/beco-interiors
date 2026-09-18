@@ -65,6 +65,15 @@ describe('ProductEditor', () => {
     expect(screen.getByLabelText('Spec 2 label')).toBeInTheDocument();
   });
 
+  it('groups name, photographs and availability, and names the product as the website does', () => {
+    render(<ProductEditor product={product} categories={[]} />);
+    expect(screen.getByRole('heading', { name: 'Name' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Photographs' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Availability' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Product name')).toHaveValue('Limestone Ivory');
+    expect(screen.getByLabelText(/^sku/i)).toHaveValue('');
+  });
+
   it('submits Save with the product lock', async () => {
     const user = userEvent.setup();
     render(<ProductEditor product={product} categories={[]} />);

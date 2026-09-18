@@ -422,11 +422,11 @@ stay as the historical seed. Stock lives here too (D89). `/stock` redirects to `
 - [x] Every write triggers storefront `revalidateTag('product:x')` and `revalidateTag('category:y')`
       via `POST /api/revalidate`. Mechanism in `docs/ARCHITECTURE.md` section 3
 - [x] Audit logging on every field change (trigger exists on `products`)
-- [x] Mobile: reduced-column table plus detail sheet (D38)
+- [x] Mobile: informative cards plus detail sheet. No horizontal table scroll
 - [x] Tests: `beco_product_manager` and admins write, `beco_sales` and `beco_editor` cannot,
       anon cannot; a POA product still cannot carry a price and a fixed one must (schema plus
       editor path); SEO override is written to `meta_title` which `generateMetadata` already reads
-- [x] New product: heading action on desktop, charcoal FAB on a phone, `?new=1`. Inserts an
+- [x] New product: charcoal labelled FAB on desktop and on a phone, `?new=1`. Inserts an
       unpublished draft (name, slug, range, unit, price), then opens the editor. Verified live
 - [x] Photographs in the editor: upload JPEG, PNG or WebP, role, alt, reorder, remove via
       `ConfirmDialog`. Sharp writes 400/800/1600 webp plus blur to R2. Separate locked actions
@@ -538,8 +538,9 @@ controls work. `docs/COMPONENTS.md` lists these as planned.
 Rule "everything works on a phone" is a hard requirement, not a courtesy (PRD section 4.2, section 5).
 
 - [x] Quotes become full cards on mobile (D38). Orders still to do
-- [x] Products keep a reduced-column table with a tap-through detail sheet (D38). Stock,
-      users and (deferred viewer aside) audit still to do
+- [x] Products are cards on a phone with a tap-through detail sheet, and
+      keep the `DataTable` on desktop. Users and (deferred viewer aside)
+      audit still to do
 - [ ] Action buttons never sit under the on-screen keyboard (PRD section 5)
 - [ ] Sorting, filtering and inline edit survive on mobile in both treatments
 - [ ] 16px type floor holds on every dashboard screen (`pnpm check:type-floor`)

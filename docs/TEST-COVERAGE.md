@@ -135,12 +135,12 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Product actions | `app/(app)/products/__tests__/actions.test.ts` | Session re-check. POA with a price is refused before the write. Save writes stock and SEO then POSTs storefront revalidation. Stale lock named. Soft delete unpublishes and stamps `deleted_at`. Create inserts an unpublished draft. Add photograph without a file is refused |
 | Product photographs | `lib/__tests__/product-photo.test.ts` | Sharp writes 400/800/1600 webp plus a blur placeholder. A non-image buffer is refused |
 | Storefront revalidate | `lib/__tests__/storefront-revalidate.test.ts` | Always refreshes the dashboard list. Posts tags and paths when the secret is set. Skips the HTTP call when it is missing so a local save still works |
-| `ProductFilters` | `components/__tests__/product-filters.test.tsx` | Availability, published and stock each push into the URL. Clearing a filter removes the param. Axe clean |
-| `ProductResults` | `components/__tests__/product-results.test.tsx` | Explicit Edit, not a click-anywhere row. POA not a invented price. Low-stock flag. Sheet opens at `?edit=`. Create sheet at `?new=1`. Axe clean |
-| `ProductEditor` | `components/__tests__/product-editor.test.tsx` | Delete ConfirmDialog names the product and says quotes keep their line. Add spec is a real control. Save submits the lock token. Axe clean. 4 tests |
+| `ProductFilters` | `components/__tests__/product-filters.test.tsx` | Availability, published and stock each push into the URL. Clearing a filter removes the param. One row from lg. Axe clean |
+| `ProductResults` | `components/__tests__/product-results.test.tsx` | Desktop table plus phone cards, explicit Edit, POA and low-stock, SKU, create and edit sheets, axe. 7 tests |
+| `ProductEditor` | `components/__tests__/product-editor.test.tsx` | Delete ConfirmDialog names the product and says quotes keep their line. Add spec is a real control. SKU field present. Save submits the lock token. Axe clean. 5 tests |
 | `ProductCreate` | `components/__tests__/product-create.test.tsx` | Slug fills from the name. Create product submits. Axe clean |
 | `ProductImages` | `components/__tests__/product-images.test.tsx` | Remove ConfirmDialog names the product. Add photograph is a real file control. Axe clean |
-| `NewProductButton` / `NewProductFab` | `components/__tests__/new-product.test.tsx` | Both go to `/products?new=1`. FAB floats |
+| `NewProductFab` | `components/__tests__/new-product.test.tsx` | Charcoal FAB to `/products?new=1` on desktop and on a phone |
 | `TopNav` | `components/__tests__/top-nav.test.tsx` | Only the current section carries `aria-current`, a nested path keeps its section, a shared stem does not, the Warm Red count shows on Quotes only and only when positive, axe clean. 6 tests |
 | `AccountMenu` | `components/__tests__/account-menu.test.tsx` | Closed until clicked, offers exactly Change password and Sign out, Sign out goes through the server action not a link, Escape closes, axe clean open and closed. 5 tests |
 | `PageHeading` | `components/__tests__/page-heading.test.tsx` | Title is the `h1`, eyebrow and lede show when given, the actions slot renders, axe clean. 4 tests |
@@ -174,7 +174,7 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `@beco/validation` | `__tests__/rate-limit.test.ts` | The sliding-window limiter: allows up to the limit then denies, per key, frees a slot as the oldest hit ages out, reports the exact wait, shares a store when given one. 7 tests. See D81 |
 | `@beco/validation` | `__tests__/money.test.ts` | D50 split: 65,000 contains 8,965.52 VAT inside, not 10,400 on top. Rounds after every operation |
 | `@beco/validation` | `__tests__/dashboard-quote.test.ts` | Counter create, line batch, catalogue add, lost-reason schemas |
-| `@beco/validation` | `__tests__/dashboard-product.test.ts` | Half-unit stock for slabs, whole otherwise, never negative. Blank stock is uncounted, not zero. POA cannot carry a price. Specs drop blank rows |
+| `@beco/validation` | `__tests__/dashboard-product.test.ts` | Half-unit stock for slabs, whole otherwise, never negative. Blank stock is uncounted, not zero. POA cannot carry a price. SKU keeps a handle code and blank is none. Specs drop blank rows |
 | `@beco/documents` | `email/__tests__/*.ts` | Storefront confirmation plus `buildPricedQuoteEmail`: reference, no marketing voice, no em dashes. Send no-ops without a key |
 | `@beco/documents` | `pdf/__tests__/quote-document.test.ts` | Bytes are a PDF. Unpriced never prints `KES 0.00`. From block is Beco Interiors Limited. 15 lines span pages. No em dashes |
 

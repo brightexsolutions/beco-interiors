@@ -3,6 +3,8 @@ export { Fab, fabClasses, type FabProps } from './components/fab';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
 export { Dialog, type DialogProps } from './components/dialog';
 export { Sheet, type SheetProps } from './components/sheet';
+export { Icon, type IconName } from './components/icon';
+export { FormSection } from './components/form-section';
 export {
   DropdownMenu,
   DropdownMenuContent,

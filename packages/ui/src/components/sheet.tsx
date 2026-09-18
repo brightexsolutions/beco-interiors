@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
+import { Icon } from './icon';
 
 /**
  * A detail sheet for scanning tables (D38). Bottom sheet on a phone, right
@@ -12,13 +13,15 @@ export interface SheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  /** Quiet status under the title: Draft, On the website. */
+  description?: string | undefined;
   children: ReactNode;
   /** Sticky actions under the scrolling body, Save and Delete. */
   footer?: ReactNode | undefined;
   className?: string | undefined;
 }
 
-export function Sheet({ open, onOpenChange, title, children, footer, className }: SheetProps) {
+export function Sheet({ open, onOpenChange, title, description, children, footer, className }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<Element | null>(null);
@@ -72,22 +75,31 @@ export function Sheet({ open, onOpenChange, title, children, footer, className }
         role="dialog"
         aria-modal="true"
         aria-labelledby="sheet-title"
+        aria-describedby={description ? 'sheet-description' : undefined}
         className={cn(
           'relative flex h-[min(92dvh,44rem)] w-full max-w-[36rem] flex-col overflow-hidden bg-high-vis-white',
           'rounded-t-[4px] lg:h-full lg:max-h-none lg:rounded-none lg:border-l lg:border-neutral-200',
           className,
         )}
       >
-        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-neutral-200 px-5 py-3">
-          <h2 id="sheet-title" className="min-w-0 truncate font-ui text-base font-semibold text-charcoal">
-            {title}
-          </h2>
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-neutral-200 px-5 py-3">
+          <div className="min-w-0">
+            <h2 id="sheet-title" className="truncate font-ui text-base font-semibold text-charcoal">
+              {title}
+            </h2>
+            {description ? (
+              <p id="sheet-description" className="mt-1 font-ui text-base text-neutral-500">
+                {description}
+              </p>
+            ) : null}
+          </div>
           <button
             ref={closeRef}
             type="button"
             onClick={close}
-            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center font-ui text-sm font-semibold text-neutral-500 hover:text-charcoal"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 font-ui text-sm font-semibold text-neutral-500 hover:text-charcoal"
           >
+            <Icon name="x" />
             Close
           </button>
         </div>

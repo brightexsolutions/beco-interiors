@@ -22,14 +22,15 @@ describe('ProductCreate', () => {
   it('fills the slug from the name until the slug is edited', async () => {
     const user = userEvent.setup();
     render(<ProductCreate categories={categories} returnTo="/products" />);
-    await user.type(screen.getByLabelText('Name'), 'Calacatta Gold');
-    expect(screen.getByLabelText('Slug')).toHaveValue('calacatta-gold');
+    await user.type(screen.getByLabelText('Product name'), 'Calacatta Gold');
+    expect(screen.getByLabelText(/page url/i)).toHaveValue('calacatta-gold');
   });
 
   it('submits Create product', async () => {
     const user = userEvent.setup();
     render(<ProductCreate categories={categories} returnTo="/products" />);
-    await user.type(screen.getByLabelText('Name'), 'Calacatta Gold');
+    await user.type(screen.getByLabelText('Product name'), 'Calacatta Gold');
+    await user.type(screen.getByLabelText(/^sku/i), '537 160 BLACK');
     await user.selectOptions(screen.getByLabelText('Range'), categories[0]!.id);
     await user.type(screen.getByRole('spinbutton'), '89000');
     await user.click(screen.getByRole('button', { name: 'Create product' }));

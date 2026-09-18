@@ -65,7 +65,7 @@ describe('ProductImages', () => {
   it('has an Add photograph control, not a decorative file picker', () => {
     render(<ProductImages product={product} />);
     expect(screen.getByRole('button', { name: 'Add photograph' })).toBeEnabled();
-    expect(screen.getByLabelText(/add photograph/i)).toHaveAttribute('type', 'file');
+    expect(screen.getByLabelText('Photograph')).toHaveAttribute('type', 'file');
   });
 
   it('has no accessibility violations', async () => {

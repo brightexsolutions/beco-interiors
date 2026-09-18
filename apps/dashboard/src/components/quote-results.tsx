@@ -6,6 +6,7 @@ import { useTransition } from 'react';
 import {
   DataTable,
   EmptyState,
+  Icon,
   Pagination,
   StatusPill,
   buttonClasses,
@@ -119,8 +120,8 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     render: (q) => <ValueCell quote={q} />,
   },
   {
-    key: 'view',
-    header: 'View',
+    key: 'actions',
+    header: 'Actions',
     align: 'right',
     render: (q) => (
       <Link
@@ -128,6 +129,7 @@ const columns: DataTableColumn<QuoteListItem>[] = [
         aria-label={`View ${q.referenceNumber}`}
         className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
       >
+        <Icon name="arrow-right" />
         View
       </Link>
     ),
@@ -144,7 +146,7 @@ function QuoteCard({ quote }: { quote: QuoteListItem }) {
       >
         <div className="flex items-baseline justify-between gap-3">
           <span className="font-ui text-base font-semibold text-charcoal">{quote.referenceNumber}</span>
-          <span className="shrink-0 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
+          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
             View
           </span>
         </div>

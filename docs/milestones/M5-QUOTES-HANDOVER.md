@@ -34,6 +34,24 @@ placeholder.
 Do not start a second products pass, and do not edit quotes, AppShell or the
 charcoal band unless Brown says so.
 
+**Locked with Brown, 18 September. Carry these forward. Do not re-argue
+them on `/users` or later screens:**
+
+- List screens: `DataTable` on desktop, cards on a phone. Desktop must keep
+  the table. A phone must not get a table that scrolls left and right.
+- Filter bars from `lg`: search and the selects share **one row**. Compact
+  on a phone (search full width, selects under it).
+- Page headings: no lede under the title on operations lists. The primary
+  create action is a labelled charcoal FAB on desktop and on a phone, never
+  a heading button. Quotes already do this. Products now match.
+- Last table column is named Actions. The control says the verb and carries
+  an `Icon` from `@beco/ui`.
+- Side sheets group fields with `FormSection`. Close uses the x icon.
+- SKU is a first-class optional field on product create and edit. Search
+  already matches it.
+- Quotes do not reduce stock. D89 stands.
+- shadcn and Radix live in `@beco/ui` only (D88). No lucide, no phosphor.
+
 ---
 
 ## 2. Do not touch
@@ -99,15 +117,21 @@ Pattern for later list / create / detail screens: `docs/DASHBOARD-UI.md`.
 
 - Nav: one Catalogue item at `/products`. `/stock` redirects there.
   Product manager landing stays `/products`. No sidebar.
-- List: reduced columns on a phone, full table on desktop (D38). Name,
-  availability, price or POA, stock, low-stock flag, explicit Edit.
-- Editor sheet: one column, Save and Delete pinned (no sideways scroll).
-  Photographs, price, compare-at, specs, descriptions, SEO, availability,
-  badge, published, sort, plus `stock_quantity` and `low_stock_threshold`.
-  Half unit for per slab, whole otherwise, never negative. Blank is
-  uncounted, not zero.
-- New product: heading button on desktop, charcoal FAB on a phone, `?new=1`.
-  Inserts an unpublished draft, then opens the editor.
+- List: table on desktop, cards on a phone. Name, SKU, range,
+  availability, price or POA, stock, low-stock flag. Last column is
+  Actions. The card is Edit. No horizontal scroll on a phone.
+- Filters: compact. From `lg`, search plus Availability, Published and
+  Stock sit on one row. Phone: search full width, three selects under it.
+  No Search label, placeholder plus aria-label.
+- Heading: Products, no lede. Charcoal labelled FAB on desktop and on a
+  phone, same as New quote. No heading button. FAB goes to `?new=1` and
+  inserts an unpublished draft (name, SKU, slug, range, unit, price), then
+  opens the editor.
+- Editor sheet: grouped `FormSection`s (Name, Photographs, Copy,
+  Availability, Price, Search). SKU on create and edit. One column, Save
+  and Delete pinned. Stock quantity and low-stock threshold live on
+  Availability. Half unit for per slab, whole otherwise, never negative.
+  Blank is uncounted, not zero.
 - Photographs in the editor: upload JPEG, PNG or WebP to R2 (400/800/1600
   webp plus blur), role, alt, reorder, remove via `ConfirmDialog`. Needs
   the R2 keys locally.

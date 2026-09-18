@@ -13,6 +13,24 @@ shape, not a new one. Cold start: `docs/milestones/M5-QUOTES-HANDOVER.md`.
 Next page is `/users` (M5 section B, `brightex_admin` only). Leave quotes,
 `AppShell`, the charcoal band, and `/products` alone.
 
+**Locked catalogue decisions (18 Sept, Brown).** Do not reopen or "improve"
+these unless Brown asks:
+
+- `/products` list: `DataTable` on desktop, informative cards on a phone.
+  Never cards on desktop. Never a squeezed table on a phone.
+- Product filters from `lg`: search and Availability, Published, Stock on
+  **one row**. On a phone, search full width then the three selects.
+- Products heading has no lede. New product is the charcoal labelled FAB
+  on desktop and on a phone, same as New quote. Never a heading button.
+- Last column of every dashboard table is Actions, with an icon plus the
+  verb (Edit, View).
+- Product sheet is grouped `FormSection`s (Name, Photographs, Copy,
+  Availability, Price, Search). SKU is on create and edit.
+- Icons come from `@beco/ui` `Icon`. No lucide, no phosphor.
+- Stock does not auto-decrement from quotes. Blank stock is uncounted, 0 is
+  out of stock.
+- Do not restyle `AppShell` or the charcoal band.
+
 ## What stays uniquely Beco
 
 - Charcoal band, wordmark, top nav, floating white content panel (`AppShell`)
@@ -25,13 +43,16 @@ Next page is `/users` (M5 section B, `brightex_admin` only). Leave quotes,
 
 ## Screen types
 
-**List** (Quotes, later Orders and Products): page heading with the primary
-action on the right on desktop, a labelled charcoal FAB on a phone. Optional
-KPI row using `StatCard`. One `Panel` holding a toolbar (search and filters)
-then `DataTable` on desktop, cards on mobile. Every list row has an explicit
-View action, not a click-anywhere row. Paginate. Empty state fills the
-panel. Skeleton matches that shape. The stored quote source `web` is labelled
-Website everywhere it is shown.
+**List** (Quotes, later Orders and Users): page heading with no primary
+in the title row. The create action is a labelled charcoal FAB on desktop
+and on a phone. No lede under the title on operations lists. Optional KPI
+row using `StatCard`. Toolbar of search and filters: from `lg` they share
+**one row**. Then `DataTable` on desktop, cards on mobile. Every list row
+has an explicit View or Edit action, last column named Actions, not a
+click-anywhere row. Paginate. Empty state fills the panel. Skeleton
+matches that shape. The stored quote source `web` is labelled Website
+everywhere it is shown. Catalogue (`/products`) follows this: table on
+desktop, cards on a phone, charcoal FAB for New product.
 
 **Create** (`/quotes/new` is the reference): heading with Save on desktop.
 Work column is a `Panel` (Add from catalogue plus Custom item, line list or empty). Inspector rail

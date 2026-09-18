@@ -296,13 +296,14 @@ Catalogue editor (M5 sections F and G, D89). Stock is on this screen; `/stock` r
 | Availability filter | Any / In stock / Pre-order / Enquire / Out of stock | Test: writes `?availability=out` |
 | Published filter | Any / Published / Draft | Test |
 | Stock filter | Any / Low stock / Out of stock | Test |
-| Desktop table | Name, availability, price or POA, stock count, low-stock flag, explicit Edit | Test: `ProductResults` |
-| Mobile table | Reduced columns: name, availability, stock, Edit (D38) | Test |
+| Desktop table | Name, SKU, range, availability, price or POA, stock, status, Actions. Sortable | Test: `ProductResults` |
+| Product cards | Phone only. Name, SKU, range, availability, stock, price or POA, low-stock flag. The card is Edit. No horizontal scroll | Test: `ProductResults` |
 | Edit | Opens a detail sheet at `?edit=slug`. One column, Save and Delete stay pinned, no sideways scroll | Test: `ProductResults` plus `ProductEditor` |
-| New product | Heading button on desktop, charcoal FAB on a phone. Opens `?new=1` as an unpublished draft | Test: `NewProductButton`, `ProductCreate`, `createProduct` action |
+| New product | Charcoal labelled FAB, desktop and phone. Opens `?new=1` as an unpublished draft | Test: `NewProductFab`, `ProductCreate`, `createProduct` action |
+| SKU | Optional supplier code on create and edit. Search already matches it. Shown on the storefront product page | Test: `createProductSchema`, `updateProduct`, `ProductCreate`, `ProductEditor`, `ProductResults` |
 | Add photograph | Upload JPEG/PNG/WebP, role, alt. Writes R2 derivatives and `products.images` | Test: `ProductImages`, `addProductImage`, `processProductPhoto` |
 | Remove photograph | `ConfirmDialog` names the product. Deletes the shot from storage | Test: `ProductImages` |
-| Save | Writes price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache | Test: `updateProduct` action. Integration against local Postgres |
+| Save | Writes name, SKU, price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache | Test: `updateProduct` action. Integration against local Postgres |
 | Delete product | `ConfirmDialog` names the product. Soft delete. Quotes keep their line and price | Test: `ProductEditor` plus integration |
 | `/stock` | Redirects to `/products` | Test |
 

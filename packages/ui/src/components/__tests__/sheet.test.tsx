@@ -46,6 +46,12 @@ describe('Sheet', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
   });
 
+  it('states a description under the title when one is passed', () => {
+    setup({ description: 'On the website' });
+    expect(screen.getByText('On the website')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-describedby', 'sheet-description');
+  });
+
   it('clips sideways overflow rather than scrolling the rail left and right', () => {
     setup();
     const dialog = screen.getByRole('dialog');
