@@ -43,6 +43,7 @@ export { BackLink, type BackLinkProps } from './components/back-link';
 export { StatusPill, type StatusPillProps, type StatusTone } from './components/status-pill';
 export { StatCard, type StatCardProps, type StatCardTone } from './components/stat-card';
 export { DataTable, type DataTableProps, type DataTableColumn } from './components/data-table';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './components/tabs';
 export { WordReveal, type WordRevealProps } from './components/word-reveal';
 export {
   CutoutReveal, type CutoutRevealProps, type CutoutRevealStat,

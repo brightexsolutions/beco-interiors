@@ -19,7 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           trees below this agree. */}
       <body suppressHydrationWarning>
         {children}
-        <Toaster />
+        <Toaster
+          position="top-center"
+          offset={{ top: '6.5rem' }}
+          mobileOffset={{ top: '5rem', left: '1rem', right: '1rem' }}
+        />
       </body>
     </html>
   );

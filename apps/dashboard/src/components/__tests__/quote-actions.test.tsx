@@ -3,7 +3,12 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import { assignQuote, reopenQuote } from '@/app/(app)/quotes/actions';
+import { convertQuoteToOrder } from '@/app/(app)/orders/actions';
 import { QuoteActions } from '../quote-actions';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 vi.mock('@/app/(app)/quotes/actions', () => ({
   claimQuote: vi.fn(async () => ({})),
@@ -12,6 +17,9 @@ vi.mock('@/app/(app)/quotes/actions', () => ({
   approveQuote: vi.fn(async () => ({})),
   reissueQuote: vi.fn(async () => ({})),
   reopenQuote: vi.fn(async () => ({ ok: 'Quote reopened. It is reviewing again.' })),
+}));
+vi.mock('@/app/(app)/orders/actions', () => ({
+  convertQuoteToOrder: vi.fn(async () => ({ ok: 'Order BEC-O-00001 is ready.', orderReference: 'BEC-O-00001' })),
 }));
 
 const base = {
@@ -29,12 +37,14 @@ const base = {
   canApprove: false,
   expired: false,
   assignees: [],
+  convertedOrderReference: null,
 };
 
 describe('QuoteActions', () => {
   beforeEach(() => {
     vi.mocked(assignQuote).mockClear();
     vi.mocked(reopenQuote).mockClear();
+    vi.mocked(convertQuoteToOrder).mockClear();
   });
   it('offers Quoted and Lost on a reviewing quote the viewer owns', () => {
     render(<QuoteActions {...base} />);
@@ -115,6 +125,27 @@ describe('QuoteActions', () => {
   it('does not offer Reopen on a won quote', () => {
     render(<QuoteActions {...base} status="won" />);
     expect(screen.queryByRole('button', { name: 'Reopen' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Convert to order' })).toBeInTheDocument();
+  });
+
+  it('opens a ConfirmDialog named for the quote when converting to an order', async () => {
+    const user = userEvent.setup();
+    render(<QuoteActions {...base} status="won" />);
+    await user.click(screen.getByRole('button', { name: 'Convert to order' }));
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog).toHaveAccessibleName('Convert BEC-Q-00042 to an order');
+    expect(dialog).toHaveTextContent(/will become an order with the prices already quoted/i);
+    expect(dialog).toHaveTextContent(/confirm, fulfil and mark it paid/i);
+    expect(within(dialog).getByRole('button', { name: 'Convert to order' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^ok$/i })).toBeNull();
+    await user.click(within(dialog).getByRole('button', { name: 'Convert to order' }));
+    await waitFor(() => expect(convertQuoteToOrder).toHaveBeenCalled());
+  });
+
+  it('links to the order once a won quote has been converted', () => {
+    render(<QuoteActions {...base} status="won" convertedOrderReference="BEC-O-00042" />);
+    expect(screen.queryByRole('button', { name: 'Convert to order' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'View order' })).toHaveAttribute('href', '/orders/BEC-O-00042');
   });
 
   it('is axe clean in reviewing and lost', async () => {

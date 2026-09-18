@@ -23,6 +23,11 @@ figures. Catalogue editor (F, G, D89) landed the same day: `/products` is the
 one screen, `/stock` redirects there, stock writes are audited, storefront
 cards read as out when `stock_quantity` is 0.
 
+M5 sections K and I (18 September): `/orders` (convert from a won quote, status,
+mark paid, receipt PDF and email) and `/reports` (salesperson leaderboard and
+conversion funnel, Nairobi month). pgTAP is **266 tests** across 22 files.
+Integration is **26 tests** across 5 files.
+
 The storefront modernisation pass (D82) rebuilt or extended these suites: `announcement-bar`
 (now a rotating client component, `buildAnnouncementItems` plus roll and reduced-motion
 behaviour), `add-to-quote` (the "Review quote" route after an add), `shop-controls` (the
@@ -77,6 +82,8 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `18_quote_milestones.test.sql` | reviewing_at on insert. quoted_at and lost_at on status change. lost_at kept after reopen. reopened_at stamped |
 | `19_add_catalogue_quote_lines.test.sql` | Two published products under one lock. Other-owner refused. Unpublished product refuses the whole batch. Stale lock refused. Empty selection refused. Product manager and anon cannot execute |
 | `20_product_stock.test.sql` | `stock_quantity` and `low_stock_threshold` cannot go negative. Half units for `per slab` only, whole otherwise, zero is allowed. `beco_product_manager` and `beco_admin` write stock; `beco_sales`, `beco_editor` and anon cannot (RLS filters the UPDATE). A stock write is audited as `entity_type = products`. 16 tests. Migration 39 |
+| `21_convert_quote_to_order.test.sql` | Line prices copy, including a discount. Second convert refused. Sales converts own only. Confirm, cannot go back to pending. Mark paid writes `paid_at` and does not decrement stock. Admin convert still attributes to the quote owner. Product manager and anon cannot execute. Cancelled cannot be marked paid. 23 tests. Migration 40 |
+| `22_order_reports.test.sql` | Nairobi this-month leaderboard: raised, won, conversion. Product views and view-to-cart. Category WhatsApp. A role that cannot read `analytics_events` sees empty conversion rows. 8 tests. Migration 41 |
 
 ## Storefront
 
@@ -119,7 +126,24 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `QuoteDocumentPanel` | `components/__tests__/quote-document-panel.test.tsx` | View opens the dialog, loads the PDF blob, Download is a real file link, Email is a real form. Dirty quantities are written through `updateQuoteLines` before the PDF fetch. Axe clean |
 | `CataloguePicker` | `components/__tests__/catalogue-picker.test.tsx` | Button opens a dialog. Search is focused. Range select lists Hardware and Lighting, not only stone. Multi-select, Add disabled until a tick, filter by typing, disabled reason shown. Axe clean |
 | Catalogue search helpers | `lib/__tests__/catalogue-search.test.ts` | Ranges split into ungrouped pillars and Drive folders under Hardware. Hits group by category so handles are not dumped under stone |
-| `QuoteActions` | `components/__tests__/quote-actions.test.tsx` | Claim, Quoted, Mark lost ConfirmDialog, Approve gated, Assign on select change, Reopen ConfirmDialog on lost, axe |
+| `QuoteActions` | `components/__tests__/quote-actions.test.tsx` | Claim, Quoted, Mark lost ConfirmDialog, Approve gated, Assign on select change, Reopen ConfirmDialog on lost, Convert to order ConfirmDialog on won, View order once converted, axe |
+| Order helpers | `lib/__tests__/orders.test.ts` | Milestones list only the stamps that exist. Mutation messages name a stale lock and do not leak SQLSTATE. Period and n/a rate labels |
+| Orders query | `lib/orders.integration.test.ts` | Against local Postgres: convert copies the override price, stock stays put, the new order appears on `mine`, confirm then mark paid stamps `paid_at` |
+| `OrderFilters` | `components/__tests__/order-filters.test.tsx` | Status and Website source write into the URL. Search has no visible Search label. One row from lg. Axe |
+| `OrderResults` | `components/__tests__/order-results.test.tsx` | Desktop table plus phone cards, explicit View, Website not Web, pagination, empty state with no New order. Axe |
+| `OrderActions` | `components/__tests__/order-actions.test.tsx` | Confirm on pending, Fulfil on confirmed, Mark paid and Cancel order ConfirmDialogs named for the order. Axe |
+| `OrderDates` | `components/__tests__/order-dates.test.tsx` | Raised only until later stamps. Paid does not imply fulfilled. Axe |
+| `OrderLines` | `components/__tests__/order-lines.test.tsx` | Catalogue strike sits on the item, not on the line total. Totals show once priced. POA otherwise. Axe |
+| `OrderDocumentPanel` | `components/__tests__/order-document-panel.test.tsx` | Renders nothing until paid. View receipt opens the PDF, Email form, Download is a real file link. Empty address still offers Email. Axe |
+| Order mutations | `app/(app)/orders/__tests__/actions.test.ts` | Session re-check on convert. Stale lock sentence. Mark paid goes through `mark_order_paid`. Receipt email refused until paid, then `sendReceipt` |
+| Order PDF helper | `lib/__tests__/order-pdf.test.ts` | Download uploads bytes and writes a `documents` row typed receipt |
+| Order PDF route | `app/(app)/orders/[reference]/pdf/__tests__/route.test.ts` | 409 until paid. Preview is inline. `?download=1` stores the file |
+| `ReportFilters` / `ReportResults` | `components/__tests__/report-results.test.tsx` | Period writes the URL and sits on the Reports title row. Invoiced and collected are two StatCards, 2 by 2 on a phone. Tabs switch Sales / Products / Categories and write `?view=`. Empty states stay on the active view. Axe |
+| `ReportBars` | `components/__tests__/report-bars.test.tsx` | Leader fill is charcoal. Values can be formatted |
+| Report helpers | `lib/__tests__/reports.test.ts` | `parseView`, team conversion, funnel totals |
+| Report PDF helper | `lib/__tests__/report-pdf.test.ts` | Filename carries the period. Input copies on-screen figures |
+| Report PDF route | `app/(app)/reports/pdf/__tests__/route.test.ts` | Attachment. Period from the query. 500 on render failure. No `documents` row |
+| `@beco/validation` order schemas | `packages/validation/src/__tests__/dashboard-order.test.ts` | Forward statuses, unknown status refused, convert needs the quote lock, receipt email needs an address |
 | Quote mutations | `app/(app)/quotes/__tests__/actions.test.ts` | Session re-check, stale lock sentence, lost-reason before the RPC, counter path refuses `web`, catalogue add goes through `add_catalogue_quote_line`, batch add through `add_catalogue_quote_lines`, reopen goes through `reopen_quote` |
 | Quote PDF helper | `lib/__tests__/quote-pdf.test.ts` | Download uploads bytes and writes a `documents` row. Preview does not |
 | PDF route | `app/(app)/quotes/[reference]/pdf/__tests__/route.test.ts` | Preview is inline. `?download=1` is an attachment. Unauthenticated is bounced |
@@ -128,7 +152,9 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `NewQuoteForm` | `components/__tests__/new-quote-form.test.tsx` | Catalogue dialog, custom item, Save disabled until a line, axe |
 | `NewQuoteFab` | `components/__tests__/new-quote-fab.test.tsx` | Link to `/quotes/new`, stays labelled |
 | Quote mutations (db) | `lib/quote-mutations.integration.test.ts` | Counter quote against local Supabase: row, items, lock |
-| Nav items | `lib/__tests__/nav-items.test.ts` | The role -> section list, and that it never lists a path the access map would then deny. Product manager sees Catalogue at `/products`, not a separate Stock item |
+| Nav items | `lib/__tests__/nav-items.test.ts` | The role -> section list, and that it never lists a path the access map would then deny. Product manager sees Catalogue at `/products`, not a separate Stock item. `navContext` names section roots and nested screens |
+| `AppShell` | `components/__tests__/app-shell.test.tsx` | Licensed still behind the chrome. Section nav exposed. White header stays in flow. Only the breadcrumb docks on a phone. Axe |
+| `ShellContext` | `components/__tests__/shell-context.test.tsx` | Hidden while the header is on screen. Docks after, with no `lg:hidden`. Nested path shows section / page, section is a real list link, New quote labelled, axe. 6 tests |
 | Stock redirect | `app/(app)/stock/__tests__/page.test.ts` | `/stock` redirects to `/products` so old links do not 404 |
 | Product helpers | `lib/__tests__/products.test.ts` | Low stock is at-or-below the mark and still above zero. Zero is out. Uncounted (NULL) keeps the stored availability |
 | Product list query | `lib/products.integration.test.ts` | Against local Postgres: product manager sets half-slab stock, SEO and a rename (old slug lands in `product_slugs`). Sales cannot write stock. Product manager can insert an unpublished draft. Soft delete leaves the quote line and its price. 4 tests |
@@ -161,8 +187,10 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Tokens | Contrast verified by script, never assumed. Caught white on pure Warm Red at 4.38:1, below the AA floor |
 | `cn` | `twMerge` actually resolves conflicting same-property utilities, for example `opacity-50` then `opacity-0`, which a raw string join did not: the D67 bug shape |
 | `DropdownMenu` | Trigger pointerdown asks to open. Items fire `onSelect`. `asChild` keeps a real link. Escape asks to close. Rows are `min-h-11`. The panel is `rounded-panel` with no shadow and no `animate-in`. Asserted in controlled `open` state because a Radix trigger click hangs in jsdom. Axe on the closed trigger. 7 tests. D88 |
-| `Dialog` | Escape, backdrop, focus return, optional `initialFocusRef`. 7 tests. Stays plain for jsdom |
+| `Tabs` | Click reveals the named panel. Active tab is a charcoal underline, not a muted pill. Axe. 3 tests |
+| `Dialog` | Escape, backdrop, focus return, optional `initialFocusRef`. Locks the page behind so a wheel does not scroll it. 8 tests. Stays plain for jsdom |
 | `Sheet` | Bottom sheet on a phone, right rail on desktop. Close and Escape actually close. Footer stays out of the scrolling body. 7 tests. D38 |
+| `useScrollLock` | `lib/__tests__/use-scroll-lock.test.tsx` | Locks html and body. Cancels a wheel on the page. Allows a wheel inside a panel scroller |
 | `Fab` | Labelled charcoal pill, `fabClasses` for genuine links. 5 tests |
 | `Panel` `Pagination` `Skeleton` `BackLink` `EmptyState` | Shape of list / create / loading screens. Pagination hidden on one page |
 | `toast()` | Done / Failed / Note. `useActionToast` for `{ ok }` / `{ error }` |
@@ -176,7 +204,8 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `@beco/validation` | `__tests__/dashboard-quote.test.ts` | Counter create, line batch, catalogue add, lost-reason schemas |
 | `@beco/validation` | `__tests__/dashboard-product.test.ts` | Half-unit stock for slabs, whole otherwise, never negative. Blank stock is uncounted, not zero. POA cannot carry a price. SKU keeps a handle code and blank is none. Specs drop blank rows |
 | `@beco/documents` | `email/__tests__/*.ts` | Storefront confirmation plus `buildPricedQuoteEmail`: reference, no marketing voice, no em dashes. Send no-ops without a key |
-| `@beco/documents` | `pdf/__tests__/quote-document.test.ts` | Bytes are a PDF. Unpriced never prints `KES 0.00`. From block is Beco Interiors Limited. 15 lines span pages. No em dashes |
+| `@beco/documents` | `pdf/__tests__/quote-document.test.ts` | Bytes are a PDF. Unpriced never prints `KES 0.00`. From block is Beco Interiors Limited. 15 lines span pages. No em dashes. Receipt title is Receipt, not Quotation |
+| `@beco/documents` | `pdf/__tests__/report-document.test.ts` | Sales review PDF carries period, figures and names. Empty tables say so. No em dashes |
 
 ## Import pipeline, `tools/drive-import`
 

@@ -22,7 +22,7 @@ export function PageHeading({
         </p>
       ) : null}
       <div className="mt-1 flex items-center justify-between gap-4">
-        <h1 className="min-w-0 font-display text-4xl leading-[1.08] text-charcoal">{title}</h1>
+        <h1 className="min-w-0 overflow-x-hidden font-display text-4xl leading-[1.08] text-charcoal">{title}</h1>
         {actions ? <div className="flex shrink-0 items-center justify-end gap-2">{actions}</div> : null}
       </div>
       {lede ? (

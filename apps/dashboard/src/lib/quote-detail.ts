@@ -62,6 +62,8 @@ export interface QuoteDetail {
   assignedToName: string | null;
   createdByName: string | null;
   approvedByName: string | null;
+  convertedOrderId: string | null;
+  convertedOrderReference: string | null;
   lines: QuoteLine[];
   totals: QuoteMoney;
   vatRate: number;
@@ -90,13 +92,13 @@ const settingNumber = (value: unknown, fallback: number): number => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-const oneName = (v: unknown): string | null => {
+const oneRef = (v: unknown): string | null => {
   if (!v) return null;
   if (Array.isArray(v)) {
-    const first = v[0] as { full_name?: string } | undefined;
-    return first?.full_name ?? null;
+    const first = v[0] as { reference_number?: string } | undefined;
+    return first?.reference_number ?? null;
   }
-  return (v as { full_name?: string }).full_name ?? null;
+  return (v as { reference_number?: string }).reference_number ?? null;
 };
 
 export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<QuoteSettings> {
@@ -127,6 +129,15 @@ export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<Quot
   };
 }
 
+const oneName = (v: unknown): string | null => {
+  if (!v) return null;
+  if (Array.isArray(v)) {
+    const first = v[0] as { full_name?: string } | undefined;
+    return first?.full_name ?? null;
+  }
+  return (v as { full_name?: string }).full_name ?? null;
+};
+
 export async function fetchQuote(
   supabase: SupabaseClient,
   reference: string,
@@ -138,10 +149,11 @@ export async function fetchQuote(
        project_type, fulfilment, delivery_address, timeline, budget_note, project_details,
        source, status, created_at, updated_at, valid_until, finalized_at, lost_reason,
        reviewing_at, quoted_at, won_at, lost_at, reopened_at,
-       requires_approval, approved_at, assigned_to,
+       requires_approval, approved_at, assigned_to, converted_order_id,
        assigned_user:users!quotes_assigned_to_fkey(full_name),
        created_user:users!quotes_created_by_fkey(full_name),
-       approved_user:users!quotes_approved_by_fkey(full_name)`,
+       approved_user:users!quotes_approved_by_fkey(full_name),
+       converted_order:orders!quotes_converted_order_fk(reference_number)`,
     )
     .eq('reference_number', reference)
     .maybeSingle();
@@ -210,6 +222,8 @@ export async function fetchQuote(
     assignedToName: oneName(quote.assigned_user),
     createdByName: oneName(quote.created_user),
     approvedByName: oneName(quote.approved_user),
+    convertedOrderId: quote.converted_order_id,
+    convertedOrderReference: oneRef(quote.converted_order),
     lines,
     totals: quoteTotals(
       lines.map((line) => ({ unitPrice: line.unitPrice, quantity: line.quantity })),

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from './button';
+import { useScrollLock } from '../lib/use-scroll-lock';
 
 /**
  * Replaces window.confirm ENTIRELY. See CLAUDE.md rule 4.
@@ -48,6 +49,7 @@ export function ConfirmDialog({
   const openerRef = useRef<Element | null>(null);
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
+  useScrollLock(open, panelRef);
 
   useEffect(() => {
     if (!open) return;
@@ -80,11 +82,8 @@ export function ConfirmDialog({
     };
 
     document.addEventListener('keydown', onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
       // Focus goes back where it came from, or the keyboard user is dropped
       // at the top of the document.
       (openerRef.current as HTMLElement | null)?.focus?.();
@@ -103,7 +102,7 @@ export function ConfirmDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
+    <div className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center p-4 sm:items-center">
       <div
         aria-hidden
         onClick={close}

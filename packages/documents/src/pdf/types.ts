@@ -23,6 +23,40 @@ export interface QuotePdfInput {
   footer: string;
   phone: string;
   issuedAt: string;
+  /** Quote is the default. A receipt is the same layout after payment. */
+  kind?: 'quote' | 'receipt';
+  paidAt?: string | null;
 }
 
 export interface QuotePdfTotals extends QuoteMoney {}
+
+export interface ReportPdfPerson {
+  name: string;
+  raised: number;
+  won: number;
+  wonValue: number;
+  conversion: number | null;
+}
+
+export interface ReportPdfFunnelRow {
+  name: string;
+  views: number;
+  addToCart: number;
+  quoted: number;
+  whatsapp: number;
+  calls: number;
+  viewToCart: number | null;
+}
+
+export interface ReportPdfInput {
+  period: string;
+  generatedAt: string;
+  invoiced: number;
+  collected: number;
+  raised: number;
+  won: number;
+  conversion: number | null;
+  people: ReportPdfPerson[];
+  products: ReportPdfFunnelRow[];
+  categories: ReportPdfFunnelRow[];
+}

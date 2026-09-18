@@ -102,34 +102,43 @@ const styles = StyleSheet.create({
   },
 });
 
-export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
-  const totals = quoteTotals(
-    quote.lines.map((line) => ({ unitPrice: line.unitPrice, quantity: line.quantity })),
-    quote.vatRate,
-  );
-  const issued = new Date(quote.issuedAt).toLocaleDateString('en-KE', {
+const nairobiDay = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-KE', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     timeZone: 'Africa/Nairobi',
   });
+
+export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
+  const totals = quoteTotals(
+    quote.lines.map((line) => ({ unitPrice: line.unitPrice, quantity: line.quantity })),
+    quote.vatRate,
+  );
+  const issued = nairobiDay(quote.issuedAt);
+  const paid = quote.paidAt ? nairobiDay(quote.paidAt) : null;
   const vatPercent = Math.round(quote.vatRate * 100);
+  const isReceipt = quote.kind === 'receipt';
 
   return (
-    <Document title={`${quote.reference} Beco Interiors`} author="Beco Interiors Limited">
+    <Document
+      title={`${quote.reference} ${isReceipt ? 'Receipt' : 'Beco Interiors'}`}
+      author="Beco Interiors Limited"
+    >
       <Page size="A4" style={styles.page} wrap>
         <View style={styles.header} fixed>
           <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
             <Image src={logoPath} style={styles.logo} />
             <View>
               <Text style={styles.eyebrow}>Beco Interiors</Text>
-              <Text style={styles.brand}>Quotation</Text>
+              <Text style={styles.brand}>{isReceipt ? 'Receipt' : 'Quotation'}</Text>
             </View>
           </View>
           <View>
             <Text style={styles.reference}>{quote.reference}</Text>
-            <Text style={styles.issued}>Issued {issued}</Text>
-            {quote.validUntil ? (
+            <Text style={styles.issued}>{isReceipt ? 'Raised' : 'Issued'} {issued}</Text>
+            {isReceipt && paid ? <Text style={styles.issued}>Paid {paid}</Text> : null}
+            {!isReceipt && quote.validUntil ? (
               <Text style={styles.issued}>Valid until {quote.validUntil}</Text>
             ) : null}
           </View>
@@ -199,19 +208,25 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
         )}
 
         <View style={styles.terms} wrap={false}>
-          {quote.paymentTerms ? (
+          {isReceipt ? (
+            <View style={{ marginBottom: 8 }}>
+              <Text style={styles.label}>Payment</Text>
+              <Text style={styles.body}>Paid in full. Thank you.</Text>
+            </View>
+          ) : null}
+          {!isReceipt && quote.paymentTerms ? (
             <View style={{ marginBottom: 8 }}>
               <Text style={styles.label}>Terms</Text>
               <Text style={styles.body}>{quote.paymentTerms}</Text>
             </View>
           ) : null}
-          {quote.bankDetails ? (
+          {!isReceipt && quote.bankDetails ? (
             <View style={{ marginBottom: 8 }}>
               <Text style={styles.label}>Bank</Text>
               <Text style={styles.body}>{quote.bankDetails}</Text>
             </View>
           ) : null}
-          {quote.tillNumber ? (
+          {!isReceipt && quote.tillNumber ? (
             <View>
               <Text style={styles.label}>Till</Text>
               <Text style={styles.body}>{quote.tillNumber}</Text>

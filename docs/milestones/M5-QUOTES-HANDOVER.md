@@ -7,12 +7,11 @@ band, or `/products` unless Brown asks.
 `docs/milestones/M5-TODO.md` is the full ticked list. This file is only what
 the next agent needs to start cold.
 
-**State, 18 September 2026:** quotes list, counter create, detail mutations,
-PDF, email, dashboard home figures and the catalogue editor (`/products`,
-stock, create, photographs, D89) are on branch `m5-quotes`, off
-`m5-dashboard` at `a6d784d`. `/stock` redirects to `/products`. Receipt PDF
-waits for orders. Live beco.co.ke is still WordPress; that is expected until
-the storefront launches.
+**State, 18 September 2026:** quotes, catalogue editor, `/orders` and
+`/reports` are on branch `m5-quotes`, off `m5-dashboard` at `a6d784d`.
+`/stock` redirects to `/products`. Receipt PDF ships with orders. Live
+beco.co.ke is still WordPress; that is expected until the storefront
+launches.
 
 **Local stack:** `pnpm db:reset` then `pnpm drive:import` if you need
 photographs. After a plain reset the local catalogue is 24 published 12mm
@@ -27,11 +26,11 @@ ranges on purpose. Migration 39 adds `stock_quantity` and
 
 Branch: `m5-quotes`. Dashboard: `http://localhost:3001/`.
 
-Own `/orders` then `/reports` next (M5 sections K and I). Users and
-announcements wait. The catalogue editor is no longer a placeholder.
+Own `/users` then announcements next (M5 sections B and J). Do not start a
+second products, quotes, orders or reports pass unless Brown asks.
 
-Do not start a second products pass, and do not edit quotes, AppShell or the
-charcoal band unless Brown says so.
+Do not start a second products pass, and do not edit quotes, AppShell, the
+charcoal band, `ShellContext`, `/orders` or `/reports` unless Brown says so.
 
 **Locked with Brown, 18 September. Carry these forward. Do not re-argue
 them on `/orders`, `/reports` or later screens:**
@@ -65,11 +64,15 @@ new write genuinely has to call them.
 - `apps/dashboard/src/lib/quote-*`, `catalogue.ts`, `catalogue-search.ts`
 - Quote RPCs and migrations 30 to 38
 - `packages/documents` quote PDF and priced-quote email
-- `apps/dashboard/src/components/app-shell.tsx` and the charcoal band
+- `apps/dashboard/src/components/app-shell.tsx`, `shell-context.tsx`, and
+  the charcoal band
 - `apps/dashboard/src/app/(app)/products/**` and `components/product-*`,
   `components/new-product.tsx`
+- `apps/dashboard/src/app/(app)/orders/**` and `components/order-*`
+- `apps/dashboard/src/app/(app)/reports/**` and `components/report-*`
 - Stock columns, product photographs and `dashboard_summary` low-stock
   (migration 39)
+- Order and report RPCs, migrations 40 and 41, receipt and report PDFs
 
 Storefront availability and `POST /api/revalidate` already landed for
 catalogue writes. Do not restyle the storefront to get the next screen done.
@@ -151,47 +154,25 @@ Pattern for later list / create / detail screens: `docs/DASHBOARD-UI.md`.
   (D88). Never a `components.json` in an app
 - RLS and the proxy both gate writes
 
-## 7. Start orders, then reports, with this
+## 7. Orders and reports have shipped
 
-Brown, 18 September: skip users and announcements. Build `/orders` (section K)
-then `/reports` (section I). Receipt PDF rides orders, not a later week
-(`docs/PLAN.md` reversed cut item 1).
+`/orders` and `/reports` landed 18 September (M5 sections K and I). Receipt
+PDF and email ride paid orders. Reports: compact StatCards in a 2 by 2
+grid on a phone, tabs for Sales / Products / Categories, a written sales
+performance PDF at `/reports/pdf`. Date range picker and trends stay
+deferred. The breadcrumb docks after the white header scrolls away, on a
+phone and on desktop. Realtime is still section L: do not block the next
+screen on it.
 
-**Orders first**
+Convert lives on a won quote detail (`QuoteActions`). That is the only
+quote-surface write from this pass. Do not restyle quotes to change it.
 
-- Schema and RLS exist: `supabase/migrations/00000000000006_orders.sql`.
-  `docs/ARCHITECTURE.md` sections 6 and 7. `docs/SCHEMA.md` Orders.
-- There is no `/orders` route yet. Nav already has the item. `beco_sales`
-  and admins. Product manager does not.
-- First write: `convert_quote_to_order` RPC per 0.9. Atomic. Line prices
-  copied unchanged. Stamps `finalized_at` and `converted_order_id`. Sets
-  `salesperson_id` to the quote owner. Carries `source`. A quote cannot
-  convert twice. Sales converts own only.
-- List like quotes: table on desktop, cards on a phone, last column
-  Actions, charcoal FAB only if there is a create action (conversion
-  happens from a won quote, not a blank FAB unless the plan names one).
-- Detail: status pending to confirmed to fulfilled, or cancelled behind
-  `ConfirmDialog`. Mark paid stamps `paid_at`, also `ConfirmDialog`.
-  Constraint `orders_paid_at_matches_status`.
-- Receipt PDF and email when paid. `@react-pdf/renderer`, `quote-document`
-  skill. Payments stay offline. D8: invoiced (confirmed) and collected
-  (paid) are two figures.
-- Stock still does not auto-decrement. D89.
-- Realtime on orders is section L. Do not block the screen on it. A banner,
-  never a silent row insert.
+**Next:** `/users` then announcements. Do not reopen orders, reports,
+quotes, AppShell, the charcoal band or `/products` unless Brown asks.
 
-**Reports second**
-
-- `beco_admin` and `brightex_admin` only. `/reports` and `/leaderboard`
-  are already in `ROUTE_RULES`.
-- Leaderboard: quotes raised, won count, won value, conversion, per person.
-- Conversion report from `analytics_events`: view to add to cart to quote
-  submitted, plus WhatsApp and call clicks, per product and category.
-- Nairobi date boundaries, same as `dashboard_summary()`.
-- Deeper reports stay deferred.
-- Charts only where a shape answers what a number cannot. No sparkline
-  tiles over a table.
-
-Copy quotes for list / create / detail. Leave quotes, AppShell, the charcoal
-band and `/products` alone.
+Users is `brightex_admin` only (`beco.brightex.dev@gmail.com`). Copy quotes
+for list / create / detail, except users is a D38 lookup: reduced-column
+table plus a detail sheet, not quote-style cards. Announcements are
+`beco_admin` (`irene.kariuki@beco.co.ke`). PM stays
+`aisha.farah@beco.co.ke` and cannot load `/users`.
 

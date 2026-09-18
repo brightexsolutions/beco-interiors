@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ActiveSession } from '@/lib/session';
 import { navItemsFor } from '@/lib/nav-items';
 import { AccountMenu } from './account-menu';
+import { ShellContext } from './shell-context';
 import { TopNav } from './top-nav';
 
 /**
@@ -9,6 +10,10 @@ import { TopNav } from './top-nav';
  * and the content each on their own floating white panel. The nav is a row of
  * pills, the current section a filled charcoal one. Top nav, never a sidebar;
  * text, never icons. The one Warm Red in the chrome is the count on Quotes.
+ *
+ * The white header stays in flow on every breakpoint. A breadcrumb docks
+ * only after that header has scrolled away, on a phone and on desktop, so the
+ * page stays named without a second bar sitting under the pills at rest.
  *
  * `newQuotes` is 0 until the realtime nav count lands (M5 section L / M).
  */
@@ -44,7 +49,10 @@ export function AppShell({
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/55 to-charcoal/90" />
       </div>
       <div className="relative mx-auto max-w-[1440px] px-4 pt-4 lg:px-8 lg:pt-6">
-        <header className="flex items-center gap-3 rounded-panel bg-high-vis-white p-2 shadow-panel lg:gap-5 lg:p-2.5">
+        <header
+          data-shell-header
+          className="flex items-center gap-3 rounded-panel bg-high-vis-white p-2 shadow-panel lg:gap-5 lg:p-2.5"
+        >
           <Link
             href="/"
             aria-label="Beco Operations, home"
@@ -83,6 +91,8 @@ export function AppShell({
           </div>
         </header>
       </div>
+
+      <ShellContext />
 
       <main className="relative mx-auto max-w-[1440px] px-4 py-4 lg:px-8 lg:py-6">
         <div className="rounded-panel bg-high-vis-white p-6 shadow-panel lg:p-9">{children}</div>

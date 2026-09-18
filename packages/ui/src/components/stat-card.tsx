@@ -68,13 +68,46 @@ export function StatCard({
 }: StatCardProps) {
   const t = TONES[tone];
   return (
-    <div className={cn('rounded-panel border', size === 'compact' ? 'p-4' : 'p-5', t.card, className)}>
-      <p className={cn('font-ui text-sm font-semibold', t.label)}>{label}</p>
-      <p className={cn('mt-1.5 font-display leading-none', size === 'compact' ? 'text-2xl' : 'text-3xl', t.value)}>
+    <div
+      className={cn(
+        'min-w-0 rounded-panel border',
+        size === 'compact' ? 'p-2.5 sm:p-3' : 'p-5',
+        t.card,
+        className,
+      )}
+    >
+      <p className={cn('truncate font-ui text-sm font-semibold', t.label)}>{label}</p>
+      <p
+        className={cn(
+          'mt-1 break-words font-display leading-none',
+          size === 'compact' ? 'text-lg sm:text-xl' : 'text-3xl',
+          t.value,
+        )}
+      >
         {value}
       </p>
-      {comparison ? <p className={cn('mt-2 font-ui text-sm', t.meta)}>{comparison}</p> : null}
-      {implication ? <p className={cn('mt-1 font-ui text-sm', t.meta)}>{implication}</p> : null}
+      {comparison ? (
+        <p
+          className={cn(
+            'truncate font-ui text-sm',
+            size === 'compact' ? 'mt-1' : 'mt-2',
+            t.meta,
+          )}
+        >
+          {comparison}
+        </p>
+      ) : null}
+      {implication ? (
+        <p
+          className={cn(
+            'font-ui text-sm',
+            size === 'compact' ? 'mt-0.5 hidden sm:block' : 'mt-1',
+            t.meta,
+          )}
+        >
+          {implication}
+        </p>
+      ) : null}
     </div>
   );
 }

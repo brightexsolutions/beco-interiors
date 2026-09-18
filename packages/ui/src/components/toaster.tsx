@@ -85,6 +85,7 @@ function ToastCard({
 
 function show(tone: ToastTone, message: string) {
   return sonnerToast.custom((id) => <ToastCard id={id} tone={tone} message={message} />, {
+    id: `${tone}:${message}`,
     duration: tone === 'error' ? 8000 : 4000,
   });
 }
@@ -96,14 +97,38 @@ export const toast = Object.assign((message: string) => show('info', message), {
   dismiss: sonnerToast.dismiss,
 });
 
-/** Mount once, in the root layout. Top-right, so it never covers the FAB. */
-export function Toaster() {
+type ToastPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
+
+type ToastOffset =
+  | number
+  | string
+  | {
+      top?: string | number;
+      right?: string | number;
+      bottom?: string | number;
+      left?: string | number;
+    };
+
+/**
+ * Mount once, in the root layout. The dashboard passes a placement that
+ * sits on the white content panel, below the chrome, never on the charcoal
+ * band and never over the FAB.
+ */
+export function Toaster({
+  position = 'top-right',
+  offset = 16,
+  mobileOffset,
+}: {
+  position?: ToastPosition;
+  offset?: ToastOffset;
+  mobileOffset?: ToastOffset;
+} = {}) {
   return (
     <SonnerToaster
-      position="top-right"
+      position={position}
       visibleToasts={3}
-      offset={16}
-      mobileOffset={16}
+      offset={offset}
+      mobileOffset={mobileOffset ?? offset}
       toastOptions={{ duration: 4000 }}
       containerAriaLabel="Notifications"
     />
@@ -121,5 +146,5 @@ export function useActionToast(state: { error?: string; ok?: string }) {
       return;
     }
     if (state.ok) toast.success(state.ok);
-  }, [state]);
+  }, [state.error, state.ok]);
 }

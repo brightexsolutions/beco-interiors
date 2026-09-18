@@ -72,3 +72,24 @@ describe('renderQuotePdf', () => {
     expect(pdf.includes(Buffer.from([0xe2, 0x80, 0x94]))).toBe(false);
   });
 });
+
+describe('renderReceiptPdf', () => {
+  it('labels the document as a receipt and records the paid date', async () => {
+    const { renderReceiptPdf } = await import('../render');
+    const pdf = await renderReceiptPdf(
+      base({
+        reference: 'BEC-O-00042',
+        kind: 'receipt',
+        paidAt: '2026-09-18T10:00:00.000Z',
+        validUntil: null,
+      }),
+    );
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    const asText = pdf.toString('latin1');
+    expect(asText).toContain('BEC-O-00042');
+    expect(asText).toContain('Beco Interiors Limited');
+    expect(asText).toContain('Receipt');
+    expect(asText).not.toMatch(/Valid until/);
+    expect(pdf.includes(Buffer.from([0xe2, 0x80, 0x94]))).toBe(false);
+  });
+});

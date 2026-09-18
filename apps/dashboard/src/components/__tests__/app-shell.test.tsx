@@ -41,6 +41,23 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Quotes' })).toBeInTheDocument();
   });
 
+  it('keeps the white header in flow. The breadcrumb is not part of that header', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const header = container.querySelector('[data-shell-header]');
+    expect(header?.className).toContain('rounded-panel');
+    expect(header?.className).toContain('bg-high-vis-white');
+    expect(header?.className).toContain('shadow-panel');
+    expect(header?.className).toContain('flex');
+    expect(header?.className).not.toContain('sticky');
+    expect(header?.parentElement?.className).toContain('relative');
+    expect(header?.parentElement?.className).not.toContain('sticky');
+    expect(screen.queryByRole('navigation', { name: 'You are here' })).toBeNull();
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(
       <AppShell user={admin}>

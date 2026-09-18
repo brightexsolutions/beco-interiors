@@ -455,14 +455,34 @@ against, and what it implies.** A number with no comparison is decoration.
 ## I. Reports
 
 Per 0.7 item 2: leaderboard and conversion report in, deeper reporting deferred.
+`beco_admin` and `brightex_admin` only. `/reports` is the screen. `/leaderboard`
+already sits in `ROUTE_RULES`; redirect it here. No sparkline tiles. No FAB.
 
-- [ ] Salesperson leaderboard: quotes raised, won count, won value, conversion, per person, from
-      `created_by`, `assigned_to` and `salesperson_id`. No side spreadsheet
-- [ ] Conversion report: product view  to  add to cart  to  quote submitted rates, plus WhatsApp and
-      call clicks per product and per category, from `analytics_events`. So Beco sees which
-      products generate leads, not only which get looked at
-- [ ] Nairobi boundaries here too
-- [ ] Deeper reports: **deferred**, recorded in `docs/PLAN.md`
+- [x] `salesperson_leaderboard()` SECURITY INVOKER, Africa/Nairobi month like
+      `dashboard_summary()`. Per person: quotes raised (`created_by`), won count
+      and won value (owner `coalesce(assigned_to, created_by)`, dated by
+      `finalized_at`), conversion won / (won + lost). Orders closed via
+      `salesperson_id` stay available to the function, not a side spreadsheet
+- [x] Conversion report from `analytics_events`: product_view, add_to_cart,
+      quote_submitted, plus whatsapp_click and call_click, per product and per
+      category. Rates null when the denominator is zero. Metadata keys
+      `product_id` / `product_slug` / `category_id` / `category_slug`
+- [x] Nairobi boundaries on both reports. Period: this month, last month, one
+      select on the Reports heading row, to the right of the title
+- [x] `/reports`: heading Reports, no lede. Period and Download PDF on the
+      title row. Compact StatCards, 2 by 2 on a phone, four across from `lg`, for invoiced,
+      collected, won and conversion. Tabs for Sales, Products and
+      Categories. Bars plus `DataTable` on desktop, cards on a phone.
+      Sales review PDF at `/reports/pdf` for the selected period, not stored
+      in `documents`.
+- [x] Invoiced (confirmed or fulfilled) and collected (`payment_status = paid`)
+      as two figures, D8. Same Nairobi month as the leaderboard
+- [~] Deeper reports: date range picker and trends stay **deferred**, recorded
+      in `docs/PLAN.md`. Brown asked for a sales-review PDF download, which
+      shipped on `/reports`.
+- [x] Tests: pgTAP for the functions and the admin-only read; Vitest for the
+      list render, empty state, period filter, and the rate maths. Sales cannot
+      load `/reports`
 
 ## J. Announcements admin
 
@@ -478,21 +498,85 @@ authoring UI, `beco_admin`.
 ## K. Orders
 
 `docs/ARCHITECTURE.md` section 6, section 7. `orders` and `order_items` RLS already written.
+Nav item exists. `beco_sales` and admins. Product manager does not. **No blank New
+order FAB**: conversion is from a won quote. Realtime is section L, do not block
+this screen on it. Stock does not auto-decrement (D89).
 
-- [ ] `convert_quote_to_order` RPC per 0.9: one action, atomic, line prices carried across
-      unchanged, `finalized_at` and `converted_order_id` stamped, `salesperson_id` set to the
-      quote owner, `source` carried
-- [ ] `/dashboard/orders`: full cards on mobile (D38), detail view
-- [ ] Mark paid: stamps `paid_at`. `orders_paid_at_matches_status` enforces agreement. Via
-      `ConfirmDialog`
-- [ ] Status pending  to  confirmed  to  fulfilled, or cancelled (cancelled via `ConfirmDialog`)
-- [ ] Realtime tier 1 on `orders`, including `payment_status` changed by a colleague at the
-      counter (`docs/ARCHITECTURE.md` section 17)
-- [ ] Reports read invoiced (all confirmed orders) and collected (`payment_status = 'paid'`)
-      separately, per D8
-- [ ] Tests: conversion carries every line price unchanged; a quote cannot be converted twice;
-      `beco_sales` converts its own only; mark-paid writes `paid_at`; the constraint refuses a
-      paid order with no `paid_at`
+Written 18 September before coding, from the handover section 7 and the locked
+Brown list.
+
+### Schema and RPCs
+
+- [x] `convert_quote_to_order(p_quote_id, p_expected_updated_at)` security
+      definer, same shape as `submit_quote`. Atomic. Quote must be `won`.
+      Line prices copied unchanged onto `order_items`. Stamps `finalized_at`
+      and `converted_order_id`. `salesperson_id` is the quote owner
+      (`coalesce(assigned_to, created_by)`). `created_by` is the converter.
+      `source`, customer, fulfilment and totals carried. Returns the order
+      reference. Unique `quote_id` on orders so a quote cannot convert twice
+- [x] Sales converts own only. Admin converts any won quote. Product manager,
+      editor and anon cannot execute
+- [x] `set_order_status`: pending to confirmed to fulfilled, or cancelled.
+      No backwards. Cancelled is a dead end. Sales own only. Optimistic lock
+- [x] `mark_order_paid`: stamps `payment_status = paid` and `paid_at` together.
+      Refuses cancelled and already paid. Constraint
+      `orders_paid_at_matches_status` still the backstop
+- [x] `confirmed_at`, `fulfilled_at`, `cancelled_at` stamps. `touch_updated_at`
+      on orders. No stock write from any of these
+
+### List `/orders`
+
+- [x] Heading Orders, no lede. No FAB
+- [x] `DataTable` on desktop, cards on a phone. Never cards on desktop. Never
+      a phone table that scrolls sideways
+- [x] Filters from `lg`: search plus Status, Payment, Source on one row.
+      Phone: search full width, selects under it. No Search label, placeholder
+      plus aria-label. URL is the source of truth
+- [x] Columns: Order, Customer, Status, Payment, Owner, Source, Raised, Value,
+      Actions. Source `web` labelled Website. Actions is icon plus View
+- [x] Card is the View link. Paginate. Empty state. Skeleton matches the shape
+
+### Detail `/orders/[reference]`
+
+- [x] Copy quote detail: heading with reference and View (receipt) top right
+      once paid. Work column is read-only lines. Inspector: Actions, customer,
+      ownership, dates, source quote link
+- [x] Status actions: Confirm, Fulfil. Cancel behind `ConfirmDialog` named for
+      the order, confirm verb Cancel order
+- [x] Mark paid behind `ConfirmDialog` named for the order, confirm verb Mark
+      paid. Does not decrement stock
+- [x] Sheets / inspector groups use `FormSection`. No lucide. No
+      `window.confirm`
+
+### Convert from a won quote
+
+- [x] Convert to order on quote detail when `status = won` and
+      `converted_order_id` is null. `ConfirmDialog`, confirm verb Convert to
+      order. Lands on the new order. Already converted: View order link.
+      Minimum quote-surface change. Do not restyle quotes
+
+### Receipt
+
+- [x] Receipt PDF in `@beco/documents`, same renderer as the quote, kind
+      receipt. From block Beco Interiors Limited. VAT backed out per D50.
+      Page breaks pinned on 15 lines. Email template, plain text fallback.
+      Persist a `documents` row (`type = receipt`, `order_id`) on download
+      and on send. Email when paid if an address exists; failure does not
+      un-pay the order. Payments stay offline
+
+### Tests and docs
+
+- [x] pgTAP: conversion copies every line price; second convert refused;
+      sales converts own only; mark-paid writes `paid_at`; paid with no
+      `paid_at` still refused; status transitions; anon and product manager
+      cannot execute
+- [x] Vitest: list, filters, cards vs table, detail actions, ConfirmDialog
+      verbs, PDF route, email builder, server actions, integration against
+      local Postgres. No Playwright
+- [x] `docs/QA-CHECKLIST.md` interaction inventory. `docs/TEST-COVERAGE.md`.
+      `docs/SCHEMA.md` for the new stamps and RPCs
+- [x] Realtime banner: **not this screen**. Section L. Do not insert rows
+      silently either
 
 ## L. Live updates
 
@@ -537,7 +621,8 @@ controls work. `docs/COMPONENTS.md` lists these as planned.
 
 Rule "everything works on a phone" is a hard requirement, not a courtesy (PRD section 4.2, section 5).
 
-- [x] Quotes become full cards on mobile (D38). Orders still to do
+- [x] Quotes become full cards on mobile (D38). Orders match: cards on a
+      phone, `DataTable` on desktop
 - [x] Products are cards on a phone with a tap-through detail sheet, and
       keep the `DataTable` on desktop. Users and (deferred viewer aside)
       audit still to do

@@ -135,6 +135,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
                 canApprove={canApprove}
                 expired={expired}
                 assignees={assignees}
+                convertedOrderReference={quote.convertedOrderReference}
               />
             </div>
           </div>

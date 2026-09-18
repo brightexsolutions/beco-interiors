@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { UserRole } from '@beco/types';
 import { canAccess } from '../access';
-import { navItemsFor } from '../nav-items';
+import { navContext, navItemsFor } from '../nav-items';
 
 const ALL_ROLES: UserRole[] = [
   'beco_admin',
@@ -43,5 +43,48 @@ describe('navItemsFor', () => {
         expect(canAccess(role, item.href)).toBe(true);
       }
     }
+  });
+});
+
+describe('navContext', () => {
+  it('names a section root as the section, with no nested page', () => {
+    expect(navContext('/orders')).toEqual({
+      sectionHref: '/orders',
+      sectionLabel: 'Orders',
+      pageLabel: null,
+    });
+    expect(navContext('/quotes')).toEqual({
+      sectionHref: '/quotes',
+      sectionLabel: 'Quotes',
+      pageLabel: null,
+    });
+  });
+
+  it('names the signed-in home Overview', () => {
+    expect(navContext('/')).toEqual({
+      sectionHref: '/',
+      sectionLabel: 'Overview',
+      pageLabel: null,
+    });
+  });
+
+  it('names the nested page under its section', () => {
+    expect(navContext('/orders/BEC-O-00036')).toEqual({
+      sectionHref: '/orders',
+      sectionLabel: 'Orders',
+      pageLabel: 'BEC-O-00036',
+    });
+  });
+
+  it('labels the counter create path as New quote, not the slug', () => {
+    expect(navContext('/quotes/new')?.pageLabel).toBe('New quote');
+  });
+
+  it('decodes a reference that arrived encoded', () => {
+    expect(navContext('/quotes/BEC-Q-00001%2Frev')?.pageLabel).toBe('BEC-Q-00001/rev');
+  });
+
+  it('keeps a malformed encoding as the raw segment', () => {
+    expect(navContext('/orders/BEC-O-%')?.pageLabel).toBe('BEC-O-%');
   });
 });

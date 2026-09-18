@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { cn } from '../lib/cn';
+import { useScrollLock } from '../lib/use-scroll-lock';
 
 /**
  * A branded modal. Same rules as ConfirmDialog: no <dialog>, no browser
@@ -26,6 +27,7 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
   const openerRef = useRef<Element | null>(null);
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
+  useScrollLock(open, panelRef);
 
   useEffect(() => {
     if (!open) return;
@@ -55,11 +57,8 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
     };
 
     document.addEventListener('keydown', onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
       (openerRef.current as HTMLElement | null)?.focus?.();
     };
   }, [open, close, initialFocusRef]);
@@ -67,7 +66,7 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center sm:items-center sm:p-6">
       <div aria-hidden onClick={close} className="absolute inset-0 bg-charcoal/60" />
       <div
         ref={panelRef}

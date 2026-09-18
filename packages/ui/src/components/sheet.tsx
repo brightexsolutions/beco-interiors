@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
 import { Icon } from './icon';
+import { useScrollLock } from '../lib/use-scroll-lock';
 
 /**
  * A detail sheet for scanning tables (D38). Bottom sheet on a phone, right
@@ -27,6 +28,7 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
   const openerRef = useRef<Element | null>(null);
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
+  useScrollLock(open, panelRef);
 
   useEffect(() => {
     if (!open) return;
@@ -56,11 +58,8 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
     };
 
     document.addEventListener('keydown', onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
       (openerRef.current as HTMLElement | null)?.focus?.();
     };
   }, [open, close]);
@@ -68,7 +67,7 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center lg:items-stretch lg:justify-end">
+    <div className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center lg:items-stretch lg:justify-end">
       <div aria-hidden onClick={close} className="absolute inset-0 bg-charcoal/60" />
       <div
         ref={panelRef}

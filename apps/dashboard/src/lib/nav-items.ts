@@ -27,3 +27,48 @@ const ALL: readonly NavItem[] = [
 
 export const navItemsFor = (role: UserRole): NavItem[] =>
   ALL.filter((item) => canAccess(role, item.href));
+
+export interface NavContext {
+  sectionHref: string;
+  sectionLabel: string;
+  pageLabel: string | null;
+}
+
+/**
+ * Where the phone breadcrumb should read. Section roots name the section.
+ * Nested screens add the page under it.
+ */
+export function navContext(pathname: string): NavContext | null {
+  const path = pathname.split('?')[0] ?? pathname;
+  if (path === '/' || path === '') {
+    return { sectionHref: '/', sectionLabel: 'Overview', pageLabel: null };
+  }
+
+  const section = [...ALL]
+    .sort((a, b) => b.href.length - a.href.length)
+    .find((item) => path === item.href || path.startsWith(`${item.href}/`));
+  if (!section) return null;
+
+  const remainder = path.slice(section.href.length).replace(/^\//, '');
+  const [raw] = remainder.split('/');
+  if (!raw) {
+    return {
+      sectionHref: section.href,
+      sectionLabel: section.label,
+      pageLabel: null,
+    };
+  }
+
+  let page = raw;
+  try {
+    page = decodeURIComponent(raw);
+  } catch {
+    page = raw;
+  }
+  const pageLabel = section.href === '/quotes' && page === 'new' ? 'New quote' : page;
+  return {
+    sectionHref: section.href,
+    sectionLabel: section.label,
+    pageLabel,
+  };
+}

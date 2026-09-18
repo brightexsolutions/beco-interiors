@@ -215,12 +215,17 @@ compares the two and gates FINALIZING one, not the pricing itself.
 | `status` | order_status default 'pending' | |
 | `payment_status` | payment_status default 'unpaid' | |
 | `paid_at` | timestamptz null | |
+| `confirmed_at`, `fulfilled_at`, `cancelled_at` | timestamptz null | Migration 40. Status stamps, same idea as quote milestones |
 | `subtotal`, `vat_amount`, `total_amount` | numeric(12,2) | |
 | `created_by`, `salesperson_id` | uuid FK users | Attribution survives conversion |
 | `deleted_at` | timestamptz null | |
 
 **Payments are offline**, so reports show invoiced and collected as two separate figures rather
 than pretending to know one from the other.
+
+One live quote becomes one order: unique index `orders_one_quote_idx` on `quote_id` where the
+quote is set and the order is not deleted. Conversion is `convert_quote_to_order`, not a
+dashboard insert, because sales cannot write `order_items` under RLS.
 
 ### order_items
 
@@ -248,7 +253,9 @@ Answers "did we send them the quote, and when" from the dashboard rather than fr
 | `sent_channel` | text null |
 
 `sent_to` and `sent_at` are nullable because a counter customer may take only a printed copy,
-which makes "was this sent" a three state question rather than two.
+which makes "was this sent" a three state question rather than two. The `/reports` sales
+review PDF is generated on download and is not stored here: `document_type` is quote or
+receipt only.
 
 ### audit_log
 
@@ -362,6 +369,12 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `reopen_quote(...)` | Dashboard. Lost to reviewing when the client comes back. Clears `lost_reason` and `finalized_at`. Won stays closed. Same owner or admin, optimistic lock |
 | `reissue_quote(...)` | Dashboard. Stamps a fresh `valid_until` on an expired open quote |
 | `dashboard_summary()` | Dashboard home. One jsonb round trip, Africa/Nairobi boundaries, security invoker so RLS decides who sees which figures. Migration 31 |
+| `convert_quote_to_order(p_quote_id, p_expected_updated_at)` | Dashboard. Won quote becomes a pending unpaid order. Copies every line price. `salesperson_id` is the quote owner. Stamps `converted_order_id` and `finalized_at`. Does not touch stock (D89). Sales own only. Optimistic lock. Migration 40 |
+| `set_order_status(p_order_id, p_status, p_expected_updated_at)` | Dashboard. Pending to confirmed to fulfilled, or cancelled. Cannot move back to pending. Sales own only. Optimistic lock. Migration 40 |
+| `mark_order_paid(p_order_id, p_expected_updated_at)` | Dashboard. Stamps `payment_status = paid` and `paid_at` together. Refuses cancelled and already paid. Does not touch stock. Migration 40 |
+| `report_period_bounds(p_period)` | Nairobi this-month / last-month window, matching `dashboard_summary()`. Migration 41 |
+| `salesperson_leaderboard(p_period)` | Admin reports. Raised, won, won value, conversion. Invoiced vs collected (D8). SECURITY INVOKER. Migration 41 |
+| `conversion_report(p_period)` | Admin reports. Views, add to cart, quotes, WhatsApp and call clicks per product and category. SECURITY INVOKER so a role that cannot read `analytics_events` sees empty rows. Migration 41 |
 | `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
 | `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
 

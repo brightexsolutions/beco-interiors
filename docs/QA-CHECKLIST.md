@@ -228,6 +228,7 @@ real phone** (M5 section D).
 | Control | What it does | Status |
 |---|---|---|
 | Section nav | Text links, role-scoped via `navItemsFor`. The current section is charcoal with a Warm Red underline; a nested path keeps its section highlighted | **Server** confirmed: signed in as each role, the nav listed exactly that role's sections, `/quotes` and `/quotes/...` both underlined Quotes. `TopNav` tested, 6 tests |
+| Docked chrome | The pill header scrolls away. A breadcrumb then docks at the top on a phone and on desktop, and names the screen. Nested screens: section / page, section is a link back to the list | Tested: `ShellContext` hidden while the header intersects, docks after, no `lg:hidden`. **Walk on a phone and desktop** |
 | Mobile section strip | Horizontal scroll, no hamburger, right-edge fade | **Server** confirmed at 390px: the strip scrolls, Quotes stays first. **Real-device swipe still to walk** |
 | New-quote count | Warm Red badge on Quotes when positive | Styled and tested; **wired to 0** until realtime (section L / M) |
 | Account menu | Name opens a flat panel: Change password (link) and Sign out (POST to `/sign-out`). Closes on Escape, outside click, navigation | **Server** confirmed: opened, "Sign out" returned to `/login` with the session gone. `AccountMenu` tested, 5 tests |
@@ -278,6 +279,7 @@ real phone** (M5 section D).
 | Mark lost | ConfirmDialog names the quote, requires a reason, confirm verb Mark lost | `QuoteActions` tested |
 | Reopen | On a lost quote the viewer can mutate. ConfirmDialog named for the quote, confirm verb Reopen. Writes `reopen_quote`, status becomes reviewing | `QuoteActions` tested. RPC `reopen_quote` |
 | Re-issue | On an expired open quote. Stamps a fresh `valid_until` | `QuoteActions` tested. RPC `reissue_quote` |
+| Convert to order | On a won quote with no order yet. ConfirmDialog named for the quote, confirm verb Convert to order. Lands on the new order. Already converted: View order | `QuoteActions` tested. RPC `convert_quote_to_order` |
 | Dates | Raised, Reviewed, Approved, Quoted, Valid until, Won, Lost, Reopened. Only stamps that exist. Lost and Reopened survive a reopen | `QuoteDates` tested |
 | Add from catalogue | Opens a dialog of published products across every range. Range select, search focused, tick several, Add writes them through `add_catalogue_quote_lines` under one lock | `QuoteLines` and `CataloguePicker` tested. RPC `add_catalogue_quote_lines` |
 | Not in the catalogue | Adds a named custom line, not an empty catalogue row | `QuoteLines` tested. RPC `add_custom_quote_line` |
@@ -309,6 +311,40 @@ Catalogue editor (M5 sections F and G, D89). Stock is on this screen; `/stock` r
 
 The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (NULL) keeps the stored availability.
 
+### `/orders`
+
+`beco_sales` and admins. No blank New order FAB: conversion is from a won quote. Stock does not auto-decrement (D89).
+
+| Control | What it does | Status |
+|---|---|---|
+| Search | Debounced, rewrites `?search=`, list re-filters by name, phone or reference | Test: `OrderFilters` |
+| Status / Payment / Source | Narrow the row set via the URL. `web` is labelled Website | Test: `OrderFilters` |
+| Owner filter, per role | Sales defaults to Assigned to me. Admins default to Everyone | Test: `OrderFilters`. Page wires the options |
+| Desktop table | Order, Customer, Status, Payment, Owner, Source, Raised, Value, Actions. Actions is icon plus View | Test: `OrderResults` |
+| Order cards | Phone only. The card itself is View. No horizontal scroll | Test: `OrderResults` |
+| Pagination | Previous / Next. Page lives in `?page=` | Test: `OrderResults` |
+| Empty state | Convert a won quote, or clear the search. No New order control | Test: `OrderResults` |
+| Line items | Item / Qty / Unit / Line on desktop. Phone: name, then qty × unit and line. Catalogue strike under the name. Totals sit under Line | Test: `OrderLines` |
+| Confirm / Fulfil | Forward status only. Writes `set_order_status` | Test: `OrderActions`. RPC pgTAP |
+| Cancel order | ConfirmDialog names the order, confirm verb Cancel order | Test: `OrderActions` |
+| Mark paid | ConfirmDialog names the order, confirm verb Mark paid. Stamps `paid_at`. Stock unchanged. Emails a receipt if an address exists | Test: `OrderActions`, `markOrderPaid`. RPC pgTAP |
+| View receipt | After paid: heading and Actions. Opens the receipt PDF. Email is a real form, Download is `?download=1`. Copy says to download to send on WhatsApp | Test: `OrderDocumentPanel`, PDF route 409 until paid |
+| Quote link | Inspector ownership block links to the source quote | Rendered on detail |
+
+### `/reports`
+
+`beco_admin` and `brightex_admin` only. `/leaderboard` redirects here. No FAB. No sparkline tiles.
+
+| Control | What it does | Status |
+|---|---|---|
+| Period | This month / Last month, on the Reports heading row to the right. Nairobi bounds, same as `dashboard_summary()` | Test: `ReportFilters`. RPC `report_period_bounds` |
+| Download PDF | Heading row, next to Period. Real file at `/reports/pdf` for the selected period. Sales, products and categories in one document. Not stored in `documents` | Test: `ReportFilters`, report PDF route. Filename `Beco sales review {period}.pdf` |
+| Invoiced / collected | Two compact StatCards with Won and Conversion, 2 by 2 on a phone and four across from `lg`. D8. Confirmed or fulfilled vs `payment_status = paid` | Test: `ReportResults` |
+| Report views | Tabs: Sales, Products, Categories. Writes `?view=` | Test: `ReportResults`. `Tabs` in `@beco/ui` |
+| Sales | Won-value bars plus leaderboard. Desktop table, phone cards | Test: `ReportResults`. RPC `salesperson_leaderboard` |
+| Products / Categories | Funnel and most-viewed bars, then the conversion table. n/a when the denominator is zero | Test: `ReportResults`. RPC `conversion_report` |
+| Empty states | Per view, not stacked on the page | Test: `ReportResults` |
+| Sales at `/reports` | Proxy bounces to `/quotes` | `access.test.ts` |
 
 ### `/launch` (D80)
 

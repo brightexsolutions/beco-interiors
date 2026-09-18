@@ -10,9 +10,8 @@ tokens.
 
 Quotes is the reference implementation. Copy its list / create / detail
 shape, not a new one. Cold start: `docs/milestones/M5-QUOTES-HANDOVER.md`.
-Next page is `/orders` then `/reports` (M5 sections K and I). Users and
-announcements wait. Leave quotes, `AppShell`, the charcoal band, and
-`/products` alone.
+Next page is `/users` then announcements. Leave quotes, `AppShell`, the
+charcoal band, `/products`, `/orders` and `/reports` alone.
 
 **Locked catalogue decisions (18 Sept, Brown).** Do not reopen or "improve"
 these unless Brown asks:
@@ -30,11 +29,12 @@ these unless Brown asks:
 - Icons come from `@beco/ui` `Icon`. No lucide, no phosphor.
 - Stock does not auto-decrement from quotes. Blank stock is uncounted, 0 is
   out of stock.
-- Do not restyle `AppShell` or the charcoal band.
+- Do not restyle the charcoal band or the desktop header. The breadcrumb docks on scroll after the pill header leaves, on a phone and on desktop.
 
 ## What stays uniquely Beco
 
 - Charcoal band, wordmark, top nav, floating white content panel (`AppShell`)
+- Desktop chrome stays the original white header in flow. A breadcrumb docks after that header scrolls away, on a phone and on desktop. Do not restyle the charcoal band.
 - Titillium for UI, Cormorant for page titles
 - Charcoal, High-Vis White, Warm Red rationed (three or four marks a page)
 - 16px type floor, 44px targets, 8px grid
@@ -44,16 +44,19 @@ these unless Brown asks:
 
 ## Screen types
 
-**List** (Quotes, later Orders and Users): page heading with no primary
+**List** (Quotes, Orders, later Users): page heading with no primary
 in the title row. The create action is a labelled charcoal FAB on desktop
-and on a phone. No lede under the title on operations lists. Optional KPI
+and on a phone, only when the plan names a create path. Orders have none:
+conversion is from a won quote. No lede under the title on operations lists. Optional KPI
 row using `StatCard`. Toolbar of search and filters: from `lg` they share
 **one row**. Then `DataTable` on desktop, cards on mobile. Every list row
 has an explicit View or Edit action, last column named Actions, not a
 click-anywhere row. Paginate. Empty state fills the panel. Skeleton
 matches that shape. The stored quote source `web` is labelled Website
 everywhere it is shown. Catalogue (`/products`) follows this: table on
-desktop, cards on a phone, charcoal FAB for New product.
+desktop, cards on a phone, charcoal FAB for New product. Reports use compact StatCards in a 2 by 2 grid on a phone and four across from `lg`, tabs for Sales, Products and
+Categories, bars, then the same table/card split with no Actions column and no FAB.
+Download PDF on the heading row is a real `/reports/pdf` file for the selected period.
 
 **Create** (`/quotes/new` is the reference): heading with Save on desktop.
 Work column is a `Panel` (Add from catalogue plus Custom item, line list or empty). Inspector rail

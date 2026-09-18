@@ -7,8 +7,17 @@ export { buildQuoteConfirmationEmail } from './email/quote-confirmation';
 export type { QuoteConfirmationInput, QuoteConfirmationEmail } from './email/quote-confirmation';
 export { buildPricedQuoteEmail } from './email/quote-priced';
 export type { PricedQuoteEmailInput, PricedQuoteEmail } from './email/quote-priced';
-export { sendQuoteConfirmation, sendPricedQuote } from './email/send';
+export { buildReceiptEmail } from './email/receipt';
+export type { ReceiptEmailInput, ReceiptEmail } from './email/receipt';
+export { sendQuoteConfirmation, sendPricedQuote, sendReceipt } from './email/send';
 export type { SendResult } from './email/send';
-export { renderQuotePdf } from './pdf/render';
+export { renderQuotePdf, renderReceiptPdf, renderReportPdf } from './pdf/render';
 export { QuoteDocument } from './pdf/quote-document';
-export type { QuotePdfInput, QuotePdfLine } from './pdf/types';
+export { ReportDocument, summaryCopy, catalogueCopy, categoryCopy } from './pdf/report-document';
+export type {
+  QuotePdfInput,
+  QuotePdfLine,
+  ReportPdfInput,
+  ReportPdfPerson,
+  ReportPdfFunnelRow,
+} from './pdf/types';

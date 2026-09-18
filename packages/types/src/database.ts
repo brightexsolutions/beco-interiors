@@ -570,6 +570,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancelled_at: string | null
+          confirmed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -577,6 +579,7 @@ export type Database = {
           customer_phone: string
           deleted_at: string | null
           delivery_address: string | null
+          fulfilled_at: string | null
           fulfilment: Database["public"]["Enums"]["fulfilment"] | null
           id: string
           notes: string | null
@@ -593,6 +596,8 @@ export type Database = {
           vat_amount: number
         }
         Insert: {
+          cancelled_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
@@ -600,6 +605,7 @@ export type Database = {
           customer_phone: string
           deleted_at?: string | null
           delivery_address?: string | null
+          fulfilled_at?: string | null
           fulfilment?: Database["public"]["Enums"]["fulfilment"] | null
           id?: string
           notes?: string | null
@@ -616,6 +622,8 @@ export type Database = {
           vat_amount?: number
         }
         Update: {
+          cancelled_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
@@ -623,6 +631,7 @@ export type Database = {
           customer_phone?: string
           deleted_at?: string | null
           delivery_address?: string | null
+          fulfilled_at?: string | null
           fulfilment?: Database["public"]["Enums"]["fulfilment"] | null
           id?: string
           notes?: string | null
@@ -701,6 +710,7 @@ export type Database = {
           id: string
           images: Json
           is_published: boolean
+          low_stock_threshold: number | null
           meta_description: string | null
           meta_title: string | null
           name: string
@@ -713,7 +723,6 @@ export type Database = {
           source_path: string | null
           specs: Json
           stock_quantity: number | null
-          low_stock_threshold: number | null
           unit: string | null
           updated_at: string
         }
@@ -729,6 +738,7 @@ export type Database = {
           id?: string
           images?: Json
           is_published?: boolean
+          low_stock_threshold?: number | null
           meta_description?: string | null
           meta_title?: string | null
           name: string
@@ -741,7 +751,6 @@ export type Database = {
           source_path?: string | null
           specs?: Json
           stock_quantity?: number | null
-          low_stock_threshold?: number | null
           unit?: string | null
           updated_at?: string
         }
@@ -757,6 +766,7 @@ export type Database = {
           id?: string
           images?: Json
           is_published?: boolean
+          low_stock_threshold?: number | null
           meta_description?: string | null
           meta_title?: string | null
           name?: string
@@ -769,7 +779,6 @@ export type Database = {
           source_path?: string | null
           specs?: Json
           stock_quantity?: number | null
-          low_stock_threshold?: number | null
           unit?: string | null
           updated_at?: string
         }
@@ -1120,16 +1129,119 @@ export type Database = {
       }
     }
     Functions: {
+      add_catalogue_quote_line: {
+        Args: {
+          p_expected_updated_at: string
+          p_product_id: string
+          p_quantity: number
+          p_quote_id: string
+          p_unit_price: number
+        }
+        Returns: undefined
+      }
+      add_catalogue_quote_lines: {
+        Args: {
+          p_expected_updated_at: string
+          p_items: Json
+          p_quote_id: string
+        }
+        Returns: undefined
+      }
+      add_custom_quote_line: {
+        Args: {
+          p_description: string
+          p_expected_updated_at: string
+          p_quantity: number
+          p_quote_id: string
+          p_unit_price: number
+        }
+        Returns: undefined
+      }
+      approve_quote: {
+        Args: { p_expected_updated_at: string; p_quote_id: string }
+        Returns: undefined
+      }
+      assign_quote: {
+        Args: {
+          p_assignee_id: string
+          p_expected_updated_at: string
+          p_quote_id: string
+        }
+        Returns: undefined
+      }
+      claim_quote: {
+        Args: { p_expected_updated_at: string; p_quote_id: string }
+        Returns: undefined
+      }
       complete_first_login: { Args: never; Returns: undefined }
+      conversion_report: { Args: { p_period?: string }; Returns: Json }
+      convert_quote_to_order: {
+        Args: { p_expected_updated_at: string; p_quote_id: string }
+        Returns: string
+      }
+      create_counter_quote: {
+        Args: {
+          p_customer_email?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_items: Json
+          p_source: Database["public"]["Enums"]["quote_source"]
+        }
+        Returns: string
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      dashboard_summary: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       is_brightex_user: { Args: never; Returns: boolean }
+      mark_order_paid: {
+        Args: { p_expected_updated_at: string; p_order_id: string }
+        Returns: undefined
+      }
       next_order_reference: { Args: never; Returns: string }
       next_quote_reference: { Args: never; Returns: string }
       record_sign_in: { Args: never; Returns: undefined }
+      refresh_quote_money: { Args: { p_quote_id: string }; Returns: undefined }
+      reissue_quote: {
+        Args: { p_expected_updated_at: string; p_quote_id: string }
+        Returns: undefined
+      }
+      reopen_quote: {
+        Args: { p_expected_updated_at: string; p_quote_id: string }
+        Returns: undefined
+      }
+      report_period_bounds: {
+        Args: { p_period: string }
+        Returns: {
+          label: string
+          period_end: string
+          period_start: string
+        }[]
+      }
+      round_quote_quantity: {
+        Args: { p_quantity: number; p_unit: string }
+        Returns: number
+      }
+      salesperson_leaderboard: { Args: { p_period?: string }; Returns: Json }
+      set_order_status: {
+        Args: {
+          p_expected_updated_at: string
+          p_order_id: string
+          p_status: Database["public"]["Enums"]["order_status"]
+        }
+        Returns: undefined
+      }
+      set_quote_status: {
+        Args: {
+          p_expected_updated_at: string
+          p_lost_reason: string
+          p_quote_id: string
+          p_status: Database["public"]["Enums"]["quote_status"]
+        }
+        Returns: undefined
+      }
       slugify: { Args: { input: string }; Returns: string }
       submit_quote: {
         Args: {
@@ -1149,93 +1261,22 @@ export type Database = {
         }
         Returns: string
       }
-      claim_quote: {
-        Args: { p_quote_id: string; p_expected_updated_at: string }
-        Returns: undefined
-      }
-      assign_quote: {
-        Args: {
-          p_quote_id: string
-          p_assignee_id: string
-          p_expected_updated_at: string
-        }
-        Returns: undefined
-      }
-      create_counter_quote: {
-        Args: {
-          p_customer_name: string
-          p_customer_phone: string
-          p_source: Database["public"]["Enums"]["quote_source"]
-          p_items: Json
-          p_customer_email?: string
-        }
-        Returns: string
-      }
       update_quote_line: {
         Args: {
-          p_quote_id: string
+          p_expected_updated_at: string
           p_line_id: string
           p_quantity: number
+          p_quote_id: string
           p_unit_price: number
-          p_expected_updated_at: string
         }
         Returns: undefined
       }
       update_quote_lines: {
         Args: {
-          p_quote_id: string
+          p_expected_updated_at: string
           p_items: Json
-          p_expected_updated_at: string
-        }
-        Returns: undefined
-      }
-      add_custom_quote_line: {
-        Args: {
           p_quote_id: string
-          p_description: string
-          p_quantity: number
-          p_unit_price: number
-          p_expected_updated_at: string
         }
-        Returns: undefined
-      }
-      add_catalogue_quote_line: {
-        Args: {
-          p_quote_id: string
-          p_product_id: string
-          p_quantity: number
-          p_unit_price: number
-          p_expected_updated_at: string
-        }
-        Returns: undefined
-      }
-      add_catalogue_quote_lines: {
-        Args: {
-          p_quote_id: string
-          p_items: Json
-          p_expected_updated_at: string
-        }
-        Returns: undefined
-      }
-      set_quote_status: {
-        Args: {
-          p_quote_id: string
-          p_status: Database["public"]["Enums"]["quote_status"]
-          p_lost_reason: string | null
-          p_expected_updated_at: string
-        }
-        Returns: undefined
-      }
-      approve_quote: {
-        Args: { p_quote_id: string; p_expected_updated_at: string }
-        Returns: undefined
-      }
-      reissue_quote: {
-        Args: { p_quote_id: string; p_expected_updated_at: string }
-        Returns: undefined
-      }
-      reopen_quote: {
-        Args: { p_quote_id: string; p_expected_updated_at: string }
         Returns: undefined
       }
     }

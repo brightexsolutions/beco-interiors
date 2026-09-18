@@ -42,6 +42,12 @@ describe('StatCard', () => {
     expect(screen.getByText('5').className).not.toContain('warm-red');
   });
 
+  it('compact is shorter: smaller value and padding', () => {
+    const { container } = render(<StatCard label="Won" value="1" comparison="of 3 raised" size="compact" />);
+    expect(container.firstElementChild?.className).toContain('p-2.5');
+    expect(screen.getByText('1').className).toContain('text-lg');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(
       <StatCard label="Invoiced" value="KES 480,000" comparison="Collected: KES 210,000" tone="plain" />,

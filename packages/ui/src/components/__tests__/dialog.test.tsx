@@ -48,6 +48,14 @@ describe('Dialog', () => {
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
   });
 
+  it('locks the page behind so a wheel does not scroll it', () => {
+    setup();
+    expect(document.body.style.overflow).toBe('hidden');
+    const event = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 80 });
+    document.body.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = setup();
     expect(await axe(container)).toHaveNoViolations();

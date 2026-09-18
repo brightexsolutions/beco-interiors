@@ -1,7 +1,9 @@
 'use client';
 
-import { useActionState, useState, useTransition } from 'react';
-import { Button, ConfirmDialog, Field, Select, Textarea, useActionToast } from '@beco/ui';
+import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button, ConfirmDialog, Field, Select, Textarea, buttonClasses, cn, useActionToast } from '@beco/ui';
 import {
   approveQuote,
   assignQuote,
@@ -11,10 +13,12 @@ import {
   setQuoteStatus,
   type QuoteActionState,
 } from '@/app/(app)/quotes/actions';
+import { convertQuoteToOrder, type OrderActionState } from '@/app/(app)/orders/actions';
 import type { QuoteAssignee } from '@/lib/quote-detail';
 import type { QuoteStatus } from '@beco/types';
 
 const INITIAL: QuoteActionState = {};
+const CONVERT_INITIAL: OrderActionState = {};
 
 const Lock = ({ quoteId, updatedAt }: { quoteId: string; updatedAt: string }) => (
   <>
@@ -38,6 +42,7 @@ export function QuoteActions({
   canApprove,
   expired,
   assignees,
+  convertedOrderReference,
 }: {
   quoteId: string;
   updatedAt: string;
@@ -53,6 +58,7 @@ export function QuoteActions({
   canApprove: boolean;
   expired: boolean;
   assignees: QuoteAssignee[];
+  convertedOrderReference: string | null;
 }) {
   const [claimState, claim, claiming] = useActionState(claimQuote, INITIAL);
   const [assignState, assign, assigning] = useActionState(assignQuote, INITIAL);
@@ -60,16 +66,24 @@ export function QuoteActions({
   const [approveState, approve, approving] = useActionState(approveQuote, INITIAL);
   const [reissueState, reissue, reissuing] = useActionState(reissueQuote, INITIAL);
   const [reopenState, reopen, reopening] = useActionState(reopenQuote, INITIAL);
+  const [convertState, convert, converting] = useActionState(convertQuoteToOrder, CONVERT_INITIAL);
   const [lostOpen, setLostOpen] = useState(false);
   const [reopenOpen, setReopenOpen] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [, startTransition] = useTransition();
+  const router = useRouter();
   useActionToast(claimState);
   useActionToast(assignState);
   useActionToast(statusState);
   useActionToast(approveState);
   useActionToast(reissueState);
   useActionToast(reopenState);
+  useActionToast(convertState);
+
+  useEffect(() => {
+    if (convertState.orderReference) router.push(`/orders/${convertState.orderReference}`);
+  }, [convertState.orderReference, router]);
 
   const nextStatuses: { status: QuoteStatus; label: string }[] = [];
   if (canMutate && status !== 'won' && status !== 'lost') {
@@ -165,6 +179,27 @@ export function QuoteActions({
         </div>
       ) : null}
 
+      {canMutate && status === 'won' && convertedOrderReference ? (
+        <Link
+          href={`/orders/${convertedOrderReference}`}
+          className={cn(buttonClasses({ variant: 'secondary' }), 'h-11 w-full py-0')}
+        >
+          View order
+        </Link>
+      ) : null}
+
+      {canMutate && status === 'won' && !convertedOrderReference ? (
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={converting}
+          className="h-11 w-full py-0"
+          onClick={() => setConvertOpen(true)}
+        >
+          Convert to order
+        </Button>
+      ) : null}
+
       {canMutate && status === 'lost' ? (
         <Button
           type="button"
@@ -236,6 +271,23 @@ export function QuoteActions({
           startTransition(async () => {
             await reopen(data);
             setReopenOpen(false);
+          });
+        }}
+      />
+
+      <ConfirmDialog
+        open={convertOpen}
+        onOpenChange={setConvertOpen}
+        title={`Convert ${reference} to an order`}
+        description={`${reference} will become an order with the prices already quoted. You can confirm, fulfil and mark it paid from there. Stock is not reduced.`}
+        confirmLabel="Convert to order"
+        onConfirm={() => {
+          const data = new FormData();
+          data.set('quoteId', quoteId);
+          data.set('updatedAt', updatedAt);
+          startTransition(async () => {
+            await convert(data);
+            setConvertOpen(false);
           });
         }}
       />

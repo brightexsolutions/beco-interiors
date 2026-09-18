@@ -49,7 +49,7 @@ describe('toast', () => {
     expect(card).toHaveTextContent(/reload and try again/i);
     expect(card).toHaveAttribute('data-tone', 'error');
     expect(card.className).toContain('bg-error/10');
-    expect(card.className).toContain('text-error');
+    expect(screen.getByText('Failed').className).toContain('text-error');
   });
 
   it('info is labelled Note, for a fact that is neither success nor failure', async () => {
@@ -77,6 +77,21 @@ describe('toast', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('This quote is now yours.');
     rerender(<ActionProbe state={{ error: 'You do not have permission to change this quote.' }} />);
     expect(await screen.findByRole('alert')).toHaveTextContent(/do not have permission/i);
+  });
+
+  it('the same success message updates rather than stacking', async () => {
+    const user = userEvent.setup();
+    render(<Trigger onFire={() => toast.success('This quote is now yours.')} />);
+    await user.click(screen.getByRole('button', { name: 'Fire' }));
+    await user.click(screen.getByRole('button', { name: 'Fire' }));
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
+  it('dashboard placement is below the chrome and centered on the panel', () => {
+    render(<Toaster position="top-center" offset={{ top: '6.5rem' }} />);
+    const toaster = document.querySelector('[data-sonner-toaster]');
+    expect(toaster).toHaveAttribute('data-x-position', 'center');
+    expect(toaster).toHaveAttribute('data-y-position', 'top');
   });
 
   it('is axe clean with a toast on screen', async () => {
