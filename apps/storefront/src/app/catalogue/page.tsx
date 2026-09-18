@@ -61,6 +61,7 @@ export default async function CataloguePage() {
                 compareAtPrice={p.compare_at_price}
                 unit={p.unit}
                 availability={p.availability}
+                stockQuantity={p.stock_quantity}
                 badge={p.badge}
                 image={
                   img ? (

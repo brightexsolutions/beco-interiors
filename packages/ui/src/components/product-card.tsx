@@ -37,6 +37,8 @@ export interface ProductCardProps {
   compareAtPrice?: number | null | undefined;
   unit?: string | null | undefined;
   availability?: 'in_stock' | 'pre_order' | 'poa' | undefined;
+  /** Counted stock. Zero makes the card read as out of stock. */
+  stockQuantity?: number | null | undefined;
   badge?: 'hot' | 'new' | 'sale' | 'clearance' | null | undefined;
   /**
    * The frame's shape. `portrait` is the default 4:5 grid card. `wide` is for
@@ -62,6 +64,7 @@ const BADGE_LABEL = { hot: 'Popular', new: 'New', sale: 'Sale', clearance: 'Clea
 export function ProductCard({
   name, href, image, priceDisplayMode, price, compareAtPrice, unit,
   availability = 'poa', badge, frame = 'portrait', imageClassName, action, images,
+  stockQuantity,
   className,
 }: ProductCardProps) {
   const frames = images && images.length > 1 ? images : null;
@@ -131,7 +134,11 @@ export function ProductCard({
             unit={unit}
             vatInclusive
           />
-          <AvailabilityBadge availability={availability} priceDisplayMode={priceDisplayMode} />
+          <AvailabilityBadge
+            availability={availability}
+            priceDisplayMode={priceDisplayMode}
+            stockQuantity={stockQuantity}
+          />
         </div>
 
         {/* Above the stretched link, so pressing it adds rather than

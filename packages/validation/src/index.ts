@@ -6,3 +6,4 @@ export * from './auth';
 export * from './rate-limit';
 export * from './money';
 export * from './dashboard-quote';
+export * from './dashboard-product';

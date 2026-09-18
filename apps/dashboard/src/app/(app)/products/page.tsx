@@ -1,24 +1,57 @@
 import type { Metadata } from 'next';
-import { EmptyState } from '@beco/ui';
+import { PageHeading } from '@/components/page-heading';
+import { NewProductButton, NewProductFab } from '@/components/new-product';
+import { ProductFilters } from '@/components/product-filters';
+import { ProductResults } from '@/components/product-results';
+import { fetchProductBySlug, fetchProductCategories, fetchProducts, type ProductListFilters } from '@/lib/products';
 import { requirePath } from '@/lib/session';
+import { getSupabase } from '@/lib/supabase';
+import type { Availability } from '@beco/types';
 
 export const metadata: Metadata = {
-  title: 'Products',
+  title: 'Catalogue',
   robots: { index: false, follow: false },
 };
 
-/**
- * Placeholder so the product manager landing resolves. The products editor is
- * M5 section G. Gated here as well as in the proxy, per "checks in two
- * places".
- */
-export default async function ProductsPage() {
+type Search = Record<string, string | string[] | undefined>;
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? '';
+
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<Search> }) {
   await requirePath('/products');
+  const params = await searchParams;
+  const filters: ProductListFilters = {
+    search: one(params.search) || undefined,
+    availability: (one(params.availability) || undefined) as Availability | 'out' | undefined,
+    published: (one(params.published) || undefined) as ProductListFilters['published'],
+    stock: (one(params.stock) || undefined) as ProductListFilters['stock'],
+  };
+
+  const supabase = await getSupabase();
+  const [products, categories] = await Promise.all([
+    fetchProducts(supabase, filters),
+    fetchProductCategories(supabase),
+  ]);
+  const editSlug = one(params.edit);
+  const creating = one(params.new) === '1' && !editSlug;
+  const editing = editSlug
+    ? (products.find((product) => product.slug === editSlug) ?? (await fetchProductBySlug(supabase, editSlug)))
+    : null;
 
   return (
-    <EmptyState
-      title="Products"
-      description="The catalogue editor, with prices, specs, availability and SEO overrides, arrives in the next build."
-    />
+    <>
+      <PageHeading
+        eyebrow="Catalogue"
+        title="Products"
+        lede="Prices, photographs, specs, SEO and stock. Quotes that already include a product keep their line if you remove it."
+        actions={<NewProductButton />}
+      />
+      <div className="mb-6">
+        <ProductFilters />
+      </div>
+      <div className="pb-24 lg:pb-0">
+        <ProductResults products={products} editing={editing} creating={creating} categories={categories} />
+      </div>
+      <NewProductFab />
+    </>
   );
 }

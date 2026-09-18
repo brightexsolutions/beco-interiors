@@ -288,7 +288,25 @@ real phone** (M5 section D).
 
 ### `/products`
 
-Placeholder EmptyState until the products editor (M5 section G). See `docs/milestones/M5-QUOTES-HANDOVER.md`.
+Catalogue editor (M5 sections F and G, D89). Stock is on this screen; `/stock` redirects here.
+
+| Control | What it does | Status |
+|---|---|---|
+| Search | Debounced, rewrites `?search=`, list re-filters | Test: `ProductFilters` |
+| Availability filter | Any / In stock / Pre-order / Enquire / Out of stock | Test: writes `?availability=out` |
+| Published filter | Any / Published / Draft | Test |
+| Stock filter | Any / Low stock / Out of stock | Test |
+| Desktop table | Name, availability, price or POA, stock count, low-stock flag, explicit Edit | Test: `ProductResults` |
+| Mobile table | Reduced columns: name, availability, stock, Edit (D38) | Test |
+| Edit | Opens a detail sheet at `?edit=slug`. One column, Save and Delete stay pinned, no sideways scroll | Test: `ProductResults` plus `ProductEditor` |
+| New product | Heading button on desktop, charcoal FAB on a phone. Opens `?new=1` as an unpublished draft | Test: `NewProductButton`, `ProductCreate`, `createProduct` action |
+| Add photograph | Upload JPEG/PNG/WebP, role, alt. Writes R2 derivatives and `products.images` | Test: `ProductImages`, `addProductImage`, `processProductPhoto` |
+| Remove photograph | `ConfirmDialog` names the product. Deletes the shot from storage | Test: `ProductImages` |
+| Save | Writes price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache | Test: `updateProduct` action. Integration against local Postgres |
+| Delete product | `ConfirmDialog` names the product. Soft delete. Quotes keep their line and price | Test: `ProductEditor` plus integration |
+| `/stock` | Redirects to `/products` | Test |
+
+The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (NULL) keeps the stored availability.
 
 
 ### `/launch` (D80)

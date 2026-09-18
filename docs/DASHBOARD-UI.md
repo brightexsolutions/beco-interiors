@@ -10,8 +10,8 @@ tokens.
 
 Quotes is the reference implementation. Copy its list / create / detail
 shape, not a new one. Cold start: `docs/milestones/M5-QUOTES-HANDOVER.md`.
-Next page is `/products` (M5 section G). Leave quotes, `AppShell`, and the
-charcoal band alone.
+Next page is `/users` (M5 section B, `brightex_admin` only). Leave quotes,
+`AppShell`, the charcoal band, and `/products` alone.
 
 ## What stays uniquely Beco
 

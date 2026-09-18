@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import {
-  ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn,
+  ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn, displayAvailability,
   type GalleryImage, type GalleryRole,
 } from '@beco/ui';
 import { AddToQuote } from '@/components/add-to-quote';
 import { ProductGrid } from '@/components/product-grid';
 import {
-  getProductBySlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
+  getProductBySlug, getCanonicalProductSlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
 } from '@/lib/products';
 import { SITE, whatsappLink } from '@/lib/site';
 
@@ -21,10 +21,17 @@ export async function generateStaticParams() {
 
 type Params = { params: Promise<{ slug: string }> };
 
+async function loadProduct(slug: string) {
+  const product = await getProductBySlug(slug);
+  if (product) return product;
+  const canonical = await getCanonicalProductSlug(slug);
+  if (canonical) permanentRedirect(`/product/${canonical}`);
+  notFound();
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
-  if (!product) return {};
+  const product = await loadProduct(slug);
 
   const image = primaryImage(product);
   return {
@@ -43,8 +50,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
-  if (!product) notFound();
+  const product = await loadProduct(slug);
 
   const images: GalleryImage[] = (product.images ?? []).map((img, i) => ({
     role: img.role as GalleryRole,
@@ -110,6 +116,7 @@ export default async function ProductPage({ params }: Params) {
             <AvailabilityBadge
               availability={product.availability}
               priceDisplayMode={product.price_display_mode}
+              stockQuantity={product.stock_quantity}
             />
           </div>
 
@@ -256,6 +263,7 @@ export default async function ProductPage({ params }: Params) {
         price={product.price}
         priceDisplayMode={product.price_display_mode}
         availability={product.availability}
+        stockQuantity={product.stock_quantity}
         category={product.category}
       />
     </main>
@@ -275,9 +283,11 @@ function ProductSchema(p: {
   name: string; slug: string; sku: string | null; description: string | null;
   image: string | null; price: number | null; priceDisplayMode: 'fixed' | 'poa';
   availability: 'in_stock' | 'pre_order' | 'poa';
+  stockQuantity?: number | null;
   category: { name: string; slug: string } | null;
 }) {
   const url = `https://www.beco.co.ke/product/${p.slug}`;
+  const shown = displayAvailability(p.availability, p.stockQuantity);
   const AVAILABILITY = {
     in_stock: 'https://schema.org/InStock',
     pre_order: 'https://schema.org/PreOrder',
@@ -285,6 +295,7 @@ function ProductSchema(p: {
     // is the honest mapping; InStock with no price would be a lie to a
     // crawler, and OutOfStock would be a lie to a customer.
     poa: 'https://schema.org/LimitedAvailability',
+    out_of_stock: 'https://schema.org/OutOfStock',
   } as const;
 
   const schema = {
@@ -304,7 +315,7 @@ function ProductSchema(p: {
       // for a POA product is the kind of structured data error that gets a
       // whole feed disqualified.
       ...(p.priceDisplayMode === 'fixed' && p.price != null ? { price: p.price } : {}),
-      availability: AVAILABILITY[p.availability],
+      availability: AVAILABILITY[shown],
       seller: { '@type': 'Organization', name: SITE.name },
     },
   };

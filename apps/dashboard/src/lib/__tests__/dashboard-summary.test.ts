@@ -124,9 +124,15 @@ describe('toStatCards: shape', () => {
     const everythingBad = summary({
       awaiting: { count: 9, oldest_hours: 40, sla_hours: 2 },
       sales: { invoiced: 1, collected: 0, orders: 1 },
-      catalogue: { published: 1, unavailable: 5, poa: 2, draft: 3 },
+      catalogue: { published: 1, unavailable: 5, poa: 2, draft: 3, low_stock: 4 },
     });
     expect(toStatCards(everythingBad).filter((c) => c.tone === 'attention')).toHaveLength(1);
+  });
+
+  it('names low stock on the catalogue card without spending Warm Red on it', () => {
+    const c = card(summary({ catalogue: { published: 24, unavailable: 0, poa: 2, draft: 1, low_stock: 3 } }), 'Products live');
+    expect(c.tone).toBe('plain');
+    expect(c.implication).toMatch(/3 at or below the low-stock mark/);
   });
 });
 

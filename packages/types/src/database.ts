@@ -712,6 +712,8 @@ export type Database = {
           sort_order: number
           source_path: string | null
           specs: Json
+          stock_quantity: number | null
+          low_stock_threshold: number | null
           unit: string | null
           updated_at: string
         }
@@ -738,6 +740,8 @@ export type Database = {
           sort_order?: number
           source_path?: string | null
           specs?: Json
+          stock_quantity?: number | null
+          low_stock_threshold?: number | null
           unit?: string | null
           updated_at?: string
         }
@@ -764,6 +768,8 @@ export type Database = {
           sort_order?: number
           source_path?: string | null
           specs?: Json
+          stock_quantity?: number | null
+          low_stock_threshold?: number | null
           unit?: string | null
           updated_at?: string
         }

@@ -46,10 +46,10 @@ export interface FieldProps {
 
 export function Field({ label, htmlFor, hint, error, children, className }: FieldProps) {
   return (
-    <div className={className}>
+    <div className={cn('min-w-0', className)}>
       <label
         htmlFor={htmlFor}
-        className="block whitespace-nowrap font-ui text-sm font-semibold text-charcoal"
+        className="block font-ui text-sm font-semibold text-charcoal"
       >
         {label}
         {hint ? <span className="ml-2 font-normal text-neutral-500">{hint}</span> : null}

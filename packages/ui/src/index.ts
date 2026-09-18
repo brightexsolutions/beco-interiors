@@ -2,6 +2,7 @@ export { Button, buttonClasses, type ButtonProps } from './components/button';
 export { Fab, fabClasses, type FabProps } from './components/fab';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
 export { Dialog, type DialogProps } from './components/dialog';
+export { Sheet, type SheetProps } from './components/sheet';
 export {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +14,7 @@ export {
 } from './components/dropdown-menu';
 
 export { PriceDisplay, formatPrice, type PriceDisplayProps } from './components/price-display';
-export { AvailabilityBadge, type AvailabilityBadgeProps } from './components/availability-badge';
+export { AvailabilityBadge, displayAvailability, type AvailabilityBadgeProps, type DisplayAvailability } from './components/availability-badge';
 export { ProductCard, type ProductCardProps } from './components/product-card';
 export {
   ProductGallery, orderImages,

@@ -3,41 +3,53 @@ import { cn } from '../lib/cn';
 /**
  * Availability, as a quiet label rather than a boxed control.
  *
- * The first version put every state in a bordered box, which read as a form
- * field rather than a label, and sat next to "Price on application" saying
- * "CALL FOR PRICE", which is the same sentence twice.
- *
- * So: a small dot and a word. And `redundantWith` lets a caller suppress it
- * entirely when the price already carries the message.
+ * `stockQuantity` of 0 is out of stock, even when the availability column
+ * still says in stock. NULL quantity means uncounted, so the stored
+ * availability stands. Warm Red is not used here: a shop grid of out-of-stock
+ * cards must not spend the page's attention budget.
  */
+export type Availability = 'in_stock' | 'pre_order' | 'poa';
+export type DisplayAvailability = Availability | 'out_of_stock';
+
 export interface AvailabilityBadgeProps {
-  availability: 'in_stock' | 'pre_order' | 'poa';
+  availability: Availability;
   /**
    * When the price display already says POA, this badge would repeat it.
    * Pass the price mode and the badge removes itself rather than duplicating.
    */
   priceDisplayMode?: 'fixed' | 'poa' | undefined;
+  /** Counted stock. Zero reads as out. Null or omitted leaves availability. */
+  stockQuantity?: number | null | undefined;
   className?: string | undefined;
 }
 
-const LABEL = {
+export const displayAvailability = (
+  availability: Availability,
+  stockQuantity?: number | null,
+): DisplayAvailability => {
+  if (stockQuantity != null && stockQuantity <= 0) return 'out_of_stock';
+  return availability;
+};
+
+const LABEL: Record<DisplayAvailability, string> = {
   in_stock: 'In stock',
   pre_order: 'Pre-order',
   poa: 'Enquire',
-} as const;
+  out_of_stock: 'Out of stock',
+};
 
-const DOT = {
-  // Green carries real information: it is here, today, in Nairobi.
+const DOT: Record<DisplayAvailability, string> = {
   in_stock: 'bg-success',
   pre_order: 'bg-neutral-500',
   poa: 'bg-neutral-300',
-} as const;
+  out_of_stock: 'bg-neutral-500',
+};
 
 export function AvailabilityBadge({
-  availability, priceDisplayMode, className,
+  availability, priceDisplayMode, stockQuantity, className,
 }: AvailabilityBadgeProps) {
-  // Saying "Price on application" and "Enquire" together is noise.
-  if (availability === 'poa' && priceDisplayMode === 'poa') return null;
+  const shown = displayAvailability(availability, stockQuantity);
+  if (shown === 'poa' && priceDisplayMode === 'poa') return null;
 
   return (
     <span
@@ -46,8 +58,8 @@ export function AvailabilityBadge({
         className,
       )}
     >
-      <span aria-hidden className={cn('h-1.5 w-1.5 rounded-full', DOT[availability])} />
-      {LABEL[availability]}
+      <span aria-hidden className={cn('h-1.5 w-1.5 rounded-full', DOT[shown])} />
+      {LABEL[shown]}
     </span>
   );
 }

@@ -45,7 +45,7 @@ anything there you would not print on a billboard.
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Click to chat number, digits only | Beco. `254722333730` | storefront, dashboard |
 | `NEXT_PUBLIC_BUSINESS_PHONE` | `tel:` link number | Beco. `+254722333730` | storefront |
 
-### Server only, never in the storefront
+### Server only, never in `NEXT_PUBLIC_*`
 
 | Variable | What | Where to get it | Used by |
 |---|---|---|---|
@@ -61,6 +61,8 @@ anything there you would not print on a billboard.
 | `AGE_SECRET_KEY` | Decrypts backups | The private half. **Store in the password manager and nowhere else.** Losing it makes every backup useless | restore only, never in CI |
 | `GEMINI_API_KEY` | Blog draft generation. **Brightex's key, in Studio only** | See 3.6 | **studio only** |
 | `GEMINI_MODEL` | Model id, so it changes without a deploy | Google's current model list. Do not hardcode | studio only |
+| `STOREFRONT_URL` | Storefront origin the dashboard POSTs revalidation to | You set it. `https://www.beco.co.ke` in production, `http://localhost:3000` locally | dashboard |
+| `REVALIDATE_SECRET` | Shared token for `POST /api/revalidate`. Busts ISR, cannot read rows | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
 | `VERCEL_TOKEN` | **Required.** GitHub Actions owns deployment, per D45 | vercel.com, Settings, Tokens | CI |
 | `VERCEL_ORG_ID` | Vercel team id | `.vercel/project.json` after `vercel link` | CI |
 | `VERCEL_PROJECT_ID_STOREFRONT` | | Same, per project | CI |

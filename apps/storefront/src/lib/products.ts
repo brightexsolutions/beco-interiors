@@ -29,6 +29,8 @@ export interface CatalogueProduct {
    * that is meant to change per slab. Written by Beco, not generated.
    */
   short_description?: string | null;
+  /** Counted stock. Null means uncounted; zero is out of stock. */
+  stock_quantity?: number | null;
 }
 
 const anon = () =>
@@ -47,7 +49,7 @@ const anon = () =>
  */
 const PRODUCT_COLUMNS =
   'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,' +
-  'images,specs,short_description,categories(name,slug)';
+  'images,specs,short_description,stock_quantity,categories(name,slug)';
 
 // The generated types cannot narrow an embedded join in a select string, so
 // the shape is asserted here and guaranteed by PRODUCT_COLUMNS above.
@@ -272,7 +274,7 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
     .from('products')
     .select(
       'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,' +
-        'description,short_description,sku,specs,meta_title,meta_description,' +
+        'description,short_description,sku,specs,meta_title,meta_description,stock_quantity,' +
         'categories(name,slug,description)',
     )
     .eq('slug', slug)
@@ -287,6 +289,25 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
   const { categories, ...rest } = row;
   return { ...rest, category: categories } as unknown as ProductDetail;
 };
+
+/**
+ * Former slug lookup for a 301. `product_slugs` is readable by anon; the
+ * join still has to be a published, live product or the redirect would
+ * leak a draft.
+ */
+export const getCanonicalProductSlug = async (slug: string): Promise<string | null> => {
+  const { data, error } = await anon()
+    .from('product_slugs')
+    .select('products!inner(slug)')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw new Error(`could not resolve product slug: ${error.message}`);
+  if (!data) return null;
+  const product = data.products as { slug: string } | { slug: string }[] | null;
+  const canonical = Array.isArray(product) ? product[0]?.slug : product?.slug;
+  return canonical && canonical !== slug ? canonical : null;
+};
+
 
 export interface GalleryShotImage {
   path: string;

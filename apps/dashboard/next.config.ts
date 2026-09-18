@@ -8,6 +8,19 @@ import type { NextConfig } from 'next';
 // tight and development actually runs.
 const isDev = process.env.NODE_ENV !== 'production';
 
+const imageOrigins = (() => {
+  const hosts = new Set(['https://img.beco.co.ke']);
+  const extra = process.env.NEXT_PUBLIC_IMAGE_HOST;
+  if (extra) {
+    try {
+      hosts.add(new URL(extra).origin);
+    } catch {
+      // Ignore a malformed host rather than break the whole CSP.
+    }
+  }
+  return [...hosts].join(' ');
+})();
+
 const scriptSrc = [
   "'self'",
   // Next.js inlines a small bootstrap script. Tighten to a nonce once the app
@@ -23,7 +36,7 @@ const csp = [
   // 'self' only, which is possible because fonts are self hosted. See D3.
   // There is no fonts.gstatic.com entry and there should never be one.
   "font-src 'self'",
-  "img-src 'self' data: blob: https://img.beco.co.ke",
+  `img-src 'self' data: blob: ${imageOrigins}`,
   `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''}`,
   "frame-src 'self' blob:",
   "frame-ancestors 'none'",
@@ -35,7 +48,12 @@ const csp = [
 
 const config: NextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ['@react-pdf/renderer', 'fontkit', 'yoga-layout'],
+  serverExternalPackages: ['@react-pdf/renderer', 'fontkit', 'yoga-layout', 'sharp'],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '20mb',
+    },
+  },
   images: {
     // Custom loader points at R2, so Vercel image optimization is never invoked
     // and its quota is never spent. See D16.

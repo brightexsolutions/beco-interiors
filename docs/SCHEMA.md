@@ -106,10 +106,12 @@ entry**, flipping automatically on first import. See D27.
 | `unit` | text | "per slab", "per piece", "per metre" |
 | `badge` | product_badge null | |
 | `images` | jsonb | Role structured, below |
-| `specs` | jsonb | `[{label, value}]` |
+| `specs` | jsonb | Object of label to value, `{ "Finish": "Silky" }` |
 | `meta_title`, `meta_description` | text | |
 | `is_published` | boolean | |
 | `sort_order` | int | |
+| `stock_quantity` | numeric(12,2) null | Manual count. NULL is uncounted. Zero is out of stock on the storefront. Half units only when `unit = 'per slab'` |
+| `low_stock_threshold` | numeric(12,2) null | Flag on the catalogue list when quantity is at or below this and still above zero |
 | `source_path` | text | |
 | `deleted_at` | timestamptz null | Soft delete |
 
@@ -123,8 +125,9 @@ entry**, flipping automatically on first import. See D27.
    "blur": "data:image/...", "sort": 0 }]
 ```
 
-**RLS.** Anonymous reads `is_published and deleted_at is null`. `beco_product_manager` and above
-write.
+**RLS.** Anonymous reads `is_published and deleted_at is null`. `beco_product_manager` and admins
+write, including `stock_quantity` and `low_stock_threshold`. `beco_sales` and anon cannot. Soft
+delete sets `deleted_at`; existing quote lines keep their `product_id`, description and price.
 
 ### product_slugs
 

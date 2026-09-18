@@ -14,7 +14,6 @@ describe('canAccess: the dashboard route/role matrix', () => {
   const allowed: Record<string, UserRole[]> = {
     '/quotes': ['beco_sales', 'beco_admin', 'brightex_admin'],
     '/orders': ['beco_sales', 'beco_admin', 'brightex_admin'],
-    '/stock': ['beco_product_manager', 'beco_admin', 'brightex_admin'],
     '/products': ['beco_product_manager', 'beco_admin', 'brightex_admin'],
     '/announcements': ['beco_admin', 'brightex_admin'],
     '/reports': ['beco_admin', 'brightex_admin'],
@@ -48,6 +47,8 @@ describe('canAccess: the dashboard route/role matrix', () => {
     for (const role of ALL_ROLES) {
       expect(canAccess(role, '/')).toBe(true);
       expect(canAccess(role, '/change-password')).toBe(true);
+      // /stock is a redirect to /products. The products prefix is the gate.
+      expect(canAccess(role, '/stock')).toBe(true);
     }
   });
 });

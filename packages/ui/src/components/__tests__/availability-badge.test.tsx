@@ -22,6 +22,21 @@ describe('AvailabilityBadge', () => {
     expect(screen.getByText('In stock')).toBeDefined();
   });
 
+  it('reads as out of stock when the counted quantity is zero', () => {
+    render(
+      <AvailabilityBadge availability="in_stock" priceDisplayMode="fixed" stockQuantity={0} />,
+    );
+    expect(screen.getByText('Out of stock')).toBeDefined();
+    expect(screen.queryByText('In stock')).toBeNull();
+  });
+
+  it('keeps the stored availability when stock has not been counted', () => {
+    render(
+      <AvailabilityBadge availability="in_stock" priceDisplayMode="fixed" stockQuantity={null} />,
+    );
+    expect(screen.getByText('In stock')).toBeDefined();
+  });
+
   it('is a label, not a boxed control', () => {
     // A border made it read as a form field rather than a status.
     const { container } = render(

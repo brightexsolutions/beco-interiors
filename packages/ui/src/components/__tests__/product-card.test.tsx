@@ -50,4 +50,19 @@ describe('ProductCard', () => {
     expect(container.querySelector('.line-through')?.textContent).toBe('KES 25,000');
     expect(screen.getByText('Sale')).toBeDefined();
   });
+
+  it('reads as out of stock when the counted quantity is zero', () => {
+    render(
+      <ProductCard
+        name="Limestone Ivory"
+        href="/product/limestone-ivory"
+        priceDisplayMode="fixed"
+        price={75000}
+        availability="in_stock"
+        stockQuantity={0}
+      />,
+    );
+    expect(screen.getByText('Out of stock')).toBeDefined();
+    expect(screen.queryByText('In stock')).toBeNull();
+  });
 });

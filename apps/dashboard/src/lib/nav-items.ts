@@ -18,8 +18,7 @@ export interface NavItem {
 const ALL: readonly NavItem[] = [
   { href: '/quotes', label: 'Quotes' },
   { href: '/orders', label: 'Orders' },
-  { href: '/stock', label: 'Stock' },
-  { href: '/products', label: 'Products' },
+  { href: '/products', label: 'Catalogue' },
   { href: '/announcements', label: 'Announcements' },
   { href: '/reports', label: 'Reports' },
   { href: '/users', label: 'Users' },

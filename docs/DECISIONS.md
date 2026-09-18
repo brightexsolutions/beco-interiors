@@ -1272,8 +1272,8 @@ the build and are recorded here so the next session does not re-derive them.
 **The route/role map is data, in `apps/dashboard/src/lib/access.ts`.** The proxy and every
 page read the same `ROUTE_RULES` table and the same `ROLE_LANDING` map, so "a salesperson
 cannot open `/users`" is decided in one place a test can point at, not re-argued per screen.
-The matrix: `beco_sales` gets `/quotes` and `/orders`; `beco_product_manager` gets `/stock`
-and `/products`; `beco_admin` and `brightex_admin` get those plus `/announcements`,
+The matrix: `beco_sales` gets `/quotes` and `/orders`; `beco_product_manager` gets `/products`
+(labelled Catalogue; `/stock` redirects there); `beco_admin` and `brightex_admin` get those plus `/announcements`,
 `/reports`, `/settings` and `/launch`; `/users` is `brightex_admin` only, per D6. A wrong role
 is redirected to its own landing, not shown a 403, because it is a real signed-in user in the
 wrong place. `beco_editor` has no operations screen in M5 (its work is the blog, which is
@@ -1430,3 +1430,15 @@ Rules that follow:
 *Reverses if:* a later pass proves Radix cannot be asserted in jsdom for a
 widget we need. That widget stays a plain implementation. The dashboard does
 not drop the standard for the widgets that do work.
+
+## D89, 17 September 2026: stock lives on the catalogue editor, not a second nav item
+
+The product manager had two sections, Stock and Products, that edited the same
+row. Quantity, threshold, price, specs and SEO now sit on `/products`, labelled
+Catalogue. `/stock` redirects there so old links do not 404. Automatic
+decrement from orders stays deferred: there is no reservation model yet.
+
+*Reverses if:* Beco later wants a warehouse scanning table that is not the
+catalogue editor, in which case `/stock` becomes a real screen again and the
+redirect is removed.
+

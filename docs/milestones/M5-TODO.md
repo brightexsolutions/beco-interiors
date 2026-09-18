@@ -1,9 +1,10 @@
 # M5: Operations dashboard
 
-> **Starting a new session on the next admin page?** Quotes is handed off.
-> Read `docs/milestones/M5-QUOTES-HANDOVER.md` first, then section G below,
-> `docs/DASHBOARD-UI.md`, and `docs/DECISIONS.md` from D50 (D54, D88). Do not
-> reopen quotes, AppShell, or the storefront.
+> **Starting a new session on the next admin page?** Quotes and the catalogue
+> editor are handed off. Read `docs/milestones/M5-QUOTES-HANDOVER.md` first,
+> then the next unbuilt section, `docs/DASHBOARD-UI.md`, and `docs/DECISIONS.md`
+> from D50 (D54, D88, D89). Do not reopen quotes, AppShell, the charcoal band,
+> or the catalogue editor.
 >
 > Cold start on the whole milestone: this file, `docs/ARCHITECTURE.md`
 > sections 4 to 7, 10, 11, 12 and 17, and `docs/DECISIONS.md` from D50. The
@@ -17,10 +18,12 @@ Status key: `[x]` verified against reality / `[~]` built, not yet verified / `[ 
 Items are added as they are discovered rather than remembered.
 
 Branch: `m5-quotes`, off `m5-dashboard` at `a6d784d` (`m5-dashboard` itself is
-off `m4-closeout` at `a5783b6`). Quotes (D, E) and dashboard home figures (H)
-are built as of 17 September. Next screen: section G, products editor.
-M4's own tail (real phone QA walk, first green Lighthouse PR run, ESLint once
-typescript-eslint supports TS 7) stays on `m4-closeout` and is not M5 work.
+off `m4-closeout` at `a5783b6`). Quotes (D, E), dashboard home figures (H) and
+the catalogue editor (F, G, D89, including create and photographs) are built
+as of 18 September. Next screen: users (section B). Then announcements,
+orders, reports. M4's own tail (real phone QA walk,
+first green Lighthouse PR run, ESLint once typescript-eslint supports TS 7)
+stays on `m4-closeout` and is not M5 work.
 
 ---
 
@@ -386,46 +389,48 @@ products editor.
 
 **0.1 resolved: option B**, quantity tracked, adjusted by hand, half unit granularity for slabs.
 
-- [ ] Migration: `products.stock_quantity numeric(12,2)` and `low_stock_threshold numeric(12,2)`,
+Landed on the catalogue editor (`/products`), not a separate `/stock` screen. See D89.
+
+- [x] Migration: `products.stock_quantity numeric(12,2)` and `low_stock_threshold numeric(12,2)`,
       with RLS and pgTAP in the same migration (`supabase-migration` skill). Half unit
       granularity for `unit = 'per slab'`, whole elsewhere, the D68 split. A `check` that
-      `stock_quantity >= 0`
-- [ ] `/dashboard/stock`: reduced-column table with a detail sheet (D38, a scanning table).
-      Adjust quantity and threshold inline, every change audited (before and after)
-- [ ] The director's stat card counts rows at or below threshold, per 0.5
-- [ ] Storefront availability reflects it: the card reads `stock_quantity` once it hits 0 (so
-      the build plan's "mark stock out and the storefront reflects it" journey works), otherwise
-      shows `availability`. A stock write triggers `revalidateTag`. Confirm this read with Brown
-      if it turns out to fight the existing `AvailabilityBadge` logic
-- [ ] Automatic decrement on order status change: **deferred**, not built in M5, per the 0.1
+      `stock_quantity >= 0`. Migration 39, tests in `20_product_stock.test.sql`
+- [x] Quantity and threshold inline on the products sheet (D38 scanning table). Every change
+      audited (the existing `products` audit trigger)
+- [x] The director's stat card names rows at or below threshold (`dashboard_summary.catalogue.low_stock`)
+- [x] Storefront availability reflects it: the card reads `stock_quantity` once it hits 0,
+      otherwise shows `availability`. A stock write POSTs storefront `/api/revalidate`
+- [x] Automatic decrement on order status change: **deferred**, not built in M5, per the 0.1
       decision. Recorded in `docs/PLAN.md` Deferred with the reason (no reservation model has
       been operated yet, and a wrong decrement is worse than a manual count)
-- [ ] pgTAP: `beco_product_manager` and admins write stock, `beco_sales` and anon cannot; the
+- [x] pgTAP: `beco_product_manager` and admins write stock, `beco_sales` and anon cannot; the
       quantity cannot go negative; the half unit constraint holds for slabs
 
 ## G. Products editor
 
-**Next session.** `/dashboard/products` is an EmptyState placeholder. Start from
-`docs/milestones/M5-QUOTES-HANDOVER.md`. Do not edit quotes to get this done.
-
 D54: from M5 the editor becomes the ongoing way to change prices and specs. Migrations 15 and 20
-stay as the historical seed.
+stay as the historical seed. Stock lives here too (D89). `/stock` redirects to `/products`.
 
-- [ ] `/dashboard/products`: list, then an editor for price, `compare_at_price`, `specs`,
+- [x] `/dashboard/products`: list, then an editor for price, `compare_at_price`, `specs`,
       `description`, `short_description`, SEO overrides (`meta_title`, `meta_description`),
-      `availability`, `badge`, `is_published`, `sort_order`
-- [ ] Soft delete via `ConfirmDialog` naming the product and stating that quotes which already
+      `availability`, `badge`, `is_published`, `sort_order`, plus `stock_quantity` and
+      `low_stock_threshold`
+- [x] Soft delete via `ConfirmDialog` naming the product and stating that quotes which already
       include it keep their line and their price (`docs/COMPONENTS.md` has the exact copy)
-- [ ] Rename records the old slug for a 301 (`product_slugs`; the trigger exists, verify it
-      fires from an editor write)
-- [ ] Every write triggers storefront `revalidateTag('product:x')` and `revalidateTag('category:y')`.
-      Cross-app revalidation is a real surface: note the mechanism in `docs/ARCHITECTURE.md` section 3
-- [ ] Audit logging on every field change (trigger exists on `products`)
-- [ ] Mobile: reduced-column table plus detail sheet (D38)
-- [ ] Tests: `beco_product_manager` and admins write, `beco_sales` and `beco_editor` cannot,
-      anon cannot; a POA product still cannot carry a price and a fixed one must (constraint,
-      already tested, keep it covered from the editor path); SEO override actually reaches the
-      storefront metadata
+- [x] Rename records the old slug for a 301 (`product_slugs`; verified from an editor write in
+      the integration test). Storefront `/product/[slug]` 301s a former slug
+- [x] Every write triggers storefront `revalidateTag('product:x')` and `revalidateTag('category:y')`
+      via `POST /api/revalidate`. Mechanism in `docs/ARCHITECTURE.md` section 3
+- [x] Audit logging on every field change (trigger exists on `products`)
+- [x] Mobile: reduced-column table plus detail sheet (D38)
+- [x] Tests: `beco_product_manager` and admins write, `beco_sales` and `beco_editor` cannot,
+      anon cannot; a POA product still cannot carry a price and a fixed one must (schema plus
+      editor path); SEO override is written to `meta_title` which `generateMetadata` already reads
+- [x] New product: heading action on desktop, charcoal FAB on a phone, `?new=1`. Inserts an
+      unpublished draft (name, slug, range, unit, price), then opens the editor. Verified live
+- [x] Photographs in the editor: upload JPEG, PNG or WebP, role, alt, reorder, remove via
+      `ConfirmDialog`. Sharp writes 400/800/1600 webp plus blur to R2. Separate locked actions
+      so they do not fight the product save. Needs the R2 keys locally
 
 ## H. Dashboard home: the six stat cards
 
@@ -440,8 +445,8 @@ against, and what it implies.** A number with no comparison is decoration.
 - [x] Invoiced against collected, this month. Two figures, kept honestly separate per D8
 - [x] Leads today: quote submissions plus `whatsapp_click` plus `call_click` from
       `analytics_events`. The only view that counts the leads that left into WhatsApp
-- [~] Catalogue card counts published / unavailable / POA / draft. **Low-stock from
-      `stock_quantity` waits on section F**
+- [~] Catalogue card counts published / unavailable / POA / draft, and low-stock from
+      `stock_quantity`
 - [x] **All date boundaries computed in `Africa/Nairobi` explicitly** (`docs/REVIEW.md` 1.6),
       inside `dashboard_summary()`. pgTAP in `13_dashboard_summary.test.sql`
 - [ ] Charts only where a shape answers what a number cannot: quotes and revenue over time,
@@ -518,7 +523,7 @@ controls work. `docs/COMPONENTS.md` lists these as planned.
 - [ ] `AuditEntry` (before and after, readable by a human; used inline on quote and order detail
       even though the standalone audit viewer is deferred per 0.7)
 - [x] `toast()` (replaces `window.alert`, announced to screen readers)
-- [x] `Dialog` (plain elements, jsdom-testable). Sheet still planned for D38
+- [x] `Dialog` (plain elements, jsdom-testable). Sheet is built for D38
       detail sheets. Do not swap Dialog for Radix to "be more shadcn" (D88)
 - [x] `DropdownMenu` (Radix via D88, restyled). Reference for new dashboard
       menus. AccountMenu stays plain (jsdom). Popover and Tabs next when a
@@ -533,8 +538,8 @@ controls work. `docs/COMPONENTS.md` lists these as planned.
 Rule "everything works on a phone" is a hard requirement, not a courtesy (PRD section 4.2, section 5).
 
 - [x] Quotes become full cards on mobile (D38). Orders still to do
-- [ ] Stock, products, users and (deferred viewer aside) audit keep a reduced-column table with
-      a tap-through detail sheet (D38)
+- [x] Products keep a reduced-column table with a tap-through detail sheet (D38). Stock,
+      users and (deferred viewer aside) audit still to do
 - [ ] Action buttons never sit under the on-screen keyboard (PRD section 5)
 - [ ] Sorting, filtering and inline edit survive on mobile in both treatments
 - [ ] 16px type floor holds on every dashboard screen (`pnpm check:type-floor`)

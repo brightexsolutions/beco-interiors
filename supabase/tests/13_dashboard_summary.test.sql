@@ -3,7 +3,7 @@
 -- interesting test is not "does it add up" but "does a role that cannot read
 -- orders get someone else's sales figures". It must not.
 begin;
-select plan(16);
+select plan(17);
 
 \set admin_id '''f3000000-0000-4000-8000-000000000001'''
 \set sales_id '''f3000000-0000-4000-8000-000000000002'''
@@ -30,10 +30,13 @@ delete from quotes;
 delete from orders;
 delete from analytics_events;
 
--- Two quotes waiting, the older one well past any sane SLA.
+-- Two quotes waiting, the older one well past any sane SLA. The web lead
+-- is a separate row stamped "now", so the count still holds when this file
+-- runs just after Nairobi midnight (a 9-hour-old row would then be yesterday).
 insert into quotes (customer_name, customer_phone, source, status, created_at, assigned_to) values
-  ('Waiting Old',   '0700000001', 'web',     'new',       now() - interval '9 hours', :sales_id::uuid),
-  ('Waiting Fresh', '0700000002', 'walk_in', 'reviewing', now() - interval '20 minutes', :sales_id::uuid);
+  ('Waiting Old',   '0700000001', 'walk_in', 'new',       now() - interval '9 hours', :sales_id::uuid),
+  ('Waiting Fresh', '0700000002', 'walk_in', 'reviewing', now() - interval '20 minutes', :sales_id::uuid),
+  ('Web Today',     '0700000009', 'web',     'quoted',    now(), :sales_id::uuid);
 
 -- Decided this month: two won, one lost, so conversion is 67%.
 insert into quotes (customer_name, customer_phone, source, status, total_amount,
@@ -126,6 +129,11 @@ select is(
 select is(
   (dashboard_summary() -> 'leads' ->> 'total')::int, 3,
   'leads adds the web submission to the WhatsApp and call clicks'
+);
+
+select is(
+  (dashboard_summary() -> 'catalogue' ->> 'low_stock')::int, 0,
+  'low_stock is zero until a counted quantity sits at or below its mark'
 );
 
 -- ---------- the point of security invoker ----------

@@ -11,7 +11,7 @@ export interface DashboardSummary {
   won: { count: number; value: number; prev_count: number; prev_value: number };
   conversion: { rate: number | null; prev_rate: number | null; decided: number };
   sales: { invoiced: number; collected: number; orders: number };
-  catalogue: { published: number; unavailable: number; poa: number; draft: number };
+  catalogue: { published: number; unavailable: number; poa: number; draft: number; low_stock: number };
   leads: { submissions: number; whatsapp: number; calls: number; total: number };
 }
 
@@ -20,7 +20,7 @@ export const EMPTY_SUMMARY: DashboardSummary = {
   won: { count: 0, value: 0, prev_count: 0, prev_value: 0 },
   conversion: { rate: null, prev_rate: null, decided: 0 },
   sales: { invoiced: 0, collected: 0, orders: 0 },
-  catalogue: { published: 0, unavailable: 0, poa: 0, draft: 0 },
+  catalogue: { published: 0, unavailable: 0, poa: 0, draft: 0, low_stock: 0 },
   leads: { submissions: 0, whatsapp: 0, calls: 0, total: 0 },
 };
 
@@ -123,10 +123,12 @@ export const toStatCards = (s: DashboardSummary): StatCardProps[] => {
       value: String(s.catalogue.published),
       comparison:
         s.catalogue.draft > 0 ? `${s.catalogue.draft} not published` : 'Whole catalogue published',
-      implication:
-        s.catalogue.unavailable > 0
-          ? `${s.catalogue.unavailable} showing as unavailable`
-          : undefined,
+      implication: [
+        s.catalogue.low_stock > 0 ? `${s.catalogue.low_stock} at or below the low-stock mark` : null,
+        s.catalogue.unavailable > 0 ? `${s.catalogue.unavailable} showing as unavailable` : null,
+      ]
+        .filter(Boolean)
+        .join('. ') || undefined,
       tone: 'plain',
     },
     {

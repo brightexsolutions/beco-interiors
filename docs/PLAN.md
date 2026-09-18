@@ -13,7 +13,7 @@ Brightex material.
 | M2 Drive import pipeline | 3.5 | Not started |
 | M3 Design system | 2.0 | Not started, overlaps M2 |
 | M4 Storefront, SEO, conversion, motion | 8.5 | Not started |
-| M5 Operations dashboard | 6.5 | **WIP.** Quotes, PDF, email and dashboard home figures landed 17 September on `m5-quotes`. Next screen: products editor. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
+| M5 Operations dashboard | 6.5 | **WIP.** Quotes, PDF, email, dashboard home figures and the catalogue editor are on `m5-quotes`. Next screen: users. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
 | M6 Launch | 3.5 | Not started |
 | M7 Brightex Studio | 3.5 | After launch, unbilled. Inside the dashboard per D9, gated per D42 |
 
@@ -58,13 +58,13 @@ showroom booking CTA, dual homeowner/professional pathways, technical spec field
 WhatsApp button). That feedback was explicitly routed to a different chat session; check with
 Brown before assuming it is unclaimed.
 
-**Dashboard, 17 September, branch `m5-quotes`:** the quotes surface is the
+**Dashboard, 18 September, branch `m5-quotes`:** the quotes surface is the
 reference admin screen (list, `/quotes/new`, detail, PDF, email). Dashboard
-home figures come from `dashboard_summary()`. `/products` is still a
-placeholder. Next session owns the products editor. Read
-`docs/milestones/M5-QUOTES-HANDOVER.md` before opening a new chat. Do not
-edit quotes, AppShell or the storefront from that session. Live beco.co.ke is
-still WordPress until launch.
+home figures come from `dashboard_summary()`. The catalogue editor lives at
+`/products` (nav label Catalogue; `/stock` redirects there): stock, create,
+photographs. Stock quantity is typed by hand on that sheet, never decremented
+from an order. Next screen: users. Then announcements, orders, reports. Live
+beco.co.ke is still WordPress until launch.
 
 ## Agreed cut order, if the date is held
 

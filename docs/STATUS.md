@@ -5,9 +5,11 @@
 Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, `BLOCKED`
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
-Last updated: 17 September 2026. M0 through M4 done. M5 (operations dashboard)
-is **WIP** on branch `m5-quotes`. Quotes, the quote PDF, priced-quote email and
-the admin home figures are built. Next admin page is the products editor.
+Last updated: 18 September 2026. M0 through M4 done. M5 (operations dashboard)
+is **WIP** on branch `m5-quotes`. Quotes, the quote PDF, priced-quote email,
+the admin home figures and the catalogue editor (`/products`, stock, create,
+photographs) are built. Next admin page is users, then announcements, orders
+and reports.
 Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md`. Live beco.co.ke is still
 WordPress; that is expected until the storefront launches.
 
@@ -38,7 +40,7 @@ copy, hours (Mon to Fri 8am to 4pm, Sat 8am to 2pm) and the two live social acco
 | M2 | Drive import pipeline | 3.5 | **DONE**, live against real Drive and R2, incremental, reports rather than guesses |
 | M3 | Design system | 2.0 | **DONE**, tokens, contrast verified, `@beco/ui` built out through M4 |
 | M4 | Storefront, SEO, conversion, motion | 8.5 | **DONE**, Codex review ran 9 Sept. A modernisation pass (D82) followed 9 to 10 Sept on branch `storefront-revamp`: real photography imported, fluid type scale, craft floor, specimen plates, the home hero and `SlabToSurface` reworked, a rotating announcement bar, a transparent header across the dark-hero pages, the `/shop` filter rebuilt for mobile, `/about` opened on Beco's own copy, confirmed hours and social. Uncommitted working-tree, all green. Follow-ups deferred in `docs/PLAN.md`: portrait video sections, `/about` lower sections, the import pipeline EXIF fix |
-| M5 | Operations dashboard | 6.5 | **WIP.** Auth, shell, quotes (list, create, detail, PDF, email) and admin home figures are on `m5-quotes`. `/products` is a placeholder. Orders, stock, team, announcements and reports are unstarted. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
+| M5 | Operations dashboard | 6.5 | **WIP.** Auth, shell, quotes (list, create, detail, PDF, email), admin home figures and the catalogue editor (`/products`, stock, create, photographs, D89) are on `m5-quotes`. `/stock` redirects to `/products`. Users, announcements, orders and reports are unstarted. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
 | M6 | Launch | 3.5 | TODO. Depends on M4, M5, and the old URL list, still not received and the largest ranking risk in the project |
 | M7 | Studio, inside the dashboard | 3.5 | After launch, unbilled |
 

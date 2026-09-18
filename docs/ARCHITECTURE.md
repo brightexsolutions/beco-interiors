@@ -154,18 +154,27 @@ more traffic does not quickly cost more money.
      |--- GET img.beco.co.ke/... ------> R2 (edge, egress free)    |
 
 
-  REVALIDATION, when the dashboard writes:
+  REVALIDATION, when the dashboard writes a product:
 
-  staff edits a price
+  staff edits a price or stock count
         |
         v
-  server action writes to Supabase
+  dashboard server action writes to Supabase (RLS still the authority)
         |
         v
-  revalidateTag('product:x') and revalidateTag('category:y')
+  dashboard POSTs to the storefront `/api/revalidate`
+  with `REVALIDATE_SECRET`, tags `product:x` and `category:y`,
+  and the matching paths
+        |
+        v
+  storefront `revalidateTag` / `revalidatePath` run in THAT process
         |
         v
   next request rebuilds that page only. Everything else stays cached.
+
+  Two Vercel projects cannot share in-process `revalidateTag`. The HTTP
+  call is the mechanism. If `STOREFRONT_URL` or the secret is unset, the
+  dashboard list still refreshes and the write still lands.
 ```
 
 Filters use query parameters and are handled client side over the already delivered set, so a

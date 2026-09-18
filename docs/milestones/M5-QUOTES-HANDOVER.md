@@ -1,23 +1,25 @@
 # M5 quotes handover
 
-**Read this first if you are starting a new dashboard session.** The quotes
-surface is built. The next admin page is the products editor. Do not reopen
-quotes unless Brown asks.
+**Read this first if you are starting a new dashboard session.** Quotes and
+the catalogue editor are built. Do not reopen quotes, AppShell, the charcoal
+band, or `/products` unless Brown asks.
 
 `docs/milestones/M5-TODO.md` is the full ticked list. This file is only what
 the next agent needs to start cold.
 
-**State, 17 September 2026:** quotes list, counter create, detail mutations,
-PDF, email and dashboard home figures are on branch `m5-quotes`, off
-`m5-dashboard` at `a6d784d`. `/products` is still an EmptyState placeholder.
-Receipt PDF waits for orders. Live beco.co.ke is still WordPress; that is
-expected until the storefront launches.
+**State, 18 September 2026:** quotes list, counter create, detail mutations,
+PDF, email, dashboard home figures and the catalogue editor (`/products`,
+stock, create, photographs, D89) are on branch `m5-quotes`, off
+`m5-dashboard` at `a6d784d`. `/stock` redirects to `/products`. Receipt PDF
+waits for orders. Live beco.co.ke is still WordPress; that is expected until
+the storefront launches.
 
 **Local stack:** `pnpm db:reset` then `pnpm drive:import` if you need
 photographs. After a plain reset the local catalogue is 24 published 12mm
 sintered stones. Handles, lighting, panels and hardware exist as empty
 taxonomy until the import. The quotes catalogue picker lists those empty
-ranges on purpose.
+ranges on purpose. Migration 39 adds `stock_quantity` and
+`low_stock_threshold`. A fresh reset is the honest replay.
 
 ---
 
@@ -25,33 +27,19 @@ ranges on purpose.
 
 Branch: `m5-quotes`. Dashboard: `http://localhost:3001/`.
 
-Own **M5 section G, the products editor**. `/dashboard/products` currently
-renders:
+Own `/users` next (M5 section B, `brightex_admin` only). After that:
+announcements, orders, reports. The catalogue editor is no longer a
+placeholder.
 
-> The catalogue editor, with prices, specs, availability and SEO overrides,
-> arrives in the next build.
-
-Paste this into the new chat:
-
-```
-Own the Products editor on branch m5-quotes. Read
-docs/milestones/M5-QUOTES-HANDOVER.md first, then M5-TODO section G,
-docs/DASHBOARD-UI.md, D54 and D88. Do not edit quotes, AppShell, the
-charcoal band, or the storefront. shadcn is dashboard only, never the
-storefront. New widgets land in @beco/ui.
-```
-
-Section F (stock quantity) can share the products list later. Do not start
-stock, orders, announcements, users, or reports in the same session unless
-Brown says so.
+Do not start a second products pass, and do not edit quotes, AppShell or the
+charcoal band unless Brown says so.
 
 ---
 
 ## 2. Do not touch
 
-These were owned by the quotes session. Leave them unless a products write
-genuinely has to call them (for example `revalidateTag` after a price
-change).
+These were owned by the quotes and catalogue sessions. Leave them unless a
+new write genuinely has to call them.
 
 - `apps/dashboard/src/app/(app)/quotes/**`
 - `apps/dashboard/src/components/quote-*`
@@ -61,7 +49,13 @@ change).
 - Quote RPCs and migrations 30 to 38
 - `packages/documents` quote PDF and priced-quote email
 - `apps/dashboard/src/components/app-shell.tsx` and the charcoal band
-- `apps/storefront`
+- `apps/dashboard/src/app/(app)/products/**` and `components/product-*`,
+  `components/new-product.tsx`
+- Stock columns, product photographs and `dashboard_summary` low-stock
+  (migration 39)
+
+Storefront availability and `POST /api/revalidate` already landed for
+catalogue writes. Do not restyle the storefront to get the next screen done.
 
 Dashboard home (`apps/dashboard/src/app/(app)/page.tsx` and
 `lib/dashboard-summary.ts`) is already wired. Do not restyle it.
@@ -101,18 +95,35 @@ Pattern for later list / create / detail screens: `docs/DASHBOARD-UI.md`.
   SQL by hand against a foreign container. `supabase/config.toml` pins
   `project_id = "beco-interiors-website"` so worktrees share one stack
 
-## 5. Rules the products session still has to keep
+## 5. What the catalogue editor shipped
+
+- Nav: one Catalogue item at `/products`. `/stock` redirects there.
+  Product manager landing stays `/products`. No sidebar.
+- List: reduced columns on a phone, full table on desktop (D38). Name,
+  availability, price or POA, stock, low-stock flag, explicit Edit.
+- Editor sheet: one column, Save and Delete pinned (no sideways scroll).
+  Photographs, price, compare-at, specs, descriptions, SEO, availability,
+  badge, published, sort, plus `stock_quantity` and `low_stock_threshold`.
+  Half unit for per slab, whole otherwise, never negative. Blank is
+  uncounted, not zero.
+- New product: heading button on desktop, charcoal FAB on a phone, `?new=1`.
+  Inserts an unpublished draft, then opens the editor.
+- Photographs in the editor: upload JPEG, PNG or WebP to R2 (400/800/1600
+  webp plus blur), role, alt, reorder, remove via `ConfirmDialog`. Needs
+  the R2 keys locally.
+- Soft delete via `ConfirmDialog`. Quotes keep their line and price.
+- Stock writes audited. `beco_product_manager` and admins write; sales and
+  anon cannot (pgTAP `20_product_stock.test.sql`).
+- Storefront card reads Out of stock when quantity is 0. Writes POST
+  storefront `/api/revalidate`. No auto-decrement from orders.
+- Former slugs 308 via `permanentRedirect` after the `product_slugs` row.
+
+## 6. Rules that still hold for the next screen
 
 - No em dashes
 - Vitest plus RTL in jsdom. No Playwright
 - No decorative controls. Inventory in `docs/QA-CHECKLIST.md`
-- No `window.confirm` / `alert` / `prompt`. Soft delete uses `ConfirmDialog`
-  and names the product. Copy is already in `docs/COMPONENTS.md`
+- No `window.confirm` / `alert` / `prompt`
 - Shared widgets in `@beco/ui`. shadcn copy-paste is allowed there only
   (D88). Never a `components.json` in an app
-- RLS and proxy both gate writes. `beco_sales` and `beco_editor` cannot
-  edit products
-- Soft delete: quotes that already include the product keep their line and
-  their price
-- Rename records the old slug for a 301 (`product_slugs` trigger exists)
-- Every write should `revalidateTag` the storefront product and category
+- RLS and the proxy both gate writes

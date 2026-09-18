@@ -45,6 +45,9 @@ export type ImageRole = (typeof IMAGE_ROLES)[number];
 export const PROJECT_TYPES = ['residential', 'commercial'] as const;
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
+export const PRODUCT_BADGES = ['hot', 'new', 'sale', 'clearance'] as const;
+export type ProductBadge = (typeof PRODUCT_BADGES)[number];
+
 export const ANALYTICS_EVENTS = [
   'page_view',
   'product_view',

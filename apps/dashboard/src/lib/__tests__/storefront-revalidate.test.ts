@@ -1,0 +1,52 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+const revalidatePath = vi.fn();
+vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
+
+const { revalidateStorefront } = await import('../storefront-revalidate');
+
+afterEach(() => {
+  revalidatePath.mockReset();
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
+
+describe('revalidateStorefront', () => {
+  it('always refreshes the dashboard catalogue list', async () => {
+    await revalidateStorefront({ productSlug: 'limestone-ivory' });
+    expect(revalidatePath).toHaveBeenCalledWith('/products');
+  });
+
+  it('posts tags and paths to the storefront when the secret is set', async () => {
+    vi.stubEnv('STOREFRONT_URL', 'http://localhost:3000');
+    vi.stubEnv('REVALIDATE_SECRET', 's3cret');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await revalidateStorefront({
+      productSlug: 'limestone-ivory-renamed',
+      formerSlug: 'limestone-ivory',
+      categorySlug: '12mm-sintered-stones',
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('http://localhost:3000/api/revalidate');
+    expect((init.headers as Record<string, string>).authorization).toBe('Bearer s3cret');
+    const body = JSON.parse(String(init.body)) as { tags: string[]; paths: string[] };
+    expect(body.tags).toEqual([
+      'product:limestone-ivory-renamed',
+      'product:limestone-ivory',
+      'category:12mm-sintered-stones',
+    ]);
+    expect(body.paths).toContain('/product/limestone-ivory-renamed');
+    expect(body.paths).toContain('/shop/12mm-sintered-stones');
+  });
+
+  it('skips the HTTP call when the secret is missing, so local saves still work', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    await revalidateStorefront({ productSlug: 'limestone-ivory' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

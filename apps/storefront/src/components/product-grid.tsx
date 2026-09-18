@@ -26,6 +26,7 @@ export function ProductGrid({ products }: { products: CatalogueProduct[] }) {
               compareAtPrice={p.compare_at_price}
               unit={p.unit}
               availability={p.availability}
+              stockQuantity={p.stock_quantity}
               badge={p.badge}
               action={
                 <QuickAddToQuote
