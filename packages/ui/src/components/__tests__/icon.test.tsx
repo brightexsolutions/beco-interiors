@@ -5,6 +5,7 @@ import { Icon, type IconName } from '../icon';
 
 const names: IconName[] = [
   'plus',
+  'minus',
   'pencil',
   'arrow-right',
   'chevron-up',

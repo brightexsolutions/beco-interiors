@@ -283,7 +283,7 @@ real phone** (M5 section D).
 | Dates | Raised, Reviewed, Approved, Quoted, Valid until, Won, Lost, Reopened. Only stamps that exist. Lost and Reopened survive a reopen | `QuoteDates` tested |
 | Add from catalogue | Opens a dialog of published products across every range. Range select, search focused, tick several, Add writes them through `add_catalogue_quote_lines` under one lock | `QuoteLines` and `CataloguePicker` tested. RPC `add_catalogue_quote_lines` |
 | Not in the catalogue | Adds a named custom line, not an empty catalogue row | `QuoteLines` tested. RPC `add_custom_quote_line` |
-| View | Compact heading action, top right, labelled View with a right arrow. Writes unsaved qty/price first, then opens a dialog with the live PDF | `QuoteDocumentPanel` tested |
+| View | Compact heading action, top right, labelled View with a right arrow. Writes unsaved qty/price first, then opens a dialog. Pages paint onto canvas. Zoom in, zoom out, and pinch | `QuoteDocumentPanel` tested |
 | Download | Real file link `?download=1`, filename includes the quote number and client name | Tested href and Content-Disposition |
 | Email | Form in the preview dialog, prefilled, submits `sendQuoteEmail` | Tested |
 | WhatsApp | Copy in the preview: download the file to send it. `quoteWhatsAppLink` is tested but not on this panel | Helper unit tested |
@@ -328,7 +328,7 @@ The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (
 | Confirm / Fulfil | Forward status only. Writes `set_order_status` | Test: `OrderActions`. RPC pgTAP |
 | Cancel order | ConfirmDialog names the order, confirm verb Cancel order | Test: `OrderActions` |
 | Mark paid | ConfirmDialog names the order, confirm verb Mark paid. Stamps `paid_at`. Stock unchanged. Emails a receipt if an address exists | Test: `OrderActions`, `markOrderPaid`. RPC pgTAP |
-| View receipt | After paid: heading and Actions. Opens the receipt PDF. Email is a real form, Download is `?download=1`. Copy says to download to send on WhatsApp | Test: `OrderDocumentPanel`, PDF route 409 until paid |
+| View receipt | After paid: heading and Actions. Opens the receipt as canvas pages. Zoom in, zoom out, and pinch. Email is a real form, Download is `?download=1`. Copy says to download to send on WhatsApp | Test: `OrderDocumentPanel`, PDF route 409 until paid |
 | Quote link | Inspector ownership block links to the source quote | Rendered on detail |
 
 ### `/reports`
@@ -337,8 +337,8 @@ The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (
 
 | Control | What it does | Status |
 |---|---|---|
-| Period | This month / Last month, on the Reports heading row to the right. Nairobi bounds, same as `dashboard_summary()` | Test: `ReportFilters`. RPC `report_period_bounds` |
-| Download PDF | Heading row, next to Period. Real file at `/reports/pdf` for the selected period. Sales, products and categories in one document. Not stored in `documents` | Test: `ReportFilters`, report PDF route. Filename `Beco sales review {period}.pdf` |
+| Period | This month / Last month / Custom. Custom shows start and end date inputs. Nairobi bounds. Custom is `?period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD` | Test: `ReportFilters`. RPC `report_period_bounds` |
+| View PDF | Heading row, next to Period. Opens a dialog with the live sales review as canvas pages. Zoom in, zoom out, and pinch. Review chooses Overall or one salesperson. Download from the footer is `?download=1` for that same document. Not stored in `documents` | Test: `ReportFilters` (opens dialog, fetches the file, switches person, custom dates, error state), report PDF route (inline vs attachment, person 400/404, inverted custom 400). Filename `Beco overall sales review {period}.pdf` or `Beco salesperson review {name} {period}.pdf` |
 | Invoiced / collected | Two compact StatCards with Won and Conversion, 2 by 2 on a phone and four across from `lg`. D8. Confirmed or fulfilled vs `payment_status = paid` | Test: `ReportResults` |
 | Report views | Tabs: Sales, Products, Categories. Writes `?view=` | Test: `ReportResults`. `Tabs` in `@beco/ui` |
 | Sales | Won-value bars plus leaderboard. Desktop table, phone cards | Test: `ReportResults`. RPC `salesperson_leaderboard` |

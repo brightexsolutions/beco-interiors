@@ -25,13 +25,6 @@ describe('OrderDocumentPanel', () => {
       'fetch',
       vi.fn(async () => new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 })),
     );
-    vi.stubGlobal(
-      'URL',
-      Object.assign(URL, {
-        createObjectURL: vi.fn(() => 'blob:http://localhost/receipt'),
-        revokeObjectURL: vi.fn(),
-      }),
-    );
   });
 
   it('holds the receipt until the order is paid', () => {
@@ -46,7 +39,8 @@ describe('OrderDocumentPanel', () => {
     const view = screen.getByRole('button', { name: 'View receipt' });
     await user.click(view);
     expect(screen.getByRole('dialog')).toHaveAccessibleName('BEC-O-00042');
-    expect(await screen.findByTitle('BEC-O-00042 PDF')).toHaveAttribute('src', 'blob:http://localhost/receipt');
+    expect(await screen.findByRole('img', { name: 'BEC-O-00042 PDF, page 1 of 1' })).toBeInTheDocument();
+    expect(screen.queryByTitle('BEC-O-00042 PDF')).toBeNull();
     expect(screen.getByRole('button', { name: 'Email' })).toBeInTheDocument();
     expect(screen.getByLabelText(/email to/i)).toHaveValue('a@example.com');
     expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(

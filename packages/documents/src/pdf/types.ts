@@ -34,8 +34,10 @@ export interface ReportPdfPerson {
   name: string;
   raised: number;
   won: number;
+  lost: number;
   wonValue: number;
   conversion: number | null;
+  orders: number;
 }
 
 export interface ReportPdfFunnelRow {
@@ -51,6 +53,8 @@ export interface ReportPdfFunnelRow {
 export interface ReportPdfInput {
   period: string;
   generatedAt: string;
+  /** Set for a one-person review. Empty is the team document. */
+  person: string | null;
   invoiced: number;
   collected: number;
   raised: number;

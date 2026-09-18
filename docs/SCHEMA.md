@@ -159,7 +159,7 @@ former slug 301s to the current one. From `docs/REVIEW.md` 2.3.
 | `status` | quote_status default 'new' | |
 | `created_by` | uuid FK users null | **Null for web submissions.** A web quote arrives unowned |
 | `assigned_to` | uuid FK users null | |
-| `subtotal`, `vat_amount`, `total_amount` | numeric(12,2) | |
+| `subtotal`, `vat_amount`, `total_amount` | numeric(12,2) | Kept in sync with priced `quote_items` by `refresh_quote_money`. Unpriced lines do not zero priced ones. Migration 44 |
 | `currency` | text default 'KES' | |
 | `valid_until` | date | |
 | `finalized_at` | timestamptz null | Stamped on reaching won or lost. Cleared if the quote leaves those states |
@@ -216,7 +216,7 @@ compares the two and gates FINALIZING one, not the pricing itself.
 | `payment_status` | payment_status default 'unpaid' | |
 | `paid_at` | timestamptz null | |
 | `confirmed_at`, `fulfilled_at`, `cancelled_at` | timestamptz null | Migration 40. Status stamps, same idea as quote milestones |
-| `subtotal`, `vat_amount`, `total_amount` | numeric(12,2) | |
+| `subtotal`, `vat_amount`, `total_amount` | numeric(12,2) | Kept in sync with priced `order_items` by `refresh_order_money`. Conversion refreshes the quote first so a stale header of 0 cannot land on the order. Migration 44 |
 | `created_by`, `salesperson_id` | uuid FK users | Attribution survives conversion |
 | `deleted_at` | timestamptz null | |
 
@@ -369,12 +369,14 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `reopen_quote(...)` | Dashboard. Lost to reviewing when the client comes back. Clears `lost_reason` and `finalized_at`. Won stays closed. Same owner or admin, optimistic lock |
 | `reissue_quote(...)` | Dashboard. Stamps a fresh `valid_until` on an expired open quote |
 | `dashboard_summary()` | Dashboard home. One jsonb round trip, Africa/Nairobi boundaries, security invoker so RLS decides who sees which figures. Migration 31 |
-| `convert_quote_to_order(p_quote_id, p_expected_updated_at)` | Dashboard. Won quote becomes a pending unpaid order. Copies every line price. `salesperson_id` is the quote owner. Stamps `converted_order_id` and `finalized_at`. Does not touch stock (D89). Sales own only. Optimistic lock. Migration 40 |
+| `convert_quote_to_order(p_quote_id, p_expected_updated_at)` | Dashboard. Won quote becomes a pending unpaid order. Refreshes quote money from the lines, copies every line price, then refreshes the order header. `salesperson_id` is the quote owner. Stamps `converted_order_id` and `finalized_at`. Does not touch stock (D89). Sales own only. Optimistic lock. Migration 40, 44 |
 | `set_order_status(p_order_id, p_status, p_expected_updated_at)` | Dashboard. Pending to confirmed to fulfilled, or cancelled. Cannot move back to pending. Sales own only. Optimistic lock. Migration 40 |
 | `mark_order_paid(p_order_id, p_expected_updated_at)` | Dashboard. Stamps `payment_status = paid` and `paid_at` together. Refuses cancelled and already paid. Does not touch stock. Migration 40 |
-| `report_period_bounds(p_period)` | Nairobi this-month / last-month window, matching `dashboard_summary()`. Migration 41 |
-| `salesperson_leaderboard(p_period)` | Admin reports. Raised, won, won value, conversion. Invoiced vs collected (D8). SECURITY INVOKER. Migration 41 |
-| `conversion_report(p_period)` | Admin reports. Views, add to cart, quotes, WhatsApp and call clicks per product and category. SECURITY INVOKER so a role that cannot read `analytics_events` sees empty rows. Migration 41 |
+| `report_period_bounds(p_period, p_from, p_to)` | Nairobi this-month / last-month window, or a custom inclusive date range. Invalid custom dates fall back to this month. Migration 41, 43 |
+| `salesperson_leaderboard(p_period, p_from, p_to)` | Admin reports. Raised, won, won value, conversion. Team and per-person invoiced vs collected (D8). SECURITY INVOKER. Migration 41, 42, 43 |
+| `conversion_report(p_period, p_from, p_to)` | Admin reports. Views, add to cart, quotes, WhatsApp and call clicks per product and category. SECURITY INVOKER so a role that cannot read `analytics_events` sees empty rows. Migration 41, 43 |
+| `refresh_quote_money(p_quote_id)` | Sums priced lines into the quote header (VAT inclusive, D50). Triggered from `quote_items`. Migration 33, 44 |
+| `refresh_order_money(p_order_id)` | Same for an order. Triggered from `order_items`. Leaves a header-only order alone when it has no lines. Migration 44 |
 | `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
 | `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
 

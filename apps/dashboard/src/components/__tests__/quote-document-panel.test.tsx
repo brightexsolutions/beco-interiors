@@ -34,13 +34,6 @@ describe('QuoteDocumentPanel', () => {
       'fetch',
       vi.fn(async () => new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 })),
     );
-    vi.stubGlobal(
-      'URL',
-      Object.assign(URL, {
-        createObjectURL: vi.fn(() => 'blob:http://localhost/quote'),
-        revokeObjectURL: vi.fn(),
-      }),
-    );
   });
 
   it('View is the action, and it is a compact button that opens the dialog', async () => {
@@ -59,7 +52,8 @@ describe('QuoteDocumentPanel', () => {
     const user = userEvent.setup();
     render(<QuoteDocumentPanel {...props} />);
     await user.click(screen.getByRole('button', { name: 'View' }));
-    expect(await screen.findByTitle('BEC-Q-00042 PDF')).toHaveAttribute('src', 'blob:http://localhost/quote');
+    expect(await screen.findByRole('img', { name: 'BEC-Q-00042 PDF, page 1 of 1' })).toBeInTheDocument();
+    expect(screen.queryByTitle('BEC-Q-00042 PDF')).toBeNull();
     expect(fetch).toHaveBeenCalledWith(
       '/quotes/BEC-Q-00042/pdf',
       expect.objectContaining({ credentials: 'same-origin', cache: 'no-store' }),

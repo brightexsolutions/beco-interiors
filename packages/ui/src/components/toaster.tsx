@@ -10,30 +10,17 @@ import { cn } from '../lib/cn';
  * only signal: Done, Failed, Note. Server actions return `{ ok }` or
  * `{ error }`; the submitting component calls `toast` with that result.
  *
- * Headless Sonner: stack, swipe and timer stay, the card is ours.
+ * Headless Sonner: stack, swipe and timer stay. The card is the same
+ * floating white panel as the dashboard chrome, opaque, so a tinted fill
+ * cannot photograph through the charcoal band.
  */
 
 export type ToastTone = 'success' | 'error' | 'info';
 
-const TONE: Record<
-  ToastTone,
-  { label: string; card: string; labelClass: string }
-> = {
-  success: {
-    label: 'Done',
-    card: 'border-success/30 bg-success/10',
-    labelClass: 'text-success',
-  },
-  error: {
-    label: 'Failed',
-    card: 'border-error/30 bg-error/10',
-    labelClass: 'text-error',
-  },
-  info: {
-    label: 'Note',
-    card: 'border-neutral-300 bg-neutral-50',
-    labelClass: 'text-neutral-700',
-  },
+const TONE: Record<ToastTone, { label: string; labelClass: string }> = {
+  success: { label: 'Done', labelClass: 'text-success' },
+  error: { label: 'Failed', labelClass: 'text-error' },
+  info: { label: 'Note', labelClass: 'text-charcoal' },
 };
 
 function ToastCard({
@@ -51,22 +38,10 @@ function ToastCard({
       data-tone={tone}
       role={tone === 'error' ? 'alert' : 'status'}
       aria-label={`${meta.label}. ${message}`}
-      className={cn(
-        'flex w-[min(24rem,calc(100vw-2rem))] items-start gap-3',
-        'rounded-[2px] border px-4 py-3',
-        'shadow-[0_12px_32px_rgba(16,24,32,0.14)]',
-        meta.card,
-      )}
+      className="flex w-[min(24rem,calc(100vw-2rem))] items-start gap-3 rounded-panel border border-neutral-200 bg-high-vis-white px-4 py-3 shadow-panel"
     >
       <div className="min-w-0 flex-1">
-        <p
-          className={cn(
-            'font-ui text-sm font-semibold uppercase tracking-[0.12em]',
-            meta.labelClass,
-          )}
-        >
-          {meta.label}
-        </p>
+        <p className={cn('font-ui text-base font-semibold', meta.labelClass)}>{meta.label}</p>
         <p className="mt-1 font-ui text-base text-charcoal">{message}</p>
       </div>
       <button
@@ -87,6 +62,7 @@ function show(tone: ToastTone, message: string) {
   return sonnerToast.custom((id) => <ToastCard id={id} tone={tone} message={message} />, {
     id: `${tone}:${message}`,
     duration: tone === 'error' ? 8000 : 4000,
+    unstyled: true,
   });
 }
 
@@ -129,7 +105,13 @@ export function Toaster({
       visibleToasts={3}
       offset={offset}
       mobileOffset={mobileOffset ?? offset}
-      toastOptions={{ duration: 4000 }}
+      toastOptions={{
+        unstyled: true,
+        duration: 4000,
+        classNames: {
+          toast: 'border-0 bg-transparent p-0 shadow-none',
+        },
+      }}
       containerAriaLabel="Notifications"
     />
   );

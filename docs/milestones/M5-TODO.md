@@ -2,7 +2,7 @@
 
 > **Starting a new session on the next admin page?** Quotes and the catalogue
 > editor are handed off. Read `docs/milestones/M5-QUOTES-HANDOVER.md` first
-> (section 7: orders then reports), then `docs/DASHBOARD-UI.md`, and
+> (section 7: `/users` then announcements), then `docs/DASHBOARD-UI.md`, and
 > `docs/DECISIONS.md` from D50 (D54, D88, D89). Do not reopen quotes, AppShell,
 > the charcoal band, or the catalogue editor.
 >
@@ -20,8 +20,8 @@ Items are added as they are discovered rather than remembered.
 Branch: `m5-quotes`, off `m5-dashboard` at `a6d784d` (`m5-dashboard` itself is
 off `m4-closeout` at `a5783b6`). Quotes (D, E), dashboard home figures (H) and
 the catalogue editor (F, G, D89, including create and photographs) are built
-as of 18 September. Next screens: orders (section K) then reports
-(section I). Users and announcements wait. M4's own tail (real phone QA walk,
+as of 18 September. Orders (K) and reports (I) have shipped. Next screens:
+users (section B) then announcements (section J). M4's own tail (real phone QA walk,
 first green Lighthouse PR run, ESLint once typescript-eslint supports TS 7)
 stays on `m4-closeout` and is not M5 work.
 
@@ -467,17 +467,20 @@ already sits in `ROUTE_RULES`; redirect it here. No sparkline tiles. No FAB.
       quote_submitted, plus whatsapp_click and call_click, per product and per
       category. Rates null when the denominator is zero. Metadata keys
       `product_id` / `product_slug` / `category_id` / `category_slug`
-- [x] Nairobi boundaries on both reports. Period: this month, last month, one
-      select on the Reports heading row, to the right of the title
-- [x] `/reports`: heading Reports, no lede. Period and Download PDF on the
+- [x] Nairobi boundaries on both reports. Period: this month, last month,
+      or Custom with start and end dates, one select on the Reports heading
+      row, to the right of the title. Custom is `?period=custom&from=&to=`
+- [x] `/reports`: heading Reports, no lede. Period and View PDF on the
       title row. Compact StatCards, 2 by 2 on a phone, four across from `lg`, for invoiced,
       collected, won and conversion. Tabs for Sales, Products and
       Categories. Bars plus `DataTable` on desktop, cards on a phone.
-      Sales review PDF at `/reports/pdf` for the selected period, not stored
-      in `documents`.
+      View PDF opens the sales review first. Review in the dialog is
+      View PDF opens the sales review first. Review in the dialog is
+      Overall or one salesperson. Download is `?download=1`.
+      Not stored in `documents`.
 - [x] Invoiced (confirmed or fulfilled) and collected (`payment_status = paid`)
       as two figures, D8. Same Nairobi month as the leaderboard
-- [~] Deeper reports: date range picker and trends stay **deferred**, recorded
+- [x] Custom date range on `/reports`. Trends stay **deferred**, recorded
       in `docs/PLAN.md`. Brown asked for a sales-review PDF download, which
       shipped on `/reports`.
 - [x] Tests: pgTAP for the functions and the admin-only read; Vitest for the

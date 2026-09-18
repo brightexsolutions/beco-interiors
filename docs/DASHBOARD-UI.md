@@ -56,7 +56,7 @@ matches that shape. The stored quote source `web` is labelled Website
 everywhere it is shown. Catalogue (`/products`) follows this: table on
 desktop, cards on a phone, charcoal FAB for New product. Reports use compact StatCards in a 2 by 2 grid on a phone and four across from `lg`, tabs for Sales, Products and
 Categories, bars, then the same table/card split with no Actions column and no FAB.
-Download PDF on the heading row is a real `/reports/pdf` file for the selected period.
+View PDF on the heading row opens the sales review in a dialog first, as canvas pages so a phone can read it. Zoom in, zoom out, and pinch, 100 to 200 percent. Review in that dialog is Overall (team: salespeople, products, ranges) or one salesperson. Download is `?download=1` for that same document. Same `/reports/pdf` file for the selected period, including a custom start and end date, not stored in `documents`.
 
 **Create** (`/quotes/new` is the reference): heading with Save on desktop.
 Work column is a `Panel` (Add from catalogue plus Custom item, line list or empty). Inspector rail

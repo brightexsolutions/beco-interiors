@@ -34,8 +34,11 @@ describe('toast', () => {
     expect(card).toHaveTextContent(/^Done/);
     expect(card).toHaveTextContent('This quote is now yours.');
     expect(card).toHaveAttribute('data-tone', 'success');
-    expect(card.className).toContain('bg-success/10');
+    expect(card.className).toContain('bg-high-vis-white');
+    expect(card.className).toContain('rounded-panel');
+    expect(card.className).not.toMatch(/bg-success/);
     expect(card.className).not.toContain('warm-red');
+    expect(screen.getByText('Done').className).toContain('text-success');
   });
 
   it('error is labelled Failed, announced as an alert, from the functional error token', async () => {
@@ -48,7 +51,8 @@ describe('toast', () => {
     expect(card).toHaveTextContent(/^Failed/);
     expect(card).toHaveTextContent(/reload and try again/i);
     expect(card).toHaveAttribute('data-tone', 'error');
-    expect(card.className).toContain('bg-error/10');
+    expect(card.className).toContain('bg-high-vis-white');
+    expect(card.className).not.toMatch(/bg-error/);
     expect(screen.getByText('Failed').className).toContain('text-error');
   });
 
@@ -59,6 +63,7 @@ describe('toast', () => {
     const card = await screen.findByRole('status');
     expect(card).toHaveTextContent(/^Note/);
     expect(card).toHaveAttribute('data-tone', 'info');
+    expect(card.className).toContain('bg-high-vis-white');
     expect(card).toHaveTextContent(/whatsapp/i);
   });
 
@@ -87,8 +92,18 @@ describe('toast', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 
-  it('dashboard placement is below the chrome and centered on the panel', () => {
-    render(<Toaster position="top-center" offset={{ top: '6.5rem' }} />);
+  it('dashboard placement is below the chrome and centered on the panel', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Toaster position="top-center" offset={{ top: '8.5rem' }} />
+        <button type="button" onClick={() => toast.success('Item updated.')}>
+          Fire
+        </button>
+      </>,
+    );
+    await user.click(screen.getByRole('button', { name: 'Fire' }));
+    await screen.findByRole('status');
     const toaster = document.querySelector('[data-sonner-toaster]');
     expect(toaster).toHaveAttribute('data-x-position', 'center');
     expect(toaster).toHaveAttribute('data-y-position', 'top');

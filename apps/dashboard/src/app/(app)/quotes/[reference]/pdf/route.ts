@@ -10,8 +10,8 @@ const pdfHeaders = (filename: string, download: boolean) => ({
   'Content-Disposition': `${download ? 'attachment' : 'inline'}; filename="${filename}"`,
   'Cache-Control': 'private, no-store',
   'X-Robots-Tag': 'noindex, nofollow',
-  // Same-origin preview only. The global dashboard CSP uses frame-ancestors
-  // none, which would otherwise blank the iframe.
+  // Preview fetches these bytes and paints them. Keep the document itself
+  // from being framed anywhere else.
   'Content-Security-Policy': "default-src 'none'; frame-ancestors 'self'",
   'X-Frame-Options': 'SAMEORIGIN',
 });

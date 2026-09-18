@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PageHeading } from '@/components/page-heading';
 import { ReportFilters } from '@/components/report-filters';
 import { ReportResults } from '@/components/report-results';
-import { fetchConversionReport, fetchLeaderboard, parsePeriod } from '@/lib/reports';
+import { fetchConversionReport, fetchLeaderboard, parseReportQuery } from '@/lib/reports';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -17,12 +17,12 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<Search> }) {
   await requirePath('/reports');
   const params = await searchParams;
-  const period = parsePeriod(one(params.period));
+  const query = parseReportQuery(one(params.period), one(params.from), one(params.to));
 
   const supabase = await getSupabase();
   const [leaderboard, conversion] = await Promise.all([
-    fetchLeaderboard(supabase, period),
-    fetchConversionReport(supabase, period),
+    fetchLeaderboard(supabase, query),
+    fetchConversionReport(supabase, query),
   ]);
 
   return (
@@ -30,7 +30,11 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       <PageHeading
         eyebrow="Sales"
         title="Reports"
-        actions={<ReportFilters />}
+        actions={
+          <ReportFilters
+            people={leaderboard.people.map((row) => ({ id: row.id, name: row.full_name }))}
+          />
+        }
       />
       <ReportResults leaderboard={leaderboard} conversion={conversion} />
     </>

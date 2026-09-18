@@ -21,8 +21,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Toaster
           position="top-center"
-          offset={{ top: '6.5rem' }}
-          mobileOffset={{ top: '5rem', left: '1rem', right: '1rem' }}
+          offset={{ top: '8.5rem' }}
+          mobileOffset={{ top: '7.5rem', left: '1rem', right: '1rem' }}
         />
       </body>
     </html>

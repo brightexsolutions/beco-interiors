@@ -8,3 +8,4 @@ export * from './money';
 export * from './dashboard-quote';
 export * from './dashboard-product';
 export * from './dashboard-order';
+export * from './dashboard-report';

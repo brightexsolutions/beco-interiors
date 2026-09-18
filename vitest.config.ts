@@ -57,7 +57,7 @@ export default defineConfig({
           include: ['apps/dashboard/**/*.test.tsx', 'apps/dashboard/**/*.test.ts'],
           exclude: ['**/*.integration.test.ts', '**/node_modules/**'],
           environment: 'jsdom',
-          setupFiles: ['./vitest.setup.ts'],
+          setupFiles: ['./vitest.setup.ts', './apps/dashboard/vitest.setup.ts'],
         },
         oxc: { jsx: { runtime: 'automatic' } },
         resolve: {

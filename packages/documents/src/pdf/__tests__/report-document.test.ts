@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { catalogueCopy, categoryCopy, renderReportPdf, summaryCopy } from '../render';
+import { catalogueCopy, categoryCopy, personCopy, renderReportPdf, summaryCopy } from '../render';
 import type { ReportPdfInput } from '../types';
 
 const base = (over: Partial<ReportPdfInput> = {}): ReportPdfInput => ({
   period: 'This month',
   generatedAt: '2026-09-18T10:00:00.000Z',
+  person: null,
   invoiced: 100000,
   collected: 40000,
   raised: 4,
   won: 2,
   conversion: 50,
   people: [
-    { name: 'Sam Odhiambo', raised: 4, won: 2, wonValue: 80000, conversion: 66.7 },
+    { name: 'Sam Odhiambo', raised: 4, won: 2, lost: 1, wonValue: 80000, conversion: 66.7, orders: 1 },
   ],
   products: [
     {
@@ -61,7 +62,7 @@ describe('report copy', () => {
       won: 0,
       conversion: null,
     });
-    expect(summaryCopy(empty)).toContain('No quotes were raised');
+    expect(summaryCopy(empty)).toContain('No quotes were raised overall');
     expect(catalogueCopy(empty)).toBe('The storefront recorded no product events in this period.');
     expect(categoryCopy(empty)).toBe('Nothing to group by range in this period.');
   });
@@ -72,11 +73,22 @@ describe('renderReportPdf', () => {
     const pdf = await renderReportPdf(base());
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
     const asText = pdf.toString('latin1');
-    expect(asText).toContain('Sales performance report, This month');
+    expect(asText).toContain('Overall sales review, This month');
     expect(asText).toContain('Beco Interiors Limited');
     expect(asText).toContain('TitilliumWeb');
     expect(asText).toContain('CormorantGaramond');
     expect(asText).not.toContain('Quotation');
+  });
+
+  it('a salesperson review is a memo, not the overall report', async () => {
+    const copy = personCopy(base({ person: 'Sam Odhiambo', raised: 4, won: 2 }));
+    expect(copy).toContain('Sam Odhiambo raised 4 quotes in this month and won 2');
+    expect(copy).toContain('1 was lost');
+    expect(copy).not.toContain('the team raised');
+    const pdf = await renderReportPdf(base({ person: 'Sam Odhiambo' }));
+    const asText = pdf.toString('latin1');
+    expect(asText).toContain('Salesperson review, Sam Odhiambo, This month');
+    expect(asText).not.toContain('Overall sales review, This month');
   });
 
   it('uses no em dashes', async () => {

@@ -32,6 +32,7 @@ describe('report helpers', () => {
   it('treats an unknown period as this month', () => {
     expect(parsePeriod(undefined)).toBe('this_month');
     expect(parsePeriod('last_month')).toBe('last_month');
+    expect(parsePeriod('custom')).toBe('custom');
   });
 
   it('prints a dash when a rate has no denominator', () => {

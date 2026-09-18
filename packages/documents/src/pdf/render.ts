@@ -28,4 +28,4 @@ export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
   return Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
 }
 
-export { summaryCopy, catalogueCopy, categoryCopy } from './report-document';
+export { summaryCopy, personCopy, catalogueCopy, categoryCopy } from './report-document';

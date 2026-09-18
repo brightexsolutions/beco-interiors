@@ -13,7 +13,7 @@ export { sendQuoteConfirmation, sendPricedQuote, sendReceipt } from './email/sen
 export type { SendResult } from './email/send';
 export { renderQuotePdf, renderReceiptPdf, renderReportPdf } from './pdf/render';
 export { QuoteDocument } from './pdf/quote-document';
-export { ReportDocument, summaryCopy, catalogueCopy, categoryCopy } from './pdf/report-document';
+export { ReportDocument, summaryCopy, personCopy, catalogueCopy, categoryCopy } from './pdf/report-document';
 export type {
   QuotePdfInput,
   QuotePdfLine,

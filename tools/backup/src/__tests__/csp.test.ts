@@ -89,6 +89,10 @@ describe('dashboard specifically', () => {
     expect(code).not.toContain('googletagmanager');
     expect(code).not.toContain('google-analytics');
   });
+
+  it('allows a same-origin pdf.js worker for canvas PDF preview', () => {
+    expect(src).toContain("worker-src 'self'");
+  });
 });
 
 describe('media', () => {

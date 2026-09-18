@@ -84,6 +84,9 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `20_product_stock.test.sql` | `stock_quantity` and `low_stock_threshold` cannot go negative. Half units for `per slab` only, whole otherwise, zero is allowed. `beco_product_manager` and `beco_admin` write stock; `beco_sales`, `beco_editor` and anon cannot (RLS filters the UPDATE). A stock write is audited as `entity_type = products`. 16 tests. Migration 39 |
 | `21_convert_quote_to_order.test.sql` | Line prices copy, including a discount. Second convert refused. Sales converts own only. Confirm, cannot go back to pending. Mark paid writes `paid_at` and does not decrement stock. Admin convert still attributes to the quote owner. Product manager and anon cannot execute. Cancelled cannot be marked paid. 23 tests. Migration 40 |
 | `22_order_reports.test.sql` | Nairobi this-month leaderboard: raised, won, conversion. Product views and view-to-cart. Category WhatsApp. A role that cannot read `analytics_events` sees empty conversion rows. 8 tests. Migration 41 |
+| `23_person_sales_review.test.sql` | Per-person invoiced and collected are that salesperson, not the team. Team invoiced still sums. Uses a custom range so live this-month orders cannot leak in. 3 tests. Migration 42 |
+| `24_report_custom_range.test.sql` | Custom start and end dates include a quote inside the window and exclude one outside it. Inverted dates fall back to this month. Conversion uses the same bounds. 5 tests. Migration 43 |
+| `25_refresh_order_money.test.sql` | A priced line writes the quote header. An unpriced line does not zero priced ones. Convert copies line money, not a stale 0. Reports invoiced follows the confirmed order. 6 tests. Migration 44 |
 
 ## Storefront
 
@@ -123,7 +126,8 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Quotes query | `lib/quotes.integration.test.ts` | Against the real database with real signed-in sessions, not a mock: a salesperson's `mine` and `unassigned` filters return exactly the right rows, an admin's `all` sees everyone's (D87's read policy), search narrows to a match, a comma in a search term cannot reshape the filter into an `or` clause, `value`/`isPriced` are computed from the real `quote_items`, not a stored total. 6 tests |
 | `QuoteFilters` | `components/__tests__/quote-filters.test.tsx` | Status, owner and search each push into the URL, so the result set actually changes; clearing a filter removes the param rather than setting it empty; search is debounced, not fired on every keystroke; the owner control hides itself when there is only one option; axe clean |
 | `QuoteLines` | `components/__tests__/quote-lines.test.tsx` | One Save on the heading writes dirty lines through `updateQuoteLines`. Unsaved + Changed appear when qty or price change. Add from catalogue opens a dialog, multi-select submits `addCatalogueLines`. Custom form is present. Read-only hides the picker. Axe clean |
-| `QuoteDocumentPanel` | `components/__tests__/quote-document-panel.test.tsx` | View opens the dialog, loads the PDF blob, Download is a real file link, Email is a real form. Dirty quantities are written through `updateQuoteLines` before the PDF fetch. Axe clean |
+| `PdfPreview` | `components/__tests__/pdf-preview.test.tsx` | Fetches the file, paints page 1 as a canvas, never an iframe. HTTP and parse errors show a Notice. Unmount after load does not throw. Zoom in widens, Zoom out disabled at 100 percent, Zoom in disabled at 200 percent. Axe while loading |
+| `QuoteDocumentPanel` | `components/__tests__/quote-document-panel.test.tsx` | View opens the dialog, `PdfPreview` loads the PDF, Download is a real file link, Email is a real form. Dirty quantities are written through `updateQuoteLines` before the PDF fetch. Axe clean |
 | `CataloguePicker` | `components/__tests__/catalogue-picker.test.tsx` | Button opens a dialog. Search is focused. Range select lists Hardware and Lighting, not only stone. Multi-select, Add disabled until a tick, filter by typing, disabled reason shown. Axe clean |
 | Catalogue search helpers | `lib/__tests__/catalogue-search.test.ts` | Ranges split into ungrouped pillars and Drive folders under Hardware. Hits group by category so handles are not dumped under stone |
 | `QuoteActions` | `components/__tests__/quote-actions.test.tsx` | Claim, Quoted, Mark lost ConfirmDialog, Approve gated, Assign on select change, Reopen ConfirmDialog on lost, Convert to order ConfirmDialog on won, View order once converted, axe |
@@ -134,15 +138,16 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `OrderActions` | `components/__tests__/order-actions.test.tsx` | Confirm on pending, Fulfil on confirmed, Mark paid and Cancel order ConfirmDialogs named for the order. Axe |
 | `OrderDates` | `components/__tests__/order-dates.test.tsx` | Raised only until later stamps. Paid does not imply fulfilled. Axe |
 | `OrderLines` | `components/__tests__/order-lines.test.tsx` | Catalogue strike sits on the item, not on the line total. Totals show once priced. POA otherwise. Axe |
-| `OrderDocumentPanel` | `components/__tests__/order-document-panel.test.tsx` | Renders nothing until paid. View receipt opens the PDF, Email form, Download is a real file link. Empty address still offers Email. Axe |
+| `OrderDocumentPanel` | `components/__tests__/order-document-panel.test.tsx` | Renders nothing until paid. View receipt opens `PdfPreview`, Email form, Download is a real file link. Empty address still offers Email. Axe |
 | Order mutations | `app/(app)/orders/__tests__/actions.test.ts` | Session re-check on convert. Stale lock sentence. Mark paid goes through `mark_order_paid`. Receipt email refused until paid, then `sendReceipt` |
 | Order PDF helper | `lib/__tests__/order-pdf.test.ts` | Download uploads bytes and writes a `documents` row typed receipt |
 | Order PDF route | `app/(app)/orders/[reference]/pdf/__tests__/route.test.ts` | 409 until paid. Preview is inline. `?download=1` stores the file |
-| `ReportFilters` / `ReportResults` | `components/__tests__/report-results.test.tsx` | Period writes the URL and sits on the Reports title row. Invoiced and collected are two StatCards, 2 by 2 on a phone. Tabs switch Sales / Products / Categories and write `?view=`. Empty states stay on the active view. Axe |
+| `ReportFilters` / `ReportResults` | `components/__tests__/report-results.test.tsx` | Period writes the URL and sits on the Reports title row. Custom writes `from` and `to`. View PDF opens a dialog and `PdfPreview` fetches the live document. Review is Overall or one salesperson. Download is `?download=1`. Invoiced and collected are two StatCards, 2 by 2 on a phone. Tabs switch Sales / Products / Categories and write `?view=`. Empty states stay on the active view. Axe |
 | `ReportBars` | `components/__tests__/report-bars.test.tsx` | Leader fill is charcoal. Values can be formatted |
-| Report helpers | `lib/__tests__/reports.test.ts` | `parseView`, team conversion, funnel totals |
-| Report PDF helper | `lib/__tests__/report-pdf.test.ts` | Filename carries the period. Input copies on-screen figures |
-| Report PDF route | `app/(app)/reports/pdf/__tests__/route.test.ts` | Attachment. Period from the query. 500 on render failure. No `documents` row |
+| Report helpers | `lib/__tests__/reports.test.ts` | `parseView`, `parsePersonId`, `parseReportQuery`, team conversion, funnel totals |
+| Report PDF helper | `lib/__tests__/report-pdf.test.ts` | Filename carries the period, and the name on an individual review. Input copies on-screen figures or one person |
+| Report PDF route | `app/(app)/reports/pdf/__tests__/route.test.ts` | Preview is inline. `?download=1` is an attachment. Person review is named. Unknown person 404. Bad person 400. Period from the query, including custom `from`/`to`. Inverted custom 400. 500 on render failure. No `documents` row |
+| `@beco/validation` report range | `packages/validation/src/__tests__/dashboard-report.test.ts` | Named months need no dates. Custom needs both. Inverted and over-year ranges refused |
 | `@beco/validation` order schemas | `packages/validation/src/__tests__/dashboard-order.test.ts` | Forward statuses, unknown status refused, convert needs the quote lock, receipt email needs an address |
 | Quote mutations | `app/(app)/quotes/__tests__/actions.test.ts` | Session re-check, stale lock sentence, lost-reason before the RPC, counter path refuses `web`, catalogue add goes through `add_catalogue_quote_line`, batch add through `add_catalogue_quote_lines`, reopen goes through `reopen_quote` |
 | Quote PDF helper | `lib/__tests__/quote-pdf.test.ts` | Download uploads bytes and writes a `documents` row. Preview does not |
@@ -193,7 +198,7 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `useScrollLock` | `lib/__tests__/use-scroll-lock.test.tsx` | Locks html and body. Cancels a wheel on the page. Allows a wheel inside a panel scroller |
 | `Fab` | Labelled charcoal pill, `fabClasses` for genuine links. 5 tests |
 | `Panel` `Pagination` `Skeleton` `BackLink` `EmptyState` | Shape of list / create / loading screens. Pagination hidden on one page |
-| `toast()` | Done / Failed / Note. `useActionToast` for `{ ok }` / `{ error }` |
+| `toast()` | Done / Failed / Note on an opaque white panel. `useActionToast` for `{ ok }` / `{ error }` |
 
 ## Shared packages
 

@@ -3,8 +3,9 @@ import { logoPath } from './fonts';
 import type { ReportPdfFunnelRow, ReportPdfInput, ReportPdfPerson } from './types';
 
 /**
- * A written sales performance report, not a printout of the dashboard.
- * Same fonts and palette as the quote. No KPI tiles, no tab chrome.
+ * Two documents, not one with a filter. Overall is the team performance
+ * report: summary, salesperson table, catalogue, ranges. A salesperson
+ * review is a memo for one person: their quotes and their orders.
  */
 
 const CHARCOAL = '#101820';
@@ -18,10 +19,22 @@ export const kes = (n: number) =>
 export const rate = (value: number | null) => (value == null ? 'n/a' : `${value}%`);
 
 export function summaryCopy(report: ReportPdfInput): string {
+  if (report.person) return personCopy(report);
   if (report.raised === 0) {
-    return `No quotes were raised in ${report.period.toLowerCase()}. Invoiced ${kes(report.invoiced)}. Collected ${kes(report.collected)}.`;
+    return `No quotes were raised overall in ${report.period.toLowerCase()}. Invoiced ${kes(report.invoiced)}. Collected ${kes(report.collected)}.`;
   }
   return `In ${report.period.toLowerCase()} the team raised ${report.raised} quotes and won ${report.won}, a conversion of ${rate(report.conversion)}. Invoiced ${kes(report.invoiced)}. Collected ${kes(report.collected)}.`;
+}
+
+export function personCopy(report: ReportPdfInput): string {
+  const name = report.person ?? 'This salesperson';
+  const row = report.people[0];
+  if (report.raised === 0) {
+    return `${name} raised no quotes in ${report.period.toLowerCase()}. Invoiced ${kes(report.invoiced)}. Collected ${kes(report.collected)}.`;
+  }
+  const lost = row?.lost ?? 0;
+  const lostBit = lost === 0 ? 'None were lost.' : `${lost} ${lost === 1 ? 'was' : 'were'} lost.`;
+  return `${name} raised ${report.raised} quotes in ${report.period.toLowerCase()} and won ${report.won} (${kes(row?.wonValue ?? 0)}). ${lostBit} Invoiced ${kes(report.invoiced)}. Collected ${kes(report.collected)}.`;
 }
 
 export function catalogueCopy(report: ReportPdfInput): string {
@@ -60,6 +73,7 @@ const styles = StyleSheet.create({
   },
   logo: { width: 36, height: 36 },
   brand: { fontFamily: 'Cormorant', fontSize: 18, fontWeight: 500, color: CHARCOAL },
+  personName: { fontFamily: 'Cormorant', fontSize: 22, fontWeight: 500, color: CHARCOAL },
   eyebrow: {
     fontSize: 8,
     fontWeight: 600,
@@ -75,6 +89,8 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: 'Cormorant', fontSize: 14, fontWeight: 500, marginBottom: 8 },
   body: { fontSize: 10, lineHeight: 1.5 },
   totals: { marginBottom: 12, width: 260 },
+  columns: { flexDirection: 'row', gap: 28, marginBottom: 16 },
+  column: { width: 240 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   totalLabel: { color: MUTED },
   grand: {
@@ -124,28 +140,52 @@ const nairobiDay = (iso: string) =>
     timeZone: 'Africa/Nairobi',
   });
 
-function Totals({ report }: { report: ReportPdfInput }) {
+function Line({ label, value }: { label: string; value: string | number }) {
+  return (
+    <View style={styles.totalRow}>
+      <Text style={styles.totalLabel}>{label}</Text>
+      <Text>{value}</Text>
+    </View>
+  );
+}
+
+function OverallTotals({ report }: { report: ReportPdfInput }) {
   return (
     <View style={styles.totals} wrap={false}>
-      <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Invoiced</Text>
-        <Text>{kes(report.invoiced)}</Text>
-      </View>
-      <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Collected</Text>
-        <Text>{kes(report.collected)}</Text>
-      </View>
-      <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Quotes raised</Text>
-        <Text>{report.raised}</Text>
-      </View>
-      <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Quotes won</Text>
-        <Text>{report.won}</Text>
-      </View>
+      <Line label="Invoiced" value={kes(report.invoiced)} />
+      <Line label="Collected" value={kes(report.collected)} />
+      <Line label="Quotes raised" value={report.raised} />
+      <Line label="Quotes won" value={report.won} />
       <View style={styles.grand}>
         <Text style={styles.grandLabel}>Conversion</Text>
         <Text style={styles.grandLabel}>{rate(report.conversion)}</Text>
+      </View>
+    </View>
+  );
+}
+
+function PersonActivity({ report, row }: { report: ReportPdfInput; row: ReportPdfPerson | undefined }) {
+  return (
+    <View style={styles.columns} wrap={false}>
+      <View style={styles.column}>
+        <Text style={styles.sectionTitle}>Quotes</Text>
+        <Line label="Raised" value={report.raised} />
+        <Line label="Won" value={report.won} />
+        <Line label="Lost" value={row?.lost ?? 0} />
+        <Line label="Won value" value={kes(row?.wonValue ?? 0)} />
+        <View style={styles.grand}>
+          <Text style={styles.grandLabel}>Conversion</Text>
+          <Text style={styles.grandLabel}>{rate(report.conversion)}</Text>
+        </View>
+      </View>
+      <View style={styles.column}>
+        <Text style={styles.sectionTitle}>Orders</Text>
+        <Line label="Placed" value={row?.orders ?? 0} />
+        <Line label="Invoiced" value={kes(report.invoiced)} />
+        <View style={styles.grand}>
+          <Text style={styles.grandLabel}>Collected</Text>
+          <Text style={styles.grandLabel}>{kes(report.collected)}</Text>
+        </View>
       </View>
     </View>
   );
@@ -201,41 +241,61 @@ function FunnelTable({ rows }: { rows: ReportPdfFunnelRow[] }) {
   );
 }
 
-export function ReportDocument({ report }: { report: ReportPdfInput }) {
+function Chrome({
+  report,
+  kind,
+  heading,
+}: {
+  report: ReportPdfInput;
+  kind: string;
+  heading: string;
+}) {
   const generated = nairobiDay(report.generatedAt);
+  return (
+    <View style={styles.header} fixed>
+      <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+        <Image src={logoPath} style={styles.logo} />
+        <View>
+          <Text style={styles.eyebrow}>Beco Interiors Limited</Text>
+          <Text style={kind === 'person' ? styles.personName : styles.brand}>{heading}</Text>
+        </View>
+      </View>
+      <View>
+        <Text style={styles.period}>{kind === 'person' ? 'Salesperson review' : report.period}</Text>
+        <Text style={styles.issued}>{kind === 'person' ? report.period : `Prepared ${generated}`}</Text>
+        {kind === 'person' ? <Text style={styles.issued}>Prepared {generated}</Text> : null}
+      </View>
+    </View>
+  );
+}
 
+function Footer() {
+  return (
+    <View style={styles.footer} fixed>
+      <Text>Beco Interiors Limited. Internal use.</Text>
+      <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+    </View>
+  );
+}
+
+function OverallReview({ report }: { report: ReportPdfInput }) {
   return (
     <Document
-      title={`Sales performance report, ${report.period}`}
+      title={`Overall sales review, ${report.period}`}
       author="Beco Interiors Limited"
       subject={summaryCopy(report)}
     >
       <Page size="A4" style={styles.page} wrap>
-        <View style={styles.header} fixed>
-          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-            <Image src={logoPath} style={styles.logo} />
-            <View>
-              <Text style={styles.eyebrow}>Beco Interiors Limited</Text>
-              <Text style={styles.brand}>Sales performance report</Text>
-            </View>
-          </View>
-          <View>
-            <Text style={styles.period}>{report.period}</Text>
-            <Text style={styles.issued}>Prepared {generated}</Text>
-          </View>
-        </View>
-
+        <Chrome report={report} kind="overall" heading="Overall sales review" />
         <Text style={styles.intro}>
-          Internal sales review for the Nairobi calendar month. Not a customer document.
+          Internal overall sales review for the Nairobi calendar month. Not a customer document.
           Dates and totals use Africa/Nairobi.
         </Text>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Summary</Text>
-          <Totals report={report} />
+          <OverallTotals report={report} />
           <Text style={styles.body}>{summaryCopy(report)}</Text>
         </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Salesperson results</Text>
           {report.people.length === 0 ? (
@@ -244,24 +304,47 @@ export function ReportDocument({ report }: { report: ReportPdfInput }) {
             <PeopleTable people={report.people} />
           )}
         </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Catalogue interest</Text>
           <Text style={styles.body}>{catalogueCopy(report)}</Text>
           {report.products.length > 0 ? <FunnelTable rows={report.products} /> : null}
         </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Range interest</Text>
           <Text style={styles.body}>{categoryCopy(report)}</Text>
           {report.categories.length > 0 ? <FunnelTable rows={report.categories} /> : null}
         </View>
-
-        <View style={styles.footer} fixed>
-          <Text>Beco Interiors Limited. Internal use.</Text>
-          <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
-        </View>
+        <Footer />
       </Page>
     </Document>
   );
+}
+
+function PersonReview({ report }: { report: ReportPdfInput }) {
+  const row = report.people[0];
+  return (
+    <Document
+      title={`Salesperson review, ${report.person}, ${report.period}`}
+      author="Beco Interiors Limited"
+      subject={personCopy(report)}
+    >
+      <Page size="A4" style={styles.page} wrap>
+        <Chrome report={report} kind="person" heading={report.person ?? 'Salesperson'} />
+        <Text style={styles.intro}>
+          One salesperson. Not the overall sales review. Nairobi calendar month. Dates and totals
+          use Africa/Nairobi.
+        </Text>
+        <PersonActivity report={report} row={row} />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Record</Text>
+          <Text style={styles.body}>{personCopy(report)}</Text>
+        </View>
+        <Footer />
+      </Page>
+    </Document>
+  );
+}
+
+export function ReportDocument({ report }: { report: ReportPdfInput }) {
+  return report.person ? <PersonReview report={report} /> : <OverallReview report={report} />;
 }

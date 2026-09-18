@@ -9,7 +9,8 @@ the next agent needs to start cold.
 
 **State, 18 September 2026:** quotes, catalogue editor, `/orders` and
 `/reports` are on branch `m5-quotes`, off `m5-dashboard` at `a6d784d`.
-`/stock` redirects to `/products`. Receipt PDF ships with orders. Live
+`/stock` redirects to `/products`. Receipt PDF ships with orders. Quote,
+receipt and report PDFs preview as canvas pages with zoom. Live
 beco.co.ke is still WordPress; that is expected until the storefront
 launches.
 
@@ -159,13 +160,23 @@ Pattern for later list / create / detail screens: `docs/DASHBOARD-UI.md`.
 `/orders` and `/reports` landed 18 September (M5 sections K and I). Receipt
 PDF and email ride paid orders. Reports: compact StatCards in a 2 by 2
 grid on a phone, tabs for Sales / Products / Categories, a written sales
-performance PDF at `/reports/pdf`. Date range picker and trends stay
-deferred. The breadcrumb docks after the white header scrolls away, on a
-phone and on desktop. Realtime is still section L: do not block the next
-screen on it.
+performance PDF at `/reports/pdf`, previewed in a dialog before download,
+for the team (Overall) or one salesperson. Custom start and end dates
+shipped (`?period=custom&from=&to=`). Trends stay deferred. Quote, receipt
+and report previews paint onto canvas (`PdfPreview`), with zoom in, zoom
+out and pinch, because iPhone Safari blanks a PDF in an iframe. The
+breadcrumb docks after the white header scrolls away, on a phone and on
+desktop. Realtime is still section L: do not block the next screen on it.
+
+Quote header money is refreshed from priced lines (migration 44). Convert
+copies that onto the order. Do not reopen that unless Brown asks.
 
 Convert lives on a won quote detail (`QuoteActions`). That is the only
 quote-surface write from this pass. Do not restyle quotes to change it.
+
+**Leave for later, not for `/users`:** installation and delivery lines are
+still VAT-inclusive in the quote UI (D50 is products only). `top-nav.tsx`
+has a known hydration warning from locale dates.
 
 **Next:** `/users` then announcements. Do not reopen orders, reports,
 quotes, AppShell, the charcoal band or `/products` unless Brown asks.

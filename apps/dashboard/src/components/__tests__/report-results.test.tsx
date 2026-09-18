@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { ConversionReport, LeaderboardReport } from '@/lib/reports';
@@ -20,13 +20,19 @@ beforeEach(() => {
   params = new URLSearchParams();
 });
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+const SAM = 'd5c0ffee-0000-4000-8000-000000000002';
+
 const leaderboard: LeaderboardReport = {
   period: 'This month',
   invoiced: 100000,
   collected: 40000,
   people: [
     {
-      id: 'sales-1',
+      id: SAM,
       full_name: 'Sam Odhiambo',
       raised: 4,
       won: 2,
@@ -35,6 +41,8 @@ const leaderboard: LeaderboardReport = {
       conversion: 66.7,
       orders: 1,
       order_value: 40000,
+      invoiced: 40000,
+      collected: 20000,
     },
   ],
 };
@@ -78,27 +86,140 @@ describe('ReportFilters', () => {
     expect(push).toHaveBeenCalledWith('/reports?period=last_month');
   });
 
+  it('Custom writes start and end dates into the URL', async () => {
+    const user = userEvent.setup();
+    render(<ReportFilters />);
+    expect(screen.queryByLabelText('Start date')).toBeNull();
+    await user.selectOptions(screen.getByLabelText('Filter by period'), 'custom');
+    const href = String(push.mock.calls[0]?.[0]);
+    expect(href).toMatch(/^\/reports\?period=custom&from=\d{4}-\d{2}-\d{2}&to=\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('changing a custom date rewrites from and to', () => {
+    params = new URLSearchParams('period=custom&from=2026-09-01&to=2026-09-18');
+    render(<ReportFilters />);
+    expect(screen.getByLabelText('Start date')).toHaveValue('2026-09-01');
+    expect(screen.getByLabelText('End date')).toHaveValue('2026-09-18');
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-09-10' } });
+    expect(push).toHaveBeenCalledWith('/reports?period=custom&from=2026-09-10&to=2026-09-18');
+  });
+
+  it('leaving Custom drops the dates from the URL', async () => {
+    params = new URLSearchParams('period=custom&from=2026-09-01&to=2026-09-18');
+    const user = userEvent.setup();
+    render(<ReportFilters />);
+    await user.selectOptions(screen.getByLabelText('Filter by period'), 'last_month');
+    expect(push).toHaveBeenCalledWith('/reports?period=last_month');
+  });
+
   it('sits on one row, label then select, so it can live in the heading', () => {
     const { container } = render(<ReportFilters />);
     expect(container.firstChild).toHaveClass('flex', 'items-center');
     expect(container.firstChild).not.toHaveClass('grid');
   });
 
-  it('Download is a real file link for the current period', () => {
+  it('View opens the document first, and Download is a real file link', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 })),
+    );
+    const user = userEvent.setup();
     render(<ReportFilters />);
-    expect(screen.getByRole('link', { name: 'Download sales review PDF' })).toHaveAttribute(
-      'href',
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'View sales review PDF' }));
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('Overall sales review, This month');
+    expect(
+      await screen.findByRole('img', { name: 'Overall sales review, This month PDF, page 1 of 1' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTitle('Overall sales review, This month PDF')).toBeNull();
+    expect(fetch).toHaveBeenCalledWith(
       '/reports/pdf',
+      expect.objectContaining({ credentials: 'same-origin', cache: 'no-store' }),
+    );
+    expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute('href', '/reports/pdf?download=1');
+    expect(screen.getByLabelText('Review overall or one salesperson')).toHaveValue('');
+  });
+
+  it('an individual review fetches that salesperson and names them on the dialog', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 })),
+    );
+    const user = userEvent.setup();
+    render(<ReportFilters people={[{ id: SAM, name: 'Sam Odhiambo' }]} />);
+    await user.click(screen.getByRole('button', { name: 'View sales review PDF' }));
+    await user.selectOptions(screen.getByLabelText('Review overall or one salesperson'), SAM);
+    expect(push).toHaveBeenCalledWith(`/reports?person=${SAM}`);
+  });
+
+  it('keeps last month on the preview fetch and the download link', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 })),
+    );
+    params = new URLSearchParams('period=last_month');
+    const user = userEvent.setup();
+    render(<ReportFilters />);
+    await user.click(screen.getByRole('button', { name: 'View sales review PDF' }));
+    expect(fetch).toHaveBeenCalledWith(
+      '/reports/pdf?period=last_month',
+      expect.objectContaining({ credentials: 'same-origin', cache: 'no-store' }),
+    );
+    expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(
+      'href',
+      '/reports/pdf?period=last_month&download=1',
     );
   });
 
-  it('keeps last month on the PDF link', () => {
-    params = new URLSearchParams('period=last_month');
-    render(<ReportFilters />);
-    expect(screen.getByRole('link', { name: 'Download sales review PDF' })).toHaveAttribute(
-      'href',
-      '/reports/pdf?period=last_month',
+  it('keeps custom dates on the preview fetch and the download link', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 })),
     );
+    params = new URLSearchParams('period=custom&from=2026-09-01&to=2026-09-18');
+    const user = userEvent.setup();
+    render(<ReportFilters />);
+    await user.click(screen.getByRole('button', { name: 'View sales review PDF' }));
+    expect(fetch).toHaveBeenCalledWith(
+      '/reports/pdf?period=custom&from=2026-09-01&to=2026-09-18',
+      expect.objectContaining({ credentials: 'same-origin', cache: 'no-store' }),
+    );
+    expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(
+      'href',
+      '/reports/pdf?period=custom&from=2026-09-01&to=2026-09-18&download=1',
+    );
+    expect(screen.getByRole('dialog')).toHaveAccessibleName(
+      'Overall sales review, 1 Sep 2026 to 18 Sep 2026',
+    );
+  });
+
+  it('opens an individual review from the URL', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 })),
+    );
+    params = new URLSearchParams(`person=${SAM}`);
+    const user = userEvent.setup();
+    render(<ReportFilters people={[{ id: SAM, name: 'Sam Odhiambo' }]} />);
+    await user.click(screen.getByRole('button', { name: 'View sales review PDF' }));
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('Salesperson review, Sam Odhiambo, This month');
+    expect(fetch).toHaveBeenCalledWith(
+      `/reports/pdf?person=${SAM}`,
+      expect.objectContaining({ credentials: 'same-origin', cache: 'no-store' }),
+    );
+    expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(
+      'href',
+      `/reports/pdf?person=${SAM}&download=1`,
+    );
+  });
+
+  it('shows the error when the PDF cannot be opened, rather than a blank frame', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('Could not render the PDF', { status: 500 })));
+    const user = userEvent.setup();
+    render(<ReportFilters />);
+    await user.click(screen.getByRole('button', { name: 'View sales review PDF' }));
+    expect(await screen.findByText(/could not render the pdf/i)).toBeInTheDocument();
+    expect(screen.queryByTitle('Overall sales review, This month PDF')).toBeNull();
   });
 
   it('renders on the title row when passed as a heading action', () => {

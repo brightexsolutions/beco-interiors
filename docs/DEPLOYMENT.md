@@ -571,7 +571,8 @@ The brief requires the CSP be written explicitly rather than left permissive. St
 `fonts.gstatic.com` entry and there should never be one.
 
 Dashboard and studio use the same headers plus `X-Robots-Tag: noindex, nofollow`, and drop the
-Google Tag Manager and Analytics entries, since neither is loaded there.
+Google Tag Manager and Analytics entries, since neither is loaded there. The dashboard also
+sets `worker-src 'self'` so pdf.js can paint quote, receipt, and sales-review pages onto canvas.
 
 `'unsafe-inline'` on `script-src` is a known compromise for Next.js inline bootstrap scripts.
 Tighten it to a nonce based policy once the app is stable, and record that as a follow up

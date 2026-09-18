@@ -1174,7 +1174,10 @@ export type Database = {
         Returns: undefined
       }
       complete_first_login: { Args: never; Returns: undefined }
-      conversion_report: { Args: { p_period?: string }; Returns: Json }
+      conversion_report: {
+        Args: { p_from?: string | null; p_period?: string; p_to?: string | null }
+        Returns: Json
+      }
       convert_quote_to_order: {
         Args: { p_expected_updated_at: string; p_quote_id: string }
         Returns: string
@@ -1213,7 +1216,7 @@ export type Database = {
         Returns: undefined
       }
       report_period_bounds: {
-        Args: { p_period: string }
+        Args: { p_from?: string | null; p_period: string; p_to?: string | null }
         Returns: {
           label: string
           period_end: string
@@ -1224,7 +1227,10 @@ export type Database = {
         Args: { p_quantity: number; p_unit: string }
         Returns: number
       }
-      salesperson_leaderboard: { Args: { p_period?: string }; Returns: Json }
+      salesperson_leaderboard: {
+        Args: { p_from?: string | null; p_period?: string; p_to?: string | null }
+        Returns: Json
+      }
       set_order_status: {
         Args: {
           p_expected_updated_at: string

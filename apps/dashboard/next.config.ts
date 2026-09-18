@@ -1,3 +1,7 @@
+import { copyFileSync, mkdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
 
 // Dashboard CSP. No analytics, no tag manager: neither is loaded here.
@@ -7,6 +11,14 @@ import type { NextConfig } from 'next';
 // built per environment rather than loosened everywhere: production stays
 // tight and development actually runs.
 const isDev = process.env.NODE_ENV !== 'production';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+mkdirSync(join(here, 'public'), { recursive: true });
+copyFileSync(
+  require.resolve('pdfjs-dist/build/pdf.worker.min.mjs'),
+  join(here, 'public', 'pdf.worker.min.mjs'),
+);
 
 const imageOrigins = (() => {
   const hosts = new Set(['https://img.beco.co.ke']);
@@ -38,17 +50,19 @@ const csp = [
   "font-src 'self'",
   `img-src 'self' data: blob: ${imageOrigins}`,
   `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''}`,
-  "frame-src 'self' blob:",
+  // pdf.js paints quote, receipt, and sales-review pages onto canvas. The
+  // worker is copied into public/ from pdfjs-dist at config load.
+  "worker-src 'self'",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",
-  "object-src 'self' blob:",
+  "object-src 'none'",
   ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
 const config: NextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ['@react-pdf/renderer', 'fontkit', 'yoga-layout', 'sharp'],
+  serverExternalPackages: ['@react-pdf/renderer', 'fontkit', 'yoga-layout', 'sharp', 'pdfjs-dist'],
   experimental: {
     serverActions: {
       bodySizeLimit: '20mb',
@@ -72,13 +86,6 @@ const config: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-        ],
-      },
-      {
-        source: '/quotes/:reference/pdf',
-        headers: [
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Content-Security-Policy', value: "default-src 'none'; frame-ancestors 'self'" },
         ],
       },
     ];

@@ -6,6 +6,7 @@ import { cn } from '../lib/cn';
  */
 export type IconName =
   | 'plus'
+  | 'minus'
   | 'pencil'
   | 'arrow-right'
   | 'chevron-up'
@@ -17,6 +18,7 @@ export type IconName =
 
 const PATH: Record<IconName, string> = {
   plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
   pencil: 'M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z',
   'arrow-right': 'M5 12h14M13 6l6 6-6 6',
   'chevron-up': 'M6 15l6-6 6 6',
