@@ -21,7 +21,7 @@ export interface PublishedClient {
   logo: Pick<ProductImage, 'path' | 'alt' | 'width' | 'height'> | null;
   project: string | null;
   sector: string | null;
-  /** A short written quote, migration 29. Optional: most credentials carry
+  /** A short written quote, migration 26. Optional: most credentials carry
       a project line with no quote attached. */
   testimonial: string | null;
 }

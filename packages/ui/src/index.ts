@@ -50,6 +50,7 @@ export {
 } from './components/cutout-reveal';
 export { RoomStack, type RoomStackCard } from './components/room-stack';
 export { RangePillarList, type RangePillarItem, type RangePillarListProps } from './components/range-pillar-list';
+export { RangeCardGrid, type RangeCardItem, type RangeCardGridProps } from './components/range-card-grid';
 export { cn } from './lib/cn';
 export { PALETTE } from './tokens/palette';
 export { contrastRatio, PAIRS } from './tokens/contrast-check';

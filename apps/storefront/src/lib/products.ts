@@ -29,8 +29,6 @@ export interface CatalogueProduct {
    * that is meant to change per slab. Written by Beco, not generated.
    */
   short_description?: string | null;
-  /** Counted stock. Null means uncounted; zero is out of stock. */
-  stock_quantity?: number | null;
 }
 
 const anon = () =>
@@ -49,7 +47,7 @@ const anon = () =>
  */
 const PRODUCT_COLUMNS =
   'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,' +
-  'images,specs,short_description,stock_quantity,categories(name,slug)';
+  'images,specs,short_description,categories(name,slug)';
 
 // The generated types cannot narrow an embedded join in a select string, so
 // the shape is asserted here and guaranteed by PRODUCT_COLUMNS above.
@@ -230,6 +228,59 @@ export const imageForGroup = (
   return undefined;
 };
 
+/**
+ * Several real photographs standing in for a whole top level group, one per
+ * distinct product first rather than every role of a single one, so the home
+ * page's range overview can cycle through what is actually IN a range
+ * rather than repeat one stone's own slab, on-stand and bookmatch shots.
+ * `imageForGroup` above answers "one photo", this answers "a few, from
+ * different products, for a card that autoplays through them".
+ *
+ * Backfills from each matched product's OWN remaining photographs when
+ * distinct products alone do not reach the limit: wall panels and several
+ * other ranges brought in by the loose category import are one deep product
+ * with many real photographs rather than several shallow ones, and a card
+ * that autoplays needs more than the single frame the first pass alone
+ * would leave it. Never triggers for a range with enough distinct products
+ * to reach the limit on its own, sintered stone's own 20-plus colours among
+ * them, so that range's "one photo per stone" variety is unchanged.
+ */
+export const imagesForGroup = (
+  groups: CategoryGroup[], products: CatalogueProduct[], slug: string, limit = 4,
+): ProductImage[] => {
+  const group = groups.find((g) => g.slug === slug);
+  if (!group) return [];
+  const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+  const matched = products.filter((p) => p.category && inGroup.has(p.category.slug));
+
+  const shots: ProductImage[] = [];
+  const seenByProduct = new Map<string, Set<string>>();
+  for (const p of matched) {
+    const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);
+    if (!shot) continue;
+    shots.push(shot);
+    seenByProduct.set(p.id, new Set([shot.path]));
+    if (shots.length >= limit) return shots;
+  }
+
+  let addedInRound = true;
+  while (shots.length < limit && addedInRound) {
+    addedInRound = false;
+    for (const p of matched) {
+      if (shots.length >= limit) break;
+      const seen = seenByProduct.get(p.id);
+      if (!seen) continue;
+      const next = orderedImages(p).find((img) => !seen.has(img.path));
+      if (!next) continue;
+      seen.add(next.path);
+      shots.push(next);
+      addedInRound = true;
+    }
+  }
+
+  return shots;
+};
+
 export const getProductsByCategory = async (slug: string): Promise<CatalogueProduct[]> => {
   const { data, error } = await anon()
     .from('products')
@@ -274,7 +325,7 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
     .from('products')
     .select(
       'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,' +
-        'description,short_description,sku,specs,meta_title,meta_description,stock_quantity,' +
+        'description,short_description,sku,specs,meta_title,meta_description,' +
         'categories(name,slug,description)',
     )
     .eq('slug', slug)
@@ -289,25 +340,6 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
   const { categories, ...rest } = row;
   return { ...rest, category: categories } as unknown as ProductDetail;
 };
-
-/**
- * Former slug lookup for a 301. `product_slugs` is readable by anon; the
- * join still has to be a published, live product or the redirect would
- * leak a draft.
- */
-export const getCanonicalProductSlug = async (slug: string): Promise<string | null> => {
-  const { data, error } = await anon()
-    .from('product_slugs')
-    .select('products!inner(slug)')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (error) throw new Error(`could not resolve product slug: ${error.message}`);
-  if (!data) return null;
-  const product = data.products as { slug: string } | { slug: string }[] | null;
-  const canonical = Array.isArray(product) ? product[0]?.slug : product?.slug;
-  return canonical && canonical !== slug ? canonical : null;
-};
-
 
 export interface GalleryShotImage {
   path: string;

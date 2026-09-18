@@ -9,11 +9,12 @@ the next agent needs to start cold.
 
 **State, 18 September 2026:** quotes, catalogue editor, `/orders`,
 `/reports`, `/users`, announcements, `/settings`, `/studio/blog`,
-`/audit` and the dashboard appearance toggle are on branch `m5-quotes`,
-off `m5-dashboard` at `a6d784d`. `/stock` redirects to `/products`.
-Receipt PDF ships with orders. Quote, receipt and report PDFs preview as
-canvas pages with zoom. Live beco.co.ke is still WordPress; that is
-expected until the storefront launches.
+`/audit`, the dashboard appearance toggle and the photography-led
+storefront revamp are on branch `m5-dashboard` (dashboard work came
+through `m5-quotes`; storefront through `storefront-revamp`). `/stock`
+redirects to `/products`. Receipt PDF ships with orders. Quote, receipt
+and report PDFs preview as canvas pages with zoom. Live beco.co.ke is
+still WordPress; that is expected until the storefront launches.
 
 **Local stack:** `pnpm db:reset` then `pnpm drive:import` if you need
 photographs. After a plain reset the local catalogue is 24 published 12mm
@@ -26,15 +27,14 @@ ranges on purpose. Migration 39 adds `stock_quantity` and
 
 ## 1. Start the next session with this
 
-Branch: `m5-quotes`. Dashboard: `http://localhost:3001/`.
+Branch: `m5-dashboard`. Dashboard: `http://localhost:3001/`. Storefront:
+`http://localhost:3000/`.
 
 Close M5. Do not reopen quotes, AppShell, the charcoal band,
 `ShellContext`, `/products`, `/orders`, `/reports`, `/users`,
 announcements, `/settings`, `/studio/blog`, `/audit` or the appearance
-toggle unless Brown asks.
-
-Do not start a second products pass, and do not edit quotes, AppShell, the
-charcoal band, `ShellContext`, `/orders` or `/reports` unless Brown says so.
+toggle unless Brown asks. Do not restyle the storefront revamp unless
+Brown asks.
 
 **Locked with Brown, 18 September. Carry these forward. Do not re-argue
 them on `/orders`, `/reports` or later screens:**

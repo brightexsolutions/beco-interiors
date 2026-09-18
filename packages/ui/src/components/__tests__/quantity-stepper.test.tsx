@@ -39,6 +39,11 @@ describe('QuantityStepper', () => {
     expect(screen.getByRole('button', { name: 'Decrease quantity of Amber Jade' })).toBeDisabled();
   });
 
+  it('accepts floor as an alias for min', () => {
+    render(<QuantityStepper value={0.5} onChange={vi.fn()} label="Amber Jade" floor={0.5} step={0.5} />);
+    expect(screen.getByRole('button', { name: 'Decrease quantity of Amber Jade' })).toBeDisabled();
+  });
+
   it('is not disabled above the floor', () => {
     render(<QuantityStepper value={1} onChange={vi.fn()} label="Amber Jade" min={0.5} step={0.5} />);
     expect(screen.getByRole('button', { name: 'Decrease quantity of Amber Jade' })).not.toBeDisabled();
@@ -60,9 +65,6 @@ describe('QuantityStepper', () => {
   });
 
   it('when editable, accepts a typed value directly', () => {
-    // fireEvent rather than userEvent.type: number inputs do not support
-    // selection in jsdom (or in real browsers), which is what userEvent's
-    // clear-then-type relies on, so it never actually empties the field.
     const onChange = vi.fn();
     render(<QuantityStepper value={1} onChange={onChange} label="Gold Bar Handle" editable />);
     const input = screen.getByLabelText('Gold Bar Handle quantity');
@@ -81,17 +83,30 @@ describe('QuantityStepper', () => {
   });
 
   it('does not clip a multi digit count behind a fixed width or the browser spinner', () => {
-    // The reported bug: a fixed w-14 box, combined with the browser's own
-    // native up/down spinner on the number input, left too little room for
-    // anything past two digits, so a box or handle count rendered clipped.
-    // The fix drops the native spinner and lets the box grow with min-w
-    // instead of pinning it, so this asserts both are actually gone.
     render(<QuantityStepper value={124} onChange={vi.fn()} label="Gold Bar Handle" editable />);
     const input = screen.getByLabelText('Gold Bar Handle quantity');
     expect((input as HTMLInputElement).value).toBe('124');
     expect(input.className).not.toMatch(/\bw-14\b/);
     expect(input.className).toContain('min-w-[3.25rem]');
     expect(input.className).toContain('[&::-webkit-inner-spin-button]:appearance-none');
+  });
+
+  it('uses a narrower input when compact', () => {
+    render(<QuantityStepper value={124} onChange={vi.fn()} label="Gold Bar Handle" editable compact />);
+    const input = screen.getByLabelText('Gold Bar Handle quantity');
+    expect(input.className).toContain('w-[2.25rem]');
+  });
+
+  it('gives multiple instances on one page distinct, non-colliding ids', () => {
+    render(
+      <>
+        <QuantityStepper value={1} onChange={vi.fn()} label="First" editable />
+        <QuantityStepper value={1} onChange={vi.fn()} label="Second" editable />
+      </>,
+    );
+    const first = screen.getByLabelText('First quantity') as HTMLInputElement;
+    const second = screen.getByLabelText('Second quantity') as HTMLInputElement;
+    expect(first.id).not.toBe(second.id);
   });
 
   it('has no accessibility violations, in the default and the editable shape', async () => {

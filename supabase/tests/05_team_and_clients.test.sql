@@ -45,7 +45,7 @@ select lives_ok(
   'a client with permission can be published'
 );
 
--- The testimonial column added in migration 29 rides the same row, so it
+-- The testimonial column added in migration 26 rides the same row, so it
 -- needs no policy of its own: proven here by reading it back through the
 -- same gate as every other column on a published, permitted client.
 update clients set testimonial = 'Beco fitted our counters on schedule.'
@@ -69,9 +69,14 @@ select is_empty(
   'anon cannot see the director at all'
 );
 
+-- Not an exact count: seed.sql carries its own published, permitted
+-- clients for the live ClientShowcase, and this test's own fixture
+-- coexists with them inside the same transaction. Targeted at the one
+-- row this test actually controls instead, so it stays true regardless
+-- of how many real clients seed.sql adds.
 select results_eq(
-  $$select count(*)::int from clients$$, ARRAY[1],
-  'anon sees only the published, permitted client'
+  $$select count(*)::int from clients where slug = 'consented-corp'$$, ARRAY[1],
+  'anon sees the published, permitted client'
 );
 
 select results_eq(

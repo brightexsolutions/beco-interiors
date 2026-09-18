@@ -6,14 +6,16 @@ Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, 
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
 Last updated: 18 September 2026. M0 through M4 done. M5 (operations dashboard)
-is **WIP** on branch `m5-quotes`, approaching close. Auth, shell, quotes, PDF
-and email, admin home figures, catalogue (`/products`), orders, reports,
-users, announcements, settings, Studio blog (`/studio/blog`), audit
-(`/audit`) and the dashboard appearance toggle are built. Next is M5 close:
-walk sections S and T, real-phone QA including the 12-tap count, then Codex
-review on committed state. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md`.
-Live beco.co.ke is still WordPress; that is expected until the storefront
-launches.
+is **WIP** on branch `m5-dashboard`, approaching close. That branch now
+carries both the operations dashboard and the photography-led storefront
+revamp (merged from `m5-quotes` and `storefront-revamp`). Auth, shell,
+quotes, PDF and email, admin home figures, catalogue (`/products`), orders,
+reports, users, announcements, settings, Studio blog (`/studio/blog`),
+audit (`/audit`) and the dashboard appearance toggle are built. Next is
+M5 close: walk sections S and T, real-phone QA including the 12-tap count,
+then Codex review on committed state. Handoff:
+`docs/milestones/M5-QUOTES-HANDOVER.md`. Live beco.co.ke is still
+WordPress; that is expected until the storefront launches.
 
 **Both external dependencies confirmed against real infrastructure**, since 31 August.
 
@@ -42,7 +44,7 @@ copy, hours (Mon to Fri 8am to 4pm, Sat 8am to 2pm) and the two live social acco
 | M2 | Drive import pipeline | 3.5 | **DONE**, live against real Drive and R2, incremental, reports rather than guesses |
 | M3 | Design system | 2.0 | **DONE**, tokens, contrast verified, `@beco/ui` built out through M4 |
 | M4 | Storefront, SEO, conversion, motion | 8.5 | **DONE**, Codex review ran 9 Sept. A modernisation pass (D82) followed 9 to 10 Sept on branch `storefront-revamp`: real photography imported, fluid type scale, craft floor, specimen plates, the home hero and `SlabToSurface` reworked, a rotating announcement bar, a transparent header across the dark-hero pages, the `/shop` filter rebuilt for mobile, `/about` opened on Beco's own copy, confirmed hours and social. Uncommitted working-tree, all green. Follow-ups deferred in `docs/PLAN.md`: portrait video sections, `/about` lower sections, the import pipeline EXIF fix |
-| M5 | Operations dashboard | 6.5 | **WIP**, screens done, close remaining. Auth, shell, quotes, PDF, email, home figures, catalogue (`/products`, D89), orders, reports, users, announcements, settings (payment channels and Brightex grants), `/studio/blog`, `/audit` and dashboard dark mode are on `m5-quotes`. Studio write is Brightex-only; audit read stays grantable. Still open: docs walk (S), definition of done (T), Codex review (U), 12-tap count and phone QA, LastUpdated, section L realtime. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
+| M5 | Operations dashboard | 6.5 | **WIP**, screens done, close remaining. Auth, shell, quotes, PDF, email, home figures, catalogue (`/products`, D89), orders, reports, users, announcements, settings (payment channels and Brightex grants), `/studio/blog`, `/audit` and dashboard dark mode are on `m5-dashboard`, which also carries the photography-led storefront revamp. Studio write is Brightex-only; audit read stays grantable. Still open: docs walk (S), definition of done (T), Codex review (U), 12-tap count and phone QA, LastUpdated, section L realtime. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
 | M6 | Launch | 3.5 | TODO. Depends on M4, M5, and the old URL list, still not received and the largest ranking risk in the project |
 | M7 | Studio, inside the dashboard | 3.5 | After launch, unbilled. Blog authoring at `/studio/blog` shipped early inside M5; remaining Studio scope stays here |
 

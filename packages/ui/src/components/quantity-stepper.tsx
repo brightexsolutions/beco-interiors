@@ -21,10 +21,15 @@ export interface QuantityStepperProps {
   step?: number | undefined;
   /** The lowest value the control will reach. Decrementing past it is a no-op. */
   min?: number | undefined;
+  /** Alias for `min`, kept for callers that name a product's own floor. */
+  floor?: number | undefined;
   /** Shown beside the control, for example "per slab". */
   unit?: string | null | undefined;
   /** Lets the value be typed as well as stepped. Off by default. */
   editable?: boolean | undefined;
+  /** Narrower buttons and input, height unchanged: the 44px touch target is
+      a hard floor, never a compact override. */
+  compact?: boolean | undefined;
   className?: string | undefined;
 }
 
@@ -32,30 +37,45 @@ export interface QuantityStepperProps {
 // priced or measured finer than a half unit, so two decimal places is exact.
 const round = (n: number): number => Math.round(n * 100) / 100;
 
-const stepperButton = [
-  'flex h-11 w-11 shrink-0 items-center justify-center text-xl text-charcoal',
+const MinusIcon = () => (
+  <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 stroke-current" fill="none" strokeWidth="1.8">
+    <path d="M5 12h14" strokeLinecap="round" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 stroke-current" fill="none" strokeWidth="1.8">
+    <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+  </svg>
+);
+
+const stepperButton = (compact: boolean) => cn(
+  'flex h-11 shrink-0 items-center justify-center text-charcoal',
   'transition-colors duration-200 ease-brand hover:bg-neutral-50 hover:text-warm-red-deep',
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-warm-red',
   'disabled:pointer-events-none disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-charcoal',
-].join(' ');
+  compact ? 'w-9' : 'w-11',
+);
 
 export function QuantityStepper({
-  value, onChange, label, step = 1, min = 0, unit, editable = false, className,
+  value, onChange, label, step = 1, min, floor, unit, editable = false, compact = false, className,
 }: QuantityStepperProps) {
   const id = useId();
-  const atFloor = value <= min;
+  const bound = min ?? floor ?? 0;
+  const atFloor = value <= bound;
+  const inputWidth = compact ? 'w-[2.25rem]' : 'min-w-[3.25rem]';
 
   return (
     <div className={cn('flex flex-wrap items-center gap-3', className)}>
-      <div className="flex items-stretch border border-neutral-300 bg-high-vis-white">
+      <div className={cn('flex items-stretch rounded-[2px] border border-neutral-300 bg-high-vis-white', compact && 'flex-nowrap')}>
         <button
           type="button"
-          onClick={() => onChange(Math.max(min, round(value - step)))}
+          onClick={() => onChange(Math.max(bound, round(value - step)))}
           disabled={atFloor}
           aria-label={`Decrease quantity of ${label}`}
-          className={stepperButton}
+          className={stepperButton(compact)}
         >
-          &minus;
+          <MinusIcon />
         </button>
 
         {editable ? (
@@ -67,25 +87,25 @@ export function QuantityStepper({
               id={id}
               type="number"
               inputMode="decimal"
-              min={min}
+              min={bound}
               step={step}
               value={value}
-              onChange={(e) => onChange(Math.max(min, Number(e.target.value) || min))}
-              // No fixed width: a slab quantity is one decimal digit but a
-              // box or handle count can run to three, and a hardcoded w-14
-              // clipped the third digit. min-w keeps it from looking cramped
-              // at "1". The three [&::...] rules and [-moz-appearance] drop
-              // the browser's own up/down spinner, which this control
-              // already provides with its own buttons: left in place, the
-              // native spinner ate into the same fixed-width box the digits
-              // needed, which is what was actually clipping the value.
-              className="h-11 min-w-[3.25rem] border-x border-neutral-300 bg-transparent px-1 text-center font-ui text-base tabular-nums text-charcoal [-moz-appearance:textfield] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-warm-red [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+              onChange={(e) => onChange(Math.max(bound, Number(e.target.value) || bound))}
+              className={cn(
+                'h-11 border-x border-neutral-300 bg-transparent px-1 text-center font-ui text-base tabular-nums text-charcoal',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-warm-red',
+                '[-moz-appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none',
+                inputWidth,
+              )}
             />
           </>
         ) : (
           <span
             aria-label={`${label} quantity, ${value}`}
-            className="flex h-11 min-w-[3.25rem] items-center justify-center border-x border-neutral-300 px-1 font-ui text-base tabular-nums text-charcoal"
+            className={cn(
+              'flex h-11 items-center justify-center border-x border-neutral-300 px-1 font-ui text-base tabular-nums text-charcoal',
+              inputWidth,
+            )}
           >
             {value}
           </span>
@@ -95,17 +115,11 @@ export function QuantityStepper({
           type="button"
           onClick={() => onChange(round(value + step))}
           aria-label={`Increase quantity of ${label}`}
-          className={stepperButton}
+          className={stepperButton(compact)}
         >
-          +
+          <PlusIcon />
         </button>
       </div>
-      {/* No fixed grey: a flat neutral tone that reads as muted on a white
-          page reads as invisible on the quote list's charcoal panel, and no
-          single shade clears AA against both a light and a dark host.
-          Inheriting the ambient text colour and dimming it stays legible
-          wherever this control is dropped, the same trick ProductCard's own
-          charcoal plate uses for its secondary line. */}
       {unit ? <span className="font-ui text-sm opacity-70">{unit}</span> : null}
     </div>
   );

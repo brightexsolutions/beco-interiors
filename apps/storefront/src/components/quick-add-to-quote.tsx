@@ -1,44 +1,76 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@beco/ui';
-import { addLine, type QuoteLine } from '@/lib/quote-list';
+import { QuantityStepper } from '@beco/ui';
+import { addLine, removeLine, setQuantity, stepFor, type QuoteLine } from '@/lib/quote-list';
 
 /**
- * Add to quote without opening the product.
+ * Add to quote without opening the product, and once it is on the list, the
+ * same slot becomes what adjusts how many and, separately, what takes it
+ * back off.
  *
- * The quote list is the conversion, and a buyer comparing eight stones should
- * not have to open eight pages and come back eight times to build one. This is
- * the same operation as the product page's control, so it uses the same store
- * and the same confirmation.
- *
- * Always visible rather than revealed on hover: hover does not exist on a
- * phone, and most of this traffic is phones.
+ * Before anything is added this is a single bordered button, an icon and a
+ * label: icon only was tried and reported back as unclear on its own.
+ * Once added it is replaced by the quantity stepper, the same one the
+ * product page uses, and a distinct remove button beside it, rather than
+ * asking someone to decrease a slab down through halves to take it off the
+ * list. That was tried too: decreasing to zero WAS the removal, and it read
+ * as an accident waiting to happen rather than a considered action.
  */
 export function QuickAddToQuote({ line }: { line: Omit<QuoteLine, 'quantity'> }) {
-  const [added, setAdded] = useState(false);
+  const { step, floor } = stepFor(line.unit);
+  const [quantity, setLocalQuantity] = useState(0);
+
+  if (quantity <= 0) {
+    return (
+      <button
+        type="button"
+        onClick={() => { addLine(line, 1); setLocalQuantity(1); }}
+        aria-label={`Add ${line.name} to your quote list`}
+        className="inline-flex h-11 items-center gap-1.5 border border-charcoal px-2.5 font-ui text-xs font-semibold uppercase tracking-[0.08em] text-charcoal transition-colors duration-200 hover:border-warm-red-deep hover:text-warm-red-deep"
+      >
+        <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-none stroke-current" strokeWidth="1.7">
+          <path
+            d="M3 5h2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20 8H6.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="9.5" cy="20" r="1.3" />
+          <circle cx="17" cy="20" r="1.3" />
+        </svg>
+        Add
+      </button>
+    );
+  }
 
   return (
-    <button
-      type="button"
-      onClick={() => { addLine(line, 1); setAdded(true); }}
-      aria-label={added ? `${line.name} is on your quote list` : `Add ${line.name} to your quote list`}
-      className={cn(
-        'inline-flex min-h-11 cursor-pointer items-center gap-2 font-ui text-sm font-semibold uppercase tracking-[0.1em]',
-        'transition-colors duration-200',
-        added ? 'text-neutral-500' : 'text-charcoal hover:text-warm-red-deep',
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn(
-          'flex h-6 w-6 items-center justify-center border transition-colors duration-200',
-          added ? 'border-neutral-300 text-neutral-500' : 'border-charcoal',
-        )}
+    <div className="flex items-center gap-1.5">
+      <QuantityStepper
+        value={quantity}
+        onChange={(next) => {
+          setQuantity(line.slug, next);
+          setLocalQuantity(next);
+        }}
+        step={step}
+        min={floor}
+        compact
+        editable
+        label={`${line.name}, quantity in your quote list`}
+      />
+      <button
+        type="button"
+        onClick={() => { removeLine(line.slug); setLocalQuantity(0); }}
+        aria-label={`Remove ${line.name} from your quote list`}
+        className="flex h-11 w-9 shrink-0 items-center justify-center border border-neutral-300 text-neutral-500 transition-colors duration-200 hover:border-warm-red-deep hover:text-warm-red-deep"
       >
-        {added ? '✓' : '+'}
-      </span>
-      {added ? 'On your list' : 'Add to quote'}
-    </button>
+        <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-none stroke-current" strokeWidth="1.7">
+          <path
+            d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 .9 12.1a1 1 0 0 0 1 .9h4.2a1 1 0 0 0 1-.9L17 7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
   );
 }

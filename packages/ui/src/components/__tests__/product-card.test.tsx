@@ -41,6 +41,28 @@ describe('ProductCard', () => {
     expect(container.innerHTML).toContain('motion-reduce:group-hover:scale-100');
   });
 
+  it('makes the whole card clickable, not only the product name', () => {
+    // Reported directly: a shopper reaching for the photograph, not the
+    // title, found nothing there. The old stretched link put `after:inset-0`
+    // on the name anchor itself, which only ever covers that anchor's own
+    // inline-block box, title sized, since giving that same element
+    // `relative` makes it the containing block for its own pseudo-element
+    // rather than the card. This asserts the real fix: a second anchor sized
+    // to the whole card.
+    const { container } = render(
+      <ProductCard name="Limestone Ivory" href="/product/limestone-ivory" priceDisplayMode="poa" />,
+    );
+    const overlay = container.querySelector('a[aria-hidden]');
+    expect(overlay).not.toBeNull();
+    expect(overlay!.getAttribute('href')).toBe('/product/limestone-ivory');
+    expect(overlay!.className).toMatch(/inset-0/);
+    // Out of tab order and out of the accessibility tree: the name anchor
+    // stays the one link a keyboard or screen reader user reaches, so the
+    // product is never announced twice.
+    expect(overlay!.getAttribute('tabindex')).toBe('-1');
+    expect(screen.getAllByRole('link', { name: 'Limestone Ivory' })).toHaveLength(1);
+  });
+
   it('shows a sale price with the original struck through', () => {
     const { container } = render(
       <ProductCard name="X" href="/x" priceDisplayMode="fixed"

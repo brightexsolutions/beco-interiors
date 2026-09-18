@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { buttonClasses, cn, WordReveal } from '@beco/ui';
 import { blurProps } from '@/lib/products';
+import { RotatingRoomWord } from './rotating-room-word';
 
 /**
  * The hero, per D79. A full bleed photograph again, not the turning
@@ -33,8 +34,12 @@ import { blurProps } from '@/lib/products';
  * What carries over from D30 and D56, married rather than discarded: the
  * real headline, used once, per WordReveal's own rule. The lede
  * crossfading with the active stone, Beco's own first sentence per slab,
- * not written for this hero. The specimen indicator and its progress
- * rail. Pin dropped entirely on mobile.
+ * not written for this hero. Pin dropped entirely on mobile.
+ *
+ * The name-and-counter indicator that used to sit under the lede was
+ * removed on direct feedback: the chip strip on the right already labels
+ * the active stone by name (the `beco-chip-label` span next to it), so the
+ * indicator was a second, redundant place stating the same thing.
  *
  * What does NOT carry over: the prototype's stock Unsplash photography,
  * its fabricated "520+ products" and five star "Client Rated" stats, and
@@ -70,6 +75,15 @@ export interface HeroSlab {
   height: number;
   blur?: string | undefined;
   /**
+   * The chip rail's own image, a slab or material shot, deliberately NOT
+   * `src`. The big background already sells the finished room; a chip
+   * showing that same room again was reported directly as redundant with
+   * what is sitting right behind it. Falls back to `src` only for a stone
+   * with no slab photography at all, so a chip is never blank.
+   */
+  thumbSrc: string;
+  thumbBlur?: string | undefined;
+  /**
    * The stone's own first sentence, from Beco's descriptions document, not
    * written for this hero. Null for a slab with no description yet, Cyprus
    * Grey and a few others: the fallback sentence covers those rather than
@@ -79,8 +93,13 @@ export interface HeroSlab {
 }
 
 /** Aligns the type column with the 1380px grid, matching every other
-    section on the page, while the photograph itself bleeds edge to edge. */
-const GRID_INSET = 'pl-6 lg:pl-[max(1.5rem,calc((100vw-1380px)/2))]';
+    section on the page, while the photograph itself bleeds edge to edge.
+    The lg step adds the section gutter (3.5rem, matching lg:px-14 elsewhere)
+    ON TOP OF the centering margin the 1380px cap produces past that width,
+    rather than taking whichever is larger: a max() of the two undershot the
+    real gutter once the viewport passed 1380px, since the centering margin
+    alone does not include the section's own inner padding. */
+const GRID_INSET = 'pl-8 sm:pl-10 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3.5rem)]';
 
 /** #101820, the real charcoal token, not the prototype's raw near-black.
     Left heavy so the type reads, lighter than the prototype's 0.97 peak,
@@ -115,7 +134,6 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
     return () => clearInterval(id);
   }, [slabs.length]);
 
-  const current = slabs[active] ?? slabs[0];
   const lead = slabs[0];
 
   // Beco's own first sentence per stone, trimmed to one sentence: the site's
@@ -220,7 +238,13 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </div>
 
           <h1 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
-            <WordReveal text="Surfaces that outlast the room." />
+            {/* "room." lives in RotatingRoomWord now, cycling through the
+                places these surfaces actually go, on request. The static
+                text WordReveal still owns has no trailing period of its
+                own for that reason, and no trailing space either: a real
+                one sits between the two spans below instead, since
+                WordReveal never appends one after its own last word. */}
+            <WordReveal text="Surfaces that outlast the" /> <RotatingRoomWord />
           </h1>
 
           <div
@@ -273,69 +297,37 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               See the range
             </Link>
           </div>
-
-          {/* --- The slab indicator. Sits on a hairline at the foot of the
-                  pinned column, so the type block above never moves as it
-                  updates. Announced politely rather than interrupting.
-                  Desktop only, matching the chip strip on the right: a
-                  design choice for this wider layout, not a functional
-                  need, now that the timer above is what drives it on
-                  every breakpoint alike. --- */}
-          <div
-            className="beco-enter mt-10 hidden border-t border-white/15 pt-5 lg:block"
-            style={{ animationDelay: '900ms' }}
-          >
-            <div className="flex items-baseline justify-between gap-6">
-              <p aria-live="polite" className="font-ui text-sm">
-                {/* Keyed on the active slab so the animation replays as
-                    the name changes, like a specimen label turning. */}
-                <span
-                  key={current?.slug}
-                  className="beco-roll inline-block overflow-hidden font-semibold uppercase tracking-[0.14em] text-high-vis-white"
-                >
-                  {current?.name}
-                </span>
-              </p>
-              <p className="font-ui text-sm font-semibold tabular-nums text-neutral-400">
-                <span className="text-high-vis-white">{String(active + 1).padStart(2, '0')}</span>
-                {' / '}
-                {String(slabs.length).padStart(2, '0')}
-              </p>
-            </div>
-            {/* One rule per slab, the current one drawn in. Cheaper to read
-                at a glance than a counter, and it shows how much is left. */}
-            <ol className="mt-3 flex gap-1.5" aria-hidden>
-              {slabs.map((slab, i) => (
-                <li key={slab.slug} className="h-0.5 flex-1 overflow-hidden bg-white/15">
-                  <span
-                    className="block h-full origin-left bg-high-vis-white transition-transform duration-500 ease-brand motion-reduce:transition-none"
-                    style={{ transform: `scaleX(${i <= active ? 1 : 0})` }}
-                  />
-                </li>
-              ))}
-            </ol>
-          </div>
         </div>
 
         {/* --- The rest of the range, on the right where the gradient
-                lightens, reported directly as too basic and needing real
-                design and motion. Real links to each product, not a
-                second orbit. Frame first (beco-pop-in), photograph
-                wiping up into it a beat later (beco-chip-wipe), the same
-                two stage assembly the gallery already uses reused at
-                chip scale rather than invented fresh. Only TRANSFORM and
-                OPACITY change on the active state, scale rather than a
-                width change, so a stone becoming active never reflows
-                its neighbours in the column. Still one section effect,
-                the crossfade: everything here is either a one time
-                entrance or a quiet accent on a single ring, never a
-                second competing choreography. --- */}
-        <div className="pointer-events-none absolute inset-y-0 right-6 hidden items-center lg:flex xl:right-14">
-          <ul className="pointer-events-auto flex flex-col gap-5">
+                lightens. A straight column of rectangular photos read as
+                basic even with the motion below already on it, reported
+                directly a second time, so the shape changed rather than
+                the animation: round material samples, the way an actual
+                stone chip is handed across a counter, lifted off the photo
+                with a real shadow rather than a hairline ring, and loosely
+                staggered side to side instead of stacked in a rigid line.
+                Each carries its own slab shot, distinct from the big
+                background beside it, see HeroSlab's own note on `thumbSrc`.
+                Real links to each product, not a second orbit. Frame first
+                (beco-pop-in), photograph wiping up into it a beat later
+                (beco-chip-wipe), the same two stage assembly the gallery
+                already uses. Only TRANSFORM and OPACITY change on the
+                active state, so a stone becoming active never reflows its
+                neighbours in the column. --- */}
+        <div className="pointer-events-none absolute inset-y-0 right-12 hidden items-center lg:flex">
+          <ul className="pointer-events-auto flex flex-col gap-6">
             {slabs.map((slab, i) => {
               const isActive = i === active;
               return (
-                <li key={slab.slug} className="relative">
+                <li
+                  key={slab.slug}
+                  className="relative"
+                  // A loose scatter instead of a rigid column: alternating
+                  // a few pixels left and right so the set reads as samples
+                  // set down beside each other rather than filed in a line.
+                  style={{ marginInlineStart: `${(i % 2) * 14}px` }}
+                >
                   {isActive ? (
                     <span
                       key={`${slab.slug}-label`}
@@ -349,20 +341,21 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                   <Link
                     href={`/product/${slab.slug}`}
                     className={cn(
-                      'beco-pop-in group relative block aspect-[4/5] w-16 overflow-hidden bg-neutral-800 transition-transform duration-500 ease-brand sm:w-20',
+                      'beco-pop-in group relative block aspect-square w-14 overflow-hidden rounded-full bg-neutral-800',
+                      'shadow-[0_10px_28px_rgba(0,0,0,0.45)] transition-transform duration-500 ease-brand sm:w-16',
                       isActive
                         ? 'scale-110'
-                        : 'opacity-70 ring-1 ring-inset ring-white/25 hover:scale-105 hover:opacity-100',
+                        : 'opacity-80 ring-1 ring-inset ring-white/30 hover:scale-105 hover:opacity-100',
                     )}
                     style={{ animationDelay: `${1000 + i * 130}ms` }}
                   >
-                    <span className="beco-clip absolute inset-0">
+                    <span className="beco-clip absolute inset-0 rounded-full">
                       <Image
-                        src={slab.src}
+                        src={slab.thumbSrc}
                         alt=""
                         fill
-                        sizes="96px"
-                        {...blurProps(slab)}
+                        sizes="64px"
+                        {...blurProps({ blur: slab.thumbBlur })}
                         className="beco-chip-wipe object-cover"
                         style={{ animationDelay: `${1150 + i * 130}ms` }}
                       />
@@ -370,7 +363,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
                     {isActive ? (
                       <span
                         aria-hidden
-                        className="beco-chip-active-ring pointer-events-none absolute inset-0 ring-2 ring-inset ring-high-vis-white"
+                        className="beco-chip-active-ring pointer-events-none absolute inset-0 rounded-full ring-2 ring-inset ring-high-vis-white"
                       />
                     ) : null}
                     <span className="sr-only">
@@ -419,7 +412,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </p>
         </div>
         <h2 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
-          Surfaces that outlast the room.
+          Surfaces that outlast the <RotatingRoomWord />
         </h2>
         <p className="beco-enter mt-5 max-w-[38ch] text-base leading-[1.6] text-neutral-300" style={{ animationDelay: '620ms' }}>
           {ledes[0]}

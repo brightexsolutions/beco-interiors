@@ -122,12 +122,48 @@ describe('buildPlan incrementality', () => {
       f(`loose-${i}`, `HANDLES/IMG_${1000 + i}.HEIC`),
     );
     const plan = buildPlan(listing, [], []);
-    expect(plan.files).toHaveLength(0);
     expect(plan.looseFolders).toEqual([{ folder: 'HANDLES', count: 12 }]);
     const issue = plan.issues.find((i) => i.path === 'HANDLES');
     expect(plan.issues).toHaveLength(1);
     expect(issue?.reason).toContain('12 file(s)');
     expect(issue?.reason).toContain('one folder per product');
+  });
+
+  it('imports loose files in a real category as one umbrella product, on request 14 September', () => {
+    // FURNITURE LEGS, OFFICE ACCESSORIES, HINGES and DOOR LOCKS are all real
+    // categories with real photographs and no per-item folders. Withholding
+    // them entirely, the previous behaviour, left every one of those ranges
+    // with nothing to show at all. Every raw camera filename still resolves
+    // to `unknown`, never guessed, exactly as it would inside a real
+    // product folder: this only changes where the files land, not how a
+    // role is decided.
+    const listing = Array.from({ length: 5 }, (_, i) =>
+      f(`fl-${i}`, `FURNITURE LEGS/IMG_${4480 + i}.HEIC`),
+    );
+    const plan = buildPlan(listing, [], []);
+    expect(plan.files).toHaveLength(5);
+    expect(plan.files.every((x) => x.role === 'unknown')).toBe(true);
+    expect(plan.files.every((x) => x.productSlug === 'furniture-legs')).toBe(true);
+    expect(plan.files.every((x) => x.categorySlug === 'furniture-legs')).toBe(true);
+    expect(plan.files[0]!.productName).toBe('Furniture Legs');
+    expect(plan.productsWithUnknowns).toContain('furniture-legs');
+    expect(plan.productsWithoutSlab).toContain('furniture-legs');
+
+    const issue = plan.issues.find((i) => i.path === 'FURNITURE LEGS');
+    expect(issue?.reason).toContain('Imported as ONE product');
+    expect(issue?.reason).toContain('Furniture Legs');
+  });
+
+  it('still imports nothing for a file with no category folder at all', () => {
+    // A genuinely stray file at the root of the whole listing, no folder
+    // above it whatsoever: there is no category to import it against, so
+    // this stays skip and report only, unlike a file one level inside a
+    // real category folder.
+    const plan = buildPlan([f('stray', 'Product Descriptions.docx')], [], []);
+    expect(plan.files).toHaveLength(0);
+    const issue = plan.issues.find((i) => i.path === 'Product Descriptions.docx');
+    expect(issue?.reason).toContain('nothing to import this against');
+    expect(issue?.reason).not.toContain('Imported as ONE product');
   });
 
   it('gallery and brand folders are NOT reported as errors', () => {

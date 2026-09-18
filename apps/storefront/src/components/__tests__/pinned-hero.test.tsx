@@ -10,7 +10,7 @@ import { PinnedHero, type HeroSlab } from '../pinned-hero';
  * device per D23, not by an automated test.
  */
 const slab = (over: Partial<HeroSlab> & Pick<HeroSlab, 'slug' | 'name'>): HeroSlab => ({
-  category: 'Sintered stone', src: '/img/a.webp', alt: over.name,
+  category: 'Sintered stone', src: '/img/a.webp', thumbSrc: '/img/a-slab.webp', alt: over.name,
   width: 1600, height: 1200, ...over,
 });
 
@@ -58,7 +58,7 @@ describe('PinnedHero, the lede', () => {
       />,
     );
     // Single slab: the invisible sizer paragraph duplicates the real lede on
-    // purpose (see the earlier fallback test), so this scopes to the one
+    // purpose (see the fallback test below), so this scopes to the one
     // visible crossfade layer rather than matching both.
     const active = container.querySelector('p.absolute.inset-0[aria-hidden="false"]');
     expect(active?.textContent).toBeTruthy();
