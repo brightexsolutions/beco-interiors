@@ -49,7 +49,11 @@
      on it uses warm-red-deep, which measures 5.88:1. Verified, not assumed. */
   --color-warm-red-deep: #c81419;
   --color-charcoal: #101820;
+  /* True charcoal and paper. They never invert when the dashboard is dark,
+     so a showroom wash and type sitting on it stay legible. */
+  --color-ink: #101820;
   --color-high-vis-white: #ffffff;
+  --color-paper: #ffffff;
 
   /* --- Neutrals, generated from the COOL charcoal, never a warm grey. --- */
   --color-neutral-950: #0b1119;
@@ -118,6 +122,25 @@
 
   /* --- Motion. Long expo out, settled rather than snappy. --- */
   --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dashboard dark appearance. Class strategy, never prefers-color-scheme
+   alone, so a toggle can pin the choice. The storefront never sets `.dark`.
+   Charcoal and high-vis-white swap roles as ink-on-paper. Ink and paper
+   themselves stay put for photography and the auth brand panel. */
+html.dark {
+  color-scheme: dark;
+  --color-charcoal: #eceef0;
+  --color-high-vis-white: #141b22;
+  --color-neutral-950: #f6f7f8;
+  --color-neutral-900: #eceef0;
+  --color-neutral-700: #c5ccd2;
+  --color-neutral-500: #8b949e;
+  --color-neutral-300: #4a5560;
+  --color-neutral-200: #2c3540;
+  --color-neutral-100: #1c242e;
+  --color-neutral-50: #0b1119;
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px -16px rgba(0, 0, 0, 0.55);
 }
 
 /* ============================================================

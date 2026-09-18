@@ -58,10 +58,11 @@ select is(
   'claiming a new quote moves it to reviewing'
 );
 
--- The row IS written (proved from the admin section below), but the person
--- who caused it cannot read it back: audit_read_admin gates the trail on
--- is_admin(). Asserting the empty result here is the point, because a trail a
--- salesperson can read is a trail a salesperson can be tempted to audit.
+-- The row IS written (proved from the Brightex section below), but the person
+-- who caused it cannot read it back: audit_read gates the trail on
+-- has_audit_read(). Asserting the empty result here is the point, because a
+-- trail a salesperson can read is a trail a salesperson can be tempted to
+-- audit.
 select is_empty(
   $$select 1 from audit_log
      where entity_id = 'f2000000-0000-4000-8000-000000000010'::uuid
@@ -103,17 +104,19 @@ select throws_ok(
   'beco_product_manager CANNOT claim a quote'
 );
 
--- ---------- as admin ----------
-set local request.jwt.claims = '{"sub":"f2000000-0000-4000-8000-000000000001","role":"authenticated"}';
+-- ---------- as Brightex, then as admin ----------
+set local request.jwt.claims = '{"sub":"f2000000-0000-4000-8000-000000000005","role":"authenticated"}';
 
 -- The other half of the assertion above: the claim DID write its audit row,
--- and an admin is who gets to see it.
+-- and Brightex is who gets to see it unless a grant is assigned.
 select isnt_empty(
   $$select 1 from audit_log
      where entity_id = 'f2000000-0000-4000-8000-000000000010'::uuid
        and action = 'assign'$$,
-  'claim writes an assign audit row, readable by an admin'
+  'claim writes an assign audit row, readable by Brightex'
 );
+
+set local request.jwt.claims = '{"sub":"f2000000-0000-4000-8000-000000000001","role":"authenticated"}';
 
 select lives_ok(
   $$select assign_quote(

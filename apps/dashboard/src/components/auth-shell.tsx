@@ -23,7 +23,7 @@ export function AuthShell({
 }) {
   return (
     <div className="grid min-h-screen grid-rows-[34svh_1fr] lg:grid-cols-[minmax(0,32rem)_1fr] lg:grid-rows-1">
-      <aside className="relative isolate flex flex-col justify-between gap-10 overflow-hidden bg-charcoal px-8 py-9 text-high-vis-white lg:px-14 lg:py-16">
+      <aside className="relative isolate flex flex-col justify-between gap-10 overflow-hidden bg-ink px-8 py-9 text-paper lg:px-14 lg:py-16">
         <video
           className="absolute inset-0 -z-20 h-full w-full object-cover motion-reduce:hidden"
           autoPlay
@@ -47,7 +47,7 @@ export function AuthShell({
             there. Heavier at the wordmark and the foot where text sits. */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-gradient-to-b from-charcoal/80 via-charcoal/55 to-charcoal/85"
+          className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/80 via-ink/55 to-ink/85"
         />
 
         <div className="flex items-center gap-3">
@@ -56,14 +56,14 @@ export function AuthShell({
         </div>
 
         <div className="hidden lg:block">
-          <span aria-hidden className="block h-px w-10 bg-high-vis-white/40" />
+          <span aria-hidden className="block h-px w-10 bg-paper/40" />
           <p className="mt-6 font-display text-4xl leading-[1.1]">Operations</p>
-          <p className="mt-4 max-w-[32ch] font-ui text-sm text-neutral-200">
+          <p className="mt-4 max-w-[32ch] font-ui text-sm text-paper/70">
             Quotes, orders and stock for the Urban Square showroom.
           </p>
         </div>
 
-        <p className="hidden font-ui text-xs uppercase tracking-[0.2em] text-neutral-200 lg:block">
+        <p className="hidden font-ui text-xs uppercase tracking-[0.2em] text-paper/70 lg:block">
           Beco Interiors, Nairobi
         </p>
       </aside>

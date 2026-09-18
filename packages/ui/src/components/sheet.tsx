@@ -68,7 +68,7 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
 
   return (
     <div className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center lg:items-stretch lg:justify-end">
-      <div aria-hidden onClick={close} className="absolute inset-0 bg-charcoal/60" />
+      <div aria-hidden onClick={close} className="absolute inset-0 bg-ink/60" />
       <div
         ref={panelRef}
         role="dialog"

@@ -1,7 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const requireAdmin = vi.fn(async () => ({ userId: 'a', email: 'a@beco.co.ke', role: 'beco_admin' as const }));
-vi.mock('@/lib/session', () => ({ requireAdmin: () => requireAdmin() }));
+const requirePath = vi.fn(async () => ({
+  userId: 'a',
+  email: 'beco.brightex.dev@gmail.com',
+  fullName: 'Brightex Ops',
+  role: 'brightex_admin' as const,
+  isActive: true,
+  mustChangePassword: false,
+  canWriteBlog: false,
+  canReadAudit: false,
+}));
+vi.mock('@/lib/session', () => ({ requirePath: (...a: unknown[]) => requirePath(...a) }));
 
 const maybeSingle = vi.fn();
 const getSupabase = vi.fn(async () => ({
@@ -17,7 +26,7 @@ const { saveLaunchDate, goLive, standDown } = await import('../actions');
 
 afterEach(() => {
   maybeSingle.mockReset();
-  requireAdmin.mockClear();
+  requirePath.mockClear();
   getSupabase.mockClear();
 });
 
@@ -31,7 +40,7 @@ describe('launch actions', () => {
   it('re-checks the admin on every action, not just the render', async () => {
     maybeSingle.mockResolvedValue({ data: { key: 'site_launch_live' }, error: null });
     await goLive();
-    expect(requireAdmin).toHaveBeenCalledOnce();
+    expect(requirePath).toHaveBeenCalledWith('/launch');
   });
 
   it('reports a friendly error, not a throw, when the write is refused', async () => {

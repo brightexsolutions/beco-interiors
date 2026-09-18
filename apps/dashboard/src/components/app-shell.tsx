@@ -2,7 +2,8 @@ import Link from 'next/link';
 import type { ActiveSession } from '@/lib/session';
 import { navItemsFor } from '@/lib/nav-items';
 import { AccountMenu } from './account-menu';
-import { ShellContext } from './shell-context';
+import { ShellContext, ShellPageLabelProvider } from './shell-context';
+import { ThemeToggle } from './theme-toggle';
 import { TopNav } from './top-nav';
 
 /**
@@ -26,7 +27,10 @@ export function AppShell({
   newQuotes?: number;
   children: React.ReactNode;
 }) {
-  const items = navItemsFor(user.role);
+  const items = navItemsFor(user.role, {
+    canWriteBlog: user.canWriteBlog,
+    canReadAudit: user.canReadAudit,
+  });
   const sections = items.filter((i) => i.href !== '/settings');
   const hasSettings = items.some((i) => i.href === '/settings');
   const name = user.fullName || user.email;
@@ -39,14 +43,15 @@ export function AppShell({
     // than a cropped scene. A flat charcoal fill remains underneath, so a
     // slow image is never a blank strip. The content panel still floats on
     // the off-white ground below, so the hierarchy is band, ground, panel.
+    <ShellPageLabelProvider>
     <div className="relative min-h-screen bg-neutral-50">
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 overflow-hidden bg-charcoal lg:h-48">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 overflow-hidden bg-ink lg:h-48">
         <img
           src="/video/gallery-ambient-poster.jpg"
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-[center_38%]"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/55 to-charcoal/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/55 to-ink/90" />
       </div>
       <div className="relative mx-auto max-w-[1440px] px-4 pt-4 lg:px-8 lg:pt-6">
         <header
@@ -68,6 +73,7 @@ export function AppShell({
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
+            <ThemeToggle />
             {hasSettings ? (
               <Link
                 href="/settings"
@@ -98,5 +104,6 @@ export function AppShell({
         <div className="rounded-panel bg-high-vis-white p-6 shadow-panel lg:p-9">{children}</div>
       </main>
     </div>
+    </ShellPageLabelProvider>
   );
 }

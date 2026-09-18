@@ -1,0 +1,21 @@
+import { Skeleton, SkeletonScreen } from '@beco/ui';
+import { NewBlogFab } from '@/components/new-blog';
+
+export default function Loading() {
+  return (
+    <SkeletonScreen label="Loading blog">
+      <Skeleton className="h-4 w-16" />
+      <Skeleton className="mt-3 h-10 w-32" />
+      <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <Skeleton className="h-11" />
+        <Skeleton className="h-11 sm:w-44" />
+      </div>
+      <div className="mt-6 space-y-px pb-24">
+        {Array.from({ length: 8 }, (_, i) => (
+          <Skeleton key={i} className="h-14" />
+        ))}
+      </div>
+      <NewBlogFab />
+    </SkeletonScreen>
+  );
+}

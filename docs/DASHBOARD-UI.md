@@ -10,9 +10,10 @@ tokens.
 
 Quotes is the reference implementation. Copy its list / create / detail
 shape, not a new one. Cold start: `docs/milestones/M5-QUOTES-HANDOVER.md`.
-Next page is settings. Leave quotes, `AppShell`, the
-charcoal band, `/products`, `/orders`, `/reports`, `/users` and announcements
-alone.
+Settings, blog, audit and the appearance toggle are done. Next session is
+M5 close, not another screen. Leave quotes, `AppShell`, the charcoal band,
+`/products`, `/orders`, `/reports`, `/users`, announcements, `/settings`,
+`/studio/blog`, `/audit` and the theme toggle alone.
 
 **Locked catalogue decisions (18 Sept, Brown).** Do not reopen or "improve"
 these unless Brown asks:
@@ -40,6 +41,7 @@ these unless Brown asks:
 - Charcoal, High-Vis White, Warm Red rationed (three or four marks a page)
 - 16px type floor, 44px targets, 8px grid
 - Have chart where necessary, no dark sidebar, no bento, no glass, no icon nav
+- Appearance lives in the chrome (`ThemeToggle`), not a settings tab. It writes `html.dark` for the dashboard only. The storefront never sets that class. The showroom band and auth panel use `ink` / `paper` so they stay charcoal and white when the rest of the UI inverts.
 
 
 

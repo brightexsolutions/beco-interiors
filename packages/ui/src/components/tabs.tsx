@@ -60,7 +60,11 @@ export const TabsContent = forwardRef<
   return (
     <TabsPrimitive.Content
       ref={ref}
-      className={cn('pt-6 focus-visible:outline-none', className)}
+      className={cn(
+        'pt-6 focus-visible:outline-none',
+        'hidden data-[state=active]:block',
+        className,
+      )}
       {...props}
     />
   );

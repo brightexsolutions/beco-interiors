@@ -14,6 +14,8 @@ const admin: ActiveSession = {
   role: 'beco_admin',
   isActive: true,
   mustChangePassword: false,
+  canWriteBlog: false,
+  canReadAudit: false,
 };
 
 describe('AppShell', () => {
@@ -39,6 +41,7 @@ describe('AppShell', () => {
     );
     expect(screen.getByRole('navigation', { name: 'Sections' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Quotes' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Use dark appearance' })).toBeInTheDocument();
   });
 
   it('keeps the white header in flow. The breadcrumb is not part of that header', () => {

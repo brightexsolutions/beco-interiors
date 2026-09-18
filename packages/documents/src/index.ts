@@ -21,3 +21,4 @@ export type {
   ReportPdfPerson,
   ReportPdfFunnelRow,
 } from './pdf/types';
+export { quotePaymentBlocks } from './pdf/types';

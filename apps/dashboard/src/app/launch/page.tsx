@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { requireAdmin } from '@/lib/session';
+import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { LaunchControls } from './launch-controls';
 
@@ -11,13 +11,12 @@ export const metadata: Metadata = {
 /**
  * The launch control, per D80. One page, one date field, one switch.
  *
- * Reachable only by an active beco_admin or brightex_admin: `requireAdmin`
+ * Reachable only by an active brightex_admin: `requirePath('/launch')`
  * is the route half of rule 7's two checks, and `settings_write_admin` RLS
- * is the half that actually holds. Not part of M5's dashboard build, just
- * the one surface this feature needs.
+ * is the half that actually holds. Irene does not see the control.
  */
 export default async function LaunchPage() {
-  const admin = await requireAdmin();
+  const admin = await requirePath('/launch');
   const supabase = await getSupabase();
 
   const { data } = await supabase

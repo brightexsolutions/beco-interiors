@@ -62,7 +62,9 @@ Brown before assuming it is unclaimed.
 dashboard home figures are in. `/orders` converts a won quote, walks pending
 to confirmed to fulfilled, marks paid, and issues a receipt. `/reports` is
 the salesperson leaderboard and conversion funnel for admins. `/users` is
-Brightex admin only. Announcements authoring is Beco admin. Next: settings.
+Brightex admin only. Announcements authoring is Beco admin. Settings, blog authoring and the audit
+log viewer shipped next. Blog write and audit read are Brightex unless
+Brightex assigns the grant on that user.
 Live beco.co.ke is still WordPress until launch.
 
 ## Agreed cut order, if the date is held
@@ -88,7 +90,7 @@ Anything cut or deferred is recorded here with a reason, never silently dropped.
 | Item | Milestone | Reason | Revisit |
 |---|---|---|---|
 | ~~Receipt PDF and its email template~~ **No longer deferred, 17 September** | M5 | Brown reversed cut order item 1: receipts are to be built in full, not left to the week after launch. A receipt is proof of payment, so it is sequenced behind the order payment state (mark an order paid, stamp `paid_at`) and is built with the orders screen rather than with quotes. Renderer decided at the same time: `@react-pdf/renderer`, shared by the quote and receipt templates per the `quote-document` skill | Building in M5, with orders |
-| Audit log viewer (`/dashboard/audit`) | M5 | Agreed cut order item 3: audit *writing* is live from day one via the trigger, *reading* it through a screen waits. Admin roles can still query the table directly meanwhile | M6 or first retainer cycle |
+| Audit log viewer (`/audit`) | M5 | Brown asked for it with settings, 18 September. Default read is `brightex_admin`. A Brightex admin can grant `can_read_audit` to another user. `beco_admin` no longer has a default read | Built this session |
 | `/dashboard/imports` screen | M5 | Agreed cut order item 4: the `drive:import` CLI and the `import_runs` / `import_issues` tables carry the same information until the screen exists | Post-launch retainer |
 | Automatic stock decrement on order status change | M5 | 0.1 resolved to option B (manual quantity). Auto-decrement needs a non-racing, non-negative decrement path, a put-back on cancellation, and a decision on whether a `quoted` quote reserves stock, none of which should be designed before the order flow has been used for real | After the order flow has real usage |
 | Deeper reports (~~date range picker~~, trends) | M5 | 0.7 item 2: salesperson leaderboard and conversion from `analytics_events` shipped on `/reports`. A sales-review PDF download for the selected period shipped 18 September. Custom start and end dates shipped 18 September. Trends still wait | Post-launch retainer |

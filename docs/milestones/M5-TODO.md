@@ -1,10 +1,11 @@
 # M5: Operations dashboard
 
-> **Starting a new session on the next admin page?** Quotes and the catalogue
-> editor are handed off. Read `docs/milestones/M5-QUOTES-HANDOVER.md` first
-> (section 8: settings next), then `docs/DASHBOARD-UI.md`, and
-> `docs/DECISIONS.md` from D50 (D54, D88, D89). Do not reopen quotes, AppShell,
-> the charcoal band, or the catalogue editor.
+> **Starting a new session to close M5?** Quotes through settings, Studio,
+> audit and the appearance toggle are handed off. Read
+> `docs/milestones/M5-QUOTES-HANDOVER.md` first, then walk sections S, T and
+> U in this file. Do not reopen quotes, AppShell, the charcoal band,
+> catalogue, orders, reports, users, announcements, settings, Studio, audit
+> or the theme toggle unless Brown asks.
 >
 > Cold start on the whole milestone: this file, `docs/ARCHITECTURE.md`
 > sections 4 to 7, 10, 11, 12 and 17, and `docs/DECISIONS.md` from D50. The
@@ -20,11 +21,13 @@ Items are added as they are discovered rather than remembered.
 Branch: `m5-quotes`, off `m5-dashboard` at `a6d784d` (`m5-dashboard` itself is
 off `m4-closeout` at `a5783b6`). Quotes (D, E), dashboard home figures (H) and
 the catalogue editor (F, G, D89, including create and photographs) are built
-as of 18 September. Orders (K) and reports (I) have shipped. Next screens:
-users (section B) and announcements (section J) shipped 18 September.
-Next: settings. M4's own tail (real phone QA walk,
-first green Lighthouse PR run, ESLint once typescript-eslint supports TS 7)
-stays on `m4-closeout` and is not M5 work.
+as of 18 September. Orders (K) and reports (I) have shipped. Users (B) and
+announcements (J) shipped 18 September. Settings (V), blog (W), audit (X)
+and the dashboard appearance toggle shipped the same day. Studio write is
+Brightex-only. Audit read stays grantable. Next: M5 close (S, T, U), not
+another screen. M4's own tail (real phone QA walk, first green Lighthouse
+PR run, ESLint once typescript-eslint supports TS 7) stays on
+`m4-closeout` and is not M5 work.
 
 ---
 
@@ -559,6 +562,84 @@ Preview in the sheet, do not restyle the storefront bar.
       audited
 - [x] Vitest: list, filters, cards vs table, sheet preview, actions,
       validation. Integration against local Postgres. QA inventory
+
+## V. Settings
+
+`beco_admin` (`irene.kariuki@beco.co.ke`) and `brightex_admin`. Proxy and
+`requirePath` already gate `/settings`. `settings_write_admin` (`is_admin()`)
+is the authority. Do not invent a second table. No FAB. Launch date stays
+on `/launch`. Do not restyle PDFs or the storefront.
+
+Written 18 September before coding, from handover section 8.
+
+Authoring keys: `vat_rate`, `quote_validity_days`, `bank_details`,
+`till_number`, `paybill_number`, `paybill_account`, `send_money_number`,
+`notification_recipients`, `whatsapp_number`, `quote_footer`,
+`brightex_allowed_emails`. Also the keys already in the table that documents
+and the home cards already read: `payment_terms`, `business_phone`,
+`quote_response_sla_hours`. Leave VAT on installation and delivery deferred
+(D50 is products only).
+
+- [x] Heading Settings, no lede. FormSections. Save writes the rows.
+      Link to `/launch` for the anniversary date (Brightex only on the
+      title row). No FAB. URL-backed tabs
+- [x] VAT stored as a fraction, shown as a percent. Validity days integer.
+      WhatsApp digits. Email lists one address per line
+- [x] `notification_recipients` seeded if missing. Bank, till, paybill,
+      send money, footer, allowlist stay off `settings_read_public`
+- [x] Writes that affect documents or the storefront revalidate the right
+      paths. Next PDF still reads settings live. Do not restyle PDFs
+- [x] Brightex-only Permissions section: assign `can_write_blog` and
+      `can_read_audit` on a named user, behind ConfirmDialog with the verb.
+      Irene does not see it. Aisha and Sam cannot load `/settings`
+- [x] Self-service cannot flip those grants. RLS plus the staff guard.
+      Studio write is Brightex-only (migration 48); audit read stays
+      grantable
+- [x] pgTAP: sales cannot write settings; admin can; anon cannot read
+      bank or the allowlist; product manager cannot grant blog or audit
+- [x] Vitest: form, Save, launch link, grant ConfirmDialog, actions,
+      validation. Integration against local Postgres. QA inventory
+- [x] Dashboard appearance toggle (`html.dark`, `beco-dashboard-theme`).
+      Storefront never sets `.dark`
+
+## W. Blog authoring
+
+Brightex's job. Route `/studio/blog`. Gemini drafts, a person publishes.
+`GEMINI_API_KEY` is server side on the dashboard, never a `NEXT_PUBLIC_`
+variable. Author is a person, never "AI". Validator rejects em dashes and
+banned phrases. Preview uses the live article layout, do not restyle the
+storefront. Cover images: same Sharp pipeline as products, R2, never
+hotlinked. Alt required before publish.
+
+Default access: `brightex_admin` on the allowlist. Studio is not grantable.
+
+- [x] List: heading Blog, no lede. Charcoal FAB New article. Filters from
+      `lg` on one row (search, status). Desktop `DataTable`, cards on a
+      phone. Actions is icon plus Edit
+- [x] Editor: work column plus inspector. Generate with sparkles
+      icon. Markdown toolbar. Live preview centered. Breadcrumb uses the
+      title, never the uuid
+- [x] Draft save, Publish (needs cover alt), Unpublish. `published_at`
+      stamped. Prompt and model stored. Storefront `/blog` and the slug
+      revalidated
+- [x] pgTAP: anon sees only published; sales cannot write; Brightex can;
+      a salesperson with the flag cannot write Studio; an ungranted
+      editor cannot; publish without alt refused
+- [x] Vitest and integration. QA inventory. No Playwright
+
+## X. Audit log viewer
+
+Was deferred as `/dashboard/audit`. Brown asked for it with settings.
+Read-only list at `/audit`. Default access: `brightex_admin`. A granted
+user (`can_read_audit`) may also load it. `audit_read` RLS is the
+authority. `beco_admin` loses the default read. No FAB. No writes.
+
+- [x] Heading Audit, no lede. Filters from `lg` on one row (search,
+      entity, action). Desktop table, cards on a phone. Actions is icon
+      plus View. Sheet shows labelled before / after. Close uses the x icon
+- [x] pgTAP: anon cannot read; sales cannot; Irene cannot unless granted;
+      Brightex can; a granted sales row can
+- [x] Vitest. QA inventory
 
 ## K. Orders
 

@@ -14,6 +14,14 @@ const names: IconName[] = [
   'photo',
   'x',
   'trash',
+  'sparkles',
+  'bold',
+  'italic',
+  'heading',
+  'list',
+  'link',
+  'sun',
+  'moon',
 ];
 
 describe('Icon', () => {

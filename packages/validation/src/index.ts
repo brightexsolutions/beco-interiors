@@ -11,3 +11,5 @@ export * from './dashboard-order';
 export * from './dashboard-report';
 export * from './dashboard-user';
 export * from './dashboard-announcement';
+export * from './dashboard-settings';
+export * from './dashboard-blog';

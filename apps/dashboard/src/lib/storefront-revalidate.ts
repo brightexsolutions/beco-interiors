@@ -45,8 +45,11 @@ export async function revalidateStorefront(input: {
   }
 }
 
-export async function revalidateStorefrontPaths(paths: string[]): Promise<void> {
-  revalidatePath('/announcements');
+export async function revalidateStorefrontPaths(
+  paths: string[],
+  dashboardPath = '/announcements',
+): Promise<void> {
+  revalidatePath(dashboardPath);
 
   const origin = process.env.STOREFRONT_URL;
   const secret = process.env.REVALIDATE_SECRET;

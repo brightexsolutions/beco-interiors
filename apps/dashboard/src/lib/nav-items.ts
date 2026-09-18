@@ -1,5 +1,5 @@
 import type { UserRole } from '@beco/types';
-import { canAccess } from './access';
+import { canAccess, type AccessGrants } from './access';
 
 export interface NavItem {
   href: string;
@@ -23,10 +23,12 @@ const ALL: readonly NavItem[] = [
   { href: '/reports', label: 'Reports' },
   { href: '/users', label: 'Users' },
   { href: '/settings', label: 'Settings' },
+  { href: '/studio/blog', label: 'Blog' },
+  { href: '/audit', label: 'Audit' },
 ];
 
-export const navItemsFor = (role: UserRole): NavItem[] =>
-  ALL.filter((item) => canAccess(role, item.href));
+export const navItemsFor = (role: UserRole, grants: AccessGrants = {}): NavItem[] =>
+  ALL.filter((item) => canAccess(role, item.href, grants));
 
 export interface NavContext {
   sectionHref: string;
@@ -65,10 +67,23 @@ export function navContext(pathname: string): NavContext | null {
   } catch {
     page = raw;
   }
-  const pageLabel = section.href === '/quotes' && page === 'new' ? 'New quote' : page;
   return {
     sectionHref: section.href,
     sectionLabel: section.label,
-    pageLabel,
+    pageLabel: nestedPageLabel(section.href, page),
   };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function nestedPageLabel(sectionHref: string, page: string): string {
+  if (page === 'new') {
+    if (sectionHref === '/quotes') return 'New quote';
+    if (sectionHref === '/studio/blog') return 'New article';
+  }
+  if (UUID.test(page)) {
+    if (sectionHref === '/studio/blog') return 'Edit article';
+    return 'Edit';
+  }
+  return page;
 }

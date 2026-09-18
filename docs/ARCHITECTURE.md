@@ -671,15 +671,16 @@ Role matrix:
   quotes              C*     RW+     -         -        RW           RW
   orders              C*     RW+     -         -        RW           RW
   products (draft)    -      R       RW        R        RW           RW
-  blog_posts          R**    R       R         RW       RW           RW
+  blog_posts          R**    R       R         R        R            RW
   users               -      -       -         -        -            RW
-  audit_log           -      -       -         -        R            R
+  audit_log           -      -       -         -        -            R
   analytics_events    C*     -       -         -        R            R
 
   R  read      W  write      C  create only      -  denied
   *  through rate limited server actions only
   ** published posts only
   +  reads all, writes only its own unless an admin reassigns
+  Blog write and audit read also open to a granted user
 ```
 
 Tested in pgTAP per table, per role, proving the negative rather than only the positive.

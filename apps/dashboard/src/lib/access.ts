@@ -8,15 +8,28 @@ import type { UserRole } from '@beco/types';
  *
  * RLS in Postgres is still the authority. Everything here is a usability
  * layer: it decides what a role SEES, never what it can touch.
+ *
+ * Blog / Studio is Brightex only (role plus the allowlist, D42). The
+ * audit log is Brightex by default. A Brightex admin can assign
+ * `can_read_audit` on another user; that grant travels on the session.
  */
 
 const ADMINS = ['beco_admin', 'brightex_admin'] as const;
+
+export type StaffGrant = 'audit';
+
+export interface AccessGrants {
+  readonly canWriteBlog?: boolean;
+  readonly canReadAudit?: boolean;
+}
 
 interface RouteRule {
   /** Matches the path itself or any path under it (`/quotes` covers
    *  `/quotes/new` and `/quotes/BEC-Q-00042`). */
   readonly prefix: string;
   readonly roles: readonly UserRole[];
+  /** Extra door besides the role list. */
+  readonly grant?: StaffGrant;
 }
 
 /**
@@ -34,7 +47,9 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/leaderboard', roles: [...ADMINS] },
   { prefix: '/users', roles: ['brightex_admin'] },
   { prefix: '/settings', roles: [...ADMINS] },
-  { prefix: '/launch', roles: [...ADMINS] },
+  { prefix: '/launch', roles: ['brightex_admin'] },
+  { prefix: '/studio', roles: ['brightex_admin'] },
+  { prefix: '/audit', roles: ['brightex_admin'], grant: 'audit' },
 ];
 
 /**
@@ -43,9 +58,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
  * permissions" (PRD section 4.2): a salesperson opens onto their own work,
  * not a stat board they cannot act on.
  *
- * `beco_editor` has no operations screen in M5 (its work is the blog, which
- * is Studio, M7). It lands on `/`, which renders a plain "nothing assigned
- * yet" page for that role rather than bouncing a real signed-in user out.
+ * `beco_editor` has no operations screen. It lands on `/`.
  */
 export const ROLE_LANDING: Record<UserRole, string> = {
   beco_sales: '/quotes',
@@ -73,9 +86,20 @@ export const ruleFor = (pathname: string): RouteRule | null => {
   return match;
 };
 
+const grantAllows = (rule: RouteRule, grants: AccessGrants): boolean => {
+  if (rule.grant === 'audit') return Boolean(grants.canReadAudit);
+  return false;
+};
+
 /** Whether a role may load a path. An ungated path is allowed for everyone
  *  signed in; the caller has already checked the session. */
-export const canAccess = (role: UserRole, pathname: string): boolean => {
+export const canAccess = (role: UserRole, pathname: string, grants: AccessGrants = {}): boolean => {
   const rule = ruleFor(pathname);
-  return rule ? rule.roles.includes(role) : true;
+  if (!rule) return true;
+  return rule.roles.includes(role) || grantAllows(rule, grants);
 };
+
+export const grantsFrom = (user: AccessGrants): AccessGrants => ({
+  canWriteBlog: Boolean(user.canWriteBlog),
+  canReadAudit: Boolean(user.canReadAudit),
+});

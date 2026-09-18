@@ -31,6 +31,8 @@ const user = (
   role: 'beco_sales' as string | null,
   isActive: true,
   mustChangePassword: false,
+  canWriteBlog: false,
+  canReadAudit: false,
   ...over,
 });
 
@@ -146,9 +148,13 @@ describe('dashboard proxy: per-route role check', () => {
     ['beco_admin', '/', null],
     ['beco_admin', '/quotes', null],
     ['beco_admin', '/settings', null],
-    ['beco_admin', '/launch', null],
+    ['beco_admin', '/launch', '/'],
     ['beco_admin', '/users', '/'],
+    ['beco_admin', '/studio/blog', '/'],
+    ['beco_admin', '/audit', '/'],
     ['brightex_admin', '/users', null],
+    ['brightex_admin', '/studio/blog', null],
+    ['brightex_admin', '/audit', null],
     ['brightex_admin', '/launch', null],
     ['beco_editor', '/', null],
     ['beco_editor', '/quotes', '/'],
@@ -176,5 +182,12 @@ describe('dashboard proxy: per-route role check', () => {
     resolveSessionUser.mockResolvedValue(user({ role: 'beco_sales' }));
     const denied = await proxy(requestFor('/users/new', AUTHED));
     expect(location(denied)?.pathname).toBe('/quotes');
+  });
+
+  it('lets a granted salesperson into audit, not studio', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    resolveSessionUser.mockResolvedValue(user({ role: 'beco_sales', canWriteBlog: true, canReadAudit: true }));
+    expect(location(await proxy(requestFor('/studio/blog', AUTHED)))?.pathname).toBe('/quotes');
+    expect(location(await proxy(requestFor('/audit', AUTHED)))).toBeNull();
   });
 });

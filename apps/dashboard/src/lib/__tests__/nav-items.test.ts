@@ -25,6 +25,18 @@ describe('navItemsFor', () => {
     const hrefs = navItemsFor('brightex_admin').map((i) => i.href);
     expect(hrefs).toContain('/users');
     expect(hrefs).toContain('/settings');
+    expect(hrefs).toContain('/studio/blog');
+    expect(hrefs).toContain('/audit');
+  });
+
+  it('hides Blog and Audit from Beco admin until granted', () => {
+    const hrefs = navItemsFor('beco_admin').map((i) => i.href);
+    expect(hrefs).not.toContain('/studio/blog');
+    expect(hrefs).not.toContain('/audit');
+    expect(navItemsFor('beco_sales', { canWriteBlog: true }).map((i) => i.href)).not.toContain(
+      '/studio/blog',
+    );
+    expect(navItemsFor('beco_sales', { canReadAudit: true }).map((i) => i.href)).toContain('/audit');
   });
 
   it('gives beco_admin everything except Users, per D6', () => {
@@ -76,8 +88,16 @@ describe('navContext', () => {
     });
   });
 
-  it('labels the counter create path as New quote, not the slug', () => {
-    expect(navContext('/quotes/new')?.pageLabel).toBe('New quote');
+  it('labels a blog id as Edit article, never the uuid', () => {
+    expect(navContext('/studio/blog/e43cf2d0-cafa-48a4-982f-55eb67d4ec25')).toEqual({
+      sectionHref: '/studio/blog',
+      sectionLabel: 'Blog',
+      pageLabel: 'Edit article',
+    });
+  });
+
+  it('labels the blog create path as New article', () => {
+    expect(navContext('/studio/blog/new')?.pageLabel).toBe('New article');
   });
 
   it('decodes a reference that arrived encoded', () => {

@@ -24,4 +24,25 @@ describe('FormSection', () => {
     );
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('can sit under a tab without repeating the heading', () => {
+    render(
+      <FormSection hint="One address per line.">
+        <label htmlFor="notify">Notification recipients</label>
+        <textarea id="notify" />
+      </FormSection>,
+    );
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Notification recipients')).toBeInTheDocument();
+  });
+
+  it('places fields side by side when asked for two columns', () => {
+    const { container } = render(
+      <FormSection columns={2}>
+        <label htmlFor="a">A</label>
+        <label htmlFor="b">B</label>
+      </FormSection>,
+    );
+    expect(container.querySelector('div.grid')?.className).toContain('sm:grid-cols-2');
+  });
 });

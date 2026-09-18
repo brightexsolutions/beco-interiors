@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@beco/supabase-client';
-import { CHANGE_PASSWORD_PATH, ROLE_LANDING, canAccess } from '@/lib/access';
+import { CHANGE_PASSWORD_PATH, ROLE_LANDING, canAccess, grantsFrom } from '@/lib/access';
 import { isForcedPasswordChangeEnforced } from '@/lib/dev-quick-login';
 import { resolveSessionUser } from '@/lib/session';
 
@@ -51,7 +51,7 @@ export async function proxy(request: NextRequest) {
     return redirectTo(request, CHANGE_PASSWORD_PATH);
   }
 
-  if (!canAccess(user.role, pathname)) {
+  if (!canAccess(user.role, pathname, grantsFrom(user))) {
     return redirectTo(request, ROLE_LANDING[user.role]);
   }
 

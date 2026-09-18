@@ -5,8 +5,8 @@ M5 builds this out. Today it carries one real surface: the anniversary launch co
 ## Routes
 
 - `/login` password sign in against Supabase Auth
-- `/launch` set the countdown date and throw the launch switch. Gated by `requireAdmin`
-  (`beco_admin` or `brightex_admin`), with RLS on `settings` as the real backstop
+- `/launch` set the countdown date and throw the launch switch. Gated by
+  `requirePath('/launch')` (`brightex_admin` only), with RLS on `settings` as the real backstop
 
 ## Running the launch control locally
 

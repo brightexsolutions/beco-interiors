@@ -1065,6 +1065,8 @@ export type Database = {
           id: string
           is_active: boolean
           is_public: boolean
+          can_read_audit: boolean
+          can_write_blog: boolean
           last_login_at: string | null
           must_change_password: boolean
           public_phone: string | null
@@ -1082,6 +1084,8 @@ export type Database = {
           id: string
           is_active?: boolean
           is_public?: boolean
+          can_read_audit?: boolean
+          can_write_blog?: boolean
           last_login_at?: string | null
           must_change_password?: boolean
           public_phone?: string | null
@@ -1099,6 +1103,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_public?: boolean
+          can_read_audit?: boolean
+          can_write_blog?: boolean
           last_login_at?: string | null
           must_change_password?: boolean
           public_phone?: string | null
@@ -1199,6 +1205,8 @@ export type Database = {
       dashboard_summary: { Args: never; Returns: Json }
       end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
+      has_audit_read: { Args: never; Returns: boolean }
+      has_blog_write: { Args: never; Returns: boolean }
       is_brightex_user: { Args: never; Returns: boolean }
       mark_order_paid: {
         Args: { p_expected_updated_at: string; p_order_id: string }

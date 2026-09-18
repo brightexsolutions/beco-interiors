@@ -19,8 +19,10 @@ describe('canAccess: the dashboard route/role matrix', () => {
     '/reports': ['beco_admin', 'brightex_admin'],
     '/leaderboard': ['beco_admin', 'brightex_admin'],
     '/settings': ['beco_admin', 'brightex_admin'],
-    '/launch': ['beco_admin', 'brightex_admin'],
+    '/launch': ['brightex_admin'],
     '/users': ['brightex_admin'],
+    '/studio/blog': ['brightex_admin'],
+    '/audit': ['brightex_admin'],
   };
 
   for (const [path, roles] of Object.entries(allowed)) {
@@ -36,6 +38,10 @@ describe('canAccess: the dashboard route/role matrix', () => {
     expect(canAccess('beco_sales', '/quotes/BEC-Q-00042')).toBe(true);
     expect(canAccess('beco_product_manager', '/quotes/new')).toBe(false);
     expect(canAccess('beco_sales', '/users/new')).toBe(false);
+    expect(canAccess('beco_admin', '/studio/blog')).toBe(false);
+    expect(canAccess('beco_sales', '/studio/blog', { canWriteBlog: true })).toBe(false);
+    expect(canAccess('beco_sales', '/audit', { canReadAudit: true })).toBe(true);
+    expect(canAccess('beco_admin', '/audit')).toBe(false);
   });
 
   it('does not match a prefix that is only a partial path segment', () => {

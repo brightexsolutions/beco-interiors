@@ -31,6 +31,38 @@ describe('Tabs', () => {
     expect(screen.queryByText('Leaderboard')).toBeNull();
   });
 
+  it('keeps inactive forceMounted panels hidden', async () => {
+    const user = userEvent.setup();
+    render(
+      <Tabs defaultValue="sales">
+        <TabsList aria-label="Report views">
+          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+        </TabsList>
+        <TabsContent value="sales" forceMount>
+          Leaderboard
+        </TabsContent>
+        <TabsContent value="products" forceMount>
+          Product funnel
+        </TabsContent>
+      </Tabs>,
+    );
+    expect(screen.getByText('Leaderboard')).toBeVisible();
+    expect(screen.getByText('Product funnel').closest('[role="tabpanel"]')).toHaveAttribute(
+      'data-state',
+      'inactive',
+    );
+    await user.click(screen.getByRole('tab', { name: 'Products' }));
+    expect(screen.getByText('Product funnel').closest('[role="tabpanel"]')).toHaveAttribute(
+      'data-state',
+      'active',
+    );
+    expect(screen.getByText('Leaderboard').closest('[role="tabpanel"]')).toHaveAttribute(
+      'data-state',
+      'inactive',
+    );
+  });
+
   it('the active tab is charcoal, not a muted shadcn pill', () => {
     render(<Views />);
     const sales = screen.getByRole('tab', { name: 'Sales' });

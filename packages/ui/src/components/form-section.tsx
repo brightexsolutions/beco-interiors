@@ -10,21 +10,36 @@ import { cn } from '../lib/cn';
 export function FormSection({
   title,
   hint,
+  columns = 1,
   children,
   className,
 }: {
-  title: string;
+  title?: string | undefined;
   hint?: string | undefined;
+  columns?: 1 | 2 | 3 | undefined;
   children: ReactNode;
   className?: string | undefined;
 }) {
   return (
     <section className={cn('min-w-0', className)}>
-      <h3 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
-        {title}
-      </h3>
-      {hint ? <p className="mt-2 font-ui text-base text-neutral-500">{hint}</p> : null}
-      <div className={cn('grid min-w-0 gap-4', hint ? 'mt-4' : 'mt-3')}>{children}</div>
+      {title ? (
+        <h3 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+          {title}
+        </h3>
+      ) : null}
+      {hint ? (
+        <p className={cn('font-ui text-base text-neutral-500', title ? 'mt-2' : null)}>{hint}</p>
+      ) : null}
+      <div
+        className={cn(
+          'grid min-w-0 gap-4',
+          title || hint ? 'mt-4' : null,
+          columns === 2 && 'sm:grid-cols-2',
+          columns === 3 && 'sm:grid-cols-2 xl:grid-cols-3',
+        )}
+      >
+        {children}
+      </div>
     </section>
   );
 }

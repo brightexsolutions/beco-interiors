@@ -8,11 +8,12 @@ band, or `/products` unless Brown asks.
 the next agent needs to start cold.
 
 **State, 18 September 2026:** quotes, catalogue editor, `/orders`,
-`/reports`, `/users` and announcements are on branch `m5-quotes`, off
-`m5-dashboard` at `a6d784d`. `/stock` redirects to `/products`. Receipt PDF
-ships with orders. Quote, receipt and report PDFs preview as canvas pages
-with zoom. Live beco.co.ke is still WordPress; that is expected until the
-storefront launches.
+`/reports`, `/users`, announcements, `/settings`, `/studio/blog`,
+`/audit` and the dashboard appearance toggle are on branch `m5-quotes`,
+off `m5-dashboard` at `a6d784d`. `/stock` redirects to `/products`.
+Receipt PDF ships with orders. Quote, receipt and report PDFs preview as
+canvas pages with zoom. Live beco.co.ke is still WordPress; that is
+expected until the storefront launches.
 
 **Local stack:** `pnpm db:reset` then `pnpm drive:import` if you need
 photographs. After a plain reset the local catalogue is 24 published 12mm
@@ -27,9 +28,10 @@ ranges on purpose. Migration 39 adds `stock_quantity` and
 
 Branch: `m5-quotes`. Dashboard: `http://localhost:3001/`.
 
-Own settings next. Do not start a
-second products, quotes, orders, reports, users or announcements pass unless
-Brown asks.
+Close M5. Do not reopen quotes, AppShell, the charcoal band,
+`ShellContext`, `/products`, `/orders`, `/reports`, `/users`,
+announcements, `/settings`, `/studio/blog`, `/audit` or the appearance
+toggle unless Brown asks.
 
 Do not start a second products pass, and do not edit quotes, AppShell, the
 charcoal band, `ShellContext`, `/orders` or `/reports` unless Brown says so.
@@ -76,11 +78,17 @@ new write genuinely has to call them.
 - `apps/dashboard/src/app/(app)/reports/**` and `components/report-*`
 - `apps/dashboard/src/app/(app)/users/**` and `components/user-*`
 - `apps/dashboard/src/app/(app)/announcements/**` and `components/announcement-*`
+- `apps/dashboard/src/app/(app)/settings/**` and `components/settings-*`
+- `apps/dashboard/src/app/(app)/studio/**` and `components/blog-*`, `new-blog.tsx`
+- `apps/dashboard/src/app/(app)/audit/**` and `components/audit-*`
+- `apps/dashboard/src/components/theme-toggle.tsx`, `lib/dashboard-theme.ts`
 - `apps/dashboard/src/app/api/img/**` (dashboard R2 preview proxy)
 - Stock columns, product photographs and `dashboard_summary` low-stock
   (migration 39)
 - Order and report RPCs, migrations 40 and 41, receipt and report PDFs
 - Migration 45 (`guard_users_staff`, `end_user_sessions`) and pgTAP 26 / 27
+- Migrations 46 to 48 (settings / blog / audit grants, payment channels,
+  studio Brightex-only) and pgTAP 28
 
 Storefront availability and `POST /api/revalidate` already landed for
 catalogue writes. Do not restyle the storefront to get the next screen done.
@@ -199,10 +207,15 @@ storefront.
 `brightex_admin`. Nairobi datetime-local. Writes bust storefront `/` so the
 bar updates. Do not restyle the storefront bar.
 
-**Next:** settings (`beco_admin` and `brightex_admin`). Key/value in
-`settings`: VAT rate, quote validity, bank and till, notification
-recipients, WhatsApp number, quote footer, `brightex_allowed_emails`.
-Launch date stays on `/launch`. No FAB unless the plan names create.
-Do not reopen orders, reports, quotes, AppShell, the charcoal band,
-`/products`, `/users` or announcements unless Brown asks.
+**Next:** close M5. Walk the remaining Definition of done items: tick
+sections S and T against reality, finish the Dashboard QA inventory
+including the 12-tap count on a real phone, run Codex's M5 review on
+committed state, and leave LastUpdated plus section L live updates unless
+Brown asks for them now. Do not reopen settings, Studio, audit or the
+theme toggle.
+
+Settings (`beco_admin` and `brightex_admin`), blog (`/studio/blog`) and audit
+(`/audit`) shipped this session. Payments on Settings cover bank, till,
+paybill and send money. Studio write is Brightex-only. Audit read stays
+grantable. Appearance toggle is dashboard-only (`html.dark`).
 

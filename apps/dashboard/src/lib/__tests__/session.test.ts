@@ -55,6 +55,8 @@ describe('resolveSessionUser', () => {
       must_change_password: true,
       email: 's@beco.co.ke',
       full_name: 'Sam Odhiambo',
+      can_write_blog: false,
+      can_read_audit: false,
     };
     expect(await resolveSessionUser(clientReturning(row), 'u1')).toEqual({
       userId: 'u1',
@@ -63,6 +65,8 @@ describe('resolveSessionUser', () => {
       role: 'beco_sales',
       isActive: true,
       mustChangePassword: true,
+      canWriteBlog: false,
+      canReadAudit: false,
     });
   });
 

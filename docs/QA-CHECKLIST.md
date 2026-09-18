@@ -232,6 +232,7 @@ real phone** (M5 section D).
 | Mobile section strip | Horizontal scroll, no hamburger, right-edge fade | **Server** confirmed at 390px: the strip scrolls, Quotes stays first. **Real-device swipe still to walk** |
 | New-quote count | Warm Red badge on Quotes when positive | Styled and tested; **wired to 0** until realtime (section L / M) |
 | Account menu | Name opens a flat panel: Change password (link) and Sign out (POST to `/sign-out`). Closes on Escape, outside click, navigation | **Server** confirmed: opened, "Sign out" returned to `/login` with the session gone. `AccountMenu` tested, 5 tests |
+| Appearance | Moon / sun in the chrome. Toggles `html.dark` and stores `beco-dashboard-theme`. First visit follows the OS if nothing is stored | Test: `ThemeToggle`, `dashboard-theme` |
 | `PageHeading` | Every screen opens with a Warm Red rule, eyebrow, Cormorant title, lede | **Server** confirmed on `/`, `/quotes`, `/products`. Tested, 4 tests |
 
 ### Proxy and role landing
@@ -380,11 +381,52 @@ The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (
 | Editor | FormSections for copy, schedule (Nairobi), CTA, preview. Save writes the row and busts the storefront layout | Test: `AnnouncementEditor`, create/update actions |
 | Live window | A row that starts tomorrow is absent from anon today, present once the window includes now | pgTAP `27_announcements_admin`. Integration against local Postgres |
 
+### `/settings`
+
+`beco_admin` (`irene.kariuki@beco.co.ke`) and `brightex_admin`. No FAB. Launch date stays on `/launch`.
+
+| Control | What it does | Status |
+|---|---|---|
+| Quotes / Payments / Contact / Notifications / Studio | Switches the panel immediately. URL `?tab=`. Inactive fields stay in the save form but stay hidden | Test: `SettingsForm`. VAT is not visible on Payments |
+| Save settings | Title row, right. Writes VAT, validity, SLA, bank, till, paybill, send money, terms, footer, WhatsApp, phone, recipients, Brightex allowlist | Test: `SettingsForm`, `saveDashboardSettings`. Integration against local Postgres |
+| Anniversary launch | Title row, right. Brightex only. Navigates to `/launch` | Test: `SettingsForm`. Irene does not see it |
+| Allow audit / Remove audit | Brightex only. ConfirmDialog names the person. Sets `can_read_audit` | Test: `SettingsGrants`. pgTAP `28` |
+| Product manager or sales at `/settings` | Proxy bounces | `access.test.ts`, `proxy.test.ts` |
+
+### `/studio/blog`
+
+Brightex only. Irene, sales, and a `can_write_blog` flag cannot load it.
+
+| Control | What it does | Status |
+|---|---|---|
+| Search / Status | URL filters. One row from `lg` | Test: `BlogFilters` |
+| Desktop table | Title, Status, Search term, Updated, Actions. Actions is icon plus Edit | Test: `BlogResults` |
+| Cards | Phone only. The card is Edit | Test: `BlogResults` |
+| New article | Charcoal labelled FAB to `/studio/blog/new` | Test: `NewBlogFab` |
+| Generate | Sparkles icon plus Generate. Server-side Gemini. Validator rejects em dashes and banned phrases | Test: `BlogEditor`, `generateBlogDraft` |
+| Body formatting | Bold, italic, heading, list, link. Link opens a Dialog, never `window.prompt`. Wraps the current selection | Test: `BlogBodyEditor` |
+| Preview | Live article layout: title, byline, cover, markdown body | Test: `BlogEditor` |
+| Breadcrumb | Article title, never the uuid. New article on `/studio/blog/new` | Test: `navContext`, `ShellContext` |
+| Save draft | Title-row submit, `form="blog-save"`. Writes `blog_posts` | Test: `BlogEditor`, `saveBlogPost` |
+| Publish / Unpublish | ConfirmDialog with the verb. Publish needs cover plus alt. Busts `/blog` | Test: `BlogEditor`, save action |
+| Upload / Remove cover | Same Sharp pipeline as products. Remove uses ConfirmDialog | Test: upload refused without R2 in action tests |
+
+### `/audit`
+
+Brightex by default. A granted user (`can_read_audit`) can also load it. Irene cannot unless granted. No FAB.
+
+| Control | What it does | Status |
+|---|---|---|
+| Search / Entity / Action | URL filters. One row from `lg` | Test: `AuditFilters` |
+| Desktop table | When, Who, Action, Entity, Actions. Actions is icon plus View | Test: `AuditResults` |
+| Cards | Phone only. The card is View | Test: `AuditResults` |
+| View | Sheet with labelled before / after rows, not JSON. Close uses the x icon | Test: `AuditResults`, `formatAuditFields` |
+
 ### `/launch` (D80)
 
 | Control | What it does | Status |
 |---|---|---|
-| `/launch` guard | `requireAdmin` plus the proxy role check | RLS backstop in pgTAP `04_role_writes`. **Server** confirmed: `beco_admin` and `brightex_admin` reach it, other roles bounce |
+| `/launch` guard | `requirePath('/launch')` plus the proxy. Brightex only. Irene is bounced | RLS still `settings_write_admin`. Proxy `beco_admin` at `/launch` -> `/` |
 | Save date | Writes `site_launch_at`, empty clears it | `launchSettingsSchema` unit tested, RLS pgTAP tested. The row write **NOT CONFIRMED end to end** |
 | Launch the site / Revert | Flips `site_launch_live` behind a `ConfirmDialog` with the verb on its button | `LaunchControls` tested, 6 tests. The row write **NOT CONFIRMED end to end** |
 

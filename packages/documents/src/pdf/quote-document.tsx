@@ -2,6 +2,7 @@ import { Document, Image, Page, Text, View, StyleSheet } from '@react-pdf/render
 import { quoteTotals } from '@beco/validation';
 import { logoPath } from './fonts';
 import type { QuotePdfInput } from './types';
+import { quotePaymentBlocks } from './types';
 
 /**
  * One template for a counter quote and a web quote. Line prices come from
@@ -220,18 +221,20 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
               <Text style={styles.body}>{quote.paymentTerms}</Text>
             </View>
           ) : null}
-          {!isReceipt && quote.bankDetails ? (
-            <View style={{ marginBottom: 8 }}>
-              <Text style={styles.label}>Bank</Text>
-              <Text style={styles.body}>{quote.bankDetails}</Text>
-            </View>
-          ) : null}
-          {!isReceipt && quote.tillNumber ? (
-            <View>
-              <Text style={styles.label}>Till</Text>
-              <Text style={styles.body}>{quote.tillNumber}</Text>
-            </View>
-          ) : null}
+          {isReceipt ? null : (
+            <>
+              {quotePaymentBlocks(quote).map((block) => (
+                <View key={block.label} style={{ marginBottom: 8 }}>
+                  <Text style={styles.label}>{block.label}</Text>
+                  {block.lines.map((line) => (
+                    <Text key={line} style={styles.body}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              ))}
+            </>
+          )}
         </View>
 
         <View style={styles.footer} fixed>

@@ -106,7 +106,7 @@ export function ConfirmDialog({
       <div
         aria-hidden
         onClick={close}
-        className="absolute inset-0 bg-charcoal/60"
+        className="absolute inset-0 bg-ink/60"
       />
       <div
         ref={panelRef}

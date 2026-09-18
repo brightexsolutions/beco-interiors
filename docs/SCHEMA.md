@@ -53,6 +53,8 @@ created them.
 | `must_change_password` | boolean default true | Forced change on first login |
 | `last_login_at` | timestamptz | |
 | `is_public` | boolean default false | Storefront `/team` only. Check `users_only_sales_are_public` refuses the flag on any role but `beco_sales` |
+| `can_write_blog` | boolean default false | Kept on the row. Does not open Studio. Write is `is_brightex_user()` |
+| `can_read_audit` | boolean default false | Brightex assigns this. Role `brightex_admin` already reads `/audit` |
 | `public_title`, `public_phone` | text null | Shown on `/team` |
 | `public_photo` | jsonb null | Catalogue stem plus alt, width, height, blur. Derivatives at 400/800/1600 webp on R2 |
 | `sort_order` | int | `/team` listing order |
@@ -273,9 +275,9 @@ receipt only.
 | `ip` | inet |
 | `created_at` | timestamptz |
 
-Written by trigger, not by application code, so it cannot be forgotten. **Read by admin roles
-through the dashboard, filterable by user and date.** An audit trail nobody can read is not an
-audit trail.
+Written by trigger, not by application code, so it cannot be forgotten. **Read by
+`brightex_admin`, and by anyone Brightex has granted `can_read_audit`.** Filterable
+by entity and action. An audit trail nobody can read is not an audit trail.
 
 ---
 
@@ -298,6 +300,11 @@ audit trail.
 | `author` | text | **A person, never "AI"** |
 | `generated_by_model`, `generation_prompt` | text null | So an underperforming post is traceable to what produced it |
 
+Dashboard authoring is `/studio/blog`. Write is `is_brightex_user()` only
+(role plus the allowlist, D42). `users.can_write_blog` remains on the row
+but does not open Studio or `blog_posts`. Anon still reads published rows
+only. Cover alt is required before publish.
+
 ### testimonials, announcements
 
 `announcements` carries `starts_at`, `ends_at`, `priority`, `is_active`, so a mid year sale
@@ -307,9 +314,13 @@ Dashboard authoring is `/announcements`. Audit trigger already on the table.
 
 ### settings
 
-Key/value. VAT rate, quote validity days, bank and till details, notification recipients,
-WhatsApp number, quote footer, and `brightex_allowed_emails` for the D42 Studio gate. **Without
-this table each of those is a code deploy.**
+Key/value. VAT rate, quote validity days, payment channels (bank, till, paybill,
+send money), notification recipients, WhatsApp number, quote footer, and
+`brightex_allowed_emails` for the D42 Studio gate. **Without this table each of
+those is a code deploy.** Dashboard authoring is `/settings`.
+Launch date stays on `/launch`. `notification_recipients` is a jsonb email list.
+Paybill, till and send-money numbers stay off `settings_read_public`, same as
+bank details.
 
 `site_launch_at` (nullable ISO instant) and `site_launch_live` (boolean) drive the first
 anniversary countdown and reveal, set from `apps/dashboard`'s `/launch` control. Both are on
@@ -417,9 +428,9 @@ See D46 and `docs/ARCHITECTURE.md` section 17.
   quotes              C*     RW+     -         -        RW           RW
   orders              C*     RW+     -         -        RW           RW
   products (draft)    -      R       RW        R        RW           RW
-  blog_posts          R**    R       R         RW       RW           RW
+  blog_posts          R**    R       R         R         R            RW
   users               -      -       -         -        R            RW
-  audit_log           -      -       -         -        R            R
+  audit_log           -      -       -         -        -            R
   settings            R***   R       R         R        RW           RW
   analytics_events    C*     -       -         -        R            R
   import_*            -      -       R         -        R            RW
@@ -429,6 +440,8 @@ See D46 and `docs/ARCHITECTURE.md` section 17.
   **  published posts only
   *** public keys only, never bank details
   +   reads all, writes only its own unless an admin reassigns
+  Audit read also opens to a user Brightex has granted `can_read_audit`.
+  Studio / blog write is `is_brightex_user()` only.
 ```
 
 Every one of these is proven in pgTAP, testing the negative rather than only the positive. See

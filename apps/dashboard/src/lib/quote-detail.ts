@@ -75,6 +75,9 @@ export interface QuoteSettings {
   validityDays: number;
   bankDetails: string;
   tillNumber: string;
+  paybillNumber: string;
+  paybillAccount: string;
+  sendMoneyNumber: string;
   paymentTerms: string;
   footer: string;
   phone: string;
@@ -110,6 +113,9 @@ export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<Quot
       'quote_validity_days',
       'bank_details',
       'till_number',
+      'paybill_number',
+      'paybill_account',
+      'send_money_number',
       'payment_terms',
       'quote_footer',
       'business_phone',
@@ -122,6 +128,9 @@ export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<Quot
     validityDays: settingNumber(map.get('quote_validity_days'), 30),
     bankDetails: settingText(map.get('bank_details')),
     tillNumber: settingText(map.get('till_number')),
+    paybillNumber: settingText(map.get('paybill_number')),
+    paybillAccount: settingText(map.get('paybill_account')),
+    sendMoneyNumber: settingText(map.get('send_money_number')),
     paymentTerms: settingText(map.get('payment_terms')),
     footer: settingText(map.get('quote_footer')),
     phone: settingText(map.get('business_phone')) || '+254 722 333 730',

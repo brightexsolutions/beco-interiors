@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { quoteTotals } from '@beco/validation';
 import { renderQuotePdf } from '../render';
-import type { QuotePdfInput } from '../types';
+import { quotePaymentBlocks, type QuotePdfInput } from '../types';
 
 const line = (n: number, price = 65000): QuotePdfInput['lines'][number] => ({
   description: `Line ${String(n).padStart(2, '0')} sintered stone slab, 12mm polished`,
@@ -22,6 +22,9 @@ const base = (over: Partial<QuotePdfInput> = {}): QuotePdfInput => ({
   vatRate: 0.16,
   bankDetails: 'KCB Bank Kenya. Account name: Beco Interiors.',
   tillNumber: '',
+  paybillNumber: '',
+  paybillAccount: '',
+  sendMoneyNumber: '',
   paymentTerms: 'Prices include VAT. Valid for the days shown.',
   footer: 'Urban Square, Enterprise Road, Industrial Area, Nairobi. +254 722 333 730.',
   phone: '+254 722 333 730',
@@ -53,6 +56,23 @@ describe('renderQuotePdf', () => {
   it('the From block is the legal name, Beco Interiors Limited', async () => {
     const pdf = await renderQuotePdf(base());
     expect(pdf.toString('latin1')).toContain('Beco Interiors Limited');
+  });
+
+  it('prints till, paybill and send money when those channels are set', async () => {
+    const quote = base({
+      tillNumber: '123456',
+      paybillNumber: '247247',
+      paybillAccount: 'Quote number',
+      sendMoneyNumber: '254722333730',
+    });
+    expect(quotePaymentBlocks(quote)).toEqual([
+      { label: 'Bank', lines: ['KCB Bank Kenya. Account name: Beco Interiors.'] },
+      { label: 'Till', lines: ['123456'] },
+      { label: 'Paybill', lines: ['247247', 'Account Quote number'] },
+      { label: 'Send money', lines: ['254722333730'] },
+    ]);
+    const pdf = await renderQuotePdf(quote);
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
   it('a priced quote uses the D50 split, VAT inside not on top', () => {

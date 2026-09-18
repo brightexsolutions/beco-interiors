@@ -5,7 +5,7 @@ import { axe } from 'vitest-axe';
 const mockPathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({ usePathname: () => mockPathname() }));
 
-const { ShellContext } = await import('../shell-context');
+const { ShellContext, ShellPageLabel, ShellPageLabelProvider } = await import('../shell-context');
 
 function stubObserver(isIntersecting: boolean) {
   vi.stubGlobal(
@@ -101,6 +101,21 @@ describe('ShellContext', () => {
     );
     expect(screen.getByRole('link', { name: 'Quotes' })).toHaveAttribute('href', '/quotes');
     expect(screen.getByText('New quote')).toBeInTheDocument();
+  });
+
+  it('shows the article title, not the blog id', () => {
+    stubObserver(false);
+    mockPathname.mockReturnValue('/studio/blog/e43cf2d0-cafa-48a4-982f-55eb67d4ec25');
+    render(
+      <ShellPageLabelProvider>
+        <header data-shell-header="" />
+        <ShellPageLabel label="Sintered Stone in Kenya: A Buying Guide" />
+        <ShellContext />
+      </ShellPageLabelProvider>,
+    );
+    expect(screen.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/studio/blog');
+    expect(screen.getByText('Sintered Stone in Kenya: A Buying Guide')).toBeInTheDocument();
+    expect(screen.queryByText(/e43cf2d0/)).toBeNull();
   });
 
   it('has no accessibility violations', async () => {

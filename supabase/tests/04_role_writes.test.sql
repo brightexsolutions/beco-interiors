@@ -140,10 +140,12 @@ select is_empty(
 -- ---------- beco_editor ----------
 set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000005","role":"authenticated"}';
 
-select lives_ok(
+select throws_ok(
   $$insert into blog_posts (title, slug, body, author)
     values ('ZZ Test Post', 'zz-test-post', 'Body.', 'E Editor')$$,
-  'beco_editor CAN write a blog post'
+  '42501',
+  null,
+  'beco_editor cannot write a blog post until Brightex grants it'
 );
 
 select throws_ok(

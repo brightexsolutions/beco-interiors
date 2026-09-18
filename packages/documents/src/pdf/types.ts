@@ -19,6 +19,9 @@ export interface QuotePdfInput {
   vatRate: number;
   bankDetails: string;
   tillNumber: string;
+  paybillNumber: string;
+  paybillAccount: string;
+  sendMoneyNumber: string;
   paymentTerms: string;
   footer: string;
   phone: string;
@@ -29,6 +32,19 @@ export interface QuotePdfInput {
 }
 
 export interface QuotePdfTotals extends QuoteMoney {}
+
+export function quotePaymentBlocks(quote: QuotePdfInput): { label: string; lines: string[] }[] {
+  const blocks: { label: string; lines: string[] }[] = [];
+  if (quote.bankDetails) blocks.push({ label: 'Bank', lines: [quote.bankDetails] });
+  if (quote.tillNumber) blocks.push({ label: 'Till', lines: [quote.tillNumber] });
+  if (quote.paybillNumber) {
+    const lines = [quote.paybillNumber];
+    if (quote.paybillAccount) lines.push(`Account ${quote.paybillAccount}`);
+    blocks.push({ label: 'Paybill', lines });
+  }
+  if (quote.sendMoneyNumber) blocks.push({ label: 'Send money', lines: [quote.sendMoneyNumber] });
+  return blocks;
+}
 
 export interface ReportPdfPerson {
   name: string;

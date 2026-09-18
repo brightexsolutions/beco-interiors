@@ -1,9 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { navContext } from '@/lib/nav-items';
+
+const PageLabelContext = createContext<{
+  override: string | null;
+  setOverride: (label: string | null) => void;
+}>({ override: null, setOverride: () => {} });
+
+export function ShellPageLabelProvider({ children }: { children: ReactNode }) {
+  const [override, setOverride] = useState<string | null>(null);
+  const value = useMemo(() => ({ override, setOverride }), [override]);
+  return <PageLabelContext.Provider value={value}>{children}</PageLabelContext.Provider>;
+}
+
+/** Sets the docked breadcrumb to a human name instead of the URL id. */
+export function ShellPageLabel({ label }: { label: string }) {
+  const { setOverride } = useContext(PageLabelContext);
+  useEffect(() => {
+    setOverride(label);
+    return () => setOverride(null);
+  }, [label, setOverride]);
+  return null;
+}
 
 /**
  * The "you are here" bar. Hidden while the dashboard header is still on
@@ -14,7 +42,9 @@ import { navContext } from '@/lib/nav-items';
 export function ShellContext() {
   const pathname = usePathname();
   const ctx = navContext(pathname);
+  const { override } = useContext(PageLabelContext);
   const [docked, setDocked] = useState(false);
+  const pageLabel = override ?? ctx?.pageLabel ?? null;
 
   useEffect(() => {
     const header = document.querySelector('[data-shell-header]');
@@ -36,7 +66,7 @@ export function ShellContext() {
       className="fixed inset-x-0 top-0 z-50 border-b border-neutral-200 bg-high-vis-white shadow-panel"
     >
       <ol className="mx-auto flex min-h-11 max-w-[1440px] items-center gap-2 px-4 lg:px-8">
-        {ctx.pageLabel ? (
+        {pageLabel ? (
           <>
             <li className="shrink-0">
               <Link
@@ -53,7 +83,7 @@ export function ShellContext() {
               aria-current="page"
               className="min-w-0 truncate font-ui text-base font-semibold text-charcoal"
             >
-              {ctx.pageLabel}
+              {pageLabel}
             </li>
           </>
         ) : (

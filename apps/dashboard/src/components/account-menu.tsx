@@ -52,7 +52,7 @@ export function AccountMenu({ name }: { name: string }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Account, ${name}`}
-        className="flex h-11 w-11 items-center justify-center rounded-full bg-charcoal font-ui text-sm font-semibold text-high-vis-white"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-ink font-ui text-sm font-semibold text-paper"
       >
         {initials(name)}
       </button>

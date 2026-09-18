@@ -31,6 +31,9 @@ Integration is **26 tests** across 5 files.
 M5 sections B and J (18 September): `/users` (Brightex admin, D38 lookup table
 plus sheet) and `/announcements` (Beco admin authoring UI). Migration 45.
 
+M5 settings, blog and audit (18 September): `/settings` for admins, `/studio/blog`
+and `/audit` for Brightex or a granted user. Migration 46.
+
 The storefront modernisation pass (D82) rebuilt or extended these suites: `announcement-bar`
 (now a rotating client component, `buildAnnouncementItems` plus roll and reduced-motion
 behaviour), `add-to-quote` (the "Review quote" route after an add), `shop-controls` (the
@@ -163,7 +166,9 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `NewQuoteFab` | `components/__tests__/new-quote-fab.test.tsx` | Link to `/quotes/new`, stays labelled |
 | Quote mutations (db) | `lib/quote-mutations.integration.test.ts` | Counter quote against local Supabase: row, items, lock |
 | Nav items | `lib/__tests__/nav-items.test.ts` | The role -> section list, and that it never lists a path the access map would then deny. Product manager sees Catalogue at `/products`, not a separate Stock item. `navContext` names section roots and nested screens |
-| `AppShell` | `components/__tests__/app-shell.test.tsx` | Licensed still behind the chrome. Section nav exposed. White header stays in flow. Only the breadcrumb docks on a phone. Axe |
+| `AppShell` | `components/__tests__/app-shell.test.tsx` | Licensed still behind the chrome. Section nav exposed. Appearance toggle present. White header stays in flow. Only the breadcrumb docks on a phone. Axe |
+| `ThemeToggle` | `components/__tests__/theme-toggle.test.tsx` | Click adds `html.dark` and stores the choice, click again restores light. Syncs after mount when dark is already stored. Axe |
+| Dashboard theme | `lib/__tests__/dashboard-theme.test.ts` | apply and toggle write the class and localStorage |
 | `ShellContext` | `components/__tests__/shell-context.test.tsx` | Hidden while the header is on screen. Docks after, with no `lg:hidden`. Nested path shows section / page, section is a real list link, New quote labelled, axe. 6 tests |
 | Stock redirect | `app/(app)/stock/__tests__/page.test.ts` | `/stock` redirects to `/products` so old links do not 404 |
 | Product helpers | `lib/__tests__/products.test.ts` | Low stock is at-or-below the mark and still above zero. Zero is out. Uncounted (NULL) keeps the stored availability |
@@ -193,6 +198,16 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `AnnouncementResults` | `components/__tests__/announcement-results.test.tsx` | Explicit Edit, sheet from `?edit=`, axe |
 | `AnnouncementEditor` | `components/__tests__/announcement-editor.test.tsx` | Preview updates from the title. FormSections present. Save submits. Axe |
 | `NewAnnouncementFab` | `components/__tests__/new-announcement.test.tsx` | Charcoal FAB to `/announcements?new=1` |
+| Settings helpers | `lib/__tests__/settings.test.ts` | Email lists, VAT numbers, storefront paths only for public-facing keys |
+| Settings query | `lib/settings.integration.test.ts` | Irene can write VAT. Sam cannot write blog until Brightex grants it |
+| Settings actions | `app/(app)/settings/__tests__/actions.test.ts` | Session re-check. VAT stored as a fraction. Irene cannot grant. Brightex can |
+| `SettingsForm` | `components/__tests__/settings-form.test.tsx` | Save on the title row, Anniversary launch Brightex-only, Payments tab, axe |
+| `SettingsGrants` | `components/__tests__/settings-grants.test.tsx` | Allow audit ConfirmDialog names the person |
+| Blog helpers | `lib/__tests__/blog.test.ts` | Slug, reading time, Gemini text extraction |
+| Blog actions | `app/(app)/studio/blog/__tests__/actions.test.ts` | Generate returns a draft. Save inserts and busts `/blog` |
+| `BlogFilters` / `BlogResults` / `BlogEditor` / `BlogBodyEditor` / `NewBlogFab` | `components/__tests__/blog-*.test.tsx` | Filters, Edit, Generate, markdown toolbar, preview, FAB |
+| `AuditFilters` / `AuditResults` | `components/__tests__/audit-results.test.tsx` | Filters, View sheet with labelled before / after, axe |
+| Settings / blog / audit grants pgTAP | `28_settings_blog_audit_grants.test.sql` | Sales cannot write settings or blog. Irene can write settings, not blog or audit. Brightex can grant. Granted sales can write blog and read audit |
 | `TopNav` | `components/__tests__/top-nav.test.tsx` | Only the current section carries `aria-current`, a nested path keeps its section, a shared stem does not, the Warm Red count shows on Quotes only and only when positive, axe clean. 6 tests |
 | `AccountMenu` | `components/__tests__/account-menu.test.tsx` | Closed until clicked, offers exactly Change password and Sign out, Sign out goes through the server action not a link, Escape closes, axe clean open and closed. 5 tests |
 | `PageHeading` | `components/__tests__/page-heading.test.tsx` | Title is the `h1`, eyebrow and lede show when given, the actions slot renders, axe clean. 4 tests |
@@ -230,7 +245,7 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `@beco/validation` | `__tests__/dashboard-quote.test.ts` | Counter create, line batch, catalogue add, lost-reason schemas |
 | `@beco/validation` | `__tests__/dashboard-product.test.ts` | Half-unit stock for slabs, whole otherwise, never negative. Blank stock is uncounted, not zero. POA cannot carry a price. SKU keeps a handle code and blank is none. Specs drop blank rows |
 | `@beco/documents` | `email/__tests__/*.ts` | Storefront confirmation plus `buildPricedQuoteEmail`: reference, no marketing voice, no em dashes. Send no-ops without a key |
-| `@beco/documents` | `pdf/__tests__/quote-document.test.ts` | Bytes are a PDF. Unpriced never prints `KES 0.00`. From block is Beco Interiors Limited. 15 lines span pages. No em dashes. Receipt title is Receipt, not Quotation |
+| `@beco/documents` | `pdf/__tests__/quote-document.test.ts` | Bytes are a PDF. Unpriced never prints `KES 0.00`. From block is Beco Interiors Limited. Till, Paybill and Send money labels print when those channels are set. 15 lines span pages. No em dashes. Receipt title is Receipt, not Quotation |
 | `@beco/documents` | `pdf/__tests__/report-document.test.ts` | Sales review PDF carries period, figures and names. Empty tables say so. No em dashes |
 
 ## Import pipeline, `tools/drive-import`

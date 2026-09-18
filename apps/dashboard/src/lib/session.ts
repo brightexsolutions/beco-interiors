@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@beco/supabase-client';
 import type { UserRole } from '@beco/types';
-import { CHANGE_PASSWORD_PATH, ROLE_LANDING, canAccess } from './access';
+import { CHANGE_PASSWORD_PATH, ROLE_LANDING, canAccess, grantsFrom } from './access';
 import { isForcedPasswordChangeEnforced } from './dev-quick-login';
 import { getSupabase } from './supabase';
 
@@ -23,6 +23,8 @@ export interface SessionUser {
   role: UserRole | null;
   isActive: boolean;
   mustChangePassword: boolean;
+  canWriteBlog: boolean;
+  canReadAudit: boolean;
 }
 
 /** A signed-in user whose account is active: `role` is known to be set. */
@@ -43,7 +45,7 @@ export const resolveSessionUser = async (
 ): Promise<SessionUser | null> => {
   const { data } = await supabase
     .from('users')
-    .select('role, is_active, must_change_password, email, full_name')
+    .select('role, is_active, must_change_password, email, full_name, can_write_blog, can_read_audit')
     .eq('id', userId)
     .maybeSingle();
   if (!data) return null;
@@ -55,6 +57,8 @@ export const resolveSessionUser = async (
     role: data.is_active ? data.role : null,
     isActive: data.is_active,
     mustChangePassword: data.must_change_password,
+    canWriteBlog: Boolean(data.can_write_blog),
+    canReadAudit: Boolean(data.can_read_audit),
   };
 };
 
@@ -119,7 +123,7 @@ export const requireRole = async (roles: readonly UserRole[]): Promise<ActiveSes
  */
 export const requirePath = async (pathname: string): Promise<ActiveSession> => {
   const user = await requireUser();
-  if (!canAccess(user.role, pathname)) redirect(ROLE_LANDING[user.role]);
+  if (!canAccess(user.role, pathname, grantsFrom(user))) redirect(ROLE_LANDING[user.role]);
   return user;
 };
 

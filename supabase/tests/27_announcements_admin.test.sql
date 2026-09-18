@@ -111,6 +111,8 @@ select lives_ok(
   'beco_admin can edit an announcement'
 );
 
+reset role;
+set local role postgres;
 select isnt_empty(
   $$select id from audit_log
      where entity_type = 'announcements'
@@ -118,6 +120,8 @@ select isnt_empty(
        and action = 'update'$$,
   'an announcement write is audited'
 );
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","role":"authenticated"}';
 
 select lives_ok(
   $$insert into announcements (title, type, starts_at, ends_at, created_by)

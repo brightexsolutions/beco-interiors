@@ -17,7 +17,11 @@ export const PALETTE = {
   warmRedDeep: '#c81419',
   /** A COOL black. The guideline calls it "a cooling counter to our warming red". */
   charcoal: '#101820',
+  /** True charcoal that never inverts. Photo washes and the auth brand panel. */
+  ink: '#101820',
   highVisWhite: '#ffffff',
+  /** Paper that never inverts. Type on an ink panel. */
+  paper: '#ffffff',
   neutral950: '#0b1119',
   neutral900: '#101820',
   neutral700: '#333d47',
