@@ -20,7 +20,9 @@ describe('QuickAddToQuote, before anything is added', () => {
     render(<QuickAddToQuote line={handleLine} />);
     const button = screen.getByRole('button', { name: 'Add Gold Bar Handle to your quote list' });
     expect(button).toHaveTextContent('Add');
-    expect(screen.queryByRole('button', { name: 'Increase quantity' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Increase quantity of Gold Bar Handle, quantity in your quote list' }),
+    ).not.toBeInTheDocument();
   });
 
   it('adds exactly one on the first click, without opening the product', async () => {
@@ -43,7 +45,9 @@ describe('QuickAddToQuote, once it is on the list', () => {
     render(<QuickAddToQuote line={handleLine} />);
     await user.click(screen.getByRole('button', { name: 'Add Gold Bar Handle to your quote list' }));
     expect(screen.queryByRole('button', { name: /^Add / })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Increase quantity' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Increase quantity of Gold Bar Handle, quantity in your quote list' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove Gold Bar Handle from your quote list' }))
       .toBeInTheDocument();
   });
@@ -52,7 +56,9 @@ describe('QuickAddToQuote, once it is on the list', () => {
     const user = userEvent.setup();
     render(<QuickAddToQuote line={handleLine} />);
     await user.click(screen.getByRole('button', { name: 'Add Gold Bar Handle to your quote list' }));
-    await user.click(screen.getByRole('button', { name: 'Increase quantity' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Increase quantity of Gold Bar Handle, quantity in your quote list' }),
+    );
     expect(readList()[0]?.quantity).toBe(2);
   });
 
@@ -60,9 +66,13 @@ describe('QuickAddToQuote, once it is on the list', () => {
     const user = userEvent.setup();
     render(<QuickAddToQuote line={slabLine} />);
     await user.click(screen.getByRole('button', { name: 'Add Amber Jade to your quote list' }));
-    await user.click(screen.getByRole('button', { name: 'Increase quantity' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Increase quantity of Amber Jade, quantity in your quote list' }),
+    );
     expect(readList()[0]?.quantity).toBe(1.5);
-    const decrease = screen.getByRole('button', { name: 'Decrease quantity' });
+    const decrease = screen.getByRole('button', {
+      name: 'Decrease quantity of Amber Jade, quantity in your quote list',
+    });
     await user.click(decrease);
     expect(readList()[0]?.quantity).toBe(1);
     expect(decrease).not.toBeDisabled();
@@ -73,7 +83,9 @@ describe('QuickAddToQuote, once it is on the list', () => {
     render(<QuickAddToQuote line={handleLine} />);
     await user.click(screen.getByRole('button', { name: 'Add Gold Bar Handle to your quote list' }));
     // Decreasing does not remove it: the floor is one whole unit, not zero.
-    expect(screen.getByRole('button', { name: 'Decrease quantity' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Decrease quantity of Gold Bar Handle, quantity in your quote list' }),
+    ).toBeDisabled();
     expect(readList()).toHaveLength(1);
 
     await user.click(screen.getByRole('button', { name: 'Remove Gold Bar Handle from your quote list' }));

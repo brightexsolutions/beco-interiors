@@ -33,7 +33,11 @@ describe('buildPricedQuoteEmail', () => {
       isPriced: false,
     });
     expect(email.text).toMatch(/priced on application/i);
-    expect(email.text).not.toMatch(/KES|total/i);
+    // Not a blanket ban on the word "total": the copy correctly explains
+    // there isn't one ("does not show a total"), which is not the same
+    // claim as stating one. What must never appear is an actual figure,
+    // a currency amount standing in for a total this email cannot back.
+    expect(email.text).not.toMatch(/KES\s*[\d,]/i);
   });
 
   it('escapes html in the name', () => {

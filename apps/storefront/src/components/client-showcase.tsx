@@ -109,9 +109,11 @@ export function ClientShowcase({ clients }: { clients: PublishedClient[] }) {
                 i === active ? 'opacity-100' : 'opacity-0',
               ].join(' ')}
             >
-              <blockquote className="font-display text-2xl italic leading-snug text-charcoal sm:text-3xl">
-                &ldquo;{bodies[i]}&rdquo;
-              </blockquote>
+              {bodies[i] ? (
+                <blockquote className="font-display text-2xl italic leading-snug text-charcoal sm:text-3xl">
+                  &ldquo;{bodies[i]}&rdquo;
+                </blockquote>
+              ) : null}
               <div className="mt-6">
                 {client.logo ? (
                   <Image

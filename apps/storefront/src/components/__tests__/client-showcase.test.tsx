@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { act } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import { ClientShowcase } from '../client-showcase';
 import type { PublishedClient } from '@/lib/clients';
@@ -100,8 +100,14 @@ describe('ClientShowcase', () => {
   });
 
   it('shows the testimonial as a quote when one is set', () => {
-    render(<ClientShowcase clients={[client({ testimonial: 'Beco fitted our counters on schedule.' })]} />);
-    expect(screen.getByText('“Beco fitted our counters on schedule.”')).toBeInTheDocument();
+    const { container } = render(
+      <ClientShowcase clients={[client({ testimonial: 'Beco fitted our counters on schedule.' })]} />,
+    );
+    // Scoped to the visible layer, not the invisible sizer, which duplicates
+    // the same text on purpose (see the `visible` helper above).
+    expect(
+      within(visible(container) as HTMLElement).getByText('“Beco fitted our counters on schedule.”'),
+    ).toBeInTheDocument();
   });
 
   it('renders no quote block when there is no testimonial', () => {
