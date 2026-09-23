@@ -284,6 +284,39 @@ export type Database = {
           },
         ]
       }
+      category_slugs: {
+        Row: {
+          category_id: string
+          created_at: string
+          slug: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          slug: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_slugs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_slugs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_product_counts"
+            referencedColumns: ["category_id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string
@@ -1058,6 +1091,8 @@ export type Database = {
       }
       users: {
         Row: {
+          can_read_audit: boolean
+          can_write_blog: boolean
           created_at: string
           created_by: string | null
           email: string
@@ -1065,8 +1100,6 @@ export type Database = {
           id: string
           is_active: boolean
           is_public: boolean
-          can_read_audit: boolean
-          can_write_blog: boolean
           last_login_at: string | null
           must_change_password: boolean
           public_phone: string | null
@@ -1077,6 +1110,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_read_audit?: boolean
+          can_write_blog?: boolean
           created_at?: string
           created_by?: string | null
           email: string
@@ -1084,8 +1119,6 @@ export type Database = {
           id: string
           is_active?: boolean
           is_public?: boolean
-          can_read_audit?: boolean
-          can_write_blog?: boolean
           last_login_at?: string | null
           must_change_password?: boolean
           public_phone?: string | null
@@ -1096,6 +1129,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_read_audit?: boolean
+          can_write_blog?: boolean
           created_at?: string
           created_by?: string | null
           email?: string
@@ -1103,8 +1138,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_public?: boolean
-          can_read_audit?: boolean
-          can_write_blog?: boolean
           last_login_at?: string | null
           must_change_password?: boolean
           public_phone?: string | null
@@ -1181,7 +1214,7 @@ export type Database = {
       }
       complete_first_login: { Args: never; Returns: undefined }
       conversion_report: {
-        Args: { p_from?: string | null; p_period?: string; p_to?: string | null }
+        Args: { p_from?: string; p_period?: string; p_to?: string }
         Returns: Json
       }
       convert_quote_to_order: {
@@ -1204,9 +1237,9 @@ export type Database = {
       }
       dashboard_summary: { Args: never; Returns: Json }
       end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
-      is_admin: { Args: never; Returns: boolean }
       has_audit_read: { Args: never; Returns: boolean }
       has_blog_write: { Args: never; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
       is_brightex_user: { Args: never; Returns: boolean }
       mark_order_paid: {
         Args: { p_expected_updated_at: string; p_order_id: string }
@@ -1215,6 +1248,7 @@ export type Database = {
       next_order_reference: { Args: never; Returns: string }
       next_quote_reference: { Args: never; Returns: string }
       record_sign_in: { Args: never; Returns: undefined }
+      refresh_order_money: { Args: { p_order_id: string }; Returns: undefined }
       refresh_quote_money: { Args: { p_quote_id: string }; Returns: undefined }
       reissue_quote: {
         Args: { p_expected_updated_at: string; p_quote_id: string }
@@ -1225,7 +1259,7 @@ export type Database = {
         Returns: undefined
       }
       report_period_bounds: {
-        Args: { p_from?: string | null; p_period: string; p_to?: string | null }
+        Args: { p_from?: string; p_period: string; p_to?: string }
         Returns: {
           label: string
           period_end: string
@@ -1237,7 +1271,7 @@ export type Database = {
         Returns: number
       }
       salesperson_leaderboard: {
-        Args: { p_from?: string | null; p_period?: string; p_to?: string | null }
+        Args: { p_from?: string; p_period?: string; p_to?: string }
         Returns: Json
       }
       set_order_status: {
