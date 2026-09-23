@@ -7,6 +7,12 @@ import { createStorage } from './storage';
 import { slugify, titleise } from './slug';
 import { readCache, writeCache } from './cache';
 import { toDecodable } from './decode';
+import {
+  mergeProductImages,
+  parseStoredImages,
+  type ImageEntry,
+  type ProcessedImage,
+} from './merge-images';
 
 /**
  * Executes an import plan: downloads only what changed, generates derivatives,
@@ -33,6 +39,36 @@ export interface RunResult {
   /** Files that could not be processed. Recorded, never fatal. */
   failures: string[];
 }
+
+export interface ProductIdentity {
+  name: string;
+  category_id: string | null;
+}
+
+export interface ProductPhotography {
+  images: ImageEntry[];
+  source_path: string;
+}
+
+/**
+ * What the importer writes for a product on this run.
+ *
+ * `name` and `category_id` are commercial identity, not photography. Once a
+ * product row exists, the dashboard's own product editor is the source of
+ * truth for them (D54), so they are set on insert only: the first time this
+ * Drive folder is seen. Writing them again on every later update reverted a
+ * dashboard rename or recategorisation back to the Drive folder name the
+ * next time anything in that folder changed, including just adding a photo.
+ *
+ * `images` and `source_path` stay importer owned on every run: that half of
+ * the D54 split still holds, and getting THAT array right is what
+ * `mergeProductImages` is for.
+ */
+export const productWriteFields = (
+  isExisting: boolean,
+  fields: ProductIdentity & ProductPhotography,
+): ProductPhotography | (ProductIdentity & ProductPhotography) =>
+  isExisting ? { images: fields.images, source_path: fields.source_path } : fields;
 
 export const executePlan = async (
   plan: ImportPlan,
@@ -93,7 +129,7 @@ export const executePlan = async (
 
   for (const [productSlug, files] of byProduct) {
     const first = files[0]!;
-    const images: unknown[] = [];
+    const processedImages = new Map<string, ProcessedImage>();
 
     const ordered = [...files].sort(
       (a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) ||
@@ -144,7 +180,7 @@ export const executePlan = async (
       }
       for (const w of processed.warnings) warnings.push(`${file.path}: ${w}`);
 
-      images.push({
+      processedImages.set(file.driveFileId, {
         role: file.role,
         path: keyBase,
         // The product's own category, never the flagship one. This said
@@ -162,7 +198,10 @@ export const executePlan = async (
         dominantColor: quality.dominantHex,
         lightness: Math.round(quality.lightness),
         uniformBackground: quality.uniformBackground,
-        sort: index,
+        // Lets a later run find this file's own entry again without
+        // re-downloading it, so an unchanged file keeps its exact
+        // derivatives instead of losing them to a full array replace.
+        driveFileId: file.driveFileId,
       });
 
       await sb.from('import_files').upsert({
@@ -194,36 +233,50 @@ export const executePlan = async (
       }
     }
 
-    if (images.length) {
-      // The importer owns photographs and provenance. It does NOT own
-      // commercial fields.
-      //
-      // A blind upsert rewrote price_display_mode, availability, unit and
-      // is_published on every run, so the first nightly import after Beco
-      // priced a product would have reset it to POA and republished anything
-      // they had deliberately hidden. Drive knows what a stone looks like; it
-      // does not know what it costs.
-      //
-      // So: defaults on first sight only, and thereafter only the fields Drive
-      // is actually the authority for.
-      const owned = {
+    // The importer owns photographs and provenance. It does NOT own
+    // commercial fields, and past the first insert it does not even own the
+    // full images array: an unchanged file's existing entry is carried
+    // forward rather than dropped when the array is rebuilt. See
+    // `mergeProductImages` and `productWriteFields`.
+    //
+    // A blind upsert used to rewrite price_display_mode, availability, unit,
+    // is_published, name and category_id on every run, so the first nightly
+    // import after Beco priced a product would have reset it to POA and
+    // republished anything they had deliberately hidden, and would have
+    // reverted a dashboard rename back to the Drive folder name the next
+    // time anything in that folder changed. Drive knows what a stone looks
+    // like; it does not know what it costs or what it is called once a
+    // human has named it.
+    const { data: existing } = await sb
+      .from('products')
+      .select('id,images')
+      .eq('slug', productSlug)
+      .maybeSingle();
+
+    const existingImages = parseStoredImages(existing?.images);
+    const images = mergeProductImages(ordered, processedImages, existingImages);
+
+    // Nothing processed this run, and the merged gallery is exactly what is
+    // already stored, so no removal happened either: skip the write. Without
+    // this, a fully unchanged product would still be upserted on every run,
+    // which is what "running twice must produce zero changes" rules out.
+    const changed = existing
+      ? processedImages.size > 0 || images.length !== existingImages.length
+      : images.length > 0;
+
+    if (changed) {
+      const fields = {
         name: first.productName,
         category_id: catId.get(first.categoryPath) ?? null,
         images,
         source_path: first.productPath,
       };
 
-      const { data: existing } = await sb
-        .from('products')
-        .select('id')
-        .eq('slug', productSlug)
-        .maybeSingle();
-
       if (existing) {
-        await sb.from('products').update(owned).eq('id', existing.id);
+        await sb.from('products').update(productWriteFields(true, fields)).eq('id', existing.id);
       } else {
         await sb.from('products').insert({
-          ...owned,
+          ...productWriteFields(false, fields),
           slug: productSlug,
           price_display_mode: 'poa',
           availability: 'poa',
