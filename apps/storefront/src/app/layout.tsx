@@ -56,10 +56,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           else. No bottom padding reserved here any more: the mobile action
           bar this used to clear, a full width fixed dock, is retired in
           favour of WhatsAppFab, which only ever occupies its own bottom
-          right corner and was never going to cover the footer. */}
+          right corner and was never going to cover the footer.
+
+          suppressHydrationWarning: browser extensions write their own
+          attributes onto <body> before React hydrates (ColorZilla's
+          cz-shortcut-listen, password managers, and so on), which React
+          then reports as a mismatch against markup that is in fact
+          correct. Applies to this element's own attributes only, one
+          level deep, so a real mismatch inside the app still surfaces. */}
       <body
         data-announcement={hasBanner ? '' : undefined}
         className="bg-high-vis-white font-ui text-base text-charcoal antialiased"
+        suppressHydrationWarning
       >
         <a
           href="#main"
