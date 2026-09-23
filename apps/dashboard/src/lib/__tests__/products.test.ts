@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  groupCategoryOptions,
   isLowStock,
   isOutOfStock,
   parseProductImages,
   productAvailabilityLabel,
   type CatalogueProduct,
+  type ProductCategoryOption,
 } from '../products';
 
 const product = (over: Partial<CatalogueProduct> = {}): CatalogueProduct => ({
@@ -33,6 +35,33 @@ const product = (over: Partial<CatalogueProduct> = {}): CatalogueProduct => ({
   lowStockThreshold: 1,
   updatedAt: '2026-09-17T10:00:00.000Z',
   ...over,
+});
+
+describe('groupCategoryOptions', () => {
+  const opt = (over: Partial<ProductCategoryOption> & Pick<ProductCategoryOption, 'id' | 'name'>): ProductCategoryOption => ({
+    slug: over.name.toLowerCase(),
+    parentId: null,
+    ...over,
+  });
+
+  it('nests a range under its group, in the order the categories arrived', () => {
+    const sintered = opt({ id: 'group-1', name: 'Sintered Stone' });
+    const limestone = opt({ id: 'range-1', name: 'Limestone', parentId: 'group-1' });
+    const grouped = groupCategoryOptions([sintered, limestone]);
+    expect(grouped).toEqual([{ group: sintered, children: [limestone] }]);
+  });
+
+  it('keeps a childless top level category, like Lighting, as its own selectable option', () => {
+    const lighting = opt({ id: 'group-2', name: 'Lighting' });
+    expect(groupCategoryOptions([lighting])).toEqual([{ group: lighting, children: [] }]);
+  });
+
+  it('never lists a range at the top level: only categories with no parent are groups', () => {
+    const sintered = opt({ id: 'group-1', name: 'Sintered Stone' });
+    const limestone = opt({ id: 'range-1', name: 'Limestone', parentId: 'group-1' });
+    const grouped = groupCategoryOptions([sintered, limestone]);
+    expect(grouped.map((g) => g.group.id)).toEqual(['group-1']);
+  });
 });
 
 describe('isLowStock', () => {

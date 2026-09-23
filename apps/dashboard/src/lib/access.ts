@@ -42,6 +42,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/quotes', roles: ['beco_sales', ...ADMINS] },
   { prefix: '/orders', roles: ['beco_sales', ...ADMINS] },
   { prefix: '/products', roles: ['beco_product_manager', ...ADMINS] },
+  { prefix: '/categories', roles: ['beco_product_manager', ...ADMINS] },
   { prefix: '/announcements', roles: [...ADMINS] },
   { prefix: '/reports', roles: [...ADMINS] },
   { prefix: '/leaderboard', roles: [...ADMINS] },

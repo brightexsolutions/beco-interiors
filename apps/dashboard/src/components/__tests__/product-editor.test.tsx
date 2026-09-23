@@ -9,8 +9,8 @@ const deleteProduct = vi.fn(async () => ({
   ok: 'Removed from the storefront. Existing quotes keep their line and price.',
 }));
 vi.mock('@/app/(app)/products/actions', () => ({
-  updateProduct: (...a: unknown[]) => updateProduct(...a),
-  deleteProduct: (...a: unknown[]) => deleteProduct(...a),
+  updateProduct: (...a: Parameters<typeof updateProduct>) => updateProduct(...a),
+  deleteProduct: (...a: Parameters<typeof deleteProduct>) => deleteProduct(...a),
   addProductImage: vi.fn(async () => ({})),
   removeProductImage: vi.fn(async () => ({})),
   saveProductImages: vi.fn(async () => ({})),

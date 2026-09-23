@@ -19,6 +19,7 @@ const ALL: readonly NavItem[] = [
   { href: '/quotes', label: 'Quotes' },
   { href: '/orders', label: 'Orders' },
   { href: '/products', label: 'Catalogue' },
+  { href: '/categories', label: 'Ranges' },
   { href: '/announcements', label: 'Announcements' },
   { href: '/reports', label: 'Reports' },
   { href: '/users', label: 'Users' },

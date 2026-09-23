@@ -45,6 +45,22 @@ export async function revalidateStorefront(input: {
   }
 }
 
+/** Bust the storefront after a category write: a rename, a publish toggle,
+ *  a reparent. `/shop` always changes shape; the category's own page and,
+ *  if it sits under a group, that group's listing page do too. */
+export async function revalidateCategory(input: {
+  categorySlug: string;
+  parentSlug?: string | null;
+  formerSlug?: string | null;
+}): Promise<void> {
+  const paths = ['/shop', `/shop/${input.categorySlug}`];
+  if (input.formerSlug && input.formerSlug !== input.categorySlug) {
+    paths.push(`/shop/${input.formerSlug}`);
+  }
+  if (input.parentSlug) paths.push(`/shop/${input.parentSlug}`);
+  await revalidateStorefrontPaths(paths, '/categories');
+}
+
 export async function revalidateStorefrontPaths(
   paths: string[],
   dashboardPath = '/announcements',

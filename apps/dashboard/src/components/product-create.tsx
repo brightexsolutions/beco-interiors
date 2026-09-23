@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Field, FormSection, Input, Select, useActionToast } from '@beco/ui';
 import { PRODUCT_UNITS, slugifyProductName } from '@beco/validation';
 import { createProduct, type ProductActionState } from '@/app/(app)/products/actions';
-import type { ProductCategoryOption } from '@/lib/products';
+import { groupCategoryOptions, type ProductCategoryOption } from '@/lib/products';
 
 const INITIAL: ProductActionState = {};
 
@@ -67,11 +67,21 @@ export function ProductCreate({
               <option value="" disabled>
                 Pick a range
               </option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
+              {groupCategoryOptions(categories).map(({ group, children }) =>
+                children.length > 0 ? (
+                  <optgroup key={group.id} label={group.name}>
+                    {children.map((child) => (
+                      <option key={child.id} value={child.id}>
+                        {child.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ),
+              )}
             </Select>
           </Field>
         </FormSection>

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { buttonClasses } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { NewProductFab } from '@/components/new-product';
 import { ProductFilters } from '@/components/product-filters';
@@ -39,7 +41,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeading eyebrow="Catalogue" title="Products" />
+      <PageHeading
+        eyebrow="Catalogue"
+        title="Products"
+        actions={
+          <Link href="/categories" className={buttonClasses({ variant: 'ghost' })}>
+            Manage ranges
+          </Link>
+        }
+      />
       <div className="mb-4">
         <ProductFilters />
       </div>

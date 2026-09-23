@@ -19,7 +19,7 @@ import { PRODUCT_UNITS, stockStepFor } from '@beco/validation';
 import type { Availability, PriceDisplayMode } from '@beco/types';
 import { deleteProduct, updateProduct, type ProductActionState } from '@/app/(app)/products/actions';
 import { ProductImages } from '@/components/product-images';
-import type { CatalogueProduct, ProductCategoryOption } from '@/lib/products';
+import { groupCategoryOptions, type CatalogueProduct, type ProductCategoryOption } from '@/lib/products';
 
 const INITIAL: ProductActionState = {};
 
@@ -161,11 +161,21 @@ export function ProductEditor({
               <Field label="Range" htmlFor="categoryId">
                 <Select id="categoryId" name="categoryId" defaultValue={product.categoryId ?? ''}>
                   <option value="">None</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
+                  {groupCategoryOptions(categories).map(({ group, children }) =>
+                    children.length > 0 ? (
+                      <optgroup key={group.id} label={group.name}>
+                        {children.map((child) => (
+                          <option key={child.id} value={child.id}>
+                            {child.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ) : (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ),
+                  )}
                 </Select>
               </Field>
             </FormSection>

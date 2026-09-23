@@ -69,7 +69,30 @@ export interface ProductCategoryOption {
   id: string;
   name: string;
   slug: string;
+  /** Null on a top level group (Lighting) and on a group that has children
+   *  (Sintered Stone itself is never assigned to a product). */
+  parentId: string | null;
 }
+
+export interface GroupedCategoryOptions {
+  group: ProductCategoryOption;
+  /** Empty when the group itself is the assignable option, e.g. Lighting. */
+  children: ProductCategoryOption[];
+}
+
+/** Ranges nested under their group, for a Select that reads the way the
+ *  shop's own taxonomy does: Sintered Stone > Limestone Ivory, not one flat
+ *  alphabetical list a product manager has to already know by heart. */
+export const groupCategoryOptions = (categories: ProductCategoryOption[]): GroupedCategoryOptions[] => {
+  const childrenOf = new Map<string, ProductCategoryOption[]>();
+  for (const category of categories) {
+    if (!category.parentId) continue;
+    childrenOf.set(category.parentId, [...(childrenOf.get(category.parentId) ?? []), category]);
+  }
+  return categories
+    .filter((c) => !c.parentId)
+    .map((group) => ({ group, children: childrenOf.get(group.id) ?? [] }));
+};
 
 export const parseProductImages = (value: unknown): ProductImage[] => {
   if (!Array.isArray(value)) return [];
@@ -221,9 +244,14 @@ export async function fetchProductBySlug(
 export async function fetchProductCategories(supabase: SupabaseClient): Promise<ProductCategoryOption[]> {
   const { data, error } = await supabase
     .from('categories')
-    .select('id, name, slug')
+    .select('id, name, slug, parent_id')
     .eq('is_published', true)
-    .order('name');
+    .order('sort_order');
   if (error) throw new Error(`Could not load ranges: ${error.message}`);
-  return (data ?? []) as ProductCategoryOption[];
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    parentId: row.parent_id,
+  }));
 }

@@ -16,9 +16,9 @@ describe('navItemsFor', () => {
     expect(navItemsFor('beco_sales').map((i) => i.href)).toEqual(['/quotes', '/orders']);
   });
 
-  it('gives the product manager Catalogue, not a separate Stock item', () => {
-    expect(navItemsFor('beco_product_manager').map((i) => i.href)).toEqual(['/products']);
-    expect(navItemsFor('beco_product_manager').map((i) => i.label)).toEqual(['Catalogue']);
+  it('gives the product manager Catalogue and Ranges, not a separate Stock item', () => {
+    expect(navItemsFor('beco_product_manager').map((i) => i.href)).toEqual(['/products', '/categories']);
+    expect(navItemsFor('beco_product_manager').map((i) => i.label)).toEqual(['Catalogue', 'Ranges']);
   });
 
   it('gives brightex_admin everything, Users included', () => {
