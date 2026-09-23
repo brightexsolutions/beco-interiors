@@ -55,7 +55,9 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
     const path = issue?.path[0];
     return {
       error: issue?.message ?? 'Check the form and try again',
-      field: path === 'email' || path === 'password' ? path : undefined,
+      // exactOptionalPropertyTypes: field is only ever 'email' or 'password', or
+      // absent entirely, never present-and-undefined.
+      ...(path === 'email' || path === 'password' ? { field: path } : {}),
     };
   }
 

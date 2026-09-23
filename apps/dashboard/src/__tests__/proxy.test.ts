@@ -8,7 +8,7 @@ vi.mock('@beco/supabase-client', () => ({
 
 const resolveSessionUser = vi.fn();
 vi.mock('@/lib/session', () => ({
-  resolveSessionUser: (...a: unknown[]) => resolveSessionUser(...a),
+  resolveSessionUser: (...a: Parameters<typeof resolveSessionUser>) => resolveSessionUser(...a),
 }));
 
 const { proxy } = await import('../proxy');
@@ -23,7 +23,13 @@ const AUTHED = { 'sb-localhost-auth-token': 'x' };
 
 /** A session user row as `resolveSessionUser` would return it. */
 const user = (
-  over: Partial<{ role: string | null; isActive: boolean; mustChangePassword: boolean }> = {},
+  over: Partial<{
+    role: string | null;
+    isActive: boolean;
+    mustChangePassword: boolean;
+    canWriteBlog: boolean;
+    canReadAudit: boolean;
+  }> = {},
 ) => ({
   userId: 'u1',
   email: 'u@beco.co.ke',

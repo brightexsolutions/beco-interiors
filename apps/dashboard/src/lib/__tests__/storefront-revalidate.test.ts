@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const revalidatePath = vi.fn();
-vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
+vi.mock('next/cache', () => ({ revalidatePath: (...a: Parameters<typeof revalidatePath>) => revalidatePath(...a) }));
 
-const { revalidateStorefront } = await import('../storefront-revalidate');
+const { revalidateStorefront, revalidateCategory } = await import('../storefront-revalidate');
 
 afterEach(() => {
   revalidatePath.mockReset();
@@ -48,6 +48,46 @@ describe('revalidateStorefront', () => {
     vi.stubGlobal('fetch', fetchMock);
     await revalidateStorefront({ productSlug: 'limestone-ivory' });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('revalidateCategory', () => {
+  it('busts the shop index, the range itself, the former slug and the parent group', async () => {
+    vi.stubEnv('STOREFRONT_URL', 'http://localhost:3000');
+    vi.stubEnv('REVALIDATE_SECRET', 's3cret');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await revalidateCategory({
+      categorySlug: 'bamboo-veneer',
+      formerSlug: 'bamboo-veneer-panels',
+      parentSlug: 'wall-panels',
+    });
+
+    expect(revalidatePath).toHaveBeenCalledWith('/categories');
+    const body = JSON.parse(String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body)) as {
+      paths: string[];
+    };
+    expect(body.paths).toEqual([
+      '/shop',
+      '/shop/bamboo-veneer',
+      '/shop/bamboo-veneer-panels',
+      '/shop/wall-panels',
+    ]);
+  });
+
+  it('leaves out the former slug and the parent when neither applies', async () => {
+    vi.stubEnv('STOREFRONT_URL', 'http://localhost:3000');
+    vi.stubEnv('REVALIDATE_SECRET', 's3cret');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await revalidateCategory({ categorySlug: 'lighting' });
+
+    const body = JSON.parse(String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body)) as {
+      paths: string[];
+    };
+    expect(body.paths).toEqual(['/shop', '/shop/lighting']);
   });
 });
 

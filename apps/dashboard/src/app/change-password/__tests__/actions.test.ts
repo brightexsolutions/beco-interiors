@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redirect = vi.fn();
-vi.mock('next/navigation', () => ({ redirect: (...a: unknown[]) => redirect(...a) }));
+vi.mock('next/navigation', () => ({ redirect: (...a: Parameters<typeof redirect>) => redirect(...a) }));
 
 const updateUser = vi.fn();
 const rpc = vi.fn();
@@ -11,7 +11,7 @@ vi.mock('@/lib/supabase', () => ({
 
 const requireSignedIn = vi.fn();
 vi.mock('@/lib/session', () => ({
-  requireSignedIn: (...a: unknown[]) => requireSignedIn(...a),
+  requireSignedIn: (...a: Parameters<typeof requireSignedIn>) => requireSignedIn(...a),
 }));
 
 const { changePassword } = await import('../actions');

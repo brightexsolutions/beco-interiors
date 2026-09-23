@@ -10,7 +10,7 @@ const requirePath = vi.fn(async () => ({
   canWriteBlog: false,
   canReadAudit: false,
 }));
-vi.mock('@/lib/session', () => ({ requirePath: (...a: unknown[]) => requirePath(...a) }));
+vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
 
 const maybeSingle = vi.fn();
 const getSupabase = vi.fn(async () => ({

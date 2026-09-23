@@ -9,7 +9,7 @@ const requirePath = vi.fn(async () => ({
   mustChangePassword: false,
 }));
 
-vi.mock('@/lib/session', () => ({ requirePath: (...a: unknown[]) => requirePath(...a) }));
+vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
 
 const rpc = vi.fn();
 const maybeSingle = vi.fn();

@@ -9,7 +9,7 @@ const createStaffUser = vi.fn(async () => ({
   userId: '11111111-1111-4111-8111-111111111111',
 }));
 vi.mock('@/app/(app)/users/actions', () => ({
-  createStaffUser: (...a: unknown[]) => createStaffUser(...a),
+  createStaffUser: (...a: Parameters<typeof createStaffUser>) => createStaffUser(...a),
 }));
 
 const { IssuedSecret, UserCreate } = await import('../user-create');

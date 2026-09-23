@@ -1,16 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ActiveSession } from '@/lib/session';
 
-const requirePath = vi.fn(async () => ({
-  userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-  email: 'irene.kariuki@beco.co.ke',
-  fullName: 'Irene Kariuki',
-  role: 'beco_admin' as const,
-  isActive: true,
-  mustChangePassword: false,
-  canWriteBlog: false,
-  canReadAudit: false,
-}));
-vi.mock('@/lib/session', () => ({ requirePath: (...a: unknown[]) => requirePath(...a) }));
+// Typed as Promise<ActiveSession> so role is the full UserRole union, not the
+// literal 'beco_admin' `as const` would infer. The Brightex admin test below
+// needs to hand back a different role.
+const requirePath = vi.fn(
+  async (): Promise<ActiveSession> => ({
+    userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    email: 'irene.kariuki@beco.co.ke',
+    fullName: 'Irene Kariuki',
+    role: 'beco_admin',
+    isActive: true,
+    mustChangePassword: false,
+    canWriteBlog: false,
+    canReadAudit: false,
+  }),
+);
+vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
 
 const maybeSingle = vi.fn();
 const update = vi.fn();
@@ -29,7 +35,7 @@ vi.mock('@/lib/supabase', () => ({ getSupabase: async () => ({ from }) }));
 
 const revalidateStorefrontPaths = vi.fn();
 vi.mock('@/lib/storefront-revalidate', () => ({
-  revalidateStorefrontPaths: (...a: unknown[]) => revalidateStorefrontPaths(...a),
+  revalidateStorefrontPaths: (...a: Parameters<typeof revalidateStorefrontPaths>) => revalidateStorefrontPaths(...a),
 }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 

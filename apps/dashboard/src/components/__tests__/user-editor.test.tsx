@@ -13,12 +13,12 @@ const saveStaffPublicProfile = vi.fn(async () => ({ ok: 'Shown on /team.' }));
 const uploadStaffPhoto = vi.fn(async () => ({ ok: 'Photograph uploaded.' }));
 const removeStaffPhoto = vi.fn(async () => ({ ok: 'Photograph removed from /team.' }));
 vi.mock('@/app/(app)/users/actions', () => ({
-  setStaffRole: (...a: unknown[]) => setStaffRole(...a),
-  setStaffActive: (...a: unknown[]) => setStaffActive(...a),
-  resetStaffPassword: (...a: unknown[]) => resetStaffPassword(...a),
-  saveStaffPublicProfile: (...a: unknown[]) => saveStaffPublicProfile(...a),
-  uploadStaffPhoto: (...a: unknown[]) => uploadStaffPhoto(...a),
-  removeStaffPhoto: (...a: unknown[]) => removeStaffPhoto(...a),
+  setStaffRole: (...a: Parameters<typeof setStaffRole>) => setStaffRole(...a),
+  setStaffActive: (...a: Parameters<typeof setStaffActive>) => setStaffActive(...a),
+  resetStaffPassword: (...a: Parameters<typeof resetStaffPassword>) => resetStaffPassword(...a),
+  saveStaffPublicProfile: (...a: Parameters<typeof saveStaffPublicProfile>) => saveStaffPublicProfile(...a),
+  uploadStaffPhoto: (...a: Parameters<typeof uploadStaffPhoto>) => uploadStaffPhoto(...a),
+  removeStaffPhoto: (...a: Parameters<typeof removeStaffPhoto>) => removeStaffPhoto(...a),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),

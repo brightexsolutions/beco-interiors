@@ -16,7 +16,7 @@ export function BlogBodyEditor({
   onChange: (next: string) => void;
 }) {
   const areaRef = useRef<HTMLTextAreaElement>(null);
-  const urlRef = useRef<HTMLElement | null>(null);
+  const urlRef = useRef<HTMLInputElement | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
   const [href, setHref] = useState('https://');
   const selection = useRef({ start: 0, end: 0 });

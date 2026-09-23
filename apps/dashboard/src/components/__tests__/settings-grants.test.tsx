@@ -6,7 +6,7 @@ import type { GrantStaffRow } from '@/lib/settings';
 
 const setStaffGrant = vi.fn(async () => ({ ok: 'Sam Odhiambo can write the blog.' }));
 vi.mock('@/app/(app)/settings/actions', () => ({
-  setStaffGrant: (...a: unknown[]) => setStaffGrant(...a),
+  setStaffGrant: (...a: Parameters<typeof setStaffGrant>) => setStaffGrant(...a),
   saveDashboardSettings: vi.fn(),
 }));
 

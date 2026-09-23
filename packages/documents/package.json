@@ -11,5 +11,8 @@
     "resend": "^6.25.0",
     "@beco/types": "workspace:*",
     "@beco/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18"
   }
 }

@@ -3,7 +3,9 @@ import { fetchAssignees } from '../quote-detail';
 
 describe('fetchAssignees', () => {
   it('asks for Beco sales and Beco admin, never a Brightex admin', async () => {
-    const inRoles = vi.fn(() => ({
+    // Typed with the real `.in(column, values)` params (both ignored) so
+    // mock.calls[0] is a real two element tuple.
+    const inRoles = vi.fn((_column: string, _values: string[]) => ({
       order: vi.fn(async () => ({
         data: [
           { id: 'sales-1', full_name: 'Ken Mutiso' },

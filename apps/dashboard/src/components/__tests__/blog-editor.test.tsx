@@ -10,8 +10,8 @@ vi.mock('next/navigation', () => ({
 const saveBlogPost = vi.fn(async () => ({ ok: 'Draft saved.', postId: '11111111-1111-4111-8111-111111111111' }));
 const generateBlogDraft = vi.fn(async () => ({ ok: 'Draft generated. Read it, then save.' }));
 vi.mock('@/app/(app)/studio/blog/actions', () => ({
-  saveBlogPost: (...a: unknown[]) => saveBlogPost(...a),
-  generateBlogDraft: (...a: unknown[]) => generateBlogDraft(...a),
+  saveBlogPost: (...a: Parameters<typeof saveBlogPost>) => saveBlogPost(...a),
+  generateBlogDraft: (...a: Parameters<typeof generateBlogDraft>) => generateBlogDraft(...a),
   uploadBlogCover: vi.fn(async () => ({ ok: 'Cover uploaded.' })),
   removeBlogCover: vi.fn(async () => ({ ok: 'Cover removed.' })),
 }));

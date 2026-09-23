@@ -61,7 +61,9 @@ export const parseCover = (value: Json | null): BlogCover | null => {
     path,
     width,
     height,
-    blur: typeof value.blur === 'string' ? value.blur : undefined,
+    // exactOptionalPropertyTypes: blur is optional, so it is left out entirely
+    // rather than set to undefined when the stored cover has none.
+    ...(typeof value.blur === 'string' ? { blur: value.blur } : {}),
   };
 };
 

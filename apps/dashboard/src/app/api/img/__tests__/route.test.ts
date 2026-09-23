@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const getProductObject = vi.fn();
 const isSafeR2Key = vi.fn((key: string) => key.length > 0 && !key.includes('..') && !key.startsWith('/'));
 vi.mock('@/lib/product-storage', () => ({
-  getProductObject: (...a: unknown[]) => getProductObject(...a),
-  isSafeR2Key: (...a: unknown[]) => isSafeR2Key(...a),
+  getProductObject: (...a: Parameters<typeof getProductObject>) => getProductObject(...a),
+  isSafeR2Key: (...a: Parameters<typeof isSafeR2Key>) => isSafeR2Key(...a),
 }));
 
 const { GET } = await import('../[...path]/route');

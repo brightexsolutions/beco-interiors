@@ -69,7 +69,9 @@ type StorageClient = {
     };
   };
   from: (table: string) => {
-    insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string; code?: string } | null }>;
+    // The real Postgrest builder is thenable, not a Promise: it lacks catch, finally and
+    // Symbol.toStringTag. PromiseLike matches what `.insert(...)` actually returns.
+    insert: (row: Record<string, unknown>) => PromiseLike<{ error: { message?: string; code?: string } | null }>;
   };
 };
 

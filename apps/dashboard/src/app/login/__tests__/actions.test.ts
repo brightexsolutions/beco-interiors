@@ -10,7 +10,7 @@ vi.mock('next/headers', () => ({
 }));
 
 const redirect = vi.fn();
-vi.mock('next/navigation', () => ({ redirect: (...a: unknown[]) => redirect(...a) }));
+vi.mock('next/navigation', () => ({ redirect: (...a: Parameters<typeof redirect>) => redirect(...a) }));
 
 const signInWithPassword = vi.fn();
 const signOut = vi.fn();
@@ -21,7 +21,7 @@ vi.mock('@/lib/supabase', () => ({
 
 const resolveSessionUser = vi.fn();
 vi.mock('@/lib/session', () => ({
-  resolveSessionUser: (...a: unknown[]) => resolveSessionUser(...a),
+  resolveSessionUser: (...a: Parameters<typeof resolveSessionUser>) => resolveSessionUser(...a),
 }));
 
 const { signIn, devSignIn } = await import('../actions');

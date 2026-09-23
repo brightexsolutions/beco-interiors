@@ -12,7 +12,7 @@ const createAnnouncement = vi.fn(async () => ({
   announcementId: '11111111-1111-4111-8111-111111111111',
 }));
 vi.mock('@/app/(app)/announcements/actions', () => ({
-  createAnnouncement: (...a: unknown[]) => createAnnouncement(...a),
+  createAnnouncement: (...a: Parameters<typeof createAnnouncement>) => createAnnouncement(...a),
   updateAnnouncement: vi.fn(async () => ({ ok: 'Announcement saved.' })),
 }));
 

@@ -1,5 +1,5 @@
 export * from './enums';
-export type { Database } from './database';
+export type { Database, Json } from './database';
 
 /** A product image. Carries its role, never a flat list. See docs/SCHEMA.md. */
 export interface ProductImage {

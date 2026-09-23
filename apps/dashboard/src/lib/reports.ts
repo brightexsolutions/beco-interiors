@@ -179,8 +179,11 @@ export const funnelTotals = (rows: ConversionRow[]) =>
 
 const rpcArgs = (query: ReportQuery) => ({
   p_period: query.period,
-  p_from: query.from,
-  p_to: query.to,
+  // p_from and p_to are `date default null` in Postgres: omitting the key
+  // when there is no bound is equivalent to passing null explicitly, and
+  // matches the generated arg type, which has no null variant.
+  ...(query.from ? { p_from: query.from } : {}),
+  ...(query.to ? { p_to: query.to } : {}),
 });
 
 export async function fetchLeaderboard(

@@ -19,7 +19,7 @@ describe('BlogBodyEditor', () => {
   it('wraps the current selection in bold', async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    const area = screen.getByLabelText('Body');
+    const area = screen.getByLabelText<HTMLTextAreaElement>('Body');
     area.focus();
     area.setSelectionRange(0, 5);
     await user.click(screen.getByRole('button', { name: 'Bold' }));
@@ -29,7 +29,7 @@ describe('BlogBodyEditor', () => {
   it('inserts a markdown link from a Dialog, never a browser prompt', async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    const area = screen.getByLabelText('Body');
+    const area = screen.getByLabelText<HTMLTextAreaElement>('Body');
     area.focus();
     area.setSelectionRange(0, 5);
     await user.click(screen.getByRole('button', { name: 'Link' }));

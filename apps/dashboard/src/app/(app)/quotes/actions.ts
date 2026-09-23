@@ -150,7 +150,9 @@ export async function updateQuoteLines(_prev: QuoteActionState, form: FormData):
   revalidateQuote(reference);
   return {
     ok: parsed.data.items.length === 1 ? 'Item updated.' : 'Items saved.',
-    updatedAt: data?.updated_at,
+    // exactOptionalPropertyTypes: only include the key when there is a value, since
+    // `updatedAt: undefined` is not the same as omitting updatedAt entirely.
+    ...(data?.updated_at ? { updatedAt: data.updated_at } : {}),
   };
 }
 
@@ -249,7 +251,10 @@ export async function setQuoteStatus(_prev: QuoteActionState, form: FormData): P
   const { error } = await supabase.rpc('set_quote_status', {
     p_quote_id: parsed.data.quoteId,
     p_status: parsed.data.status,
-    p_lost_reason: parsed.data.lostReason ?? null,
+    // set_quote_status only reads p_lost_reason when p_status is 'lost' (it nulls the
+    // column otherwise regardless of this value), so an empty string is equivalent to
+    // null here and matches the generated arg type, which is `string`, not nullable.
+    p_lost_reason: parsed.data.lostReason ?? '',
     p_expected_updated_at: parsed.data.updatedAt,
   });
   if (error) return { error: mutationMessage(error) };
@@ -346,7 +351,9 @@ export async function createCounterQuote(
       quantity: item.quantity,
       unit_price: item.unitPrice,
     })),
-    p_customer_email: parsed.data.customerEmail || undefined,
+    // exactOptionalPropertyTypes: p_customer_email is an optional key, so it must be
+    // left out entirely rather than set to undefined when there is no email.
+    ...(parsed.data.customerEmail ? { p_customer_email: parsed.data.customerEmail } : {}),
   });
   if (error || !data) return { error: mutationMessage(error) };
 

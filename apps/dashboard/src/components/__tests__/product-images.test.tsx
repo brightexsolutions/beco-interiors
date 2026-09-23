@@ -8,9 +8,9 @@ const addProductImage = vi.fn(async () => ({ ok: 'Photograph added.' }));
 const removeProductImage = vi.fn(async () => ({ ok: 'Photograph removed.' }));
 const saveProductImages = vi.fn(async () => ({ ok: 'Photographs updated.' }));
 vi.mock('@/app/(app)/products/actions', () => ({
-  addProductImage: (...a: unknown[]) => addProductImage(...a),
-  removeProductImage: (...a: unknown[]) => removeProductImage(...a),
-  saveProductImages: (...a: unknown[]) => saveProductImages(...a),
+  addProductImage: (...a: Parameters<typeof addProductImage>) => addProductImage(...a),
+  removeProductImage: (...a: Parameters<typeof removeProductImage>) => removeProductImage(...a),
+  saveProductImages: (...a: Parameters<typeof saveProductImages>) => saveProductImages(...a),
 }));
 
 const { ProductImages } = await import('../product-images');
@@ -65,7 +65,7 @@ describe('ProductImages', () => {
   it('has an Add photograph control, not a decorative file picker', () => {
     render(<ProductImages product={product} />);
     expect(screen.getByRole('button', { name: 'Add photograph' })).toBeEnabled();
-    expect(screen.getByLabelText('Photograph')).toHaveAttribute('type', 'file');
+    expect(screen.getByLabelText(/^photograph/i)).toHaveAttribute('type', 'file');
   });
 
   it('has no accessibility violations', async () => {

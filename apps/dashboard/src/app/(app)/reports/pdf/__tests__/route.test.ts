@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requirePath = vi.fn(async () => ({ userId: 'admin-1', role: 'beco_admin' }));
-vi.mock('@/lib/session', () => ({ requirePath: (...a: unknown[]) => requirePath(...a) }));
+vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
 
 const fetchLeaderboard = vi.fn();
 const fetchConversionReport = vi.fn();
@@ -9,8 +9,8 @@ vi.mock('@/lib/reports', async () => {
   const actual = await vi.importActual<typeof import('@/lib/reports')>('@/lib/reports');
   return {
     ...actual,
-    fetchLeaderboard: (...a: unknown[]) => fetchLeaderboard(...a),
-    fetchConversionReport: (...a: unknown[]) => fetchConversionReport(...a),
+    fetchLeaderboard: (...a: Parameters<typeof fetchLeaderboard>) => fetchLeaderboard(...a),
+    fetchConversionReport: (...a: Parameters<typeof fetchConversionReport>) => fetchConversionReport(...a),
   };
 });
 
@@ -19,7 +19,7 @@ vi.mock('@/lib/report-pdf', async () => {
   const actual = await vi.importActual<typeof import('@/lib/report-pdf')>('@/lib/report-pdf');
   return {
     ...actual,
-    renderReportPdfBytes: (...a: unknown[]) => renderReportPdfBytes(...a),
+    renderReportPdfBytes: (...a: Parameters<typeof renderReportPdfBytes>) => renderReportPdfBytes(...a),
   };
 });
 

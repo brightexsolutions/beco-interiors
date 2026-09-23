@@ -42,15 +42,17 @@ const formString = (form: FormData, key: string): string => String(form.get(key)
 async function catalogueContext(): Promise<string> {
   try {
     const supabase = await getSupabase();
+    // products has no list_price column, that is quote_items and order_items recording
+    // the price at the time of the quote. The live catalogue price is products.price.
     const { data } = await supabase
       .from('products')
-      .select('name, list_price')
+      .select('name, price')
       .eq('is_published', true)
       .is('deleted_at', null)
       .limit(12);
     if (!data?.length) return '';
     return data
-      .map((row) => `${row.name}${row.list_price != null ? `, KES ${row.list_price}` : ''}`)
+      .map((row) => `${row.name}${row.price != null ? `, KES ${row.price}` : ''}`)
       .join('\n');
   } catch {
     return '';

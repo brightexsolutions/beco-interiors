@@ -1,21 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requirePath = vi.fn(async () => ({ userId: 'sales-1', role: 'beco_sales' }));
-vi.mock('@/lib/session', () => ({ requirePath: (...a: unknown[]) => requirePath(...a) }));
+vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
 
 const fetchQuote = vi.fn();
 const fetchQuoteSettings = vi.fn();
 vi.mock('@/lib/quote-detail', () => ({
-  fetchQuote: (...a: unknown[]) => fetchQuote(...a),
-  fetchQuoteSettings: (...a: unknown[]) => fetchQuoteSettings(...a),
+  fetchQuote: (...a: Parameters<typeof fetchQuote>) => fetchQuote(...a),
+  fetchQuoteSettings: (...a: Parameters<typeof fetchQuoteSettings>) => fetchQuoteSettings(...a),
 }));
 
 const persistQuotePdf = vi.fn();
 const renderQuotePdfBytes = vi.fn();
-vi.mock('@/lib/quote-pdf', () => ({
-  persistQuotePdf: (...a: unknown[]) => persistQuotePdf(...a),
-  renderQuotePdfBytes: (...a: unknown[]) => renderQuotePdfBytes(...a),
-}));
+vi.mock('@/lib/quote-pdf', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/quote-pdf')>();
+  return {
+    ...actual,
+    persistQuotePdf: (...a: Parameters<typeof persistQuotePdf>) => persistQuotePdf(...a),
+    renderQuotePdfBytes: (...a: Parameters<typeof renderQuotePdfBytes>) => renderQuotePdfBytes(...a),
+  };
+});
 
 vi.mock('@/lib/supabase', () => ({ getSupabase: async () => ({}) }));
 
@@ -34,7 +38,7 @@ const get = (url: string) =>
 
 describe('GET /quotes/[reference]/pdf', () => {
   it('preview renders bytes without writing a documents row', async () => {
-    fetchQuote.mockResolvedValue({ reference: 'BEC-Q-00042', id: 'q' });
+    fetchQuote.mockResolvedValue({ reference: 'BEC-Q-00042', id: 'q', customerName: 'Achieng Otieno' });
     fetchQuoteSettings.mockResolvedValue({});
     renderQuotePdfBytes.mockResolvedValue({
       ok: true,
@@ -54,7 +58,7 @@ describe('GET /quotes/[reference]/pdf', () => {
   });
 
   it('Download stores the file and returns it as an attachment', async () => {
-    fetchQuote.mockResolvedValue({ reference: 'BEC-Q-00042', id: 'q' });
+    fetchQuote.mockResolvedValue({ reference: 'BEC-Q-00042', id: 'q', customerName: 'Achieng Otieno' });
     fetchQuoteSettings.mockResolvedValue({});
     persistQuotePdf.mockResolvedValue({
       ok: true,

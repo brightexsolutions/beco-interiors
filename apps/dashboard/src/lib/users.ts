@@ -81,7 +81,9 @@ export const formatLastLogin = (iso: string | null): string => {
 };
 
 export const userMutationMessage = (
-  error: { message?: string; code?: string } | null | undefined,
+  // AuthError types `code` as including `| undefined` explicitly, not only via the
+  // optional modifier, so the param needs the same shape under exactOptionalPropertyTypes.
+  error: { message?: string | undefined; code?: string | undefined } | null | undefined,
 ): string => {
   const message = error?.message ?? '';
   const code = error?.code ?? '';

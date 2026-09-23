@@ -176,8 +176,8 @@ function CatalogueAdd({
       </div>
       <CataloguePicker
         onAdd={pick}
-        disabled={adding || disabled}
-        disabledHint={disabled ? 'Save your line changes first.' : undefined}
+        disabled={Boolean(adding || disabled)}
+        {...(disabled ? { disabledHint: 'Save your line changes first.' } : {})}
       />
     </div>
   );
@@ -237,7 +237,9 @@ export function QuoteLines({
       const result = await updateQuoteLines({}, form);
       if (result.error) return { ok: false, error: result.error };
       if (result.updatedAt) lockRef.current = result.updatedAt;
-      return { ok: true, updatedAt: result.updatedAt };
+      // exactOptionalPropertyTypes: QuoteDraftFlushResult's ok branch only allows
+      // updatedAt to be a string or absent, never present-and-undefined.
+      return result.updatedAt ? { ok: true, updatedAt: result.updatedAt } : { ok: true };
     });
     return () => register(null);
   }, [canMutate, quoteId, register]);

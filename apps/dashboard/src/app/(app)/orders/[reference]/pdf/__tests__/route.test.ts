@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requirePath = vi.fn(async () => ({ userId: 'sales-1', role: 'beco_sales' }));
-vi.mock('@/lib/session', () => ({ requirePath: (...a: unknown[]) => requirePath(...a) }));
+vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
 
 const fetchOrder = vi.fn();
-vi.mock('@/lib/order-detail', () => ({ fetchOrder: (...a: unknown[]) => fetchOrder(...a) }));
+vi.mock('@/lib/order-detail', () => ({ fetchOrder: (...a: Parameters<typeof fetchOrder>) => fetchOrder(...a) }));
 vi.mock('@/lib/quote-detail', () => ({ fetchQuoteSettings: vi.fn(async () => ({})) }));
 
 const persistReceiptPdf = vi.fn();
 const renderReceiptPdfBytes = vi.fn();
 vi.mock('@/lib/order-pdf', () => ({
-  persistReceiptPdf: (...a: unknown[]) => persistReceiptPdf(...a),
-  renderReceiptPdfBytes: (...a: unknown[]) => renderReceiptPdfBytes(...a),
+  persistReceiptPdf: (...a: Parameters<typeof persistReceiptPdf>) => persistReceiptPdf(...a),
+  renderReceiptPdfBytes: (...a: Parameters<typeof renderReceiptPdfBytes>) => renderReceiptPdfBytes(...a),
   receiptPdfFilename: (ref: string, name: string) => `${ref} ${name}.pdf`,
 }));
 

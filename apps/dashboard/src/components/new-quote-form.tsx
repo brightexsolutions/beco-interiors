@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { Button, EmptyState, Field, Input, Panel, QuantityStepper, Select, useActionToast } from '@beco/ui';
+import { Button, EmptyState, Field, Input, Notice, Panel, QuantityStepper, Select, useActionToast } from '@beco/ui';
 import { roundMoney } from '@beco/validation';
 import { createCounterQuote, type QuoteActionState } from '@/app/(app)/quotes/actions';
 import { CataloguePicker, catalogueLineDraft } from '@/components/catalogue-picker';

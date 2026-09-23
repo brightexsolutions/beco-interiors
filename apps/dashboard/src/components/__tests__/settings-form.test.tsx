@@ -4,9 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { DashboardSettings, GrantStaffRow } from '@/lib/settings';
 
-const saveDashboardSettings = vi.fn(async () => ({ ok: 'Settings saved.' }));
+// Typed with the real action's two params (both ignored here) so
+// mock.calls[n] is a real two element tuple, matching how the component
+// actually calls it: saveDashboardSettings(prevState, formData).
+const saveDashboardSettings = vi.fn(async (_prev: unknown, _form: FormData) => ({ ok: 'Settings saved.' }));
 vi.mock('@/app/(app)/settings/actions', () => ({
-  saveDashboardSettings: (...a: unknown[]) => saveDashboardSettings(...a),
+  saveDashboardSettings: (...a: Parameters<typeof saveDashboardSettings>) => saveDashboardSettings(...a),
   setStaffGrant: vi.fn(),
 }));
 

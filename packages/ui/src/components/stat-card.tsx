@@ -51,7 +51,7 @@ export interface StatCardProps {
   /** What the value is measured against, for example "vs 8 last month". */
   comparison?: string;
   /** What the number means in one short sentence, not a repeat of the label. */
-  implication?: string;
+  implication?: string | undefined;
   tone?: StatCardTone;
   size?: StatCardSize;
   className?: string | undefined;

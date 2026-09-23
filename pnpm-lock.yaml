@@ -154,6 +154,10 @@ importers:
       resend:
         specifier: ^6.25.0
         version: 6.25.0
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
 
   packages/supabase-client:
     dependencies:

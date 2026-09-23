@@ -1,6 +1,26 @@
 import type { createServerClient } from '@beco/supabase-client';
+import type { Database } from '@beco/types';
 
 type SupabaseClient = ReturnType<typeof createServerClient>;
+
+type AuditActionValue = Database['public']['Enums']['audit_action'];
+
+// Mirrors the audit_action enum in migration 00000000000001. A search param
+// outside this set is treated as no filter rather than sent to Postgres,
+// which would otherwise reject it as an invalid enum value.
+const AUDIT_ACTION_VALUES = new Set<AuditActionValue>([
+  'create',
+  'update',
+  'delete',
+  'login',
+  'send',
+  'export',
+  'assign',
+]);
+
+function isAuditActionValue(value: string): value is AuditActionValue {
+  return (AUDIT_ACTION_VALUES as Set<string>).has(value);
+}
 
 export interface AuditRow {
   id: string;
@@ -28,7 +48,7 @@ export async function fetchAuditLog(supabase: SupabaseClient, filters: AuditFilt
     .limit(200);
 
   if (filters.entity) query = query.eq('entity_type', filters.entity);
-  if (filters.action) query = query.eq('action', filters.action);
+  if (filters.action && isAuditActionValue(filters.action)) query = query.eq('action', filters.action);
   if (filters.search) {
     const term = filters.search.replace(/[%]/g, '');
     query = query.ilike('entity_type', `%${term}%`);
