@@ -29,9 +29,13 @@ export interface CategoryGroupRow extends CategoryRow {
   children: CategoryRow[];
 }
 
+// PostgREST cannot be given a hint to pick a direction on a self join: both
+// the constraint name and the column name resolve to the CHILD rows, never
+// the one row parent_id itself points at. Confirmed directly against the
+// REST API, not assumed. The storefront's own getCategoryWithTree already
+// works around this the same way, a separate lookup rather than an embed.
 const ROW_COLUMNS =
   'id,name,slug,description,meta_title,meta_description,parent_id,sort_order,is_published,updated_at,' +
-  'parent:categories!categories_parent_id_fkey(name),' +
   'products(count)';
 
 interface RawRow {
@@ -45,16 +49,10 @@ interface RawRow {
   sort_order: number;
   is_published: boolean;
   updated_at: string;
-  parent: { name: string } | { name: string }[] | null;
   products: { count: number }[] | null;
 }
 
-const parentNameOf = (parent: RawRow['parent']): string | null => {
-  if (!parent) return null;
-  return Array.isArray(parent) ? (parent[0]?.name ?? null) : parent.name;
-};
-
-const toRow = (raw: RawRow, childCount: number): CategoryRow => ({
+const toRow = (raw: RawRow, parentName: string | null, childCount: number): CategoryRow => ({
   id: raw.id,
   name: raw.name,
   slug: raw.slug,
@@ -62,7 +60,7 @@ const toRow = (raw: RawRow, childCount: number): CategoryRow => ({
   metaTitle: raw.meta_title,
   metaDescription: raw.meta_description,
   parentId: raw.parent_id,
-  parentName: parentNameOf(raw.parent),
+  parentName,
   sortOrder: raw.sort_order,
   isPublished: raw.is_published,
   productCount: raw.products?.[0]?.count ?? 0,
@@ -80,13 +78,16 @@ export async function fetchCategoryTree(supabase: SupabaseClient): Promise<Categ
   if (error) throw new Error(`Could not load categories: ${error.message}`);
 
   const rows = (data ?? []) as unknown as RawRow[];
+  const nameById = new Map(rows.map((row) => [row.id, row.name]));
   const childCountOf = new Map<string, number>();
   for (const row of rows) {
     if (!row.parent_id) continue;
     childCountOf.set(row.parent_id, (childCountOf.get(row.parent_id) ?? 0) + 1);
   }
 
-  const bySlugRow = rows.map((raw) => toRow(raw, childCountOf.get(raw.id) ?? 0));
+  const bySlugRow = rows.map((raw) =>
+    toRow(raw, raw.parent_id ? (nameById.get(raw.parent_id) ?? null) : null, childCountOf.get(raw.id) ?? 0),
+  );
   const childrenOf = new Map<string, CategoryRow[]>();
   for (const row of bySlugRow) {
     if (!row.parentId) continue;
@@ -110,11 +111,14 @@ export async function fetchCategoryBySlug(
   if (error) throw new Error(`Could not load that category: ${error.message}`);
   if (!data) return null;
   const raw = data as unknown as RawRow;
-  const { count } = await supabase
-    .from('categories')
-    .select('id', { count: 'exact', head: true })
-    .eq('parent_id', raw.id);
-  return toRow(raw, count ?? 0);
+
+  const [{ count }, parent] = await Promise.all([
+    supabase.from('categories').select('id', { count: 'exact', head: true }).eq('parent_id', raw.id),
+    raw.parent_id
+      ? supabase.from('categories').select('name').eq('id', raw.parent_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  return toRow(raw, parent.data?.name ?? null, count ?? 0);
 }
 
 export interface CategoryParentOption {
