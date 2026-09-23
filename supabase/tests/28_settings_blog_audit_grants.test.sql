@@ -130,11 +130,15 @@ select lives_ok(
 -- ---------- granted sales still cannot write blog; audit grant still works ----------
 set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000002","role":"authenticated"}';
 
-select throws_ok(
+-- A row a USING clause filters out is invisible to the UPDATE and simply
+-- matches zero rows: Postgres only raises 42501 when a row IS visible but
+-- fails WITH CHECK on the new values, which is not this case (single
+-- policy, same expression for both). is_empty on RETURNING is how every
+-- other "cannot write" case in this suite proves the same negative.
+select is_empty(
   $$update blog_posts set title = 'Sales edit'
-     where id = 'dddddddd-0000-0000-0000-000000000001'$$,
-  '42501',
-  null,
+     where id = 'dddddddd-0000-0000-0000-000000000001'
+     returning id$$,
   'a salesperson cannot edit a blog post even with can_write_blog'
 );
 
