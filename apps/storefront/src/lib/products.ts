@@ -341,6 +341,20 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
   return { ...rest, category: categories } as unknown as ProductDetail;
 };
 
+/** Former slug from `product_slugs` to the product's current slug, or null. */
+export const getCanonicalProductSlug = async (slug: string): Promise<string | null> => {
+  const { data, error } = await anon()
+    .from('product_slugs')
+    .select('products!inner(slug)')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw new Error(`could not resolve product slug: ${error.message}`);
+  if (!data) return null;
+  const product = data.products as { slug: string } | { slug: string }[] | null;
+  const canonical = Array.isArray(product) ? product[0]?.slug : product?.slug;
+  return canonical && canonical !== slug ? canonical : null;
+};
+
 export interface GalleryShotImage {
   path: string;
   alt: string;
