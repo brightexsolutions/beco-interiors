@@ -9,7 +9,7 @@ const image = (role: ProductImage['role'], path = '/x.jpg'): ProductImage => ({
 const product = (slug: string, name: string, images: ProductImage[]): CatalogueProduct => ({
   id: slug, slug, name, images,
   price: null, compare_at_price: null, price_display_mode: 'poa',
-  availability: 'poa', face_type: null, unit: null, badge: null,
+  availability: 'poa', stock_quantity: null, face_type: null, unit: null, badge: null,
 });
 
 describe('stoneSlidesFrom', () => {

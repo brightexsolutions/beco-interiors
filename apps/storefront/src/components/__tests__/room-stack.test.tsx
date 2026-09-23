@@ -16,7 +16,7 @@ const product = (
 ): CatalogueProduct => ({
   id: slug, slug, name, images,
   price: null, compare_at_price: null, price_display_mode: 'poa',
-  availability: 'poa', face_type: null, unit: null, badge: null,
+  availability: 'poa', stock_quantity: null, face_type: null, unit: null, badge: null,
 });
 
 describe('RoomStack (storefront wrapper)', () => {

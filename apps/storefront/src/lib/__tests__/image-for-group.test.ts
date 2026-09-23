@@ -18,7 +18,7 @@ const product = (
   over: Partial<CatalogueProduct> & Pick<CatalogueProduct, 'id' | 'slug' | 'category'>,
 ): CatalogueProduct => ({
   name: over.slug, price: null, compare_at_price: null, price_display_mode: 'poa',
-  availability: 'in_stock', face_type: null, unit: null, badge: null, images: [],
+  availability: 'in_stock', stock_quantity: null, face_type: null, unit: null, badge: null, images: [],
   ...over,
 });
 

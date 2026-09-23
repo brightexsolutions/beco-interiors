@@ -15,6 +15,9 @@ export interface CatalogueProduct {
   compare_at_price: number | null;
   price_display_mode: 'fixed' | 'poa';
   availability: 'in_stock' | 'pre_order' | 'poa';
+  /** 0 reads as out of stock regardless of `availability`. Null is uncounted:
+   *  the stored `availability` still decides what the card shows. */
+  stock_quantity: number | null;
   face_type: 'book_match' | 'one_face' | null;
   unit: string | null;
   badge: 'hot' | 'new' | 'sale' | 'clearance' | null;
@@ -46,7 +49,7 @@ const anon = () =>
  * neither on /shop/[category]. A card should not depend on which page asked.
  */
 const PRODUCT_COLUMNS =
-  'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,' +
+  'id,name,slug,price,compare_at_price,price_display_mode,availability,stock_quantity,face_type,unit,badge,' +
   'images,specs,short_description,categories(name,slug)';
 
 // The generated types cannot narrow an embedded join in a select string, so
@@ -324,7 +327,7 @@ export const getProductBySlug = async (slug: string): Promise<ProductDetail | nu
   const { data, error } = await anon()
     .from('products')
     .select(
-      'id,name,slug,price,compare_at_price,price_display_mode,availability,face_type,unit,badge,images,' +
+      'id,name,slug,price,compare_at_price,price_display_mode,availability,stock_quantity,face_type,unit,badge,images,' +
         'description,short_description,sku,specs,meta_title,meta_description,' +
         'categories(name,slug,description)',
     )
