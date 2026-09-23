@@ -73,12 +73,26 @@ select isnt_empty(
   'Sintered Stone is a group with children'
 );
 
+-- Scoped to the 14 Drive folders migration 13 actually seeded a home for,
+-- not every source_path that will ever exist. A live import against the
+-- real Drive can and does create a fresh top level category for a folder
+-- that predates neither this seed nor a group to file it under, for
+-- example a folder Beco adds later, or one already flagged in "Waiting on
+-- Beco" (FLUTED WALL PANELS) and a real "Lights" folder that does not
+-- match the placeholder LIGHTING source_path migration 13 seeded for it
+-- (D47). That is the importer working as designed, not a taxonomy defect,
+-- so asserting it over the whole live table the way this used to would
+-- fail the moment a real import added exactly the row it is supposed to.
 select is_empty(
   $$select c.slug from categories c
-     where c.source_path is not null
-       and c.slug <> 'lighting'
+     where c.source_path in (
+       '12MM SINTERED STONES', '15MM SINTERED STONES', 'ACCOUSTIC WALL PANELS',
+       'BAMBOO VENEER WALL PANELS', 'SPC WALL PANELS', 'WALL PANEL ACCESSORIES',
+       'SPC FLOORING', 'HANDLES', 'HINGES', 'DOOR LOCKS', 'FURNITURE LEGS',
+       'FLOATING SHELF ACCESSORIES', 'KITCHEN ACCESSORIES', 'OFFICE ACCESSORIES'
+     )
        and c.parent_id is null$$,
-  'every Drive folder category is filed under a group, except Lighting which is top level by design'
+  'every Drive folder category migration 13 seeded a home for is still filed under a group'
 );
 
 -- Anonymous has to be able to read a group, or the shop cannot draw the tree.
