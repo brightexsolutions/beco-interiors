@@ -93,7 +93,23 @@ so `source_path` is null on it, which is what keeps the importer, which upserts 
 `published_product_count` is a view or generated value. **Zero means `noindex` and no sitemap
 entry**, flipping automatically on first import. See D27.
 
-**RLS.** Anonymous reads published only. `beco_product_manager` and above write.
+**RLS.** Anonymous reads published only. `beco_product_manager` and above write. Writes come
+from the dashboard's `/categories` screen (D91) as of migration 49, not only from the importer:
+`categories_touch_updated_at` (migration 53) bumps `updated_at` on every write, the same
+optimistic lock the products editor already relies on. Nothing bumped it before that migration,
+so it stayed frozen at insert time forever.
+
+### category_slugs
+
+Slug history for categories, the same job `product_slugs` does for products: a rename made in
+`/categories` 301s from its former URL instead of losing whatever it had ranked for. Migration
+49, D91.
+
+| Column | Type |
+|---|---|
+| `slug` | text PK |
+| `category_id` | uuid FK categories |
+| `created_at` | timestamptz |
 
 ### products
 
@@ -130,6 +146,11 @@ entry**, flipping automatically on first import. See D27.
    "width": 1600, "height": 1067,
    "blur": "data:image/...", "sort": 0 }]
 ```
+
+An entry the importer wrote also carries `driveFileId`, the Drive file it came from, so a re
+run can find and keep that exact entry when the file is unchanged rather than losing it to a
+full array replace (D90). An entry uploaded through the dashboard editor has no `driveFileId`
+and never needs one, since nothing about it depends on Drive.
 
 **RLS.** Anonymous reads `is_published and deleted_at is null`. `beco_product_manager` and admins
 write, including `stock_quantity` and `low_stock_threshold`. `beco_sales` and anon cannot. Soft

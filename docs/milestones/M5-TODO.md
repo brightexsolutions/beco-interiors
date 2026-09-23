@@ -482,6 +482,34 @@ stay as the historical seed. Stock lives here too (D89). `/stock` redirects to `
       `ConfirmDialog`. Sharp writes 400/800/1600 webp plus blur to R2. Separate locked actions
       so they do not fight the product save. Needs the R2 keys locally
 
+## G2. Ranges (category) editor, D91
+
+Added 23 September, not in the original section list: the schema supported this since migration
+19 but nothing ever exposed it, and it is the real gap behind "no developer needed to manage the
+catalogue." `/categories`, same access as Catalogue (`beco_product_manager` and admins).
+
+- [x] `category_slugs` table, mirrors `product_slugs`. Migration 49
+- [x] `categories_touch_updated_at` trigger: nothing bumped `updated_at` before this, so the
+      editor's optimistic lock would have always passed. Migration 53
+- [x] pgTAP closes the write-side gap `06_category_groups.test.sql` left open (read only):
+      product manager and admins write, sales and editor cannot, anon cannot. `29_category_admin.test.sql`
+- [x] `/categories`: one `Panel` per top level group, its ranges listed inside, product count,
+      Published/Draft, explicit Edit link. Empty-group state named
+- [x] Create: top level group or a range filed under an existing one. Charcoal FAB, `?new=1`
+- [x] Edit sheet: name, page URL, File under (locked, with the reason stated, once the row has
+      children), description, published, sort order, SEO overrides
+- [x] Delete: `ConfirmDialog`, but disabled with the blocking count in its own label when
+      products or child ranges are still filed under it, refused server side too since neither
+      foreign key restrains it (`category_id` and `parent_id` both go quietly null on delete)
+- [x] Every write busts the storefront's `/shop`, the range's own page, its former slug if
+      renamed, and its parent group's page
+- [x] Product editor's Range select now groups by parent, an `optgroup` per group, a childless
+      top level category like Lighting as its own option, instead of one flat alphabetical list
+- [x] Tests: schema (`dashboard-category.ts`), actions (10 tests), three components (16 tests
+      total), `groupCategoryOptions` (3 tests). No Playwright
+- [x] `docs/QA-CHECKLIST.md`, `docs/TEST-COVERAGE.md`, `docs/COMPONENTS.md`, `docs/SCHEMA.md`,
+      `docs/DASHBOARD-UI.md` updated
+
 ## H. Dashboard home: the six stat cards
 
 D37, `files/BUILD-PLAN.md` section 11.1, A10. **Every card states a number, what it is measured
@@ -838,16 +866,25 @@ screen. Verify the editor override path against a live storefront render at mile
 ## S. Documentation
 
 - [x] `docs/STATUS.md` M5 row and headline numbers
-- [ ] `docs/COMPONENTS.md`: dashboard components to **B**
+- [~] `docs/COMPONENTS.md`: dashboard components to **B**. True for everything shipped through
+      settings/blog/audit and the 23 September Ranges work (D91); not re-audited further back
 - [ ] `docs/DECISIONS.md`: new D-numbers for the stock model (0.1), quote expiry (0.2),
-      unpriced totals (0.3), the SLA setting (0.4), the convert RPC (0.9), and anything
-      discovered during the build
+      unpriced totals (0.3), the SLA setting (0.4), the convert RPC (0.9). **Still genuinely
+      open**: these were resolved inline in section 0 above on 9 September but never mirrored
+      into DECISIONS.md as their own entries, and reconstructing that rationale from a session
+      that is not this one risks getting it wrong rather than getting it done. D90 and D91 (23
+      September, the importer ownership fix and Ranges) are written up
 - [ ] `docs/ARCHITECTURE.md`: update any flow that changes (the convert path, optimistic
-      locking enforcement, cross-app revalidation)
-- [ ] `docs/TEST-COVERAGE.md`: every new file and what it proves
+      locking enforcement, cross-app revalidation). Not re-audited this session; the
+      cross-app revalidation flow it already documents (section 3) was confirmed still accurate
+      by a full read, so nothing found that needed a change
+- [~] `docs/TEST-COVERAGE.md`: every new file and what it proves. True for 23 September's work
+      (typecheck fixes, the migration renumbering, the importer fix, Ranges); not a full
+      re-audit of every earlier M5 file
 - [ ] `docs/PLAN.md` Deferred table: receipt PDF, audit log viewer, `/dashboard/imports`,
-      automatic stock decrement, and anything else cut, each with a reason and a revisit note
-- [ ] This file walked and ticked against reality at close, not against memory
+      automatic stock decrement, and anything else cut, each with a reason and a revisit note.
+      The table itself is current; not re-walked line by line this session
+- [ ] This file walked and ticked against reality at close, not against memory. Not a close yet
 
 ## T. Definition of done, per CLAUDE.md rule 8
 

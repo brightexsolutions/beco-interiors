@@ -7,6 +7,22 @@ band, or `/products` unless Brown asks.
 `docs/milestones/M5-TODO.md` is the full ticked list. This file is only what
 the next agent needs to start cold.
 
+**Update, 23 September 2026.** Work now happens on branch `dev`, forked from
+`m5-dashboard` and kept ahead of `main`; fork a feature or polish branch from
+`dev`, merge back once built and verified. `/categories` (Ranges) is now
+built too, D91, see section G2 in `docs/milestones/M5-TODO.md`. A
+consolidation pass this session fixed real, previously unnoticed debt: a
+broken build (a nonexistent function import), three colliding migration
+numbers from an unrenumbered merge, and `stock_quantity` never actually
+reaching the storefront query layer despite section F recording it done.
+`pnpm typecheck`, both app builds, the full Vitest suite and pgTAP are
+clean together, confirmed by actually running all four, not assumed. See
+D90 and D91 in `docs/DECISIONS.md`, and `docs/STATUS.md` for current
+headline numbers. Do not trust a `[x]` in this file's own section F/G
+history against `stock_quantity` reaching the storefront again without
+re-checking `apps/storefront/src/lib/products.ts` directly; that is
+exactly the kind of gap this pass found.
+
 **State, 18 September 2026:** quotes, catalogue editor, `/orders`,
 `/reports`, `/users`, announcements, `/settings`, `/studio/blog`,
 `/audit`, the dashboard appearance toggle and the photography-led

@@ -33,6 +33,17 @@ these unless Brown asks:
   out of stock.
 - Do not restyle the charcoal band or the desktop header. The breadcrumb docks on scroll after the pill header leaves, on a phone and on desktop.
 
+**Revised 23 September, Brown asked directly.** `/categories` is a real screen now (D91),
+Ranges beside Catalogue in the nav, product manager and admins. It is not "another screen" the
+18 Sept lock was refusing, it is what that catalogue work was always missing: the taxonomy
+itself had no editor, only the products inside it did. Pattern: one `Panel` per top level group
+listing its ranges, `Sheet` at `?edit=id` / `?new=1`, same as `/products`, but the list is a tree
+render, not `DataTable`, since a two-level hierarchy does not read as a flat sortable table. The
+product editor's Range select now groups by parent (`optgroup` per group, a childless top level
+category like Lighting as its own option) instead of one flat alphabetical list; this is the one
+sanctioned touch to `/products` itself, additive, not a restyle of anything the 18 Sept lock
+named.
+
 ## What stays uniquely Beco
 
 - Charcoal band, wordmark, top nav, floating white content panel (`AppShell`)

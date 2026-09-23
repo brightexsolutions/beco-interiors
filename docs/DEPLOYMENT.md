@@ -257,8 +257,12 @@ UptimeRobot under becointeriorsdev, one monitor per live surface.
 
 ## 4. How a change reaches production
 
+`dev` is the standing developer branch, kept ahead of `main`. A feature or polish branch forks
+from `dev`, not `main`, and merges back to `dev` once built and verified, `dev` itself is what
+pushes to GitHub. `main` only moves when `dev` is ready to ship, per the release step below.
+
 ```
-  branch from main
+  branch from dev
       |
       v
   push  ---------------> CI runs: typecheck, lint, unit, component,
@@ -270,7 +274,11 @@ UptimeRobot under becointeriorsdev, one monitor per live surface.
       |
       |                  Codex review pass at milestone close
       v
-  merge to main  ------> production deploy, both projects,
+  merge to dev  -------> dev stays green, ahead of main
+      |
+      |                  (released deliberately, not on every merge)
+      v
+  merge dev to main  --> production deploy, both projects,
                          Turborepo rebuilds only what changed
 ```
 

@@ -13,7 +13,7 @@ Brightex material.
 | M2 Drive import pipeline | 3.5 | Not started |
 | M3 Design system | 2.0 | Not started, overlaps M2 |
 | M4 Storefront, SEO, conversion, motion | 8.5 | Not started |
-| M5 Operations dashboard | 6.5 | **WIP**, screens done, close remaining. Quotes through settings, `/studio/blog`, `/audit`, dashboard dark mode and the storefront revamp are on `m5-dashboard`. Next: sections S, T, U and phone QA. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
+| M5 Operations dashboard | 6.5 | **WIP**, screens done including Ranges (D91), close remaining. Quotes through settings, `/studio/blog`, `/audit`, `/categories`, dashboard dark mode and the storefront revamp are on `dev`, the branch now used for all ongoing work (forked from `m5-dashboard`, always kept ahead of `main`; a feature or polish branch forks from `dev` and merges back once built and verified). Next: sections S, T, U and phone QA. Handoff: `docs/milestones/M5-QUOTES-HANDOVER.md` |
 | M6 Launch | 3.5 | Not started |
 | M7 Brightex Studio | 3.5 | After launch, unbilled. Inside the dashboard per D9, gated per D42 |
 
@@ -67,6 +67,22 @@ log viewer shipped next. Blog write and audit read are Brightex unless
 Brightex assigns the grant on that user. The photography-led storefront
 revamp is on the same branch.
 Live beco.co.ke is still WordPress until launch.
+
+**Consolidation, 23 September, branch `dev`:** the branch had accumulated real, previously
+unverified debt from several concurrent sessions: `pnpm typecheck` had never once been run
+clean end to end (a broken build was committed: the product page imported a function that did
+not exist), three migrations collided on the same number from an unrenumbered merge so a fresh
+`supabase db reset` failed outright, and `stock_quantity` was never actually wired into the
+storefront's own query layer despite the M5 handover recording it as done. All fixed; see
+`docs/DECISIONS.md` D90 and the commit history on `dev`. `pnpm typecheck`, both app builds,
+the full Vitest suite (1331 tests) and pgTAP (330 tests) are now clean together for the first
+time. Category and range management shipped, `/categories` (D91), closing the one real gap in
+the "no developer needed to manage the catalogue" goal: product editing was already complete,
+the taxonomy itself had no editor. The Drive importer had two real bugs, found before reusing
+it to pick up photographs Beco added to previously empty folders: a re-run could silently drop
+existing photos, and it reverted a dashboard rename or recategorisation on the next unrelated
+change to that product's folder. Both fixed, D90, and the importer has run for real against the
+local stack to prove it on live data, not only against fixtures.
 
 ## Agreed cut order, if the date is held
 

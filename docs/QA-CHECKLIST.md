@@ -309,8 +309,25 @@ Catalogue editor (M5 sections F and G, D89). Stock is on this screen; `/stock` r
 | Save | Writes name, SKU, price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache | Test: `updateProduct` action. Integration against local Postgres |
 | Delete product | `ConfirmDialog` names the product. Soft delete. Quotes keep their line and price | Test: `ProductEditor` plus integration |
 | `/stock` | Redirects to `/products` | Test |
+| Manage ranges | Navigates to `/categories` | **Server** confirmed: real destination |
 
 The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (NULL) keeps the stored availability.
+
+### `/categories`
+
+The taxonomy editor, D91. Product manager and admins, same access as Catalogue. A group's
+`Panel` lists the ranges filed under it.
+
+| Control | What it does | Status |
+|---|---|---|
+| Group panel | Name, Published/Draft, Edit link | Test: `CategoryTree` |
+| Range row | Name, page URL, product count, Published/Draft, Edit link | Test: `CategoryTree` |
+| Empty group state | Names that no ranges are filed under it yet | Test: `CategoryTree` |
+| Edit | Opens a detail sheet at `?edit=id` | Test: `CategoryTree` plus `CategoryEditor` |
+| New range | Charcoal labelled FAB, desktop and phone. Opens `?new=1`, picks Top level group or an existing group | Test: `NewCategoryFab`, `CategoryCreate`, `createCategory` action |
+| File under | Select of top level groups. Locked, with the reason stated, when the row already has children | Test: `CategoryEditor` |
+| Save | Writes name, slug, parent, description, SEO overrides, published, sort order. Busts the storefront `/shop` pages for the range, its former slug and its parent | Test: `updateCategory` action. Integration against local Postgres |
+| Delete range | `ConfirmDialog` names the range. Disabled, with the blocking count in its own label, when products or child ranges are still filed under it. Refused server side too if reached anyway | Test: `CategoryEditor` plus `deleteCategory` action |
 
 ### `/orders`
 

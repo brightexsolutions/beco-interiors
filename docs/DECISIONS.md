@@ -1442,3 +1442,57 @@ decrement from orders stays deferred: there is no reservation model yet.
 catalogue editor, in which case `/stock` becomes a real screen again and the
 redirect is removed.
 
+## D90, 23 September 2026: the Drive importer stops owning commercial identity past first insert
+
+D54 said the importer owns photographs and provenance, never commercial
+fields, and named its own reversal condition: "if the dashboard's product
+editor becomes the source of truth at M5." That has now happened, `/products`
+shipped as the ongoing way to change a product, but `run.ts` was never
+updated to match. It still wrote `name` and `category_id` on every run that
+touched an existing product, so a dashboard rename or recategorisation
+reverted to the Drive folder name the next time anything in that folder
+changed, including just adding a photograph, which is exactly what re
+running the import to pick up Beco's new photos was about to do.
+
+Fixed by writing `name` and `category_id` on insert only. `images` and
+`source_path` stay importer owned on every run, and that half of D54 still
+holds, tightened by the same pass: the per file loop only ever pushed what it
+downloaded THIS run into the images array, so a re run silently replaced the
+whole stored gallery with just the new files, dropping any existing unchanged
+photo. `mergeProductImages` now carries an unchanged file's own prior entry
+forward, matched by a `driveFileId` recorded on each processed image.
+
+*Reverses if:* a future pass wants Drive to be able to correct a product name
+after the fact, which would need an explicit signal (a flag, a convention)
+distinguishing a Drive-sourced rename from a dashboard one, not a blind
+overwrite.
+
+## D91, 23 September 2026: category and range management moves into the dashboard
+
+The schema supported this since migration 19, `categories.parent_id`, the two
+level depth trigger, `categories_write` RLS, and migration 19's own test file
+literally says it "attacks the trigger from every direction the dashboard's
+category editor could reach it." No editor was ever built. Renaming a range,
+filing one under a different group, or adding a new one at all required a
+developer writing a SQL migration, which is the exact bottleneck rule 8's
+"no developer needs to be present" standard exists to remove, and this
+session's build plan asked for it directly.
+
+New `/categories` route, product manager and admins, same access as
+Catalogue. This revises the M5 handover's "one Catalogue item" nav note:
+a second, closely related item, Ranges, sits beside it. The taxonomy is a
+materially different surface from a single product (a tree with depth rules,
+not a record), and cramming it into the products sheet would have compromised
+both screens rather than kept the nav minimal for its own sake.
+
+Category slugs get the same history table products already had,
+`category_slugs`, migration 49, so a rename 301s instead of losing whatever
+the old URL had ranked for. Delete only works on an empty range or a
+childless group, enforced server side, because neither foreign key restrains
+it: `category_id` and `parent_id` both go quietly null on delete, correct
+behaviour for other reasons, wrong for a delete button with no warning.
+
+*Reverses if:* Beco never actually reorganises the taxonomy in practice and
+the screen goes unused, in which case it is cheaper to fold range editing
+back into the product sheet than to maintain a second screen nobody opens.
+

@@ -95,6 +95,8 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `25_refresh_order_money.test.sql` | A priced line writes the quote header. An unpriced line does not zero priced ones. Convert copies line money, not a stale 0. Reports invoiced follows the confirmed order. 6 tests. Migration 44 |
 | `26_users_staff.test.sql` | Sales, product manager and editor cannot write `users`. Allowlisted Brightex can. Self role and self deactivate refused. Last `beco_admin` cannot be deactivated. Created user has `must_change_password`. Anon cannot execute `end_user_sessions`. Migration 45 |
 | `27_announcements_admin.test.sql` | Anon sees a live row and not one that starts tomorrow. Once the window includes `now()`, anon can read it. Sales and product manager cannot write. Beco admin can, and the write is audited |
+| `28_settings_blog_audit_grants.test.sql` | Sales cannot write settings; admin can. Anon cannot read bank details or the Brightex allowlist. Brightex can write a blog post, read the audit log and grant `can_write_blog` / `can_read_audit` to a salesperson; the grant opens audit reading but never blog write, Studio stays Brightex-only regardless of the flag (D42, migration 48). Product manager cannot grant either. 18 tests |
+| `29_category_admin.test.sql` | Closes the write-side gap `06` left open: `beco_product_manager` and admins can create and update a category, sales and editor cannot (an INSERT denial raises 42501, an UPDATE denial just matches zero rows under USING, both asserted correctly). Anon cannot write. A rename records the former slug in `category_slugs` and survives a second rename; anon can read that history, which the storefront redirect depends on, and cannot write it. 12 tests. Migration 49, D91 |
 
 ## Storefront
 
@@ -183,6 +185,13 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `ProductCreate` | `components/__tests__/product-create.test.tsx` | Slug fills from the name. Create product submits. Axe clean |
 | `ProductImages` | `components/__tests__/product-images.test.tsx` | Remove ConfirmDialog names the product. Add photograph is a real file control. Axe clean |
 | `NewProductFab` | `components/__tests__/new-product.test.tsx` | Charcoal FAB to `/products?new=1` on desktop and on a phone |
+| Category grouping helper | `lib/__tests__/products.test.ts` | `groupCategoryOptions` nests a range under its group in arrival order, keeps a childless top level category like Lighting selectable on its own, and never lists a range itself at the top level |
+| Category tree query | `lib/categories.ts` | No dedicated unit file: exercised through `CategoryTree`'s fixtures and the actions integration below. `fetchCategoryGroupOptions` excludes the row being edited so a category cannot become its own parent from the UI |
+| Category actions | `app/(app)/categories/__tests__/actions.test.ts` | Session re-check. Create returns the slug so the editor can open, looks up the parent slug for revalidation. Update busts the current and former slug. Stale lock named. Delete refuses and never issues the DELETE when products or child ranges are still filed under it, naming which. Bad slug refused before any write. 10 tests |
+| Storefront revalidate, categories | `lib/__tests__/storefront-revalidate.test.ts` | `revalidateCategory` busts `/shop`, the range, its former slug and its parent group; omits what does not apply |
+| `CategoryTree` | `components/__tests__/category-tree.test.tsx` | Every group and its ranges render, empty-group state named, explicit Edit link per row, create and edit sheets, axe. 6 tests |
+| `CategoryEditor` | `components/__tests__/category-editor.test.tsx` | Save submits. Delete ConfirmDialog names the range. Delete disabled with the blocking count in its own label when products or children exist. Parent select locked, with the reason, when the group has children. Axe |
+| `CategoryCreate` | `components/__tests__/category-create.test.tsx` | Slug fills from the name. Defaults to a top level group, can be filed under one instead. Cancel returns without creating anything. Axe |
 | User helpers | `lib/__tests__/users.test.ts` | Issued password length. Duplicate email, last-admin, sales-only website sentences. `parseStaffPublicPhoto` |
 | Users query | `lib/users.integration.test.ts` | Seeded Brightex admin inserts a flagged sales row and can set `is_public` plus `public_photo`. Product manager cannot deactivate anyone |
 | User actions | `app/(app)/users/__tests__/actions.test.ts` | Session re-check. Password not stored on the profile insert. Duplicate email cleans up the auth user. Self role refused. Deactivate revokes sessions. Director cannot be listed on `/team`. Photograph without a file is refused |
@@ -258,6 +267,8 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `classify.test.ts` | New, changed, unchanged and missing |
 | `quality.test.ts` | Size budgets, and the reports that come with them |
 | `slug.test.ts` `plan.test.ts` `decode.test.ts` | Slug rules, plan assembly, HEIC detection by MAGIC BYTES rather than extension |
+| `merge-images.test.ts` | `mergeProductImages` (D90): an unchanged file's own prior entry is carried forward rather than dropped when new photos are added alongside it, the actual bug that shipped. A file removed from Drive entirely is dropped. Empty-to-populated works cleanly, the common case for a folder that just got its first photos. A legacy entry with no `driveFileId` falls back to a same-role positional match. A file that needed downloading this run but failed processing is never backfilled from a stale entry. `parseStoredImages` drops a malformed entry rather than carrying it through. 9 tests |
+| `run.test.ts` | `productWriteFields` (D90): an existing product's write never includes `name` or `category_id`, so a dashboard rename or recategorisation survives a re-import; a new product's insert includes both |
 
 ## Known gaps
 
@@ -273,3 +284,10 @@ Named rather than rounded up.
   against the real database; the form itself has not been used by a person
 - Neither error page has been triggered by a real thrown error in a browser
 - Linux CI cannot process HEIC until Sharp is built with libheif
+- `pnpm vitest run` with no `--project` filter occasionally fails one or two `integration`
+  files on a fixture email already existing, confirmed 23 September to be resource contention
+  from every project's files racing the same local Postgres and GoTrue at once, not a real bug:
+  `pnpm vitest run --project integration` alone is consistently green. `ci.yml` already runs
+  `test:unit`, `test:component` and `test:dashboard` as separate steps before `test:integration`
+  runs alone in its own step, so CI itself is not exposed to this. Only a local
+  `pnpm test` / `pnpm vitest run` with no project filter can hit it
