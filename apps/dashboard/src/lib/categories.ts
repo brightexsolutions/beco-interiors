@@ -121,6 +121,21 @@ export async function fetchCategoryBySlug(
   return toRow(raw, parent.data?.name ?? null, count ?? 0);
 }
 
+/** Expands a selected row in the ranges panel to every category id its
+ *  products can actually carry: itself, plus its children when it is a
+ *  group. A childless group (Lighting) is itself the assignable id, so it
+ *  needs no expansion; a group with ranges under it (Sintered Stone) is
+ *  never assigned to a product directly, only its children are, per
+ *  `groupCategoryOptions`. Null when nothing is selected, so the caller can
+ *  tell "show everything" apart from "show a group with nothing filed
+ *  under it yet", which would otherwise both look like an empty array. */
+export function categoryIdsInSelection(tree: CategoryGroupRow[], selectedId: string | null): string[] | null {
+  if (!selectedId) return null;
+  const group = tree.find((row) => row.id === selectedId);
+  if (group) return group.children.length > 0 ? group.children.map((child) => child.id) : [group.id];
+  return [selectedId];
+}
+
 export interface CategoryParentOption {
   id: string;
   name: string;

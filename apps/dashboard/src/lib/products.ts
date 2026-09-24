@@ -11,6 +11,13 @@ export interface ProductListFilters {
   availability?: Availability | 'out' | undefined;
   published?: 'published' | 'draft' | undefined;
   stock?: 'low' | 'out' | undefined;
+  /** One or more category ids to match `category_id` against. Plural
+   *  because filtering the catalogue by a GROUP (Sintered Stone) has to
+   *  match every range filed under it, not just products assigned to the
+   *  group row itself, which per `groupCategoryOptions` only happens for a
+   *  childless group like Lighting. The caller (the catalogue page) expands
+   *  a group id to itself plus its children before this is called. */
+  categoryIds?: string[] | undefined;
 }
 
 export interface CatalogueProduct {
@@ -213,6 +220,7 @@ export async function fetchProducts(
   }
   if (filters.published === 'published') query = query.eq('is_published', true);
   if (filters.published === 'draft') query = query.eq('is_published', false);
+  if (filters.categoryIds?.length) query = query.in('category_id', filters.categoryIds);
 
   const { data, error } = await query.overrideTypes<ProductRow[]>();
   if (error) throw new Error(`Could not load products: ${error.message}`);

@@ -81,7 +81,10 @@ describe('createCategory', () => {
     form.set('slug', 'wall-panels');
     form.set('parentId', '');
     const result = await createCategory({}, form);
-    expect(requirePath).toHaveBeenCalledWith('/categories');
+    // Gated against /products, not /categories: see the rationale comment
+    // at the top of actions.ts. /categories is a bare redirect since D100
+    // and carries no rule of its own in lib/access.ts.
+    expect(requirePath).toHaveBeenCalledWith('/products');
     expect(insert).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Wall Panels', slug: 'wall-panels', parent_id: null, is_published: false }),
     );
@@ -136,7 +139,7 @@ describe('updateCategory', () => {
       .mockResolvedValueOnce({ data: { slug: 'sintered-stone', parent_id: null } })
       .mockResolvedValueOnce({ data: { slug: 'sintered-stone' }, error: null });
     await updateCategory({}, formFrom());
-    expect(requirePath).toHaveBeenCalledWith('/categories');
+    expect(requirePath).toHaveBeenCalledWith('/products');
   });
 
   it('saves and busts the storefront for the current and former slug', async () => {

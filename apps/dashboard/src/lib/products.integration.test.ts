@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import type { Database } from '@beco/types';
+import { fetchProducts } from './products';
 
 config({ path: new URL('../../../../.env.local', import.meta.url).pathname, quiet: true });
 
@@ -180,5 +181,60 @@ describe('catalogue writes against local Postgres', () => {
     expect(Number(kept.data?.unit_price)).toBe(75000);
 
     await sb.from('quotes').delete().eq('id', quote.data!.id);
+  });
+});
+
+describe('fetchProducts, categoryIds filter, against local Postgres', () => {
+  // Its own product, created and torn down inside this one test, rather than
+  // reusing the suite's shared `productId`: by the time this describe block
+  // runs, the block above has already renamed AND soft-deleted that row, so
+  // borrowing it here would filter against a product `fetchProducts` is
+  // correctly excluding for an unrelated reason.
+  it('matches a product filed under a given category id, and excludes it under any other', async () => {
+    const sb = service();
+    const category = await sb.from('categories').select('id').eq('is_published', true).limit(1).maybeSingle();
+    expect(category.data?.id, 'at least one published category must exist locally').toBeTruthy();
+
+    const created = await sb
+      .from('products')
+      .insert({
+        name: 'ZZ Cat Filter',
+        slug: `${PREFIX}-filter`,
+        category_id: category.data!.id,
+        unit: 'per slab',
+        price: 70000,
+        price_display_mode: 'fixed',
+        is_published: true,
+        images: [],
+        specs: {},
+      })
+      .select('id')
+      .single();
+    expect(created.error).toBeNull();
+    const filterProductId = created.data!.id;
+
+    try {
+      const matched = await fetchProducts(sb, { search: PREFIX, categoryIds: [category.data!.id] });
+      expect(matched.map((p) => p.id)).toContain(filterProductId);
+
+      // A category id that exists but was never assigned to this product:
+      // the catalogue page's own "click a range you did not create" case.
+      const other = await sb
+        .from('categories')
+        .select('id')
+        .eq('is_published', true)
+        .neq('id', category.data!.id)
+        .limit(1)
+        .maybeSingle();
+      if (other.data?.id) {
+        const excluded = await fetchProducts(sb, { search: PREFIX, categoryIds: [other.data.id] });
+        expect(excluded.map((p) => p.id)).not.toContain(filterProductId);
+      }
+
+      const unfiltered = await fetchProducts(sb, { search: PREFIX });
+      expect(unfiltered.map((p) => p.id)).toContain(filterProductId);
+    } finally {
+      await sb.from('products').delete().eq('id', filterProductId);
+    }
   });
 });

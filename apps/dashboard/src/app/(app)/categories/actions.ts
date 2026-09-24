@@ -1,5 +1,11 @@
 'use server';
 
+// Gates against `/products`, not `/categories`, even though this file lives
+// under `app/(app)/categories`: D100 folded the ranges screen into the
+// catalogue, `/categories` is now a bare redirect with no rule of its own in
+// `lib/access.ts`, and `requirePath` treats an unmatched path as open to any
+// signed-in role. `/products` carries the identical role set these actions
+// always required, so this is the route that actually still gates them.
 import { createCategorySchema, deleteCategorySchema, updateCategorySchema } from '@beco/validation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
@@ -27,7 +33,7 @@ export async function createCategory(
   _prev: CategoryActionState,
   form: FormData,
 ): Promise<CategoryActionState> {
-  await requirePath('/categories');
+  await requirePath('/products');
   const parsed = createCategorySchema.safeParse({
     name: formString(form, 'name'),
     slug: formString(form, 'slug'),
@@ -61,7 +67,7 @@ export async function updateCategory(
   _prev: CategoryActionState,
   form: FormData,
 ): Promise<CategoryActionState> {
-  await requirePath('/categories');
+  await requirePath('/products');
   const parsed = updateCategorySchema.safeParse({
     categoryId: formString(form, 'categoryId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -115,7 +121,7 @@ export async function deleteCategory(
   _prev: CategoryActionState,
   form: FormData,
 ): Promise<CategoryActionState> {
-  await requirePath('/categories');
+  await requirePath('/products');
   const parsed = deleteCategorySchema.safeParse({
     categoryId: formString(form, 'categoryId'),
     updatedAt: formString(form, 'updatedAt'),

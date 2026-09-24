@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
-import { updateQuoteLines } from '@/app/(app)/quotes/actions';
+import { sendQuoteEmail, updateQuoteLines } from '@/app/(app)/quotes/actions';
 import { QuoteDocumentPanel } from '../quote-document-panel';
 import { QuoteDraftFlushProvider } from '../quote-draft-flush';
 import { QuoteLines } from '../quote-lines';
@@ -82,6 +82,32 @@ describe('QuoteDocumentPanel', () => {
     await user.click(screen.getByRole('button', { name: 'View' }));
     expect(screen.getByRole('button', { name: 'Email' })).toBeInTheDocument();
     expect(screen.getByLabelText(/email to/i)).toHaveValue('a@example.com');
+  });
+
+  it('actually sends through sendQuoteEmail on submit, and dispatches inside a transition', async () => {
+    // Regression: the form's own action awaited flush() first, then called
+    // useActionState's dispatch directly, which React only wraps in a
+    // transition automatically for the form's OWN action, not for a call
+    // made after an await inside it. That desync never threw, it only
+    // logged "An async function with useActionState was called outside of
+    // a transition", so Email had never actually been submitted in a test
+    // before this one, only asserted to exist.
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(<QuoteDocumentPanel {...props} />);
+    await user.click(screen.getByRole('button', { name: 'View' }));
+    await user.click(screen.getByRole('button', { name: 'Email' }));
+
+    await waitFor(() => expect(sendQuoteEmail).toHaveBeenCalled());
+    const form = vi.mocked(sendQuoteEmail).mock.calls.at(-1)?.[1];
+    expect(form).toBeInstanceOf(FormData);
+    expect((form as FormData).get('to')).toBe('a@example.com');
+    expect((form as FormData).get('quoteId')).toBe('q');
+
+    expect(
+      consoleError.mock.calls.some((call) => String(call[0]).includes('outside of a transition')),
+    ).toBe(false);
+    consoleError.mockRestore();
   });
 
   it('Close actually closes the preview', async () => {

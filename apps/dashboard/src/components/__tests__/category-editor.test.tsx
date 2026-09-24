@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { CategoryRow } from '@/lib/categories';
+import type { CategoryActionState } from '@/app/(app)/categories/actions';
 
-const updateCategory = vi.fn(async () => ({ ok: 'Saved.' }));
-const deleteCategory = vi.fn(async () => ({ ok: 'Removed.' }));
+const updateCategory = vi.fn(async (): Promise<CategoryActionState> => ({ ok: 'Saved.' }));
+const deleteCategory = vi.fn(async (): Promise<CategoryActionState> => ({ ok: 'Removed.' }));
 vi.mock('@/app/(app)/categories/actions', () => ({
   updateCategory: (...a: Parameters<typeof updateCategory>) => updateCategory(...a),
   deleteCategory: (...a: Parameters<typeof deleteCategory>) => deleteCategory(...a),
@@ -37,6 +38,25 @@ describe('CategoryEditor', () => {
     await user.type(screen.getByLabelText('Name'), 'Limestone Ivory');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(updateCategory).toHaveBeenCalled();
+  });
+
+  it('calls onSaved once the save actually succeeds, not merely on submit', async () => {
+    const onSaved = vi.fn();
+    const user = userEvent.setup();
+    render(<CategoryEditor category={range} groupOptions={[]} onSaved={onSaved} />);
+    expect(onSaved).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  });
+
+  it('does not call onSaved on a rejected save, so the sheet stays open on the error', async () => {
+    updateCategory.mockResolvedValueOnce({ error: 'That page URL is already taken.' });
+    const onSaved = vi.fn();
+    const user = userEvent.setup();
+    render(<CategoryEditor category={range} groupOptions={[]} onSaved={onSaved} />);
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(updateCategory).toHaveBeenCalled());
+    expect(onSaved).not.toHaveBeenCalled();
   });
 
   it('names the range on delete, and requires the confirm verb', async () => {

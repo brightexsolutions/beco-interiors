@@ -156,6 +156,29 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
             </dl>
           </div>
 
+          {quote.fulfilment === 'delivery' || quote.wantsInstallation || quote.wantsSamples ? (
+            <div>
+              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                Requested
+              </h2>
+              {/* Captured on submission, priced separately: these are not
+                  quote lines, so nothing here totals into the quote's own
+                  price. Delivery and installation get the attention tone,
+                  Warm Red, because each is a real pricing gap someone has
+                  to close with its own custom line before the quote is
+                  complete; samples is informational, not a pricing gap, so
+                  it stays muted rather than spending the same red. */}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {quote.fulfilment === 'delivery' ? <StatusPill label="Delivery" tone="attention" /> : null}
+                {quote.wantsInstallation ? <StatusPill label="Installation" tone="attention" /> : null}
+                {quote.wantsSamples ? <StatusPill label="Samples" tone="muted" /> : null}
+              </div>
+              {quote.fulfilment === 'delivery' && quote.deliveryAddress ? (
+                <p className="mt-2 font-ui text-sm text-neutral-500">{quote.deliveryAddress}</p>
+              ) : null}
+            </div>
+          ) : null}
+
           <div>
             <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Ownership

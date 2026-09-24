@@ -53,8 +53,10 @@ describe('canAccess: the dashboard route/role matrix', () => {
     for (const role of ALL_ROLES) {
       expect(canAccess(role, '/')).toBe(true);
       expect(canAccess(role, '/change-password')).toBe(true);
-      // /stock is a redirect to /products. The products prefix is the gate.
+      // /stock and /categories both redirect to /products. The products
+      // prefix is the gate for both, same as any other ungated path.
       expect(canAccess(role, '/stock')).toBe(true);
+      expect(canAccess(role, '/categories')).toBe(true);
     }
   });
 });

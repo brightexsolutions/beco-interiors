@@ -41,6 +41,11 @@ export interface QuoteDetail {
   projectType: string | null;
   fulfilment: string | null;
   deliveryAddress: string | null;
+  /** Captured as intent on submission, never as a priced line: the
+   *  salesperson prices delivery and installation separately, once they
+   *  have seen the customer asked for either. See D101. */
+  wantsInstallation: boolean;
+  wantsSamples: boolean;
   timeline: string | null;
   budgetNote: string | null;
   projectDetails: string | null;
@@ -155,7 +160,8 @@ export async function fetchQuote(
     .from('quotes')
     .select(
       `id, reference_number, customer_name, customer_phone, customer_email, company,
-       project_type, fulfilment, delivery_address, timeline, budget_note, project_details,
+       project_type, fulfilment, delivery_address, wants_installation, wants_samples,
+       timeline, budget_note, project_details,
        source, status, created_at, updated_at, valid_until, finalized_at, lost_reason,
        reviewing_at, quoted_at, won_at, lost_at, reopened_at,
        requires_approval, approved_at, assigned_to, converted_order_id,
@@ -210,6 +216,8 @@ export async function fetchQuote(
     projectType: quote.project_type,
     fulfilment: quote.fulfilment,
     deliveryAddress: quote.delivery_address,
+    wantsInstallation: quote.wants_installation,
+    wantsSamples: quote.wants_samples,
     timeline: quote.timeline,
     budgetNote: quote.budget_note,
     projectDetails: quote.project_details,

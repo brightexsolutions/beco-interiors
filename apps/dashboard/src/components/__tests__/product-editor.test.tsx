@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { CatalogueProduct } from '@/lib/products';
+import type { ProductActionState } from '@/app/(app)/products/actions';
 
-const updateProduct = vi.fn(async () => ({ ok: 'Saved.' }));
-const deleteProduct = vi.fn(async () => ({
+const updateProduct = vi.fn(async (): Promise<ProductActionState> => ({ ok: 'Saved.' }));
+const deleteProduct = vi.fn(async (): Promise<ProductActionState> => ({
   ok: 'Removed from the storefront. Existing quotes keep their line and price.',
 }));
 vi.mock('@/app/(app)/products/actions', () => ({
@@ -44,6 +45,27 @@ const product: CatalogueProduct = {
   lowStockThreshold: 1,
   updatedAt: '2026-09-17T10:00:00.000Z',
 };
+
+describe('ProductEditor, closing the sheet', () => {
+  it('calls onSaved once the save actually succeeds, not merely on submit', async () => {
+    const onSaved = vi.fn();
+    const user = userEvent.setup();
+    render(<ProductEditor product={product} categories={[]} onSaved={onSaved} />);
+    expect(onSaved).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  });
+
+  it('does not call onSaved on a rejected save, so the sheet stays open on the error', async () => {
+    updateProduct.mockResolvedValueOnce({ error: 'Something else has that page URL.' });
+    const onSaved = vi.fn();
+    const user = userEvent.setup();
+    render(<ProductEditor product={product} categories={[]} onSaved={onSaved} />);
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(updateProduct).toHaveBeenCalled());
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+});
 
 describe('ProductEditor', () => {
   it('names the product on delete and says quotes keep their line', async () => {

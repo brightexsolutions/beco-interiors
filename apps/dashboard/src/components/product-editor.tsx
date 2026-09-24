@@ -35,11 +35,16 @@ const asNumber = (value: string): number | null => {
 export function ProductEditor({
   product,
   categories,
+  onSaved,
   onDeleted,
   onImagesChanged,
 }: {
   product: CatalogueProduct;
   categories: ProductCategoryOption[];
+  /** Fires once `save` actually succeeds, not merely on submit, so a
+   *  rejected save (the slug is taken, the row moved under someone else)
+   *  leaves the sheet open on the same form and its error. */
+  onSaved?: () => void;
   onDeleted?: () => void;
   onImagesChanged?: () => void;
 }) {
@@ -90,6 +95,14 @@ export function ProductEditor({
   useEffect(() => {
     if (deleteState.ok) onDeleted?.();
   }, [deleteState.ok, onDeleted]);
+
+  // Closes the sheet the same way delete already does. Previously Save left
+  // the sheet sitting open on the same form after a successful write, with
+  // only a toast to say so, reported directly as looking like nothing had
+  // happened.
+  useEffect(() => {
+    if (saveState.ok) onSaved?.();
+  }, [saveState.ok, onSaved]);
 
   const addSpec = () => setSpecs((current) => [...current, { label: '', value: '' }]);
   const updateSpec = (index: number, patch: { label?: string; value?: string }) => {
@@ -155,7 +168,7 @@ export function ProductEditor({
               <Field label="SKU" htmlFor="sku" hint="Supplier code. Shown on the product page">
                 <Input id="sku" name="sku" defaultValue={product.sku ?? ''} className="min-w-0" />
               </Field>
-              <Field label="Page URL" htmlFor="slug" hint="Old URL redirects">
+              <Field label="Page URL" htmlFor="slug" hint="Old links still work">
                 <Input id="slug" name="slug" defaultValue={product.slug} required className="min-w-0" />
               </Field>
               <Field label="Range" htmlFor="categoryId">

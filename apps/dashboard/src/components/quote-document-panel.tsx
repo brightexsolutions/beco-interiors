@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { startTransition, useActionState, useEffect, useState } from 'react';
 import { Button, Dialog, Field, Input, buttonClasses, toast, useActionToast } from '@beco/ui';
 import { sendQuoteEmail, type QuoteActionState } from '@/app/(app)/quotes/actions';
 import { PdfPreview } from '@/components/pdf-preview';
@@ -99,7 +99,14 @@ export function QuoteDocumentPanel({
                     return;
                   }
                   formData.set('updatedAt', result.updatedAt ?? lock);
-                  send(formData);
+                  // `send` is useActionState's own dispatch, called here
+                  // after an await rather than directly as the form's
+                  // action, which is the one case React cannot wrap in a
+                  // transition for you: done explicitly, or `sending` stops
+                  // tracking this submit correctly.
+                  startTransition(() => {
+                    send(formData);
+                  });
                 }}
                 className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
               >

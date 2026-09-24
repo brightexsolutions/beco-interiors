@@ -215,6 +215,7 @@ export function ProductResults({
           key={`${editing.id}-${editing.updatedAt}`}
           product={editing}
           categories={categories}
+          onSaved={closeSheet}
           onDeleted={closeSheet}
           onImagesChanged={refresh}
         />

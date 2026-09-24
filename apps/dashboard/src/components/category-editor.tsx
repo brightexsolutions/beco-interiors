@@ -21,10 +21,14 @@ const INITIAL: CategoryActionState = {};
 export function CategoryEditor({
   category,
   groupOptions,
+  onSaved,
   onDeleted,
 }: {
   category: CategoryRow;
   groupOptions: CategoryParentOption[];
+  /** Fires once `save` actually succeeds, not merely on submit, so a
+   *  rejected save leaves the sheet open on the same form and its error. */
+  onSaved?: () => void;
   onDeleted?: () => void;
 }) {
   const [saveState, save, saving] = useActionState(updateCategory, INITIAL);
@@ -43,6 +47,13 @@ export function CategoryEditor({
   useEffect(() => {
     if (deleteState.ok) onDeleted?.();
   }, [deleteState.ok, onDeleted]);
+
+  // Closes the sheet the same way delete already does: previously Save left
+  // it sitting open on the same form after a successful write, with only a
+  // toast to say so.
+  useEffect(() => {
+    if (saveState.ok) onSaved?.();
+  }, [saveState.ok, onSaved]);
 
   const busy = saving || removing;
   const isGroup = category.parentId == null;
@@ -99,7 +110,7 @@ export function CategoryEditor({
                   className="min-w-0"
                 />
               </Field>
-              <Field label="Page URL" htmlFor="cat-slug" hint="Old URL redirects">
+              <Field label="Page URL" htmlFor="cat-slug" hint="Old links still work">
                 <Input id="cat-slug" name="slug" defaultValue={category.slug} required className="min-w-0" />
               </Field>
               <Field
