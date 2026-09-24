@@ -1496,3 +1496,656 @@ behaviour for other reasons, wrong for a delete button with no warning.
 the screen goes unused, in which case it is cheaper to fold range editing
 back into the product sheet than to maintain a second screen nobody opens.
 
+## D92, 23 September 2026: a second storefront pass, wider than D82
+
+Brown's call, put in place explicitly overriding the narrower framing this
+session first proposed back to him. D82 scoped the September modernisation
+as a craft pass: sharper inside the existing system, not a new visual world.
+Brown's verdict on the result is that it still does not read as premium
+against the inspiration references he shared (Poliform, Aestic, Ambiente and
+similar), and asked for room to genuinely diverge from the interaction rules
+in `CLAUDE.md`, not just polish inside them. This decision is that room,
+scoped rather than open ended.
+
+**Stays locked, unchanged from D2 and D82.** Charcoal Black, High-Vis White
+and Warm Red at their guideline values, Titillium Web and Cormorant
+Garamond, the 8px base and the type floor. The Lighthouse budgets (LCP
+under 2.0s, CLS under 0.05, INP under 200ms, the page weight and hero image
+ceilings): these are not a Brightex house rule being relaxed for its own
+sake, they are the same speed Brown asked this pass to protect in the same
+conversation he asked for the deviation, so a change that costs the budget
+is not shipped regardless of how it reads. No `window.confirm/alert/prompt`,
+no Playwright, reduced motion still collapses every effect: none of that is
+what "premium" was ever blocked on.
+
+**Opens up.** The six named motion effects and "one significant effect per
+section" stop being a ceiling: a page can carry a genuinely designed motion
+system rather than a pick from a list, as long as reduced motion still
+collapses it and nothing but transform and opacity drives it. The "craft
+pass inside the existing system" framing is retired: this can be a new
+structural and interaction language, not sharper versions of what shipped
+in September. `framer-motion` is added as a real dependency rather than kept
+off because the CSS transition approach already covered the six effects.
+Shadcn stays the base `@beco/ui` is already built on (`components.json`,
+Radix primitives, CVA were there before this decision), now used
+deliberately rather than incidentally.
+
+**Cinematic hero and header, everywhere the guideline previously confined
+them.** The header's transparent-over-hero, solid-on-scroll behaviour and
+its contrast-tested scrim stay (the 55% floor at the header's weakest point
+is a real accessibility fix, not decoration, D79's own header note), but the
+flat two-stop gradient can be softened into a longer cinematic falloff.
+Hero treatment extends to `/shop` and `/product`, which D79's own routing
+table deliberately excluded as "a slim banner, not a full hero": that
+exclusion is reversed here. The home hero moves from sintered stone alone to
+the full six ranges.
+
+**Photography is static, not queried live, on Brown's explicit instruction
+given mid session.** The original draft of this decision had the hero
+reusing `imageForGroup`/`imagesForGroup` against the live `products` table,
+the same way the range cards further down the page already do. Brown
+stopped that: a hero, or any imagery on a page that is not itself a product
+page, has to survive `pnpm db:reset` intact, so only product information and
+product photography are allowed to go blank on a reset, never the site's own
+design. This is not theoretical. Checked live against this machine's own
+local database while writing this decision: every one of the 24 sintered
+stone products currently has zero images, `role` on every image that DOES
+exist elsewhere in the catalogue reads `unknown` rather than `application`
+or `slab`, and `docs/SETUP.md` already documents why: `db:reset` rebuilds
+the catalogue from its migration, R2 keeps the files, but the image records
+that point at them only come back via `pnpm drive:import`, a twenty minute
+run nobody does by reflex after every reset. A hero built against that query
+is broken more often than it works on a fresh machine.
+
+The fix already exists elsewhere on this site and is extended rather than
+invented: `SITE_SHOTS`, `SHOWROOM_FILM` and `GALLERY_FILM` in
+`apps/storefront/src/lib/site.ts` are all hardcoded manifests pointing at
+files in `apps/storefront/public/`, committed to git, immune to a database
+reset because nothing about them touches Postgres. The hero's new per-range
+manifest, `HERO_RANGES`, follows the same shape. Sintered stone draws on
+`SITE_SHOTS`'s own real Beco photography rather than new sourcing. Where no
+static Beco shot exists yet for a range (lighting, wall panels, flooring,
+hardware, accessories are the thin ones), free, commercially licensed stock
+fills the gap exactly the way `GALLERY_FILM` already does for the gallery's
+ambient video: a real, checked Pexels/Unsplash/Pixabay source, license
+confirmed free for commercial use before download, credited in the source
+comment for traceability, downloaded and committed to `public/hero/` rather
+than hot linked, and replaced the moment Beco has real room photography for
+that range. Optimised to the same weight budget as every other hero image.
+Product photography itself is unaffected by any of this: `/shop`,
+`/product` and every card still read the live `products` table as before,
+because a reset leaving product data blank until the next import is the
+correct, expected behaviour D91 and `docs/SETUP.md` already document, not a
+bug this decision is trying to fix.
+
+**Sequencing.** Runs on `storefront-cinematic-redesign`, forked from `dev`.
+Broken into session sized milestones rather than one pass, on Brown's own
+instruction to keep this out of a single chat session's context: Home first
+(this session), then Shop, then Product, then Gallery, About and Contact
+together since they already share the dark hero pattern, then the dashboard
+modernisation as its own, separate milestone. Each page's change is still
+recorded as an M4 revision, the same way D70 to D79 and D82 were. This
+decision also folds in the storefront feedback queue `docs/PLAN.md` had
+recorded as routed to a different chat session (home hero copy, pricing
+prominence, the `/about` showroom video and background, real project
+photography replacing supplier renders on `/gallery`, a floating WhatsApp
+button, dual homeowner and professional pathways): it overlaps too heavily
+with this pass to stay a separate, unclaimed thread.
+
+**Dashboard.** Same top nav, but the screens move from a working skeleton to
+a styled one: coloured, avatar bearing tables, charts where a screen
+actually has a trend or a split worth showing, not charts added because a
+dashboard is expected to have one. Its own milestone, scoped and recorded
+separately once the storefront passes are done.
+
+*Reverses if:* a specific change cannot be made to fit the Lighthouse
+budgets even after image and delivery optimisation, in which case that one
+change is dropped rather than the budget raised, matching D82's own
+reversal clause. Or if Beco asks that the palette or type themselves change,
+which still needs Beco at the table, unchanged from D82.
+
+## D93, 24 September 2026: the shop's catalogue-by-category section, a duplicate range folder, and two new pages
+
+Closes the one item D92's Session 2 table named but did not ship: `/shop`'s catalogue read as
+one flat grid of everything, reported directly as wanting the ranges Beco actually deals in to
+be legible on its own busiest page, sintered stone leading rather than buried in an
+alphabetical wall.
+
+**This was tried once already and reverted, on 14 September: worth stating plainly rather than
+quietly redoing it.** That session's own commit message: "A rail per range was tried first and
+reported back directly as repetitive right after the featured one, so there is a single curated
+row now." What shipped instead was the single Featured rail plus a flat paginated grid, which is
+what `/shop` carried until this decision. This decision reverses that specifically on fresh,
+direct instruction given this session, arranging the catalogue by range again, sintered stone
+leading. Two things are genuinely different from the version that read as repetitive, both worth
+recording in case the objection returns: each rail now carries the range's WHOLE published stock
+rather than the same up-to-three badged items Featured already showed a screen above, so the
+content is not literally a repeat; and each rail ends in its own "View all" to a real page rather
+than every rail feeding the same flat grid Featured already sits above. If it reads as repetitive
+again once it is actually seen running, that is the same objection raised the first time and
+should weigh the same way.
+
+`SlabRail`'s own docstring, written when it was built for Home's single Featured row, already
+anticipated exactly this use, unbuilt until now: "the shop page can run one of these per
+category, 'Sintered stone' leading to its own range, without a second copy of the chrome
+drifting from this one", `divider`, `viewAllHref` and `viewAllLabel` all already there for it.
+`/shop`, browsing rather than filtering, now renders one `SlabRail` per `RANGE_GROUPS` entry, in
+that order, each carrying every published product in the range's subtree so the rail's own arrow
+controls genuinely move through the whole thing, and skips a range with nothing published rather
+than rendering an empty rail, the same rule Featured already applied. `divider={false}`
+throughout, per the component's own note that several of these stacked back to back read as one
+continuous rhythm without it. A search or a facet still collapses this to the one flat, paginated
+grid it already showed, unchanged: a reader who narrowed the catalogue on purpose asked for that
+specific set, not Beco's editorial shape of it.
+
+**"View all" needed somewhere to lead that did not dump everything at once.** It already led to
+`/shop/<range>`, but that page rendered its full product list with `ProductGrid`, no pagination.
+Swapped for `ProductGridPaginated`, the same paginated grid `/shop`'s own filtered view already
+used, twelve at a time behind a "View N more" button, rather than either page inventing a second
+pagination pattern.
+
+**A real duplicate, not a styling gap.** Reported directly against the footer's products column,
+seen still listing "Lights" once "Lighting" was already fixed the first time this session: a
+stale point, not a wrong one. The footer reads categories live from `getCategoryTree()`, and
+`revalidate = 3600` on the pages that warm that fetch cache meant a direct database fix during a
+`next dev` session already running did not show until the dev server itself restarted and threw
+its in memory cache away. Once restarted, the real fix held: the Drive importer's "Lights"
+folder, a loose folder of photographs with no product subfolder per the same "one product per
+folder" gap `docs/STATUS.md`'s "Waiting on Beco" list already tracks, had imported as its own
+top level category rather than landing inside the actual "Lighting" range, so the footer, the
+shop filter and the home range grid all carried both, one of them permanently empty and marked
+"soon". The one real product in "Lights" was moved into "Lighting" and the now empty duplicate
+category deleted, directly against the local database rather than through a migration: this is
+catalogue content from the Drive import, not schema, and the same fix still has to happen to the
+Drive folder itself, merging or renaming it into "Lighting", before the next `drive:import`
+recreates exactly this duplicate. Recorded here rather than only fixed silently so a future
+session does not spend an hour rediscovering it. The footer's "soon" marker on any zero stock
+range is also gone, on direct request: said once in the "Also stocked, being photographed"
+section `/shop` itself already carries, it does not need repeating in small grey type in every
+footer visit too.
+
+**The old Brightex credit is gone from the footer**, replaced by "Terms & conditions" and
+"Privacy policy" links, on direct request. Both are genuinely new pages rather than stubs: short,
+general and specifically NOT inventing a commitment nobody at Beco has agreed to, a returns
+window or a liability clause chief among them. What each one states is already true elsewhere in
+this codebase: 30 day quote validity and VAT shown as its own line per `files/BUILD-PLAN.md`'s
+own A3, no payment taken through the site itself, the same fraud prevention note `/team` already
+carries about matching a payment request to a real quote, and, for privacy, that the quote list
+a reader builds lives in their own browser via `localStorage` until they choose to send it, and
+that no advertising or tracking script is wired into the storefront today, checked by `grep`
+rather than assumed. Both pages share one new `LegalSection` component rather than each hand
+writing its own heading and prose block, and both read as a single centred reading column rather
+than the site's usual asymmetric layout, on direct request: a page that is nothing but prose
+reads as unbalanced dead space beside a short heading at the site's normal left edge.
+
+**Four of the home page's process step captions were rewritten.** "The list survives a refresh,
+and no account is required" and "Your name and phone number are the only things we genuinely
+need" described the tool's own behaviour to the person using it rather than speaking to them
+directly, reported directly as reading like system language rather than something Beco would
+actually say to a customer at the counter.
+
+*Reverses if:* the per range rails read as repetitive again once actually seen running, the same
+objection that reverted the first attempt on 14 September, in which case `/shop` goes back to one
+Featured rail over a flat paginated grid rather than trying a third variant unasked. Also
+reverses if Beco's own Drive folder for "Lights" is renamed or merged differently than "Lighting"
+absorbing it, in which case the database fix here is redone to match whatever the next import
+actually produces.
+
+**Addendum, same day: the first reversal clause fired.** Seen live against the running site
+rather than only reasoned about, `/shop`'s per range rails were reported back as needing to
+revert, the same call made about the near identical layout on 14 September. A second, sharper
+reason surfaced alongside it: `RailTrack`'s cards, built for Home's editorial Featured row, carry
+no price and no add to quote control at all, so browsing the actual catalogue that way was a
+functional step back from `ProductGrid`'s own `ProductCard`, not only a repeated taste call.
+`/shop` is back to exactly its pre D93 shape, one Featured rail over a flat, paginated grid, and
+every product card there carries its price and `QuickAddToQuote` again, confirmed against the
+rendered HTML rather than assumed. `/shop/[category]`'s own `ProductGridPaginated` swap was never
+part of the complaint and stays. The catalogue-by-category section remains the one item open from
+D92's Session 2 table, now tried and reverted twice: repetitive alone the first time, repetitive
+and missing commerce actions the second. A third attempt needs to answer both, not just repeat
+either previous shape.
+
+## D94, 24 September 2026: the Featured rail's own two real bugs, and why the filter bar was not actually sticking
+
+Three items, all reported directly against the Featured rail and the docked filter bar that D93
+left in place once the per range rails themselves were reverted.
+
+**"View all" on Featured went nowhere a reader could see, reported as not clickable.** It was not
+a broken link in the DOM sense: `viewAllHref="/shop"` rendered a real anchor, but `/shop` is the
+page it was already on, so clicking it produced no visible change, which is indistinguishable
+from broken to the person clicking it and is exactly what rule 3 means by a control that looks
+right and does nothing. Changed to `viewAllHref="#the-whole-catalogue"`, a real id now on the flat
+grid section beneath it, with `viewAllLabel` reworded from "View all" to "See everything" since it
+jumps to everything rather than to one range. `scroll-mt-48` on that section so the jump lands
+below both sticky layers, the header and the filter bar, rather than tucking the heading under
+them.
+
+**The Featured rail itself was not actually showing the whole business**, reported directly
+against a screenshot where several of the visible cards were "Fluted Wall Panels" and "Drawer
+Rails", the same loose Drive folders D93's own addendum already named, rather than the six ranges
+Beco actually organises around. The rail was built from the raw top level `groups` returned by
+`getCategoryTree()`, eight rows today because two loose folders each import as their own top
+level category, three items per row and a hard cap of twelve overall. With eight rows competing
+for twelve slots, iteration order decided which real ranges got crowded out entirely: Hinges and
+Office Accessories, both genuinely stocked, did not appear. Rebuilt from `RANGE_GROUPS`, the same
+six range list `/`'s own "What we deal in" section and the hero already use, so Featured now
+always carries up to three items from each of the six, sintered stone through accessories, with
+no overall cap needed since six ranges at three each tops out at eighteen. Confirmed against the
+rendered HTML: every range with any stock now appears at least once, flooring still absent
+because it genuinely holds nothing published, the same content gap D93 already recorded rather
+than a bug this fixes.
+
+**The filter bar was never actually sticking, only appearing to for an instant.** Reported as
+wanting it to "stick at that point for easier access" while scrolling, which is what `sticky
+top-20` was already supposed to do and had been described as doing since D62. The real defect:
+`position: sticky` holds an element in place only for as long as its own PARENT is still passing
+through the viewport, and the bar's parent was a wrapper exactly as tall as the bar itself, a
+sibling of the rest of `/shop` rather than an ancestor of it. The instant that thin parent's
+bottom edge reached the sticky offset, the bar had nowhere left to stay pinned within and
+resumed scrolling immediately, which reads as never having stuck at all. `ShopControls` now takes
+`children`, rendered inside its own outer wrapper after the sticky layer rather than passed as a
+page level sibling, so that wrapper is as tall as the whole browsing surface, Featured and the
+full catalogue grid both, and the bar can stay pinned below the header for the whole of that
+scroll. The sticky class itself moved from the innermost bordered card onto the middle gutter
+layer, so the card's own internal padding is unaffected: only which element the containing block
+math runs against changed, not how anything is meant to look. This is one CSS mechanism, so it
+applies identically at every breakpoint, including the phone layout's "Filters" panel, without a
+separate mobile fix. `shop-controls.test.tsx`'s existing behavioural coverage still passes
+unchanged, since nothing about the bar's own interactions moved, only its position in the tree.
+
+**Addendum, same day: that fix introduced a real stacking bug, caught immediately against the
+running page, and the first attempt at fixing it was still wrong.** Reported directly, with a
+screenshot: the filter bar's own bottom edge was rendering under the product cards once scrolling
+began, the search field and the range dropdown both partly covered by an image scrolling up over
+them. Cause: making `children` render INSIDE the bar's own outer wrapper, the fix above, also made
+the bar and the scrolling content SIBLINGS inside that wrapper for the first time. Neither carried
+its own `z-index` before, because they never used to share a stacking context: the bar had one
+internal to `ShopControls`, the content sat entirely outside it as a page level sibling.
+
+First fix tried was `z-10` on the sticky layer, confirmed live and by a passing test run, and
+still reported back as broken, persisting at rest rather than only during scroll, this time
+specifically the product card's own TITLE, PRICE and ADD button rendering over the bar rather than
+its image. That specificity was the tell: `ProductCard` (`packages/ui/src/components/product-card.tsx`)
+sets `relative z-10` on its title, its price row and its action slot individually, each for its
+own reason internal to the card, and the card's own root wrapper is `relative` with no z-index of
+its own, which does NOT isolate a stacking context. Position without a set z-index does not
+create one. So those three z-10 elements were never actually contained inside "the card"; they
+were always stacking directly against whatever the nearest ancestor stacking context is, which
+used to be irrelevant because the bar and the grid were never siblings in one, and became relevant
+the moment this decision made them so. A bar at `z-10` ties with card internals also at `z-10`,
+and a tie resolves to document order, later wins, which is the grid. Fixed by moving the bar to
+`z-30`, clear of every z-index actually in play inside `/shop`'s own content (`z-20` on
+`RailTrack`'s arrow buttons is the next highest, checked by grepping every component `children`
+can render rather than assumed) and still short of the header's own `z-50` above it.
+
+*Reverses if:* a future range genuinely does not belong in `RANGE_GROUPS`, in which case Featured
+is rebuilt against whatever list replaces it rather than reverting to the raw category tree this
+decision moved away from.
+
+## D95, 24 September 2026: a services section on Home and About, dated legal pages, and cutting the eyebrow device's own repetition
+
+Reported directly, together: `/terms` and `/privacy` gave no indication of when they were last
+reviewed, and, more broadly, "the random lines used across gives the impression of the site is
+done by AI, we want to ensure no AI slop is left on the platform." Asked directly which lines,
+the answer was all three: the repeated visual hairline-plus-uppercase-label opener ("the eyebrow"
+in this codebase's own comments), repeated copy phrasing site wide, and the `/terms` and
+`/privacy` copy specifically.
+
+**Dated pages.** Both now carry a `LAST_UPDATED` constant set by hand under the page header, not
+read from a clock: a "last updated" date that always says today is worse than none, because it is
+trusted. Both also had their copy tightened, seven `LegalSection` blocks down to five on `/terms`
+and six down to four on `/privacy`, folding near identical uniform blocks (stock availability into
+quotations, damage into delivery, why into what) into the sections they actually belonged beside,
+rather than one tidy paragraph of the same length under every heading, the generated-checklist
+rhythm that was the actual complaint.
+
+**The eyebrow census.** An Explore agent catalogued every occurrence across the storefront rather
+than guessing where to fix it. Findings: Home is the worst offender, four sections in a row,
+"What we deal in", "Why Beco", "Completed interiors" and "The range", separated only by a
+background tint change in places, immediately followed by the Process section's own comment
+explaining why IT has no eyebrow, one section too late to stop the run before it. About carries
+two back to back triples. Gallery is the most visually dense page relative to its length. Shop
+category pages and the product page already show the restraint being asked for and were left
+alone as the models to extend rather than pages needing a fix.
+
+Fixed on Home and About specifically, the two pages named directly, rather than attempting
+Gallery in the same pass: `CompletedInteriors` gained an `eyebrow?: string | null` (was
+`string`), `null` dropping the row entirely rather than every caller being forced to keep one,
+and Home's own call now passes it. Home's "The range" and About's "Inside the showroom" and "The
+team" sections had their eyebrow markup removed outright, each because the heading or the
+surrounding content (a caption plate, a numbered list right above) already names the section
+without it. Net effect on Home: the four-in-a-row is now two. On About: six of seven eyebrow
+sections down to four, with two genuine white-space breaks (the new services section below, and
+the existing statement-of-intent and rotating-statement sections) between the remaining ones
+instead of stacking back to back.
+
+**A services section, on both pages, on direct request: "i dont see... a section showing the
+services beco offers... that need to stand out clear across the 2 key pages."** Grounded in
+`docs/BECO-COMPANY-PROFILE.md`'s own "What we do" and "The client journey" rather than invented:
+consultation and selection, a site assessment ahead of anything fabricated, fabrication and
+installation (sintered stone and wall panels specifically, per the profile, not every range,
+which `SERVICES` in the new `lib/services.ts` states correctly rather than overclaiming), and
+delivery. Shared between both pages rather than each writing its own list, the same reasoning
+`RANGE_GROUPS` and `RangePillarList` already rest on elsewhere in this codebase.
+
+First built with `RangePillarList`, the numbered-row component already sitting unused in
+`packages/ui` since About's own material pillars moved to photograph tiles in an earlier session,
+reasoned as a natural fit for a fourth thing on the page needing "a numbered row, real content".
+Reported back directly as the wrong design style. Rebuilt as a new `ServiceCardGrid`
+(`apps/storefront/src/components/service-card-grid.tsx`) instead, reusing the soft raised card
+`Why Beco` and About's own team section already establish on both pages, a short red rule
+standing in for an icon, rather than inventing a third card language. Each card carries its own
+"Book a consultation" action, on direct request, opening WhatsApp with that specific service
+named in the prefilled message (`whatsappLink(item.title.toLowerCase())`) rather than one generic
+enquiry button for the whole section, so the button states what it does and the message on the
+other end proves it. Tested: `service-card-grid.test.tsx` asserts every card's link carries the
+right href for its own service, opens in a new tab, and the grid has no accessibility violations.
+
+**The showroom photograph, About's own rotating statement.** Reported directly against a
+screenshot: the stock photo standing in for the word SHOWROOMS read as a home decor shelf, folded
+textiles and a potted plant, nothing like an interior materials showroom. Beco's own showroom is
+real and already photographed, `/video/showroom-poster.jpg`, a still from the real
+`SHOWROOM_FILM` this same page already embeds further down, so reaching for a different stock
+photo would have been a worse answer than the real one already on hand. Swapped directly; the old
+`/rooms/showroom.webp`, confirmed unreferenced anywhere else first, is deleted rather than left
+orphaned in `public/`.
+
+`pnpm typecheck` clean, full `unit` (258) and `component` (547, four new) projects green.
+
+*Reverses if:* Gallery's own density, named in the census but not touched this pass, turns out to
+need the identical fix rather than a different one once someone actually looks at it running.
+
+## D96, 24 September 2026: WhatsApp's own prefilled message, rewritten to say the intent rather than wrap it
+
+`whatsappLink`'s template built every message the same way regardless of what the reader had
+actually clicked: `Hi Beco, I would like to ask about ${context}.`, with `context` a bare topic
+("speaking with Jane Doe", a product name, a service title) rather than a sentence. Asked
+directly for the prefilled text to "read Hi Beco Interiors, [the intent of the message]", then
+separately, once four new service buttons made the pattern's limits obvious, to make every one of
+them "match the intent of that button clicked".
+
+`whatsappLink(intent?: string)` now treats its argument as a full clause completing "Hi Beco
+Interiors, ...", not a topic for a wrapper sentence to append. Every call site audited against its
+own button, not just reworded to fit the new template: `/product/[slug]` states "I'm interested
+in {product}"; `/team` states "I would like to speak with {name}"; the quote confirmation states
+"here is my quote reference, {reference}", matching its own "Send the reference on WhatsApp"
+button; `ServiceCardGrid`'s "Book a consultation" states "I would like to book a consultation on
+{service}"; Home's own "Book a showroom visit" states exactly that. One real miss found in the
+audit: `error.tsx`'s "Message us on WhatsApp", shown only when something has actually broken, was
+still opening the same bare "I would like to enquire." as a floating chat widget with no context
+at all. It now states "I ran into an error on the website and need help", the one message that
+should read differently depending on where the button sits. Left generic on purpose, checked
+individually rather than assumed: the contact page's own WhatsApp channel card ("send a
+photograph, a drawing or a question", one of three deliberately general ways to reach Beco), the
+mobile menu's "WhatsApp us" nav shortcut, the floating chat widget, and the footer's own WhatsApp
+link. None of these sit next to a specific product, service or action, so a generic enquiry is the
+honest message for what the button actually is.
+
+`service-card-grid.test.tsx` updated to assert the new full-clause hrefs rather than the old bare
+topic. `pnpm typecheck` clean, full `unit` (258) and `component` (547) projects green.
+
+## D97, 24 September 2026: the header's own phone number, wrapping onto two lines around 1024 to 1280px
+
+Reported directly against a screenshot at 1200px: the header's business line, `+254 722 333 730`,
+broke onto two lines, crowding the Quote button beside it. The number's own text already had a
+graceful fallback for tight widths, `hidden lg:inline` so only the phone icon shows below `lg`
+(1024px), per its own comment: "icon plus number where there is room, icon alone where there is
+not, so it never wraps." The judgement of where "there is room" actually starts was wrong, not
+the design: five nav items, the logo, the number and the Quote button all compete for one row from
+`lg` up, and 1024px was not genuinely enough of it. The number was also the only multi-word text
+in that row without `whitespace-nowrap`, so it was the one thing that gave when the row was tight,
+wrapping at its own spaces rather than the row visibly overflowing.
+
+Raised the reveal breakpoint from `lg` to `xl` (1280px), and added `whitespace-nowrap` under it
+regardless: the breakpoint is a judgement call about how much room the rest of the bar needs,
+`nowrap` is a floor that holds even if that judgement is wrong a second time. Between `md` and
+`xl` the business line is icon only, unchanged in principle, just correctly scoped now.
+
+*Reverses if:* the header's own content changes enough (a shorter or longer nav, for instance)
+that `xl` stops being the right threshold, in which case it is retuned against the running header
+rather than assumed to still be correct.
+
+## D98, 24 September 2026: two more narrow-width fits, header spacing and the bookmatch caption
+
+Reported directly, testing between roughly 650 and 860px: the header's phone icon, Quote button
+and hamburger trigger read as touching, and the "It opens along the seam" bookmatch section did
+not sit well within its own box.
+
+**Header.** The right hand group was `gap-1 sm:gap-3`, 4px between three 44px targets below
+`sm` (640px), one of them a solid red button beside a plain icon trigger. Visually crowded even
+though nothing was actually overlapping. Raised to `gap-2` (8px), one grid step under CLAUDE.md's
+own 8px base, keeping `sm:gap-3` unchanged above 640px.
+
+**`SlabToSurface`'s caption column.** Its `min-h-[12.5rem]` was sized for the compact phone
+state: an eyebrow, a short heading, and the "scroll to open it" cue, nothing else. The lede
+paragraph and the secondary "All bookmatched stone" link both switch on at the same `sm`
+breakpoint (640px) via their own `hidden ... sm:block` / `sm:inline-flex`, but the box holding
+them, absolutely positioned children filling their parent's exact height, was never given more
+room to match. Between 640 and 1024px, the fuller caption needed more height than a box sized for
+the compact one, and did not fit it cleanly. `sm:min-h-[19rem]` added, leaving the compact height
+below `sm` and the desktop height at `lg` untouched. The image frame above it is `flex-1` with
+nothing in normal flow (its own photographs are all `position: absolute`), so it has no content
+driven minimum height and simply gives up the room the taller caption now takes, rather than the
+column overflowing its own fixed-height, `overflow-hidden` stage.
+
+`pnpm typecheck` clean, full `component` project green (547).
+
+*Reverses if:* the caption's real content changes enough that `19rem` over or undershoots again,
+in which case it is retuned against the running section rather than assumed correct a second
+time.
+
+## D99, 24 September 2026: the home hero's own gutter, stuck on the site's very first value
+
+Reported directly against a screenshot: the hero's eyebrow, headline, lede and buttons sat
+visibly left of the header's own logo above them, on a page where every other section lines up
+with it exactly. Real cause, not a one-off: `PinnedHero` and `HeroStatic` each kept their own
+copy of a `GRID_INSET` constant, `pl-8 sm:pl-10 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3.5rem)]`,
+which is the site's gutter formula shape but carrying its very first, pre-widening values, `3.5rem`
+(56px) at `lg` and `pl-10` (40px) at `sm`, untouched through every one of the five later passes
+that took the rest of the site to `px-24`/`px-40` (96px/160px), CLAUDE.md's own design rules
+section records the exact sequence. Both hero components carried the same wrong number rather
+than one drifting from the other, which is why it read as consistent, just consistently wrong,
+and why it was not caught by comparing the two against each other.
+
+Fixed at the source rather than in each file: `HERO_GRID_INSET`, a new shared constant in
+`apps/storefront/src/lib/layout.ts`, corrected to match `px-24`/`px-40` exactly at each step.
+Both `PinnedHero` and `HeroStatic` import
+it instead of keeping their own copy, specifically so a future widening pass has one place to
+change rather than two files that can silently disagree, or in this case, two files that can
+silently agree on the same stale number, which is the same failure CLAUDE.md's own gutter note
+already warns about for `packages/ui` callers, extended here to a second local duplicate the
+warning did not yet name.
+
+`pnpm typecheck` clean, full `component` project green (547).
+
+*Reverses if:* a future hero redesign moves away from this inset-column-over-a-bleed-photograph
+shape entirely, in which case `HERO_GRID_INSET` is retired with it rather than kept for a pattern
+that no longer exists.
+
+## D100, 24 September 2026: D91 reversed, ranges fold into the catalogue; sheets close on save
+
+Reported directly by Brown, developer to developer: `/products` and `/categories` as two
+separate screens was confusing even to build against, not just to look at. "How do I add a
+range, then add a product under it, then edit it and add photos" is one task a product manager
+actually does, and it was spread across two nav items and two URLs that shared nothing but an
+eyebrow. D91's own text named this exact risk and gave itself an exit: *"Reverses if Beco never
+actually reorganises the taxonomy in practice and the screen goes unused, in which case it is
+cheaper to fold range editing back into the product sheet than to maintain a second screen
+nobody opens."* The condition that actually fired is adjacent, not identical, the screen was
+used, it was just the wrong shape, and Brown's fresh, direct instruction is taken as invoking
+that exit rather than re-litigated against it.
+
+**Not literally folded into the product sheet**, which D91 also warned against and which still
+holds: a range is a materially different surface from a product; cramming its own name, slug,
+parent, publish state and delete guard into the product editor would compromise both forms. What
+changes is that they now live on the SAME PAGE, `/products`, related the way they actually are:
+`CatalogueRanges`, a new component, renders as a compact chip panel above the existing product
+filters and list, one chip per range plus its group, each carrying its product count and a
+Draft mark. Clicking a chip sets `?category=` and narrows the product list below it, exactly the
+"pick a range, see what's in it" flow Brown described; the chip's own pencil icon opens the same
+range sheet `/categories` used to, now at `?range=` and `?newRange=1` rather than `?edit=`/`?new=`
+specifically because those two keys are already spoken for by the product sheet on this same
+route, and the two sheets must never read the same param. `fetchProducts` gained a `categoryIds`
+filter (plural: clicking a GROUP with children, Sintered Stone, has to match every range filed
+under it, since a group with children is never itself an assignable category, only a childless
+one like Lighting is); `categoryIdsInSelection` in `lib/categories.ts` does that expansion from
+the already-fetched tree so the page needs no second query.
+
+`/categories` still exists, as a bare `redirect('/products')`, the exact shape `/stock` already
+uses for the same reason (`docs/QA-CHECKLIST.md` already documented that one): an old bookmark or
+link gets forwarded rather than a 404, and the redirect page carries no access check of its own
+because the destination enforces its own. `ROUTE_RULES` in `lib/access.ts` drops the now dead
+`/categories` prefix entry to match, same as `/stock` never had one. `nav-items.ts` drops the
+"Ranges" item outright: one nav entry, "Catalogue", where there were two. `CategoryTree` and
+`NewCategoryFab`, the components `/categories` used alone, are deleted rather than kept unused,
+`CategoryEditor` and `CategoryCreate` are reused as is, they were always the range's actual form,
+only the page around them changes.
+
+**Sheets left open after a successful save, a real bug, reported alongside the redesign
+request.** `ProductEditor` and `CategoryEditor` each already closed on a successful DELETE
+(`onDeleted`), but Save only ever produced a toast; the sheet sat there unchanged, which reads as
+nothing having happened even though the write succeeded. Both now take an `onSaved` callback,
+fired from a `useEffect` keyed on the action state's own `ok` string rather than on submit, so a
+REJECTED save (a taken slug, a race on `updated_at`) correctly leaves the sheet open on its own
+form and its own error instead of closing on a failure. Deliberately NOT extended to the CREATE
+flow: `ProductCreate` and `CategoryCreate` already transition into edit mode on success rather
+than closing, on purpose, "Draft created. Add photographs, then publish." is that flow's own
+copy, and a brand new product typically still needs photographs before it is done. Brown's own
+report named "creation or update," this reading, that creation's continue-to-edit-mode is not the
+same complaint as update's do-nothing-visible, is a judgement call recorded here rather than
+silently assumed, and is reversible on a word if it is the wrong one.
+
+**A real regression, caught before it shipped, not after.** Dropping `/categories` from
+`ROUTE_RULES` in `lib/access.ts` (matching `/stock`, which never had an entry) silently
+disarmed `createCategory`, `updateCategory` and `deleteCategory` in `categories/actions.ts`:
+each still called `requirePath('/categories')`, and `requirePath` treats a path matching no rule
+as open to ANY signed-in role, per `access.ts`'s own documented behaviour. Postgres RLS
+(`29_category_admin.test.sql`, migration 49) was never touched and would still have refused a
+`beco_sales` or `beco_editor` write, rule 7's whole reason for requiring the check in two
+places, but the ROUTE check, the one that stops the wrong role even reaching the database, had
+gone quiet. Fixed by gating all three actions on `/products` instead, the route that actually
+carries the same role set now, with a comment at the top of `actions.ts` recording why a file
+under `app/(app)/categories` gates against a different path, so a future prune of `ROUTE_RULES`
+does not repeat this. Caught by checking every source reference to `/categories`, not just the
+ones this decision expected to find, before calling the pass finished.
+
+`pnpm typecheck` clean across all 9 packages. `catalogue-ranges.test.tsx` new, 9 tests.
+`category-editor.test.tsx` and `product-editor.test.tsx` each gained two `onSaved` tests, success
+and rejection. `categories.test.ts` new, unit coverage on `categoryIdsInSelection` alone (no
+database needed, it is pure). `products.integration.test.ts` gained a `categoryIds` case against
+real Postgres, self contained (its own product, created and torn down inside the one test) after
+a first version borrowed the suite's shared product and failed for a real reason, that product
+had already been soft deleted by an earlier test in the same file. Full `dashboard` (548, up from
+530), `unit` and `component` projects green together (1355 total).
+
+*Reverses if:* the chip-panel-above-the-list shape reads as cluttered once actually used on a
+catalogue with all six ranges and their full child count, rather than the two-range fixture this
+was built and tested against, in which case the ranges panel becomes a collapsed disclosure
+instead of an always-open block, not a return to a separate screen.
+
+**Addendum, same day: the risk this clause named fired within the hour, against a real
+screenshot of the full taxonomy, and was fixed without pulling the reversal lever.** Two real
+defects, not a matter of taste: every group and every range shared one `flex-wrap` row with no
+box or divider around a group's own cluster, so a line break could land between a group and its
+own ranges and the whole panel read as one flat, undifferentiated list, "the range section is
+not still designed to play the part, they feel over the place" in Brown's own words. And a
+group's chip showed its own `productCount`, which per `groupCategoryOptions`'s own comment is
+always 0 for a group with children, since only the children are ever assignable, so "Sintered
+Stone 0" sat directly beside "12mm Sintered Stones 25", reading as an empty range that in fact
+held 26 products. Fixed structurally rather than by hiding the problem: each group is now a full
+width row of its own, `divide-y` between them, so a browser's line break can never again cross a
+group boundary; the group's own name renders as a heading-weight text control, its ranges as
+bordered chips a size down, so the two categories of control are never visually interchangeable;
+and a group's displayed count is the sum of its own ranges when it has any, which is also the
+exact set `?category=` on that group's name actually filters to, so the number on screen and the
+behaviour behind it can no longer disagree. `catalogue-ranges.test.tsx` gained two tests for
+these specifically: the summed count against a group whose own `productCount` is 0, and a two
+group render asserting each group's ranges stay inside its own row rather than the neighbour's.
+11 tests total, up from 9. The disclosure fallback this clause offered was not needed; record
+that it was considered and a structural fix was preferred, in case a future session reaches for
+the disclosure again without re-deriving why a plainer fix was chosen first.
+
+Also this addendum: "Old URL redirects" as the Page URL hint, on both the product and range
+editors, was reported directly as developer language a product manager should not have to parse.
+Changed to "Old links still work" in both `product-editor.tsx` and `category-editor.tsx`. No
+test asserted the old copy, and no other doc referenced it verbatim, so this needed no other
+follow-up.
+
+**Second addendum, still the same day, on Brown's own live screenshot of the full nine-group
+taxonomy.** The cluster fix above closed the "over the place" complaint but, exactly as its own
+closing note admitted was still unconfirmed, most groups carried one or two ranges and each still
+claimed a whole cluster's worth of width on its own line, so the panel remained tall enough to
+push the product list, the actual reason the screen exists, most of a scroll down. Brown's own
+direction this round was concrete rather than another verbal description of what looked wrong:
+every range and group should be "pills... in a row that wraps" with "the edit icon... small and
+inside the pill", and both kinds of pill "should have the same height and form of design." That
+last line is the one that actually resolves the tension between the first two iterations: the
+group-name-as-heading treatment existed specifically to keep a group from being mistaken for one
+of its own ranges, and dropping it in favour of one uniform `RangePill` throughout only works
+because ORDER, a group's pill immediately followed by its own ranges' pills, still carries that
+relationship without a box or a font-weight to do it. A `catalogue-ranges.test.tsx` case asserts
+exactly this: a group and range pill produce byte-identical `className`, and a separate case
+asserts the ordering itself.
+
+The edit pencil moved from a separate `h-11 w-11` button beside each chip into a narrower,
+`w-8` segment sharing the pill's own border, a deliberate width tradeoff under CLAUDE.md's own
+44px touch target floor, accepted here because it was Brown's own explicit instruction ("small"),
+scoped to a SECONDARY action inside a control whose PRIMARY action, the filter click, still meets
+the floor at full pill height and width. The panel also gained a real collapse, a disclosure
+button on the "Ranges" heading itself (`aria-expanded`, `aria-controls`), superseding the
+`max-h-72` scroll cap the previous round added for the same problem: a toggle the product manager
+controls is a better fix than an internal scrollbar they did not ask for, so the cap is gone
+rather than kept alongside it. `catalogue-ranges.test.tsx` is 13 tests now, up from 11; one test
+from the cluster round (ranges staying inside their own bordered box) no longer applies now that
+there is no box, and was replaced rather than deleted silently.
+
+## D101, 24 September 2026: delivery and installation, captured for years, finally shown to the person pricing them
+
+Brown's own report: a customer who ticks Installation or asks for Delivery on the storefront
+quote form needs that indicated to whoever picks up the quote, and priced as its own line, on the
+same document but separate from the materials. "Am not sure of the best approach for it" was the
+actual ask, so this started as research, not a build: `quotes.fulfilment`, `delivery_address`,
+`wants_installation` and `wants_samples` all already exist on the table (`00000000000005_quotes.sql`,
+extended by `00000000000017_quote_services.sql`), all four are written by `submit_quote` on every
+storefront submission, and that migration's own column comments already say the plan out loud:
+"captured as intent, not as priced lines: the salesperson prices them." The plan was correct from
+the start. What was missing was the other half of it.
+
+Checked directly rather than assumed: `fetchQuote` in `lib/quote-detail.ts` selected `fulfilment`
+and `delivery_address` but never rendered either anywhere on `/quotes/[reference]`, and did not
+even select `wants_installation` or `wants_samples` at all. A salesperson opening a quote had no
+way to know a customer had asked for either. The order detail page, by contrast, already renders
+`order.fulfilment` and `order.deliveryAddress` as plain text in its own Customer block, an
+existing precedent this could have followed exactly; it does not, on purpose, because Brown's own
+framing was that this needs to be INDICATED, not merely present in a line of muted text a reader
+has to notice on their own. A new "Requested" block on the quote detail page's Customer aside
+uses `StatusPill` instead: Delivery and Installation both carry the `attention` tone, the
+dashboard's own Warm Red, reserved per the design rules for a state that genuinely needs someone
+to act, which this is, each one is a real pricing gap the quote cannot be marked Quoted with a
+straight face until it is closed. Samples carries `muted`: worth knowing, not a pricing gap, so
+it does not spend the same red. The delivery address renders beneath the pills when the customer
+gave one.
+
+Pricing it needs no new mechanism. `add_custom_quote_line` (`00000000000033_quote_mutations.sql`),
+already the "Not in the catalogue" control on the quote detail screen's own Line items panel, is
+a description-only line with an arbitrary price and quantity, no `product_id` at all, exactly
+what "Delivery to Kilimani" or "Installation" as a real, separately priced line already needs. A
+`quote_items.kind` column that would let the PDF group a delivery or installation line apart from
+materials visually, rather than relying on how staff word the description, was considered and
+deliberately not built: `packages/documents/src/pdf/quote-document.tsx` renders one flat line
+table today, and adding a grouping column, a migration, an RLS test, and a template change,
+before the plain version has even been used once, would be solving a problem nobody has reported
+yet. If the flat rendering itself is later reported as reading like an ordinary product line
+lost among the materials, that is the concrete case for building it.
+
+`pnpm typecheck` clean. No new component test: `fetchQuote` itself has never carried one, its
+callers (`pdf/route.ts` and this page) mock it directly, and `/quotes/[reference]`'s own
+orchestration has always been walked manually rather than unit tested, the same pattern this
+change follows rather than breaks. `docs/QA-CHECKLIST.md`'s own entry for this page marks the
+new panel **NOT WALKED** rather than assumed, since it has not been checked against a real quote
+with delivery and installation both set.
+
+*Reverses if:* staff report the `attention` tone on Delivery and Installation as noise, in
+which case both drop to `neutral` rather than being removed outright, since the underlying gap,
+staff not knowing at all, is the one this decision actually closes.
+

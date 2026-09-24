@@ -32,6 +32,19 @@ redirects to `/products`. Receipt PDF ships with orders. Quote, receipt
 and report PDFs preview as canvas pages with zoom. Live beco.co.ke is
 still WordPress; that is expected until the storefront launches.
 
+**Update, 24 September 2026: `/categories` reversed, folded back into `/products`.** The line
+above, "`/categories` (Ranges) is now built too," is no longer where it lives: D91's separate
+screen was reported back by Brown as confusing to build against, not just to look at, and D100
+in `docs/DECISIONS.md` reverses it. Ranges now render as a chip panel, `CatalogueRanges`, above
+the product list on `/products` itself; `/categories` is a bare redirect to `/products`, same
+shape as `/stock`. `nav-items.ts` has one "Catalogue" item, not two. `CategoryTree` and
+`NewCategoryFab` are deleted. `CategoryEditor` and `CategoryCreate` are unchanged, still the
+range's real form, just opened from `?range=`/`?newRange=` now rather than `?edit=`/`?new=`,
+since those two keys already belong to the product sheet on the same route. Also this session:
+`ProductEditor` and `CategoryEditor` both close their sheet on a successful Save now (`onSaved`),
+matching the delete behaviour each already had; a rejected save still leaves the sheet open on
+its own error. Full reasoning and the test count delta: D100.
+
 **Local stack:** `pnpm db:reset` then `pnpm drive:import` if you need
 photographs. After a plain reset the local catalogue is 24 published 12mm
 sintered stones. Handles, lighting, panels and hardware exist as empty

@@ -44,6 +44,18 @@ category like Lighting as its own option) instead of one flat alphabetical list;
 sanctioned touch to `/products` itself, additive, not a restyle of anything the 18 Sept lock
 named.
 
+**Reversed 24 September, Brown asked directly, developer to developer.** `/categories` as its
+own screen was reported back as confusing to build against, not just to look at: managing a
+range and managing what is filed under it are one task, not two nav items and two URLs. D100 in
+`docs/DECISIONS.md` has the full reasoning; the pattern going forward is `CatalogueRanges`, a
+chip panel above the product list on `/products` itself, one chip per range and group, each
+carrying its product count and a Draft mark, clicking one narrows the list below it via
+`?category=`. `/categories` is now a bare redirect to `/products`, the same shape `/stock`
+already used. `CategoryTree` and `NewCategoryFab`, built for the standalone screen, are deleted
+rather than kept unused; `CategoryEditor` and `CategoryCreate`, the range's actual form, are
+unchanged and reused inside the sheet the chip's own pencil opens. Read the 23 Sept note above
+for why a taxonomy editor exists at all, not for where it now lives.
+
 ## What stays uniquely Beco
 
 - Charcoal band, wordmark, top nav, floating white content panel (`AppShell`)

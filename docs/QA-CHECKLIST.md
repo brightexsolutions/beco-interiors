@@ -36,17 +36,20 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Control | What it does | Status |
 |---|---|---|
 | Logo | Navigates to `/` | Server, 200 |
-| Header background (D82) | Transparent with light chrome over the dark-hero pages (`/`, `/gallery`, `/about`, `/contact`); solid white with a hairline everywhere else and on scroll past 8px | Verified by DOM measurement on `/about`, `/contact`, `/product`: transparent bg and white logo at top, solid white bg, hairline and dark logo after scroll. **Not walked on a device** |
+| Header background (D82, scrim reworked D92) | Transparent with light chrome over the dark-hero pages (`/`, `/gallery`, `/about`, `/contact`); solid white with a hairline everywhere else and on scroll past 8px. The dark scrim is a separate 240px layer behind the header, eased over 7 stops down to 0, not a flat gradient confined to the header's own 80px box, so it fades into the photograph rather than cutting across it | Verified by DOM measurement on `/about`, `/contact`, `/product`: transparent bg and white logo at top, solid white bg, hairline and dark logo after scroll. Scrim visually checked live on `/` against the running dev server, twice: the first pass still showed a visible edge where the fade ended, the eased 7 stop version fixed it. **Not walked on a device** |
 | Nav: Shop, Projects, About, Contact | Navigate | Server, each 200 |
 | About dropdown | Opens on hover for a pointer, on click or Enter otherwise. Escape returns focus to the trigger, arrows walk the items, click outside dismisses | **NOT CONFIRMED** by test. Keyboard behaviour is written but has no test and has not been walked |
 | Quote counter | Reads the localStorage list and navigates to `/quote` | Test, on the list. Navigation Server |
 | Business line, header | Opens the dialler on `+254722333730` | Server, `tel:` href correct. Dialler itself **NOT CONFIRMED** |
+| Business line, header, number text at intermediate widths (D97) | Icon shows from `md`, the full number text only from `xl` (1280px) with `whitespace-nowrap`, rather than wrapping onto two lines around 1024 to 1280px as it did before, reported directly against a screenshot at 1200px | Server: class present in the rendered HTML. **Not walked on a device at exactly 1024 to 1280px** |
+| Header right group spacing below `sm` (D98) | `gap-2`, not `gap-1`, between the phone icon, Quote button and hamburger trigger, reported directly as reading as touching around 650 to 860px | Server: class present in the rendered HTML. **Not walked on a device** |
 | Mobile menu trigger | Opens the panel, traps focus, locks the page, escape returns focus to the trigger, closes on navigation | Test, 7 tests |
 | Mobile action bar: Quote, WhatsApp, Call | Navigate and open external channels | Server on hrefs. **NOT CONFIRMED** that it never sits under the on screen keyboard |
 | Announcement bar (D82) | Rotates through every live announcement, then "Call the showroom" (dials), then "Email us:" (`mailto:`). An announcement's own CTA navigates. Rolls up and out on a ~5.5s timer, pauses on hover, no rotation under reduced motion, no close control per D49 | Test: `buildAnnouncementItems` order, the roll, reduced-motion hold, the contact links. Server: rotates through all three items, bar stays charcoal. **Not walked on a device** |
 | Launch banner (D80), when a launch date or the live switch is set | Replaces the announcement bar. Counts down to `site_launch_at`, or once live shows the reveal and links to `/gallery`. Confetti plays once per browser, `localStorage` gated, skipped under reduced motion | Test, 9 tests on `LaunchBanner`. The live transform across a page load has not been walked on a device |
-| Footer nav and category links | Navigate | Server |
+| Footer nav and category links | Navigate. The products column reads live from `getCategoryTree()`, so it cannot list a duplicate or a range that does not exist: the "Lights" top level category, a loose Drive folder importing itself as its own range beside "Lighting", was merged into "Lighting" for exactly this reason. The "soon" marker on a zero stock range is gone, on direct request | Server, each 200 |
 | Footer social icons | **Deliberately not links.** Five platforms drawn, all five URLs null until Beco supplies handles, so the icon is drawn without an anchor rather than shipping `href="#"` | Test |
+| Footer "Terms & conditions" and "Privacy policy" (replaces the old Brightex credit, on direct request) | Navigate to `/terms` and `/privacy` | Server, each 200 |
 | Skip to content | Moves focus to `#main` | **NOT CONFIRMED** |
 
 ---
@@ -56,11 +59,15 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Control | What it does | Status |
 |---|---|---|
 | Hero CTAs | Navigate to `/shop` and `/quote` | Server |
-| Hero, no photography | `HeroStatic` renders in place of `PinnedHero` when no product carries a slab or application shot. Same eyebrow, h1, lede and the same two CTAs to the same routes, on flat charcoal | Test, 4 tests. The swap point is `slabs.length` in `page.tsx` |
+| Hero range chips (D92) | Six ranges, not four stone colours: sintered stone, lighting, wall panels, SPC flooring, hardware, accessories, each a real link to `/shop/<range>` or a plain span if the range has no stock. Photography is a static manifest, `HERO_RANGE_IMAGES` in `lib/ranges.ts`, not a live product query, so it renders the same way before and after a `db:reset` | Test, `pinned-hero.test.tsx`, 17 tests, including the no-stock-renders-a-span case |
+| Hero left column lines up with the header's own logo (D99) | Shared `HERO_GRID_INSET` (`lib/layout.ts`), corrected from the site's very first, pre-widening gutter value to match `px-24`/`px-40`, used by both `PinnedHero` and `HeroStatic` | Server: class present in the rendered HTML on both. **Not walked on a device** |
+| Hero, no photography | `HeroStatic` renders in place of `PinnedHero` when `heroSlides` is somehow empty. Same eyebrow, h1, lede and the same two CTAs to the same routes, on flat charcoal. In practice this branch no longer depends on the database per D92, so it is a safety rail rather than the common case D79 wrote it for | Test, 4 tests. The swap point is `heroSlides.length` in `page.tsx` |
 | Category rail cards | Navigate to the category | Server |
 | Range grid cards | Navigate to the product | Server, 29 product links present |
 | Room stack | Auto dealing, decorative, not interactive | n/a |
+| "Beyond stone" tiles (D92) | Lighting, wall panels, SPC flooring and accessories, each a real link to `/shop/<range>` or a plain non-interactive block if the range has no stock, matching the hero chip rail's own rule. Added on direct feedback that scrolling past the hero still read as a stone catalogue, hardware's own cutout section and stone's three other sections aside | Server, anchors confirmed in the rendered HTML for every range with stock. Same coverage level as Range grid cards and Category rail cards above, this page's existing convention for derived display data |
 | Process list | Static | n/a |
+| Services grid, "Book a consultation" per card (D95) | Opens WhatsApp with that specific service named in the prefilled message, `ServiceCardGrid`, shared with `/about` | Test: `service-card-grid.test.tsx`, per-card href, new tab, axe clean. Server: 4 distinct `wa.me` hrefs present, each naming its own service |
 | Cutout section, "Shop handles" | Navigates to `/shop/handles` | Server: anchor confirmed in the rendered HTML |
 
 LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN.**
@@ -73,19 +80,54 @@ LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN
 |---|---|---|
 | Search box | Rewrites `?q=`, debounced at 250ms, server re-filters | Server: `?q=calc` narrows the grid |
 | "Filters" button (mobile, D82) | Opens and closes the facet panel; a red badge shows how many of range, finish, sort are active | Test: `aria-expanded` and the panel toggle. Server: closed bar ~100px, panel opens with full-width controls and a "Show N results" close |
-| Range select | Rewrites `?range=` for a group or `?category=` for a range, clearing the other so the two cannot disagree | Server: `?range=hardware` 6 of 30, `?category=handles` 6, `?range=sintered-stone` 24, `?range=wall-panels` 0 |
-| Finish select | Rewrites `?finish=` | Server: `?finish=Polished` 4 of 30 |
-| Sort select | Rewrites `?sort=` | Server: `price-desc` orders 95,000 then 85,000 then 75,000 |
+| Range select | Rewrites `?range=` for a group or `?category=` for a range, clearing the other so the two cannot disagree | Server: `?range=hardware` 6 of 30, `?category=handles` 6, `?range=sintered-stone` 24, `?range=wall-panels` 0. Test: shares the desktop row rather than wrapping onto its own line, see the real bug fixed below |
+| Finish select | Rewrites `?finish=` | Server: `?finish=Polished` 4 of 30. Test: same row-sharing coverage as Range |
+| Sort select | Rewrites `?sort=` | Server: `price-desc` orders 95,000 then 85,000 then 75,000. Test: same row-sharing coverage as Range |
 | "Show N results" (mobile, D82) | Closes the facet panel, count matches the grid | Test |
 | Filter chips | Each removes its own filter | Test: clearing a chip rewrites the URL without that filter |
-| Clear all | Returns to bare `/shop` | **NOT CONFIRMED** by test |
+| Clear all | Returns to bare `/shop`, including the search box | Test: rewrites to `/shop` with no query string, search input value cleared |
 | Range browse tiles | Navigate to the group page | Server, each 200 |
 | Range browse child links | Navigate to the range page | Server, each 200 |
 | Quick add to quote, on each card | Writes the product to the localStorage list | Test, asserts the list changed |
 | Empty state "Show everything" | Returns to `/shop` | **NOT CONFIRMED** |
 | "Being photographed" links | Navigate to the empty category page | Server |
+| Featured rail "See everything" (D94, was "View all") | Jumps to the `#the-whole-catalogue` anchor below rather than linking to `/shop`, the page already open, which read as not clickable since nothing visibly happened | Server: anchor and matching `id` both present in the rendered HTML |
+| Filter bar sticks under the header while scrolling, on top of the content passing beneath it (D94) | Stays pinned at `top-20`, the header's own height, through Featured and the whole catalogue grid, not just for the first few pixels, and stays visually above the cards scrolling past rather than showing their title, price or Add button through it | Server: DOM nesting confirmed (`ShopControls` wraps Featured and the catalogue grid as children so its sticky layer has a containing block tall enough to hold). Bar is `z-30`, confirmed clear of every z-index actually used inside `/shop`'s own content, `ProductCard`'s own internal `z-10` on its title, price and action slot chief among them (its card root does not isolate a stacking context, so those values were never actually contained), and `RailTrack`'s arrow buttons at `z-20`. **Not walked on a device** |
 
 Every filtered view carries `noindex` with canonical `/shop`, per D29. **Server confirmed.**
+
+**Featured rail coverage (D94).** Rebuilt from `RANGE_GROUPS` rather than the raw category tree,
+which let two loose Drive folders ("Fluted Wall Panels", "Drawer Rails") crowd out genuinely
+stocked ranges (Hinges, Office Accessories) under the old fixed 12 item cap. Server confirmed:
+every one of the six ranges with any stock now appears in the rendered rail at least once;
+flooring is still absent because it holds nothing published yet, not a bug.
+
+**A real bug, found and fixed this pass, not a styling gap.** Reported directly against a
+screenshot: the Range, Finish and Sort controls each rendered as their own near-empty full width
+row, with the drawn chevron stranded far from the visible box. Root cause was in
+`Select` (`packages/ui/src/components/field.tsx`), a shared primitive: the flex sizing classes a
+caller passes (`sm:flex-1 lg:w-auto lg:flex-none` here) were applied to the inner `<select>`
+element, but the element that actually sits in the bar's flex row is the wrapping span `Select`
+renders around it, hardcoded `w-full` with no way for a caller to override it. Every one of
+`ShopControls`' own sizing classes was therefore inert at every breakpoint. Fixed by moving the
+passed `className` onto that wrapping span instead, which is a shared fix: any other caller
+passing layout classes to `Select` (`grep -rn "<Select" apps/` turns up two dozen, mostly the
+dashboard's own filter bars) now gets the sizing it already asked for rather than silently
+losing it. `packages/ui/src/components/__tests__/field.test.tsx` carries a regression test
+asserting the wrapper, not the `<select>`, receives the class. Corner radius was raised again
+this pass and confirmed rather than reopened: `docs/PLAN.md` already records that a
+`rounded-2xl` then `rounded-lg` pass on `button.tsx`, `field.tsx` and every card frame was tried
+during the D92 session, reported "not right" twice, and deliberately reversed outright, file by
+file against `git diff`, confirmed live against the running dev server. CLAUDE.md's own "Corner
+radius: sharp, no exceptions" rule was rewritten at the time specifically to record that history
+so a later session does not propose it again without knowing it was already tried. Asked again
+directly this pass, Brown's call stayed the same: sharp `rounded-[2px]` throughout, no revival.
+
+Also this pass: both `/shop`'s catalogue grid and `/shop/[category]`'s product grid moved onto a
+full bleed `bg-neutral-50` section, reported directly as every surface on the site reading flat
+white with nothing to lift a product card off the page the way `ProductCard`'s own "no border, no
+shadow" principle assumes something will. Same token the home page's "Why Beco" section already
+uses, not a new colour.
 
 ---
 
@@ -101,6 +143,7 @@ Every filtered view carries `noindex` with canonical `/shop`, per D29. **Server 
 | Product cards | Navigate to the product | Server |
 | Quick add to quote | Writes to the list | Test |
 | Cutout section, "Visit the showroom", Handles range only | Navigates to `/contact` | Server: anchor confirmed in the rendered HTML |
+| "View N more" | Reveals another page of the range, 12 at a time. This is where `/shop`'s own rail's "View all" leads, so the full range still paginates rather than dumping every product at once. `ProductGrid` swapped for `ProductGridPaginated`, the same component `/shop`'s own flat filtered view already used | Server: `/shop/sintered-stone` renders 12 of 25 published stones plus "View 12 more". Test coverage is `ProductGridPaginated`'s own, reused rather than duplicated |
 
 `ItemList` and `BreadcrumbList` JSON-LD both emitted. **Server confirmed by parsing.**
 Index gating asked of the subtree: `/shop/wall-panels` noindex, `/shop/hardware` indexable.
@@ -129,16 +172,26 @@ parsing. NOT validated in Google's Rich Results Test.**
 **This is the product. It is tested more thoroughly than anything else, and it is also the one
 screen where the automated coverage stops short of the thing that matters.**
 
+**Redesigned 24 September 2026** on Brown's request for a better layout, easier to use on both
+desktop and mobile: the form column (the one piece D92's storefront pass had not yet touched,
+`docs/PLAN.md`) is now grouped into `FormSection`s (Your details, The project) plus two
+fieldsets (Collection or delivery, Anything else you need), the list panel is `lg:sticky` beside
+the now much longer form so it stays on screen while the reader fills it in, and its own `<ul>`
+caps at `46vh` with internal scroll past that so a long list cannot grow the sticky panel taller
+than the viewport. Every input carries a placeholder now, not just phone number.
+
 | Control | What it does | Status |
 |---|---|---|
 | Quantity steppers per line | Change the line quantity, persisted | Test |
 | Remove line | Removes it immediately, no `ConfirmDialog`: a single line is recoverable by adding the product again, unlike clearing the whole list | Test |
 | Clear list | Empties the list, behind a `ConfirmDialog` naming what will happen | Test |
+| Add more materials, on the list panel | Navigates to `/shop`. New: the list previously had no way back to the catalogue except the header nav | Test, on the href |
 | Name, phone, email, company, project fields | Carry their values to the server action | Test, on the labels and the `name` attributes |
-| Collection or delivery radios | Reveal the delivery address field and the delivery charge note | **NOT CONFIRMED** by test |
-| Installation and samples checkboxes | Reach `submit_quote` as `p_wants_installation` and `p_wants_samples` | Integration test on the action |
+| Collection or delivery, now a two-card toggle rather than bare radios | Reveals the delivery address field and the delivery charge note | Test: card click reveals both, and switching back to collection hides them again |
+| Installation and samples, now bordered selectable cards rather than a bare checkbox row | Reach `submit_quote` as `p_wants_installation` and `p_wants_samples` | Integration test on the action. Card selected-state itself (`border-charcoal bg-neutral-50` on check) is **NOT walked on a device** |
 | Send my request | Calls `submitQuote`, mints a reference, writes the rows | Integration test against the real database, 9 tests |
 | WhatsApp and Call fallbacks | Open external channels | Server on hrefs |
+| Sticky list panel on scroll, `lg` and up | Stays in view beside the form as the reader scrolls past it | Server: class present. **NOT walked on a device**, and the `46vh` scrolling cap on a long list has not been checked against a real 60 item quote |
 
 **A quote has never been submitted from the actual browser form by a person.** The server
 action is proven against a real database and the form is proven to render and carry its values,
@@ -169,6 +222,8 @@ Motion: frame drawn first, photograph wipes up into it, caption plate rises afte
 | Directions | Opens Google Maps at the showroom | Server on href |
 | Email link | Opens the mail client | Server on href |
 | Showroom film | Autoplays muted at 50% visibility, pauses on leaving, no autoplay under reduced motion | **NOT CONFIRMED** by test or by hand |
+| Services grid, "Book a consultation" per card, `/about` only (D95) | Opens WhatsApp with that specific service named in the prefilled message, same `ServiceCardGrid` `/` uses | Test: `service-card-grid.test.tsx`. Server: 4 distinct `wa.me` hrefs present |
+| Rotating statement, SHOWROOMS frame (D95) | Now Beco's own real showroom, `/video/showroom-poster.jpg`, in place of a stock photo of a home decor shelf that had nothing to do with an interior materials showroom | Server: path present in the rendered HTML. **Not walked on a device** |
 
 NAP matches the footer and the JSON-LD character for character. **Server confirmed.**
 
@@ -271,6 +326,7 @@ real phone** (M5 section D).
 | Control | What it does | Status |
 |---|---|---|
 | Line items | Lists every line, a discount struck through against the catalogue price | **Server** confirmed on the discounted seed quote |
+| Requested (D101) | Delivery, Installation and Samples flags, captured on submission and previously fetched but never rendered anywhere. Delivery and Installation carry the `attention` tone (Warm Red) since each is a real pricing gap; Samples is `muted`, informational rather than a pricing gap. Delivery address shown beneath when set. Priced by adding a custom line, `add_custom_quote_line`, the existing "Not in the catalogue" control; no new pricing mechanism was built | Data layer only: `wants_installation`/`wants_samples` added to `fetchQuote`'s select and `QuoteDetail`. **NOT WALKED**: the panel itself has no test, matching this page's own established pattern (only its interactive children are unit tested, the page is walked manually) |
 | Save | One control on the Line items heading. Disabled until a qty or price changes, reason shown. Writes every dirty line through `update_quote_lines`. Unsaved + Changed mark the dirty state | `QuoteLines` tested |
 | Totals / Pricing on application | Shows a real total once every line is priced, the 0.3 line otherwise | **Server** confirmed both states |
 | Unknown reference | A real 404, not a broken render | **Server** confirmed |
@@ -291,7 +347,33 @@ real phone** (M5 section D).
 
 ### `/products`
 
-Catalogue editor (M5 sections F and G, D89). Stock is on this screen; `/stock` redirects here.
+The catalogue: ranges and the products filed under them, one screen (D100, reversing D91's
+separate `/categories` screen). Stock is on this screen too; `/stock` redirects here, and so
+does `/categories`, an old link or bookmark from before the merge.
+
+**Ranges panel**, `CatalogueRanges`, above the product list. Third iteration: every group and
+every range is now the identical pill, same height and form, in one flat wrapping row, group
+directly followed by its own ranges so adjacency carries the taxonomy (there is no longer a box
+or a heading weight to do it instead). Each pill's own edit pencil is a small segment sharing the
+pill's own border rather than a separate button beside it. The whole panel collapses from the
+"Ranges" heading:
+
+| Control | What it does | Status |
+|---|---|---|
+| Ranges heading (disclosure) | Collapses or re-expands the whole panel, `aria-expanded` | Test: `CatalogueRanges` |
+| Range or group pill | Sets `?category=`, filters the product list below it. A group pill shows the SUM of its ranges' product counts, not its own (a group with children is never itself assignable, so its own count is always 0), and matches every range filed under it when clicked | Test: `CatalogueRanges`. `categoryIds` filter: integration against local Postgres |
+| "All products" | Clears `?category=`. No edit segment, unlike every other pill | Test: `CatalogueRanges` |
+| Draft mark | Shown on a group or range pill when it is not published | Test: `CatalogueRanges` |
+| Edit (small pencil, inside the pill) | Opens a detail sheet at `?range=id`, a separate control from the pill's own click-to-filter even though it shares the pill's outline | Test: `CatalogueRanges` plus `CategoryEditor` |
+| New range | Ghost button beside the "Ranges" heading. Opens `?newRange=1`, picks Top level group or an existing group | Test: `CategoryCreate`, `createCategory` action |
+| File under | Select of top level groups. Locked, with the reason stated, when the row already has children | Test: `CategoryEditor` |
+| Save (range) | Writes name, slug, parent, description, SEO overrides, published, sort order. Busts the storefront `/shop` pages for the range, its former slug and its parent. Closes the sheet on success | Test: `updateCategory` action, integration against local Postgres. Sheet close: `category-editor.test.tsx` |
+| Delete range | `ConfirmDialog` names the range. Disabled, with the blocking count in its own label, when products or child ranges are still filed under it. Refused server side too if reached anyway. Closes the sheet | Test: `CategoryEditor` plus `deleteCategory` action |
+
+Page URL fields (both products and ranges) carry the hint "Old links still work", not a
+"redirect" mention: the person using this screen is a product manager, not a developer.
+
+**Product list and filters:**
 
 | Control | What it does | Status |
 |---|---|---|
@@ -306,28 +388,16 @@ Catalogue editor (M5 sections F and G, D89). Stock is on this screen; `/stock` r
 | SKU | Optional supplier code on create and edit. Search already matches it. Shown on the storefront product page | Test: `createProductSchema`, `updateProduct`, `ProductCreate`, `ProductEditor`, `ProductResults` |
 | Add photograph | Upload JPEG/PNG/WebP, role, alt. Writes R2 derivatives and `products.images` | Test: `ProductImages`, `addProductImage`, `processProductPhoto` |
 | Remove photograph | `ConfirmDialog` names the product. Deletes the shot from storage | Test: `ProductImages` |
-| Save | Writes name, SKU, price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache | Test: `updateProduct` action. Integration against local Postgres |
-| Delete product | `ConfirmDialog` names the product. Soft delete. Quotes keep their line and price | Test: `ProductEditor` plus integration |
+| Save (product) | Writes name, SKU, price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache. Closes the sheet on success | Test: `updateProduct` action, integration against local Postgres. Sheet close: `product-editor.test.tsx` |
+| Delete product | `ConfirmDialog` names the product. Soft delete. Quotes keep their line and price. Closes the sheet | Test: `ProductEditor` plus integration |
 | `/stock` | Redirects to `/products` | Test |
-| Manage ranges | Navigates to `/categories` | **Server** confirmed: real destination |
+| `/categories` | Redirects to `/products` | Test |
 
-The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (NULL) keeps the stored availability.
-
-### `/categories`
-
-The taxonomy editor, D91. Product manager and admins, same access as Catalogue. A group's
-`Panel` lists the ranges filed under it.
-
-| Control | What it does | Status |
-|---|---|---|
-| Group panel | Name, Published/Draft, Edit link | Test: `CategoryTree` |
-| Range row | Name, page URL, product count, Published/Draft, Edit link | Test: `CategoryTree` |
-| Empty group state | Names that no ranges are filed under it yet | Test: `CategoryTree` |
-| Edit | Opens a detail sheet at `?edit=id` | Test: `CategoryTree` plus `CategoryEditor` |
-| New range | Charcoal labelled FAB, desktop and phone. Opens `?new=1`, picks Top level group or an existing group | Test: `NewCategoryFab`, `CategoryCreate`, `createCategory` action |
-| File under | Select of top level groups. Locked, with the reason stated, when the row already has children | Test: `CategoryEditor` |
-| Save | Writes name, slug, parent, description, SEO overrides, published, sort order. Busts the storefront `/shop` pages for the range, its former slug and its parent | Test: `updateCategory` action. Integration against local Postgres |
-| Delete range | `ConfirmDialog` names the range. Disabled, with the blocking count in its own label, when products or child ranges are still filed under it. Refused server side too if reached anyway | Test: `CategoryEditor` plus `deleteCategory` action |
+The storefront card reads `Out of stock` when `stock_quantity` is 0. Uncounted (NULL) keeps the
+stored availability. **The ranges panel has not been walked on a real phone against the full
+live taxonomy**, only checked against desktop screenshots through three rounds of layout
+changes; how the pill row wraps at phone width, and how the collapse toggle reads there, are
+both still unconfirmed.
 
 ### `/orders`
 
