@@ -151,7 +151,23 @@ section rhythm, the eyebrow pattern, the scroll reveal.
   woff2, no Google Fonts request. **Formula1 Display is never deployed**, see D3
 - **Type floor 16px everywhere including the dashboard.** 17px body on desktop. 14px small
   print floor, used rarely. Measure capped at 68ch. Line height 1.6 body
-- **Spacing:** 8px base. Section padding 120 desktop, 88 tablet, 64 mobile. Touch targets 44px
+- **Spacing:** 8px base. Section padding 120 desktop, 88 tablet, 64 mobile. Touch targets 44px.
+  Horizontal content gutter, against the 1380px content cap: 160px desktop, 96px tablet, 32px
+  mobile (`px-8 sm:px-24 lg:px-40`), tuned five times on Brown's direct call, D92, each pass
+  checked against the running dev server, not a guess: 56/40/32px originally, then 80/48/32px,
+  112/64/32px, 160/80/32px, 176/96/32px, settling on 160 desktop with tablet held at 96. Applies
+  everywhere the 1380px container is used, not just the storefront home page. Check both
+  `apps/storefront/src` AND `packages/ui/src` when this value next changes: the first widening
+  pass missed `CutoutReveal` in `packages/ui` entirely, caught only by curling the running
+  server rather than trusting a source grep scoped to `apps/storefront/src` alone. The footer is
+  a deliberate exception, `lg:px-32` rather than `lg:px-40`: it carries several nav columns side
+  by side, not one column of prose, and the site's own 160px read as compressing them
+- **Corner radius: sharp, no exceptions.** D2's own "a sharp edge reads more deliberate than a
+  blur" stands. D92 tried a rounded corner on boxed elements, `rounded-2xl` then `rounded-lg`,
+  reported directly as "not right" both times, then reversed outright rather than tuned a third
+  time: Brown's own call was to stay consistent with the sharp language everywhere instead of
+  rounding some elements and not others. Do not reintroduce rounded corners on cards, frames,
+  buttons or form controls without a fresh, explicit instruction
 - **Contrast** verified by script, never assumed. Warm Red on white checked at every size
 - **Copy is short.** No explanatory paragraphs inside interface elements, no marketing voice in
   the dashboard, no sentence where two words will do

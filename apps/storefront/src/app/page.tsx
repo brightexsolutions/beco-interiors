@@ -3,7 +3,7 @@ import Link from 'next/link';
 import {
   ProductCard, Reveal, CountUp, CutoutReveal, RangeCardGrid, buttonClasses, cn,
 } from '@beco/ui';
-import { PinnedHero, type HeroSlab } from '@/components/pinned-hero';
+import { PinnedHero, type HeroRangeSlide } from '@/components/pinned-hero';
 import { HeroStatic } from '@/components/hero-static';
 import { QuickAddToQuote } from '@/components/quick-add-to-quote';
 import { SlabRail } from '@/components/slab-rail';
@@ -12,51 +12,15 @@ import { RoomStack } from '@/components/room-stack';
 import { CompletedInteriors } from '@/components/completed-interiors';
 import { ShowroomFilm } from '@/components/showroom-film';
 import { ClientShowcase } from '@/components/client-showcase';
+import { ServiceCardGrid } from '@/components/service-card-grid';
 import {
   getPublishedProducts, getCategoriesWithProducts, getCategoryTree, primaryImage, imagesForGroup,
   type CatalogueProduct, blurProps,
 } from '@/lib/products';
 import { getPublishedClients } from '@/lib/clients';
 import { SITE, SITE_SHOTS, whatsappLink } from '@/lib/site';
-
-/**
- * The six ranges Beco actually deals in, per docs/BECO-COMPANY-PROFILE.md
- * ("What we do"): sintered stone, wall panels, kitchen accessories, cabinet
- * handles, SPC flooring and furniture accessories. Grouped here the same way
- * migration 19 groups the taxonomy, Kitchen and furniture accessories both
- * landing under the editorial "Accessories" group alongside office fittings.
- *
- * `href` is resolved per group against real product counts below, not
- * written here, so a range that is still empty is never linked from the
- * home page. See `imagesForGroup` and `getCategoriesWithProducts`'s own note
- * on why an empty category stays off a high traffic page.
- */
-const RANGE_GROUPS = [
-  {
-    slug: 'sintered-stone', title: 'Sintered stone',
-    body: 'Large format slabs for worktops, feature walls, vanities and flooring, in 12mm and 15mm.',
-  },
-  {
-    slug: 'lighting', title: 'Lighting',
-    body: 'Decorative and architectural fittings, specified alongside the surfaces they sit in.',
-  },
-  {
-    slug: 'wall-panels', title: 'Wall panels',
-    body: 'Acoustic, bamboo veneer and SPC panelling, for a wall that goes up quickly and cleanly.',
-  },
-  {
-    slug: 'flooring', title: 'SPC flooring',
-    body: 'A rigid core plank that sits over most existing floors and clicks together without adhesive.',
-  },
-  {
-    slug: 'hardware', title: 'Hardware',
-    body: 'Handles, hinges, door locks and furniture legs, in finishes chosen to sit with the surfaces we supply.',
-  },
-  {
-    slug: 'accessories', title: 'Accessories',
-    body: 'Kitchen organisers, floating shelf fittings and office accessories that finish a piece of joinery properly.',
-  },
-] as const;
+import { RANGE_GROUPS, HERO_RANGE_IMAGES } from '@/lib/ranges';
+import { SERVICES } from '@/lib/services';
 
 /**
  * The home page.
@@ -125,38 +89,39 @@ export default async function HomePage() {
   // carry every range.
   const stones = products.filter((p) => p.category?.slug?.includes('sintered-stone'));
 
-  // Four slabs for the hero, taken from stones that actually have a slab or
-  // application shot, so the hero can never fall back to a photograph of a
-  // stand.
-  //
-  // Application over slab, per D79: the hero sells a finished room now, not
-  // a material sample, so it needs a stone actually installed somewhere,
-  // not a close crop of the sheet it was cut from. Falls back to the slab
-  // shot for a stone with no application photography yet, rather than
-  // dropping it from the hero entirely.
-  const slabs: HeroSlab[] = stones
-    .filter((p) => p.images?.some((i) => i.role === 'application' || i.role === 'slab'))
-    .slice(0, 4)
-    .map((p) => {
-      const img =
-        p.images.find((i) => i.role === 'application') ??
-        p.images.find((i) => i.role === 'slab')!;
-      // The chip rail's own image: a slab shot, distinct from the big
-      // background it sits beside. Showing the same application photo in
-      // both places was reported directly as redundant, the background
-      // already being the finished room. Falls back to `img` only for a
-      // stone with no slab photography at all.
-      const thumb = p.images.find((i) => i.role === 'slab') ?? img;
-      return {
-        name: p.name, slug: p.slug, src: img.path, alt: img.alt,
-        category: p.category?.name ?? 'Sintered stone',
-        width: img.width, height: img.height, blur: img.blur,
-        thumbSrc: thumb.path, thumbBlur: thumb.blur,
-        // Beco's own first sentence for this stone, so the hero's lede can
-        // change with the slab instead of one generic sentence for all four.
-        blurb: p.short_description ?? null,
-      };
-    });
+  // One slide per range, per D92, built from the static `HERO_RANGE_IMAGES`
+  // manifest rather than a live query: see that file's own note and D92 for
+  // why the hero cannot depend on data `pnpm db:reset` empties out. `href`
+  // still checks real stock, the same `hasStock` rule `rangeItems` above
+  // already applies, so a range that sells out never gets a hero link to a
+  // dead shop page.
+  const heroSlides: HeroRangeSlide[] = RANGE_GROUPS.map((range): HeroRangeSlide | null => {
+    const group = groups.find((g) => g.slug === range.slug);
+    const hasStock = (group?.total_count ?? 0) > 0;
+    const image = HERO_RANGE_IMAGES[range.slug];
+    return image ? {
+      title: range.title, slug: range.slug, body: range.body,
+      src: image.path, alt: image.alt, width: image.width, height: image.height,
+      href: hasStock ? `/shop/${range.slug}` : null,
+    } : null;
+  }).filter((slide): slide is HeroRangeSlide => slide !== null);
+
+  // The four ranges with no other dedicated section on the page, per D92:
+  // sintered stone gets the hero, the featured grid below and the signature
+  // moment, hardware gets its own cutout section further down, so both are
+  // excluded here rather than getting a second spotlight on top of the one
+  // they already have.
+  const beyondStoneRanges = RANGE_GROUPS.filter(
+    (range) => range.slug !== 'sintered-stone' && range.slug !== 'hardware',
+  ).map((range) => {
+    const group = groups.find((g) => g.slug === range.slug);
+    const hasStock = (group?.total_count ?? 0) > 0;
+    const image = HERO_RANGE_IMAGES[range.slug];
+    return image ? {
+      slug: range.slug, title: range.title, body: range.body, image,
+      href: hasStock ? `/shop/${range.slug}` : null,
+    } : null;
+  }).filter((range): range is NonNullable<typeof range> => range !== null);
 
   // Two rows at the desktop grid's own 3 columns, not eight tiles' worth of
   // three: the lead tile spans 2 columns, so row one is the lead plus one
@@ -201,10 +166,12 @@ export default async function HomePage() {
 
   return (
     <main>
-      {/* The hero is guaranteed: the full crossfade when there is photography
-          to run it, a static charcoal hero with the same words when there is
-          not, never nothing. */}
-      {slabs.length > 0 ? <PinnedHero slabs={slabs} thickness="12mm" /> : <HeroStatic />}
+      {/* The hero is guaranteed: the full crossfade when the static range
+          manifest has something to show, a static charcoal hero with the
+          same words when it somehow does not, never nothing. In practice
+          `heroSlides` no longer depends on the database, so this branch is
+          the safety rail, not the common case D79 originally wrote it for. */}
+      {heroSlides.length > 0 ? <PinnedHero slides={heroSlides} /> : <HeroStatic />}
 
       {/* --- Who Beco is, straight after the hero. Reported directly: the
               hero and every section after it read as a sintered stone
@@ -212,7 +179,7 @@ export default async function HomePage() {
               selling it. docs/BECO-COMPANY-PROFILE.md is the source, the
               same document /about already draws its own copy from, so
               nothing here is written fresh for this section. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20 lg:py-24">
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-20 lg:py-24">
         <div className="grid gap-x-16 gap-y-12 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div>
             <Reveal className="beco-clip">
@@ -224,7 +191,7 @@ export default async function HomePage() {
               </div>
             </Reveal>
             <Reveal delay={60}>
-              <p className="mt-5 max-w-[26ch] font-display text-3xl leading-[1.15] text-charcoal sm:text-4xl">
+              <p className="mt-5 max-w-[26ch] font-display text-3xl leading-[1.15] text-charcoal">
                 Creating spaces through thoughtful materials, intelligent solutions and exceptional
                 service.
               </p>
@@ -289,18 +256,22 @@ export default async function HomePage() {
       {/* --- Stat band, moved up to sit right after who Beco is: reported
               directly that a quick set of real numbers belongs in the same
               early stretch as identity, not after the range and the client
-              credentials further down. Redesigned on the same note that the
-              plain three column, divided table read as too basic: a dark
-              band, a short red rule standing in for the divider lines it
-              used to lean on, and a fourth figure. Projects delivered has
-              no real count behind it yet, unlike the other three, which are
-              read off the database and the confirmed contact block. Stated
-              here rather than left to look equally sourced: PLACEHOLDER,
-              a stand-in Brown asked for pending a real number, swap the
-              literal value below for the real count once Beco has one. --- */}
-      <section className="bg-charcoal py-14 sm:py-16 lg:py-20">
-        <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4 lg:gap-x-12">
+              credentials further down. Redesigned a second time, D92: the
+              original was a single full-bleed dark rectangle edge to edge,
+              which is exactly the flat, uncontained block every reference
+              Brown shared avoids, each one breaks a stat row into discrete
+              cards rather than one solid strip. Same four real figures,
+              same charcoal, now four separate rounded tiles on the page's
+              own white ground instead of one band replacing it. Projects
+              delivered has no real count behind it yet, unlike the other
+              three, which are read off the database and the confirmed
+              contact block. Stated here rather than left to look equally
+              sourced: PLACEHOLDER, a stand-in Brown asked for pending a
+              real number, swap the literal value below for the real count
+              once Beco has one. --- */}
+      <section className="py-16 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
+          <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
             <Stat value={stones.length} label="Stone colours on the floor" suffix="" />
             <Stat value={12} label="Slab thickness" suffix="mm" />
             <Stat value={6} label="Days a week, Urban Square" suffix="" />
@@ -323,7 +294,7 @@ export default async function HomePage() {
               bottom. Moving the stat band in between, a different
               background colour, left it touching the dark band above with
               no gap at all. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24">
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -332,12 +303,12 @@ export default async function HomePage() {
                 What we deal in
               </p>
             </div>
-            <h2 className="mt-4 max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+            <h2 className="mt-4 max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal">
               Six ranges, one supplier.
             </h2>
           </div>
         </div>
-        <RangeCardGrid className="mt-14" items={rangeItems} />
+        <RangeCardGrid className="mt-10" items={rangeItems} />
       </section>
 
 
@@ -351,7 +322,7 @@ export default async function HomePage() {
               own edge. A short red rule stands in for an icon rather than
               a literal one. --- */}
       <section className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
-        <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
           <div className="beco-clip">
             <div className="beco-wipe">
               <div className="flex items-center gap-4">
@@ -360,13 +331,13 @@ export default async function HomePage() {
                   Why Beco
                 </p>
               </div>
-              <h2 className="mt-4 max-w-[20ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+              <h2 className="mt-4 max-w-[20ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal">
                 Not just what we sell. Why it is worth choosing us.
               </h2>
             </div>
           </div>
 
-          <ul className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ['Locally stocked', 'Already imported and held on the floor at Urban Square. See it, price it, collect it the same day.'],
               ['Quality without compromise', 'Materials chosen for how they perform over years, not just how they photograph on day one.'],
@@ -412,23 +383,23 @@ export default async function HomePage() {
 
       {/* --- Completed interiors, at three depths. Sits between the count
               and the range so the page answers "what does it look like in a
-              room" before it asks anyone to browse a grid. --- */}
-      <CompletedInteriors products={products} siteShots={SITE_SHOTS} />
+              room" before it asks anyone to browse a grid. No eyebrow:
+              reported directly as four "hairline plus label" openers in a
+              row down this page already (What we deal in, Why Beco, this
+              section, The range), the exact templated rhythm the Process
+              section further down was already written to avoid. --- */}
+      <CompletedInteriors products={products} siteShots={SITE_SHOTS} eyebrow={null} />
 
       {/* --- The range. One large tile against smaller ones, per the design
               direction, which rules out the even four across grid that treats
-              the page as a container to fill. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:py-30">
+              the page as a container to fill. No eyebrow: the third of what
+              would otherwise be four "hairline plus label" openers in a row
+              down this page, reported directly as reading templated. --- */}
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
-          <div className="flex items-center gap-4">
-            <span aria-hidden className="h-px w-8 bg-warm-red" />
-            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              The range
-            </p>
-          </div>
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
-            <h2 className="max-w-[18ch] font-display text-4xl leading-[1.1] text-charcoal sm:text-5xl">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <h2 className="max-w-[18ch] font-display text-4xl leading-[1.1] text-charcoal">
               Stone that behaves like a finished surface.
             </h2>
             <Link
@@ -441,7 +412,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((p, i) => {
             const img = imageFor(p);
             // The first tile takes two columns and a taller frame, so the eye
@@ -491,36 +462,105 @@ export default async function HomePage() {
       {/* --- The signature moment, per D43. --- */}
       <SlabToSurface product={signature} />
 
+      {/* --- Beyond stone, per D92. Reported directly against the running
+              page: by this point a reader has been through the hero, the
+              stat band, "What we deal in", the featured stone grid and the
+              signature moment above, and every one of those except the
+              overview grid was about sintered stone specifically. Hardware
+              gets its own cutout section further down; lighting, wall
+              panels, SPC flooring and accessories did not get a section of
+              their own anywhere on the page. This is that section, for the
+              four ranges with no other spotlight, so scrolling the page
+              stops reading as a stone catalogue with everything else
+              mentioned once in a grid. Reuses the same photography the
+              hero already carries, `HERO_RANGE_IMAGES`, rather than
+              sourcing a second set: those images were chosen for exactly
+              this, being the one real (or checked, licensed) shot that
+              sells the range. --- */}
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
+        <div className="beco-clip">
+          <div className="beco-wipe">
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-px w-8 bg-warm-red" />
+              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                Beyond stone
+              </p>
+            </div>
+            <h2 className="mt-4 max-w-[22ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal">
+              A finished room needs more than a worktop.
+            </h2>
+          </div>
+        </div>
+
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {beyondStoneRanges.map((range, i) => {
+            const tile = (
+              <>
+                <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+                  <Image
+                    src={range.image.path}
+                    alt={range.image.alt}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-700 ease-brand group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                  />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/75 via-charcoal/5 to-transparent"
+                  />
+                  <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                  <p className="absolute inset-x-0 bottom-0 p-5 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white">
+                    {range.title}
+                  </p>
+                </div>
+                <p className="mt-3 text-sm leading-[1.6] text-neutral-700">{range.body}</p>
+              </>
+            );
+            return (
+              <Reveal key={range.slug} delay={(i % 4) * 70}>
+                {range.href ? (
+                  <Link href={range.href} className="group block">
+                    {tile}
+                  </Link>
+                ) : (
+                  <div className="block">{tile}</div>
+                )}
+              </Reveal>
+            );
+          })}
+        </div>
+      </section>
+
       {/* --- Process. A numbered editorial list, which is what goes where
               three icon-in-a-circle cards would have. Carried by the large
               serif numeral and real air between steps rather than a hairline
               rule under each one now, on request: too many rules of this
               kind across the site read as templated rather than editorial. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:py-30">
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
             {/* No eyebrow here on purpose: the numbered list below names the
                 section, and an uppercase label over every heading is the
                 rhythm that makes a page read as templated. */}
-            <h2 className="max-w-[16ch] font-display text-4xl leading-[1.1] text-charcoal sm:text-5xl">
+            <h2 className="max-w-[16ch] font-display text-4xl leading-[1.1] text-charcoal">
               From a shortlist to a priced quote.
             </h2>
           </div>
         </div>
 
-        <div className="mt-14 grid gap-16 lg:grid-cols-[1fr_26rem] lg:gap-20">
+        <div className="mt-10 grid gap-16 lg:grid-cols-[1fr_26rem] lg:gap-20">
           <ol className="flex flex-col gap-10">
           {[
-            ['Build a list', 'Add every material the project needs. The list survives a refresh, and no account is required.'],
-            ['Send it over', 'Your name and phone number are the only things we genuinely need. Everything else helps us price it faster.'],
-            ['We price it', 'A written quote, itemised, with delivery or collection set out.'],
-            ['Collect or deliver', 'Pick it up at Urban Square, or tell us where the site is.'],
+            ['Build a list', 'Add every material the project needs, from stone to the smallest handle. Nothing is lost if you step away and come back later.'],
+            ['Send it over', 'Just your name and phone number to get started. The more you tell us about the project, the faster we can price it.'],
+            ['We price it', 'A written quote, itemised, with delivery or collection worked out for you.'],
+            ['Collect or deliver', 'Collect it from Urban Square, or tell us where the site is and we will bring it.'],
           ].map(([title, body], i) => (
             <Reveal as="li" key={title} delay={i * 60}>
               <div className="grid gap-4 sm:grid-cols-[6rem_1fr] sm:gap-10">
                 <span
                   aria-hidden
-                  className="font-display text-4xl leading-none text-neutral-300 sm:text-5xl"
+                  className="font-display text-4xl leading-none text-neutral-300"
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
@@ -535,6 +575,31 @@ export default async function HomePage() {
 
           {/* Real installations, dealing themselves, opposite the steps. */}
           <RoomStack products={products} />
+        </div>
+      </section>
+
+      {/* --- What Beco actually does, beyond selling the material: reported
+              directly as missing, clearly, from this page, "Why Beco" above
+              touches consultation and installation in passing but neither is
+              a service anyone can act on there, no site assessment or
+              delivery either. Same component About uses, `ServiceCardGrid`,
+              so the two pages describe one set of services rather than each
+              writing its own. No eyebrow: Process right above has none
+              either, on the same reasoning, and this follows it directly. --- */}
+      <section className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
+          <div className="beco-clip">
+            <div className="beco-wipe">
+              <h2 className="max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+                We do not just supply it.
+              </h2>
+              <p className="mt-5 max-w-[58ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+                Consultation, a site assessment before anything is fabricated, installation for
+                sintered stone and wall panels, and delivery either way.
+              </p>
+            </div>
+          </div>
+          <ServiceCardGrid className="mt-10" items={SERVICES} />
         </div>
       </section>
 
@@ -650,7 +715,7 @@ export default async function HomePage() {
                 The showroom
               </p>
             </div>
-            <h2 className="mt-5 max-w-[16ch] font-display text-4xl leading-[1.08] sm:text-5xl">
+            <h2 className="mt-5 max-w-[16ch] font-display text-4xl leading-[1.08]">
               Come and put a hand on it.
             </h2>
             <p className="mt-5 max-w-[46ch] text-base leading-[1.65] text-neutral-300 lg:text-lg">
@@ -668,7 +733,7 @@ export default async function HomePage() {
                 // unless that is formally revised), so "book" here means
                 // the fastest real path to one, the same WhatsApp deep
                 // link the mobile action bar already opens.
-                href={whatsappLink('booking a showroom visit')}
+                href={whatsappLink('I would like to book a showroom visit')}
                 data-analytics="whatsapp_click"
                 className={cn(
                   buttonClasses({ variant: 'outline' }),
@@ -694,7 +759,7 @@ export default async function HomePage() {
             the same SITE.address fields the schema and the footer already
             use, so the pin lands on the address this page also states in
             text rather than a hand typed string that could drift from it. */}
-        <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-16 sm:pb-22 lg:pb-30">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-16 sm:pb-22 lg:pb-30">
           {/* Reported directly as not showing: a near-full invert on a
               light Google roadmap style turns the tiles almost black, and
               sitting directly on this section's own charcoal background
@@ -725,12 +790,12 @@ export default async function HomePage() {
 
 function Stat({ value, label, suffix }: { value: number; label: string; suffix: string }) {
   return (
-    <div>
+    <div className="bg-charcoal p-6 sm:p-8">
       <span aria-hidden className="block h-px w-8 bg-warm-red" />
       {/* No tabular-nums: Cormorant gives '1' a full width advance under it,
           and "12mm" was reading as "1 2mm" at display size. The figures here
           never need to align in a column. */}
-      <dd className="mt-5 font-display text-5xl leading-none tracking-[-0.01em] text-high-vis-white sm:text-6xl">
+      <dd className="mt-5 font-display text-5xl leading-none tracking-[-0.01em] text-high-vis-white">
         <CountUp value={value} />
         {suffix}
       </dd>

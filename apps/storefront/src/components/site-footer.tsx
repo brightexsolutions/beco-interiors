@@ -31,7 +31,11 @@ export async function SiteFooter() {
 
   return (
     <footer className="bg-charcoal text-high-vis-white">
-      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:py-30">
+      {/* A narrower gutter than the site's own 160px desktop standard, on
+          direct request: the footer carries several nav columns side by
+          side, not one column of prose, and the full 160px read as
+          compressing them rather than giving the page room to breathe. */}
+      <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-32 py-16 sm:py-22 lg:py-30">
         <div className="grid gap-12 lg:grid-cols-[1.5fr_auto] lg:items-end lg:gap-20">
           <div>
             <Image
@@ -108,15 +112,9 @@ export async function SiteFooter() {
                 <li key={category.id}>
                   <Link
                     href={`/shop/${category.slug}`}
-                    className="flex items-baseline gap-2 hover:text-high-vis-white"
+                    className="hover:text-high-vis-white"
                   >
                     {category.name}
-                    {/* Said plainly rather than hidden. A range that is
-                        genuinely coming is worth showing; implying it is
-                        stocked when it is not is what loses a specifier. */}
-                    {category.total_count === 0 ? (
-                      <span className="font-ui text-sm text-neutral-500">soon</span>
-                    ) : null}
                   </Link>
                 </li>
               ))}
@@ -168,17 +166,20 @@ export async function SiteFooter() {
 
         <div className="mt-14 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 font-ui text-sm text-neutral-500">
           <p>&copy; {new Date().getFullYear()} Beco Interiors Limited</p>
-          <p>
-            Designed and built by{' '}
-            <a
-              href="https://www.brightexsolutions.co.ke"
-              target="_blank"
-              rel="noreferrer"
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <Link
+              href="/terms"
               className="font-semibold text-neutral-300 underline-offset-4 transition-colors hover:text-high-vis-white hover:underline"
             >
-              Brightex Solutions
-            </a>
-          </p>
+              Terms &amp; conditions
+            </Link>
+            <Link
+              href="/privacy"
+              className="font-semibold text-neutral-300 underline-offset-4 transition-colors hover:text-high-vis-white hover:underline"
+            >
+              Privacy policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

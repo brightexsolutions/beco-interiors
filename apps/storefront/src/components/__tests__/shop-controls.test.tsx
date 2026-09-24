@@ -95,6 +95,29 @@ describe('ShopControls', () => {
     expect(replace).toHaveBeenCalledWith('/shop?finish=Polished', { scroll: false });
   });
 
+  it('"Clear all" returns to the bare path, dropping every filter including the search box', async () => {
+    const user = userEvent.setup();
+    search = new URLSearchParams('range=hardware&finish=Polished&q=black');
+    render(<ShopControls groups={GROUPS} finishes={FINISHES} total={30} showing={1} />);
+    await user.click(screen.getByRole('button', { name: 'Clear all' }));
+    expect(replace).toHaveBeenCalledWith('/shop', { scroll: false });
+    expect(screen.getByLabelText('Search')).toHaveValue('');
+  });
+
+  it('sizes the range, finish and sort controls to share the desktop row rather than each claiming a full line, the real cause of the bar rendering as stacked, near-empty rows', () => {
+    render(<ShopControls groups={GROUPS} finishes={FINISHES} total={30} showing={30} />);
+    for (const label of ['Range', 'Finish', 'Sort']) {
+      const control = screen.getByLabelText(label);
+      // The wrapper Field/Select renders around the <select> is the element
+      // that actually sits in the bar's flex row; asserting on it, not the
+      // select itself, is what would have caught the bug where these classes
+      // landed on the wrong element and never took effect.
+      const wrapper = control.closest('span');
+      expect(wrapper?.className).toMatch(/lg:w-auto/);
+      expect(wrapper?.className).toMatch(/lg:flex-none/);
+    }
+  });
+
   it('has no accessibility violations, filtered or not', async () => {
     const { container, rerender } = render(
       <ShopControls groups={GROUPS} finishes={FINISHES} total={30} showing={30} />,

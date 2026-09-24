@@ -46,7 +46,7 @@ export interface RangeCardGridProps {
 
 export function RangeCardGrid({ items, className, autoplay = false }: RangeCardGridProps) {
   return (
-    <ul className={cn('grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3', className)}>
+    <ul className={cn('grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3', className)}>
       {items.map((item, i) => {
         const multi = item.images && item.images.length > 1;
         // A caller that always passes `images` should not have to also

@@ -62,7 +62,7 @@ export default async function ContactPage() {
           </div>
         ) : null}
 
-        <div className="beco-hero-content-top relative mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-20 sm:pb-24 lg:pb-28">
+        <div className="beco-hero-content-top relative mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-20 sm:pb-24 lg:pb-28">
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-px w-8 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
@@ -85,7 +85,7 @@ export default async function ContactPage() {
               a bordered, hairline-divided grid, on request: the shared-line
               technique read like a spec table rather than three separate
               ways to reach a person. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20">
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-20">
         <div className="grid gap-6 sm:grid-cols-3 sm:gap-5">
           <Channel
             eyebrow="Best for a project"
@@ -132,7 +132,7 @@ export default async function ContactPage() {
               needed above it now that the channel cards no longer carry
               one either. --- */}
       <section className="bg-neutral-50">
-        <div className="mx-auto grid max-w-[1380px] gap-14 px-8 sm:px-10 lg:px-14 py-16 sm:py-20 lg:grid-cols-[1fr_32rem] lg:gap-16 lg:py-24">
+        <div className="mx-auto grid max-w-[1380px] gap-14 px-8 sm:px-24 lg:px-40 py-16 sm:py-20 lg:grid-cols-[1fr_32rem] lg:gap-16 lg:py-24">
           <Reveal>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

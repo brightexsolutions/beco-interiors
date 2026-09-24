@@ -5,101 +5,57 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { buttonClasses, cn, WordReveal } from '@beco/ui';
 import { blurProps } from '@/lib/products';
+import { HERO_GRID_INSET } from '@/lib/layout';
 import { RotatingRoomWord } from './rotating-room-word';
 
 /**
- * The hero, per D79. A full bleed photograph again, not the turning
- * specimen cards D56 built: reported directly from Irene, during an
- * evening session, that the client wants the prototype's full bleed
- * feel back, and the images should sell the experience a stone brings
- * to a finished room rather than read as a material sample.
+ * The hero, per D79, broadened from sintered stone alone to all six ranges
+ * per D92. A full bleed photograph, crossfading, with a left heavy dark
+ * gradient so the type reads over it, the same technique D79 built. What
+ * changed under D92: the hero now walks through every range Beco sells
+ * rather than repeating stone four times, on Brown's own verdict that a
+ * hero saying only "sintered stone" undersold a six range supplier before a
+ * reader reached the "What we deal in" section further down the page.
  *
- * **This reverses D30 and D56, on Brown's explicit instruction after being
- * shown the conflict.** The prototype's own README calls this exact
- * pattern out by name: "Centered text over a darkened full bleed
- * photograph is the pattern the brief explicitly rules out." That
- * reasoning does not stop being true; it is overridden by a specific,
- * informed decision, not forgotten. See D79 in docs/DECISIONS.md.
- *
- * What actually carries over from the prototype: a full bleed photograph,
- * crossfading, with a left heavy dark gradient so the type reads over it.
- * The gradient is deliberately lighter than the prototype's, which ran
- * 0.97 opacity at the left edge: Irene's own note was that it was too
- * dark. This uses the site's real charcoal token rather than the
- * prototype's raw near black, and drops the prototype's gold and red
- * radial glows entirely, since gold is retired per D2 and a second red
- * accent here would spend the page's whole Warm Red budget in the hero
- * alone.
- *
- * What carries over from D30 and D56, married rather than discarded: the
- * real headline, used once, per WordReveal's own rule. The lede
- * crossfading with the active stone, Beco's own first sentence per slab,
- * not written for this hero. Pin dropped entirely on mobile.
- *
- * The name-and-counter indicator that used to sit under the lede was
- * removed on direct feedback: the chip strip on the right already labels
- * the active stone by name (the `beco-chip-label` span next to it), so the
- * indicator was a second, redundant place stating the same thing.
- *
- * What does NOT carry over: the prototype's stock Unsplash photography,
- * its fabricated "520+ products" and five star "Client Rated" stats, and
- * its plain "Elevate Every Surface." headline. Beco's own real photography
- * and real numbers were always the point of this rebuild, and reversing
- * the hero's structure does not reverse that.
+ * The photography backing each slide is a static manifest, `HERO_RANGE_IMAGES`
+ * in `@/lib/ranges`, not a live query against `products`: see that file's
+ * own note and D92 for why a hero cannot depend on data `pnpm db:reset`
+ * empties out.
  *
  * TECHNIQUE: the crossfading photograph and the pinned type sit in ONE
- * sticky box spanning the section's full width. Which slab is active was
- * originally ALSO driven by scroll position, an IntersectionObserver
- * watching a second, invisible stack of chapters for which one was
- * centred: removed on request, since scrolling the page changing the
- * hero's own photograph read as an unwanted second thing happening at
- * once. The interval below is the only thing that changes `active` now,
- * so the section is close to a normal sticky block rather than one
- * engineered for scroll length, and nothing about it costs INP: no
- * scroll handler, transform and opacity only, matching the site's own
- * motion rules regardless.
+ * sticky box spanning the section's full width. Which range is active is
+ * driven by an interval alone, no scroll coupling, the same reasoning D79
+ * already recorded: scrolling the page changing the hero's own photograph
+ * read as an unwanted second thing happening at once.
  *
  * The first photograph is the LCP element. It is never animated on entry,
  * priority loaded, and the only ambient drift on it starts 1.6s after
  * paint via `.beco-ambient`, the same technique already used for the
  * SlabCard frames and the mobile background this replaces.
  */
-export interface HeroSlab {
-  name: string;
+export interface HeroRangeSlide {
+  /** The range's own title, "Lighting", "Wall panels", never a single
+   *  product's name: this hero sells the range, not one item in it. */
+  title: string;
   slug: string;
-  /** The product's real category, never assumed from the section it is in. */
-  category: string;
   src: string;
   alt: string;
   width: number;
   height: number;
   blur?: string | undefined;
   /**
-   * The chip rail's own image, a slab or material shot, deliberately NOT
-   * `src`. The big background already sells the finished room; a chip
-   * showing that same room again was reported directly as redundant with
-   * what is sitting right behind it. Falls back to `src` only for a stone
-   * with no slab photography at all, so a chip is never blank.
+   * The chip rail's own image, distinct from the big background only where
+   * a caller wants variety. Falls back to `src` so a chip is never blank.
    */
-  thumbSrc: string;
+  thumbSrc?: string;
   thumbBlur?: string | undefined;
-  /**
-   * The stone's own first sentence, from Beco's descriptions document, not
-   * written for this hero. Null for a slab with no description yet, Cyprus
-   * Grey and a few others: the fallback sentence covers those rather than
-   * leaving a blank.
-   */
-  blurb?: string | null;
+  /** The range's own one line description, from `RANGE_GROUPS`. */
+  body: string;
+  /** `/shop/<slug>` when the range has real stock behind it, null when it
+   *  does not yet: a chip or card never links to a dead page, matching the
+   *  same `hasStock` rule the "What we deal in" grid already enforces. */
+  href: string | null;
 }
-
-/** Aligns the type column with the 1380px grid, matching every other
-    section on the page, while the photograph itself bleeds edge to edge.
-    The lg step adds the section gutter (3.5rem, matching lg:px-14 elsewhere)
-    ON TOP OF the centering margin the 1380px cap produces past that width,
-    rather than taking whichever is larger: a max() of the two undershot the
-    real gutter once the viewport passed 1380px, since the centering margin
-    alone does not include the section's own inner padding. */
-const GRID_INSET = 'pl-8 sm:pl-10 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3.5rem)]';
 
 /** #101820, the real charcoal token, not the prototype's raw near-black.
     Left heavy so the type reads, lighter than the prototype's 0.97 peak,
@@ -113,86 +69,52 @@ const GRADIENT =
 /** ms between automatic slides, the prototype's own cadence. */
 const AUTO_ADVANCE_MS = 4200;
 
-export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness: string }) {
+export function PinnedHero({ slides }: { slides: HeroRangeSlide[] }) {
   const [active, setActive] = useState(0);
 
-  // Auto advance, so the range is seen without requiring a scroll, on
-  // request: which stone is active USED to also change as the reader
-  // scrolled past one of a set of invisible chapters, an
-  // IntersectionObserver watching which one was centred. That coupling is
-  // removed here rather than layered under this timer: scrolling the page
-  // no longer changes the background at all, only this interval does. The
-  // same guard RotatingStatement and StoneSlider already use: off under
-  // prefers-reduced-motion, and never armed for a single slab.
+  // Auto advance, so the range is seen without requiring a scroll. Off
+  // under prefers-reduced-motion, and never armed for a single slide.
   useEffect(() => {
-    if (slabs.length < 2) return;
+    if (slides.length < 2) return;
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     const id = setInterval(
-      () => setActive((i) => (i + 1) % slabs.length),
+      () => setActive((i) => (i + 1) % slides.length),
       AUTO_ADVANCE_MS,
     );
     return () => clearInterval(id);
-  }, [slabs.length]);
+  }, [slides.length]);
 
-  const lead = slabs[0];
-
-  // Beco's own first sentence per stone, trimmed to one sentence: the site's
-  // own copy rule is short copy, and a hero lede is not the place for the
-  // three sentence version. A slab with no description falls back to the
-  // original generic sentence rather than showing nothing.
-  const FALLBACK_LEDE = 'Large format slabs, here in the showroom today.';
-  // One short line per stone, not the full first sentence: the hero should
-  // not crowd. Take the first sentence, then, if it is still long, its first
-  // clause up to a comma, so a stone reads as a phrase under the headline
-  // rather than a paragraph.
+  // One short line per range, not the full body sentence: the hero should
+  // not crowd. Take the first sentence, then, if it is still long, its
+  // first clause up to a comma, so a range reads as a phrase under the
+  // headline rather than a paragraph. Same heuristic D79 built for the
+  // stone-only hero, reused rather than rewritten: the bug it guards
+  // against (a first clause under 24 characters falling through
+  // untouched) is exactly as possible with range copy as with stone copy.
   const shorten = (text: string) => {
     const sentence = text.split(/(?<=[.!?])\s/)[0]?.trim() ?? '';
     if (sentence.length <= 72) return sentence;
-    // First clause, trailing punctuation stripped so a single period can be
-    // put back cleanly rather than doubling one the sentence already had.
     const clause = (sentence.split(/,\s/)[0]?.trim() ?? sentence).replace(/[\s.,;:]+$/, '');
     if (clause.length >= 24 && clause.length <= 88) return `${clause}.`;
-    // The clause heuristic does not fit every sentence, for example one
-    // whose first clause lands before "Warm taupe, greige and amber tones
-    // run..." (too short to pass the floor above): this shipped the FULL,
-    // uncut sentence to the mobile hero, which is the exact crowding this
-    // function exists to prevent. Fall back to a hard word boundary cut
-    // instead of the whole sentence.
     const cut = sentence.slice(0, 72);
     const lastSpace = cut.lastIndexOf(' ');
     return (lastSpace > 24 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:]+$/, '');
   };
-  const ledes = slabs.map((slab) => (slab.blurb ? shorten(slab.blurb) || FALLBACK_LEDE : FALLBACK_LEDE));
+  const ledes = slides.map((slide) => shorten(slide.body));
   const longestLede = [...ledes].sort((a, b) => b.length - a.length)[0];
 
   return (
     <section
-      aria-label="Sintered stone"
+      aria-label="What Beco stocks"
       className="beco-hero-bleed relative border-b border-neutral-200 bg-charcoal"
     >
       {/* --- The sticky visual: photograph, gradient and type together, one
-              box spanning the section's full width.
-
-              top-0 and a full 100vh, not top-20 and 100vh minus the
-              header: the photograph itself needs to reach the very top of
-              the viewport, behind the header, per beco-hero-bleed above,
-              or the header would float over a gap rather than over the
-              photograph. Once actually scrolled, the header's own z-50
-              simply paints over this box's own top 5rem, the same
-              relationship a sticky header has with any page's content,
-              rather than this box reserving that space for it. --- */}
+              box spanning the section's full width. --- */}
       <div className="relative hidden overflow-hidden lg:sticky lg:top-0 lg:block lg:h-[100vh]">
         <div aria-hidden className="beco-ambient absolute inset-0">
-          {slabs.map((slab, i) => (
-            // The scale-settle lives on this wrapper, the slow ambient drift
-            // on the image inside it: a transition and an animation cannot
-            // both own `transform` on one element, the bug D67 and D77 both
-            // turned on. An incoming photograph settles out of a slight zoom
-            // as the last one drifts back, so a change reads as considered
-            // rather than as a flat dissolve. The first slide renders at
-            // rest, so nothing animates on mount and it is safe as the LCP.
+          {slides.map((slide, i) => (
             <div
-              key={slab.slug}
+              key={slide.slug}
               className={cn(
                 'absolute inset-0 transition-transform duration-[1800ms] ease-brand',
                 'will-change-transform motion-reduce:transition-none motion-reduce:!transform-none',
@@ -200,15 +122,12 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               )}
             >
               <Image
-                src={slab.src}
+                src={slide.src}
                 alt=""
                 fill
                 priority={i === 0}
                 sizes="100vw"
-                {...blurProps(slab)}
-                // Opacity has exactly ONE source, the ternary: a hardcoded
-                // base alongside a conditional one is the exact bug D67 found
-                // the first time this crossfade shipped.
+                {...blurProps(slide)}
                 className={cn(
                   'object-cover transition-opacity duration-[1400ms] ease-brand motion-reduce:transition-none',
                   i === active ? 'opacity-100' : 'opacity-0',
@@ -222,7 +141,7 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
 
         <div
           className={cn(
-            GRID_INSET,
+            HERO_GRID_INSET,
             'beco-hero-content-top relative flex h-full max-w-[52rem] flex-col justify-end pb-10 pr-6 pt-16',
             'lg:justify-center lg:pb-14 lg:pr-20',
           )}
@@ -233,38 +152,24 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
               className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300"
               style={{ animationDelay: '120ms' }}
             >
-              Sintered stone, stocked in Nairobi
+              Six ranges, stocked in Nairobi
             </p>
           </div>
 
-          <h1 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
-            {/* "room." lives in RotatingRoomWord now, cycling through the
-                places these surfaces actually go, on request. The static
-                text WordReveal still owns has no trailing period of its
-                own for that reason, and no trailing space either: a real
-                one sits between the two spans below instead, since
-                WordReveal never appends one after its own last word. */}
-            <WordReveal text="Surfaces that outlast the" /> <RotatingRoomWord />
+          <h1 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white">
+            <WordReveal text="Every material for the" /> <RotatingRoomWord />
           </h1>
 
           <div
             className="beco-enter relative mt-5 max-w-[42ch]"
             style={{ animationDelay: '620ms' }}
           >
-            {/* Invisible, in normal flow, sized to the longest of the real
-                ledes: what actually reserves this box's height so the
-                stacked, absolutely positioned ones below cannot shift the
-                buttons and the indicator beneath them as the slab changes. */}
             <p aria-hidden className="invisible text-base leading-[1.65] lg:text-lg">
               {longestLede}
             </p>
             {ledes.map((lede, i) => (
               <p
-                // The slab's own slug, not the lede text: more than one
-                // slab without its own description shares the identical
-                // fallback sentence, which made this a duplicate React key
-                // the moment two slabs on the same hero both lacked one.
-                key={slabs[i]?.slug ?? i}
+                key={slides[i]?.slug ?? i}
                 aria-hidden={i !== active}
                 className={cn(
                   'absolute inset-0 text-base leading-[1.65] text-neutral-300 lg:text-lg',
@@ -299,77 +204,75 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           </div>
         </div>
 
-        {/* --- The rest of the range, on the right where the gradient
-                lightens. A straight column of rectangular photos read as
-                basic even with the motion below already on it, reported
-                directly a second time, so the shape changed rather than
-                the animation: round material samples, the way an actual
-                stone chip is handed across a counter, lifted off the photo
-                with a real shadow rather than a hairline ring, and loosely
-                staggered side to side instead of stacked in a rigid line.
-                Each carries its own slab shot, distinct from the big
-                background beside it, see HeroSlab's own note on `thumbSrc`.
-                Real links to each product, not a second orbit. Frame first
-                (beco-pop-in), photograph wiping up into it a beat later
-                (beco-chip-wipe), the same two stage assembly the gallery
-                already uses. Only TRANSFORM and OPACITY change on the
-                active state, so a stone becoming active never reflows its
-                neighbours in the column. --- */}
+        {/* --- The rest of the ranges, on the right where the gradient
+                lightens. Round material samples, the way an actual stone
+                chip is handed across a counter, lifted off the photo with a
+                real shadow rather than a hairline ring, loosely staggered
+                side to side. A range with no stock yet renders as a plain
+                span rather than a Link: a chip pointing at an empty shop
+                page is a decorative control, the exact thing rule 3 rules
+                out. --- */}
         <div className="pointer-events-none absolute inset-y-0 right-12 hidden items-center lg:flex">
           <ul className="pointer-events-auto flex flex-col gap-6">
-            {slabs.map((slab, i) => {
+            {slides.map((slide, i) => {
               const isActive = i === active;
+              const chipClassName = cn(
+                'beco-pop-in group relative block aspect-square w-14 overflow-hidden rounded-full bg-neutral-800',
+                'shadow-[0_10px_28px_rgba(0,0,0,0.45)] transition-transform duration-500 ease-brand sm:w-16',
+                isActive
+                  ? 'scale-110'
+                  : 'opacity-80 ring-1 ring-inset ring-white/30 hover:scale-105 hover:opacity-100',
+              );
+              const chipStyle = { animationDelay: `${1000 + i * 130}ms` };
+              const chipContent = (
+                <>
+                  <span className="beco-clip absolute inset-0 rounded-full">
+                    <Image
+                      src={slide.thumbSrc ?? slide.src}
+                      alt=""
+                      fill
+                      sizes="64px"
+                      {...blurProps({ blur: slide.thumbBlur ?? slide.blur })}
+                      className="beco-chip-wipe object-cover"
+                      style={{ animationDelay: `${1150 + i * 130}ms` }}
+                    />
+                  </span>
+                  {isActive ? (
+                    <span
+                      aria-hidden
+                      className="beco-chip-active-ring pointer-events-none absolute inset-0 rounded-full ring-2 ring-inset ring-high-vis-white"
+                    />
+                  ) : null}
+                  <span className="sr-only">
+                    {slide.title}{isActive ? ', showing now' : ''}
+                  </span>
+                </>
+              );
               return (
                 <li
-                  key={slab.slug}
+                  key={slide.slug}
                   className="relative"
-                  // A loose scatter instead of a rigid column: alternating
-                  // a few pixels left and right so the set reads as samples
-                  // set down beside each other rather than filed in a line.
                   style={{ marginInlineStart: `${(i % 2) * 14}px` }}
                 >
                   {isActive ? (
                     <span
-                      key={`${slab.slug}-label`}
+                      key={`${slide.slug}-label`}
                       aria-hidden
                       className="beco-chip-label absolute right-full top-1/2 mr-3 -translate-y-1/2 whitespace-nowrap bg-charcoal/90 px-3 py-1.5 font-ui text-xs font-semibold uppercase tracking-[0.12em] text-high-vis-white"
                     >
-                      {slab.name}
+                      {slide.title}
                     </span>
                   ) : null}
 
-                  <Link
-                    href={`/product/${slab.slug}`}
-                    className={cn(
-                      'beco-pop-in group relative block aspect-square w-14 overflow-hidden rounded-full bg-neutral-800',
-                      'shadow-[0_10px_28px_rgba(0,0,0,0.45)] transition-transform duration-500 ease-brand sm:w-16',
-                      isActive
-                        ? 'scale-110'
-                        : 'opacity-80 ring-1 ring-inset ring-white/30 hover:scale-105 hover:opacity-100',
-                    )}
-                    style={{ animationDelay: `${1000 + i * 130}ms` }}
-                  >
-                    <span className="beco-clip absolute inset-0 rounded-full">
-                      <Image
-                        src={slab.thumbSrc}
-                        alt=""
-                        fill
-                        sizes="64px"
-                        {...blurProps({ blur: slab.thumbBlur })}
-                        className="beco-chip-wipe object-cover"
-                        style={{ animationDelay: `${1150 + i * 130}ms` }}
-                      />
+                  {slide.href ? (
+                    <Link href={slide.href} className={chipClassName} style={chipStyle}>
+                      {chipContent}
+                    </Link>
+                  ) : (
+                    <span className={chipClassName} style={chipStyle}>
+                      {chipContent}
                     </span>
-                    {isActive ? (
-                      <span
-                        aria-hidden
-                        className="beco-chip-active-ring pointer-events-none absolute inset-0 rounded-full ring-2 ring-inset ring-high-vis-white"
-                      />
-                    ) : null}
-                    <span className="sr-only">
-                      {slab.name}{isActive ? ', showing now' : ''}
-                    </span>
-                  </Link>
+                  )}
                 </li>
               );
             })}
@@ -378,22 +281,18 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
       </div>
 
       {/* --- Mobile: no pin, since D30 drops it below lg, but the SAME auto
-              advancing crossfade as desktop: the background is not static
-              any more, it cycles through the range on the timer above,
-              which does not depend on scroll chapters that do not exist
-              here. The swipeable row below still carries the full set for
-              a reader who wants to stop and pick one. --- */}
+              advancing crossfade as desktop. --- */}
       <div className="relative min-h-[70svh] overflow-hidden lg:hidden">
         <div aria-hidden className="beco-ambient absolute inset-0">
-          {slabs.map((slab, i) => (
+          {slides.map((slide, i) => (
             <Image
-              key={slab.slug}
-              src={slab.src}
+              key={slide.slug}
+              src={slide.src}
               alt=""
               fill
               priority={i === 0}
               sizes="800px"
-              {...blurProps(slab)}
+              {...blurProps(slide)}
               className={cn(
                 'object-cover transition-[opacity,transform] duration-[1600ms] ease-brand',
                 'will-change-transform motion-reduce:transition-none motion-reduce:!transform-none',
@@ -404,15 +303,15 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
           <div aria-hidden className="absolute inset-0" style={{ backgroundImage: GRADIENT }} />
         </div>
 
-      <div className={cn(GRID_INSET, 'beco-hero-content-top relative flex h-full flex-col justify-end pb-10 pr-6')}>
+      <div className={cn(HERO_GRID_INSET, 'beco-hero-content-top relative flex h-full flex-col justify-end pb-10 pr-6')}>
         <div className="flex items-center gap-4">
           <span aria-hidden className="beco-rule-draw h-px w-8 bg-warm-red" />
           <p className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300" style={{ animationDelay: '120ms' }}>
-            Sintered stone, stocked in Nairobi
+            Six ranges, stocked in Nairobi
           </p>
         </div>
-        <h2 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white sm:text-6xl">
-          Surfaces that outlast the <RotatingRoomWord />
+        <h2 className="mt-5 max-w-[18ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] text-high-vis-white">
+          Every material for the <RotatingRoomWord />
         </h2>
         <p className="beco-enter mt-5 max-w-[38ch] text-base leading-[1.6] text-neutral-300" style={{ animationDelay: '620ms' }}>
           {ledes[0]}
@@ -434,19 +333,13 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
       </div>
       </div>
 
-      {/* --- Mobile: a swipeable sequence, so a four slab and a six slab
+      {/* --- Mobile: a swipeable sequence, so a four slide and a six slide
               hero occupy the same vertical space. --- */}
       <div className="lg:hidden">
         <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-16 pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {slabs.map((slab, i) => (
-            <li key={slab.slug} className="w-[78vw] shrink-0 snap-center">
-              {/* `800px` rather than `78vw`, deliberately: it is the same
-                  derivative the opening screen's background already asked
-                  for, so the first card costs a cache hit instead of a
-                  second download. No `priority` here, the background is the
-                  mobile LCP and it is the same photograph. */}
-              <SlabCard slab={slab} index={i} total={slabs.length} thickness={thickness}
-                        sizes="800px" />
+          {slides.map((slide, i) => (
+            <li key={slide.slug} className="w-[78vw] shrink-0 snap-center">
+              <RangeCard slide={slide} index={i} total={slides.length} sizes="800px" />
             </li>
           ))}
         </ul>
@@ -456,67 +349,72 @@ export function PinnedHero({ slabs, thickness }: { slabs: HeroSlab[]; thickness:
 }
 
 /**
- * A specimen card, mobile only now: the desktop turning cards D56 built
- * are gone with the orbit, replaced by the full bleed crossfade above.
+ * A specimen card, mobile only: the desktop turning cards D56 built are
+ * gone with the orbit, replaced by the full bleed crossfade above.
  *
- * The photograph, then a charcoal caption carrying the stone's name, its
- * thickness and its position in the set. That caption is what makes it a
- * card rather than a picture: it names what is being looked at, which a
- * buyer comparing four stones needs and a full bleed photograph cannot
- * give.
+ * The photograph, then a charcoal caption carrying the range's name and its
+ * position in the set. No thickness or category line any more, per D92: a
+ * single hero now spans stone, lighting, hardware and more, and those two
+ * facts stopped being something every range shares.
  *
- * The whole card is one link, so the target is the card and not a word in it.
+ * A range with no stock yet renders without a `Link` wrapper entirely,
+ * matching the desktop chip rail's own rule: a card is either a real
+ * destination or it is not a control.
  */
-function SlabCard({
-  slab, index, total, thickness, priority = false,
-  sizes = '78vw',
+function RangeCard({
+  slide, index, total, priority = false, sizes = '78vw',
 }: {
-  slab: HeroSlab;
+  slide: HeroRangeSlide;
   index: number;
   total: number;
-  thickness: string;
   priority?: boolean;
   sizes?: string;
 }) {
+  const photo = (
+    <div className="beco-ambient beco-sheen relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 shadow-[0_24px_64px_rgba(16,24,32,0.18)] after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
+      <Image
+        src={slide.src}
+        alt={slide.alt}
+        fill
+        priority={priority}
+        sizes={sizes}
+        {...blurProps(slide)}
+        className="object-cover transition-transform duration-[900ms] ease-brand group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+      />
+    </div>
+  );
+
+  const caption = (
+    <div className="beco-plate flex items-baseline justify-between gap-4 bg-charcoal px-6 py-5 text-high-vis-white">
+      <p className="font-ui text-sm font-semibold uppercase tracking-[0.16em]">
+        {slide.title}
+      </p>
+      <p className="font-ui text-sm font-semibold tabular-nums text-neutral-500">
+        {String(index + 1).padStart(2, '0')}
+        <span className="text-neutral-700">/{String(total).padStart(2, '0')}</span>
+      </p>
+    </div>
+  );
+
+  if (!slide.href) {
+    return (
+      <div className="block w-full">
+        {photo}
+        {caption}
+      </div>
+    );
+  }
+
   return (
     <Link
-      href={`/product/${slab.slug}`}
+      href={slide.href}
       className={cn(
         'group beco-lean block w-full [transform-style:preserve-3d]',
         'motion-reduce:!transform-none motion-reduce:transition-none',
       )}
     >
-      <div className="beco-ambient beco-sheen relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 shadow-[0_24px_64px_rgba(16,24,32,0.18)] after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
-        <Image
-          src={slab.src}
-          alt={slab.alt}
-          fill
-          // Stated by the caller, never inferred from the index. Inferring it
-          // meant the mobile row's first card also claimed priority, which
-          // preloaded a second copy of the photograph already behind the hero.
-          priority={priority}
-          sizes={sizes}
-          {...blurProps(slab)}
-          className="object-cover transition-transform duration-[900ms] ease-brand group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-        />
-      </div>
-
-      <div className="beco-plate flex items-baseline justify-between gap-4 bg-charcoal px-6 py-5 text-high-vis-white">
-        <div>
-          <p className="font-ui text-sm font-semibold uppercase tracking-[0.16em]">
-            {slab.name}
-          </p>
-          <p className="mt-1 font-ui text-sm text-neutral-500">
-            {slab.category}
-            <span aria-hidden className="px-2 text-neutral-700">/</span>
-            {thickness}
-          </p>
-        </div>
-        <p className="font-ui text-sm font-semibold tabular-nums text-neutral-500">
-          {String(index + 1).padStart(2, '0')}
-          <span className="text-neutral-700">/{String(total).padStart(2, '0')}</span>
-        </p>
-      </div>
+      {photo}
+      {caption}
     </Link>
   );
 }

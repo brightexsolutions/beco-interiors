@@ -38,7 +38,11 @@ export function NavLink({
       href={href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'block px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] transition-colors',
+        // text-sm is already CLAUDE.md's 14px small print floor: it cannot
+        // go smaller without breaching that rule, so the desktop nav reads
+        // more compact via tighter tracking and padding instead, on
+        // Brown's request, D92.
+        'block px-3 py-2 font-ui text-sm font-semibold uppercase tracking-[0.06em] transition-colors',
         active && 'text-warm-red-deep',
         !active && light && 'text-neutral-200 hover:text-high-vis-white',
         !active && !light && 'text-neutral-700 hover:text-warm-red-deep',

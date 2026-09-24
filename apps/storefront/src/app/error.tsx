@@ -36,7 +36,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[60vh] max-w-[1380px] flex-col justify-center px-8 sm:px-10 lg:px-14 py-24">
+    <main className="mx-auto flex min-h-[60vh] max-w-[1380px] flex-col justify-center px-8 sm:px-24 lg:px-40 py-24">
       <div className="flex items-center gap-4">
         <span aria-hidden className="h-px w-8 bg-warm-red" />
         <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
@@ -62,7 +62,7 @@ export default function Error({
           Try again
         </button>
         <a
-          href={whatsappLink()}
+          href={whatsappLink('I ran into an error on the website and need help')}
           target="_blank"
           rel="noopener noreferrer"
           data-analytics="whatsapp_click"

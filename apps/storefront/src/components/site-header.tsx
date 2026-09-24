@@ -85,26 +85,49 @@ export function SiteHeader() {
         'sticky top-0 z-50 transition-colors duration-300 ease-brand',
         scrolled || !overHero
           ? 'border-b border-neutral-200 bg-high-vis-white'
-          : // The hero's own gradient is tuned for the type block on the
-            // LEFT of the photo, not the header, which spans the full
-            // width above it. Wherever the header happens to sit over a
-            // bright patch of whichever stone is currently showing, that
-            // gradient can leave nav text with nowhere near enough
-            // contrast. The header needs its own guaranteed scrim rather
-            // than trusting content behind it it does not control.
-            //
-            // Never fades below 55% at its weakest point (the bottom
-            // edge, right where the nav sits): verified against the
-            // project's own contrast formula for a near white stone photo
-            // behind it, the worst real case, which still holds text-
-            // neutral-200 at 4.77:1, past the 4.5 AA floor. The earlier
-            // fade to fully transparent measured 3.02:1 in that same
-            // scenario, a real failure a lighter application photo would
-            // have exposed the first time one rotated into view.
-            'border-b border-transparent bg-gradient-to-b from-charcoal/75 to-charcoal/55',
+          : 'border-b border-transparent bg-transparent',
       )}
     >
-      <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between gap-6 px-8 sm:px-10 lg:px-14">
+      {/* The scrim, per D92: a separate, taller layer behind the header's own
+          80px content box rather than a flat gradient confined to it. The
+          original version painted the full box a fairly uniform 75% to 55%
+          charcoal and stopped dead at the header's own bottom edge, which
+          against a bright stone photo read as a distinct grey bar sitting
+          on the image rather than the image's own natural falloff, reported
+          directly as looking like "a colored transparent background".
+          A first fix extended the same darkening 200px past the header on a
+          4 stop linear fade, which was still wrong: it ended at 5% opacity,
+          not 0, and the last 60px dropped from 30% to 5%, a change large
+          and fast enough for the eye to still read as an edge. Perceived
+          brightness is closer to logarithmic than linear, so an evenly
+          spaced fade looks uneven: the steps near full darkness read as
+          smooth, the steps near transparent read as a visible band. This
+          version tapers over 240px on an eased 7 stop curve, each step
+          smaller than the last, and actually reaches 0, not a faint
+          residual, so there is nothing left to seam against.
+
+          Contrast is unchanged from D79's own tested floor: at the header's
+          own bottom edge (80px of this layer's 240px), this gradient still
+          holds 58% charcoal, still above the 55% minimum verified against
+          the project's own contrast formula for a near white stone photo,
+          the worst real case (text-neutral-200 at 4.77:1, past the 4.5 AA
+          floor). Every stop from there down is decorative only: no nav text
+          ever sits below the header's own box, so nothing below 80px needs
+          to hold a contrast floor at all. */}
+      {!scrolled && overHero ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[240px] transition-opacity duration-300 ease-brand"
+          style={{
+            backgroundImage:
+              'linear-gradient(180deg, rgba(16,24,32,0.86) 0%, rgba(16,24,32,0.74) 20%, ' +
+              'rgba(16,24,32,0.58) 33%, rgba(16,24,32,0.42) 50%, rgba(16,24,32,0.26) 66%, ' +
+              'rgba(16,24,32,0.12) 83%, rgba(16,24,32,0) 100%)',
+          }}
+        />
+      ) : null}
+
+      <div className="mx-auto flex h-20 max-w-[1380px] items-center justify-between gap-6 px-8 sm:px-24 lg:px-40">
         {/* The real mark from the brand pack, not a typeset approximation.
             The supplied lockup stacks INTERIORS beneath the square, which at
             this header height would be about four pixels tall, so the mark
@@ -159,11 +182,24 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-1 sm:gap-3">
+        {/* `gap-2`, not `gap-1`, below `sm`: reported directly as the phone
+            icon, the Quote button and the hamburger trigger reading as
+            touching at narrow widths. `gap-1` (4px) between three 44px
+            targets, one of them a solid red button, read as crowded rather
+            than deliberately tight. One 8px grid step, the base unit
+            CLAUDE.md's own spacing rules already use everywhere else. */}
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* The business line, per D39: visible rather than merely findable.
               Icon plus number where there is room, icon alone where there is
               not, so it never wraps and never competes with the quote button
-              for width. */}
+              for width. Reported directly against a screenshot at 1200px:
+              `lg` (1024px) was not actually enough room, five nav items, the
+              phone number and the quote button all fighting for the same
+              row, and the number, the only multi-word text in that row with
+              no `nowrap`, was what gave and broke onto two lines. Raised to
+              `xl` (1280px), where there is genuinely space, and `nowrap`
+              added as a real floor under that judgement call rather than
+              trusting the breakpoint alone a second time. */}
           <a
             href={SITE.phoneHref}
             data-analytics="call_click"
@@ -176,7 +212,7 @@ export function SiteHeader() {
             <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current">
               <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z" />
             </svg>
-            <span className="hidden lg:inline">{SITE.phone}</span>
+            <span className="hidden whitespace-nowrap xl:inline">{SITE.phone}</span>
           </a>
 
           {/* One word and a basket. "Request a quote" is the page's language,
@@ -187,7 +223,10 @@ export function SiteHeader() {
             aria-label="Your quote list"
             className={cn(
               buttonClasses({ variant: 'primary' }),
-              'h-11 min-h-0 gap-2 px-4 py-0 text-sm tracking-[0.08em]',
+              // h-11 (44px) stays: CLAUDE.md's touch target floor. text-sm
+              // stays too: the 14px type floor. Tighter gap and padding is
+              // the lever that's actually free to move, D92.
+              'h-11 min-h-0 gap-1.5 px-3 py-0 text-sm tracking-[0.08em]',
             )}
           >
             <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-none stroke-current" strokeWidth="1.7">

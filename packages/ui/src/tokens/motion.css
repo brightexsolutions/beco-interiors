@@ -458,6 +458,23 @@
     animation: beco-word-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
+  /* --- D92: the hero's rotating room word, typed rather than risen. The
+         rise-in-place `beco-word` keyframe above is right for an entrance
+         played once; replayed every 2.2s on a timer it read as a mannerism,
+         reported directly. `RotatingRoomWord` (apps/storefront) now types
+         and deletes the word itself in JS; this caret is the only piece
+         still owned by CSS: a steady blink, opacity only, so it never
+         competes with the type/delete text change for what "the animation"
+         on this word actually is. --- */
+  .beco-caret {
+    animation: beco-caret-blink 1s steps(1, jump-none) infinite;
+  }
+
+  @keyframes beco-caret-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0; }
+  }
+
   /* --- D80: the launch banner's own reveal, when the countdown gives way to
          "we are live". This is `reveal` per D31 applied to a strip of the
          chrome instead of a section entering the viewport on scroll, the

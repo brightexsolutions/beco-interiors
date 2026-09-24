@@ -9,6 +9,7 @@ import {
   getPublishedProducts, getCategoryTree,
   type CatalogueProduct, type CategoryGroup,
 } from '@/lib/products';
+import { RANGE_GROUPS } from '@/lib/ranges';
 
 export const revalidate = 3600;
 
@@ -111,18 +112,28 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     .slice(0, 5);
 
   // One rail, standing for the whole business rather than the range with the
-  // most photography: up to three products per top level group, badged
+  // most photography: up to three products per RANGE_GROUPS entry, badged
   // stock preferred within each, so sintered stone cannot fill the row on
-  // its own and lighting, panels and accessories actually appear in it. A
-  // second rail per range was tried and reported back as repetitive right
-  // after this one, so this is the only curated row before the general grid.
-  const featured = groups
-    .flatMap((group) => {
-      const inGroup = all.filter((p) => p.category && subtreeSlugs(group).has(p.category.slug));
-      const badged = inGroup.filter((p) => p.badge === 'hot' || p.badge === 'new');
-      return (badged.length > 0 ? badged : inGroup).slice(0, 3);
-    })
-    .slice(0, 12);
+  // its own and lighting, panels, hardware and accessories actually appear
+  // in it too. A second rail per range was tried and reported back as
+  // repetitive right after this one, so this is the only curated row before
+  // the general grid.
+  //
+  // Built from RANGE_GROUPS, the six ranges Beco actually deals in, rather
+  // than the raw top level `groups` from the database: that list also
+  // carries loose Drive folders that never became a real range, "Drawer
+  // Rails" and "Fluted Wall Panels" among them, which were crowding out
+  // Hinges and Office Accessories under the old fixed 12 item cap, reported
+  // directly against the running rail. No overall cap now: six ranges at up
+  // to three each tops out at eighteen, a length RailTrack's own scrollable
+  // row already handles.
+  const featured = RANGE_GROUPS.flatMap((spec) => {
+    const group = groups.find((g) => g.slug === spec.slug);
+    if (!group) return [];
+    const inGroup = all.filter((p) => p.category && subtreeSlugs(group).has(p.category.slug));
+    const badged = inGroup.filter((p) => p.badge === 'hot' || p.badge === 'new');
+    return (badged.length > 0 ? badged : inGroup).slice(0, 3);
+  });
 
   return (
     <main>
@@ -158,62 +169,76 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
-      {/* Docked over the hero's own bottom edge, see the component's own
-          note: the search, the filters and the live count are the one
-          thing every visitor here wants first, so they sit on the hero
-          rather than waiting below it. */}
+      {/* Everything the bar filters is passed as ITS children rather than
+          rendered as its sibling here: see `ShopControls`' own LAYOUT note
+          for why that is what actually keeps the bar stuck to the header
+          while scrolling, rather than only for the first few pixels. */}
       <ShopControls
         groups={facetGroups}
         finishes={finishFacets}
         total={all.length}
         showing={products.length}
-      />
+      >
+        {/* --- One curated row, only while browsing rather than filtering: a
+                featured rail under a search or a facet is noise about things
+                nobody asked for, the same reasoning ComingSoon below already
+                uses. "View all" jumps to the catalogue grid below rather
+                than linking to `/shop`, the page already open: that link
+                used to go nowhere a reader could see happen, reported
+                directly as reading as not clickable. --- */}
+        {!filtered ? (
+          <SlabRail
+            products={featured}
+            eyebrow="Featured"
+            heading="On the floor right now."
+            viewAllHref="#the-whole-catalogue"
+            viewAllLabel="See everything"
+          />
+        ) : null}
 
-      {/* --- One curated row, only while browsing rather than filtering: a
-              featured rail under a search or a facet is noise about things
-              nobody asked for, the same reasoning ComingSoon below already
-              uses. --- */}
-      {!filtered ? (
-        <SlabRail
-          products={featured}
-          eyebrow="Featured"
-          heading="On the floor right now."
-          viewAllHref="/shop"
-          viewAllLabel="View all"
-        />
-      ) : null}
+        {/* --- The whole catalogue section, on a distinct surface rather than
+                flat white: reported directly that the site's surfaces read as
+                plain white throughout, with nothing to lift the product cards
+                off the page the way ProductCard's own "no border, no shadow"
+                principle assumes something will. Full bleed neutral-50, the
+                same token the home page's "Why Beco" section already uses,
+                so the docked filter panel above and the featured rail keep
+                their white ground while the browsing grid itself sits on a
+                quieter, warmer surface. --- */}
+        <section id="the-whole-catalogue" className="scroll-mt-48 bg-neutral-50">
+          <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-20">
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-px w-8 bg-warm-red" />
+              <h2 className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                {filtered ? 'Matching the filter' : 'The whole catalogue'}
+              </h2>
+            </div>
 
-      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20">
-        <div className="flex items-center gap-4">
-          <span aria-hidden className="h-px w-8 bg-warm-red" />
-          <h2 className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-            {filtered ? 'Matching the filter' : 'The whole catalogue'}
-          </h2>
-        </div>
+            <div className="mt-8">
+              {products.length === 0 ? (
+                <EmptyState
+                  title="Nothing matches that"
+                  description="Try a shorter search, or clear the filters to see the whole range."
+                  action={
+                    <Link href="/shop" className={buttonClasses({ variant: 'primary' })}>
+                      Show everything
+                    </Link>
+                  }
+                />
+              ) : (
+                <ProductGridPaginated products={products} />
+              )}
+            </div>
 
-        <div className="mt-8">
-          {products.length === 0 ? (
-            <EmptyState
-              title="Nothing matches that"
-              description="Try a shorter search, or clear the filters to see the whole range."
-              action={
-                <Link href="/shop" className={buttonClasses({ variant: 'primary' })}>
-                  Show everything
-                </Link>
-              }
-            />
-          ) : (
-            <ProductGridPaginated products={products} />
-          )}
-        </div>
-
-        {/* --- Ranges still being photographed. Shown so the site does not
-                present Beco as a stone supplier with a sideline in handles, and
-                said plainly so nobody thinks they are on the floor today. Only
-                when the reader is looking at everything: under a filter it is
-                noise about things they did not ask for. --- */}
-        {!filtered ? <ComingSoon groups={groups} /> : null}
-      </div>
+            {/* --- Ranges still being photographed. Shown so the site does not
+                    present Beco as a stone supplier with a sideline in handles,
+                    and said plainly so nobody thinks they are on the floor
+                    today. Only when the reader is looking at everything: under
+                    a filter it is noise about things they did not ask for. --- */}
+            {!filtered ? <ComingSoon groups={groups} /> : null}
+          </div>
+        </section>
+      </ShopControls>
     </main>
   );
 }

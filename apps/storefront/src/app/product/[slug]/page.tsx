@@ -73,10 +73,10 @@ export default async function ProductPage({ params }: Params) {
     ? await getRelatedProducts(product.category.slug, product.slug)
     : [];
   const hero = primaryImage(product);
-  const context = `${product.name}${product.sku ? ` (${product.sku})` : ''}`;
+  const whatsappIntent = `I'm interested in ${product.name}${product.sku ? ` (${product.sku})` : ''}`;
 
   return (
-    <main className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-10">
+    <main className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-10">
       <nav aria-label="Breadcrumb" className="mb-8">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
@@ -148,7 +148,7 @@ export default async function ProductPage({ params }: Params) {
               at all. */}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             <a
-              href={whatsappLink(context)}
+              href={whatsappLink(whatsappIntent)}
               data-analytics="whatsapp_click"
               data-product={product.slug}
               className={cn(buttonClasses({ variant: 'outline' }), 'w-full gap-2 px-3')}

@@ -6,10 +6,12 @@ import { RoomStack } from '@/components/room-stack';
 import { RotatingStatement } from '@/components/rotating-statement';
 import { ShowroomFilm } from '@/components/showroom-film';
 import { CompletedInteriors } from '@/components/completed-interiors';
+import { ServiceCardGrid } from '@/components/service-card-grid';
 import {
   getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages,
 } from '@/lib/products';
 import { SITE, SITE_SHOTS, SHOWROOM_FILM } from '@/lib/site';
+import { SERVICES } from '@/lib/services';
 
 export const revalidate = 3600;
 
@@ -156,12 +158,20 @@ export default async function AboutPage() {
   // reaching for a real kitchen, bathroom, office or showroom photograph
   // sourced and licensed for free commercial use is what keeps the pairing
   // honest, the same reasoning the component's own note explains further.
+  //
+  // SHOWROOMS is the one exception: Beco's own showroom is real and already
+  // photographed, `/video/showroom-poster.jpg`, a still from the real
+  // `SHOWROOM_FILM` used further down this page, so a stock substitute for
+  // this specific word is a worse answer than the real thing, not a better
+  // one. Reported directly against a screenshot: the stock photo that was
+  // here read as a home decor shelf, plants and folded textiles, nothing
+  // like an interior materials showroom.
   const ROTATING_WORDS = ['KITCHENS', 'BATHROOMS', 'OFFICES', 'SHOWROOMS'];
   const rotatingImages = [
     { path: '/rooms/kitchen.webp' },
     { path: '/rooms/bathroom.webp' },
     { path: '/rooms/office.webp' },
-    { path: '/rooms/showroom.webp' },
+    { path: '/video/showroom-poster.jpg' },
   ];
 
   return (
@@ -204,7 +214,7 @@ export default async function AboutPage() {
           />
         </div>
 
-        <div className="beco-clip beco-hero-content-top relative mx-auto w-full max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-16 sm:pb-20 lg:pb-24">
+        <div className="beco-clip beco-hero-content-top relative mx-auto w-full max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-16 sm:pb-20 lg:pb-24">
           <div className="beco-wipe flex items-center gap-4">
             <span aria-hidden className="h-px w-10 bg-warm-red" />
             <p className="font-ui text-xs font-semibold uppercase tracking-[0.22em] text-neutral-300">
@@ -242,7 +252,7 @@ export default async function AboutPage() {
               running text the full width of the page. Both real, both
               `application` shots, per the guideline's own photography
               direction. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-20 lg:py-24">
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-20 lg:py-24">
         <Reveal className="beco-clip text-center">
           {/* Centred rather than left set: left aligned inside a section as
               wide as 1380px put most of a short pull quote's own row in
@@ -334,7 +344,7 @@ export default async function AboutPage() {
               this is the one of the three with real air around it to take
               a tone change without competing with a photograph. --- */}
       <section className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
-        <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -417,6 +427,39 @@ export default async function AboutPage() {
         </div>
       </section>
 
+      {/* --- What Beco actually does, beyond selling the material: reported
+              directly as missing, clearly, from this page. Everything above
+              is the range and everything below is proof and process, but
+              nothing said plainly that Beco measures, fits and delivers as
+              well as sells. `RangePillarList` was tried here first and
+              reported back directly as the wrong style: `ServiceCardGrid`
+              reuses the soft raised card `Why Beco` and the team section
+              already establish on this page instead, with its own action on
+              every card rather than a numbered row that only sends a reader
+              somewhere at the end of it. No eyebrow here: the heading names
+              the section, and this is a break from that opener rather than
+              a fourth repeat of it on one page. Plain white, not tinted: the
+              pillars section right before this one is already
+              `bg-neutral-50`, and running the same tint through two
+              sections back to back is the same "reads as one thing" problem
+              a colour change is meant to solve, not a fix for it. --- */}
+      <section className="py-16 sm:py-22 lg:py-30">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
+        <div className="beco-clip">
+          <div className="beco-wipe">
+            <h2 className="max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+              We do not just supply it.
+            </h2>
+            <p className="mt-5 max-w-[58ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
+              Consultation, a site assessment before anything is fabricated, installation for
+              sintered stone and wall panels, and delivery either way.
+            </p>
+          </div>
+        </div>
+        <ServiceCardGrid className="mt-10" items={SERVICES} />
+        </div>
+      </section>
+
       {/* --- The showroom's own footage, elsewhere always a small side column
               beside an address block, given one dedicated moment here
               instead: video in view, the sixth effect in D31's vocabulary,
@@ -442,17 +485,15 @@ export default async function AboutPage() {
               edge the way a real screen throws light in a dim room. --- */}
       {SHOWROOM_FILM ? (
         <section className="bg-neutral-950 py-16 sm:py-22 lg:py-30">
-          <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
+          <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
             <div className="grid gap-x-16 gap-y-10 lg:grid-cols-[1fr_1.3fr] lg:items-center">
               <div className="beco-clip">
                 <div className="beco-wipe">
-                  <div className="flex items-center gap-4">
-                    <span aria-hidden className="h-px w-8 bg-warm-red" />
-                    <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                      Inside the showroom
-                    </p>
-                  </div>
-                  <h2 className="mt-4 max-w-[14ch] font-display text-4xl leading-[1.08] text-high-vis-white sm:text-5xl">
+                  {/* No eyebrow: the caption plate under the video itself
+                      already names the place, and this is a break from the
+                      hairline-plus-label opener rather than a sixth repeat
+                      of it on one page. */}
+                  <h2 className="max-w-[14ch] font-display text-4xl leading-[1.08] text-high-vis-white sm:text-5xl">
                     A walk through, before you visit.
                   </h2>
                   <p className="mt-5 max-w-[36ch] text-base leading-[1.65] text-neutral-400 lg:text-lg">
@@ -519,7 +560,7 @@ export default async function AboutPage() {
             </h2>
           </div>
         </div>
-        <p className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
+        <p className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
           Supplied, cut and installed across the city
         </p>
       </section>
@@ -541,7 +582,7 @@ export default async function AboutPage() {
               white sections either side of it that otherwise ran together
               with the team section below. */}
       <section className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
-        <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
+        <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -623,16 +664,15 @@ export default async function AboutPage() {
               since only individual sales roles were otherwise represented
               on this page despite fabrication and installation being
               claimed as a real service elsewhere on it. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:py-30">
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
-            <div className="flex items-center gap-4">
-              <span aria-hidden className="h-px w-8 bg-warm-red" />
-              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                The team
-              </p>
-            </div>
-            <h2 className="mt-4 max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
+            {/* No eyebrow: "Who you would actually be talking to" already
+                names the section, and How it works right above already
+                carries one. Two openers of the same shape back to back,
+                then a third right after on The showroom, was the exact run
+                reported as reading templated. */}
+            <h2 className="max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
               Who you would actually be talking to.
             </h2>
             <p className="mt-5 max-w-[62ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
@@ -739,7 +779,7 @@ export default async function AboutPage() {
 
       {/* --- The showroom, against real installations. --- */}
       <section className="border-y border-neutral-200 bg-neutral-50">
-        <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:grid-cols-[1fr_24rem] lg:gap-20 lg:py-30">
+        <div className="mx-auto grid max-w-[1380px] items-center gap-16 px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:grid-cols-[1fr_24rem] lg:gap-20 lg:py-30">
           <div>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />

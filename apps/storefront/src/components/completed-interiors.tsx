@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { HoverGallery } from '@beco/ui';
+import { HoverGallery, cn } from '@beco/ui';
 // No Reveal import: this section's cards assemble via beco-wipe/beco-plate, the
 // same physical language as the gallery, rather than the site's default fade.
 import { blurProps, type CatalogueProduct } from '@/lib/products';
@@ -96,8 +96,13 @@ export function CompletedInteriors({
       note on why there are only two of these today. */
   siteShots?: SiteShot[];
   /** Overridable so a second call site, About, can carry its own line rather
-      than repeating Home's word for word. */
-  eyebrow?: string;
+      than repeating Home's word for word. `null` drops the eyebrow row
+      entirely: Home's own call does this, reported directly as four
+      "hairline plus small caps label" openers running back to back with
+      only a background tint between some of them ("What we deal in", "Why
+      Beco", this section, "The range"), the same templated rhythm the
+      Process section elsewhere on that page was already written to avoid. */
+  eyebrow?: string | null;
   heading?: string;
   body?: string;
 }) {
@@ -128,17 +133,22 @@ export function CompletedInteriors({
   if (shots.length < 2) return null;
 
   return (
-    <section className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 py-16 sm:py-22 lg:py-30">
+    <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
       <div className="flex flex-wrap items-end justify-between gap-x-16 gap-y-6">
         <div className="beco-clip">
           <div className="beco-wipe">
-            <div className="flex items-center gap-4">
-              <span aria-hidden className="h-px w-8 bg-warm-red" />
-              <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                {eyebrow}
-              </p>
-            </div>
-            <h2 className="mt-4 max-w-[15ch] font-display text-4xl leading-[1.06] tracking-[-0.015em] text-charcoal sm:text-5xl">
+            {eyebrow ? (
+              <div className="flex items-center gap-4">
+                <span aria-hidden className="h-px w-8 bg-warm-red" />
+                <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                  {eyebrow}
+                </p>
+              </div>
+            ) : null}
+            <h2 className={cn(
+              'max-w-[15ch] font-display text-4xl leading-[1.06] tracking-[-0.015em] text-charcoal sm:text-5xl',
+              eyebrow ? 'mt-4' : undefined,
+            )}>
               {heading}
             </h2>
           </div>

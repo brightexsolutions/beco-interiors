@@ -144,7 +144,9 @@ export function NavDropdown({
         aria-controls={menuId}
         onClick={onTriggerClick}
         className={cn(
-          'flex min-h-11 items-center gap-2 px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] transition-colors',
+          // Matches NavLink's own tracking/padding tightening, D92: text-sm
+          // is already the 14px small print floor and cannot go smaller.
+          'flex min-h-11 items-center gap-2 px-3 py-2 font-ui text-sm font-semibold uppercase tracking-[0.06em] transition-colors',
           active && 'text-warm-red-deep',
           !active && light && 'text-neutral-200 hover:text-high-vis-white',
           !active && !light && 'text-neutral-700 hover:text-warm-red-deep',

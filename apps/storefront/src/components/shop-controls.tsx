@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition, type ReactNode } from 'react';
 import { Input, Select, cn } from '@beco/ui';
 
 /**
@@ -16,17 +16,27 @@ import { Input, Select, cn } from '@beco/ui';
  * four facet grid cannot generate hundreds of thin duplicate URLs. That is
  * handled in the page's metadata, not here.
  *
- * LAYOUT. The bar is sticky under the header on every size now. On desktop it
- * is one row: search, the three facet controls, the live count. On a phone
- * that row would wrap the controls onto two or three lines and push the grid
- * off screen, so below `lg` only the search and a "Filters" button show, and
- * the button opens the range, finish and sort controls in a panel beneath the
- * bar with a badge for how many are active. The controls themselves are the
- * SAME elements at both sizes: the wrapper is `display: contents` from `lg` up
- * so its children flow into the bar row, and a toggled block below it on
- * mobile. One set of labelled controls, one source of truth. This revises
- * D65, which dropped the mobile sticky bar when it was still three rows of
- * loose fields.
+ * LAYOUT. The bar is sticky under the header on every size now, and stays
+ * stuck for as long as there is page below it to scroll through: `children`
+ * is rendered inside this component's own outer wrapper, AFTER the sticky
+ * card rather than as a sibling of it in the page, specifically so that
+ * wrapper is as tall as the whole browsing surface rather than only the bar
+ * itself. `position: sticky` only holds an element in place for as long as
+ * its own parent is still passing through the viewport: nested two levels
+ * deep in a wrapper exactly as tall as the bar, as this used to be with the
+ * rest of `/shop` as its sibling rather than its child, the bar unstuck
+ * again within a few pixels of engaging, reported directly as not sticking
+ * at all in practice. On desktop the bar itself is one row: search, the
+ * three facet controls, the live count. On a phone that row would wrap the
+ * controls onto two or three lines and push the grid off screen, so below
+ * `lg` only the search and a "Filters" button show, and the button opens the
+ * range, finish and sort controls in a panel beneath the bar with a badge
+ * for how many are active. The controls themselves are the SAME elements at
+ * both sizes: the wrapper is `display: contents` from `lg` up so its
+ * children flow into the bar row, and a toggled block below it on mobile.
+ * One set of labelled controls, one source of truth. This revises D65,
+ * which dropped the mobile sticky bar when it was still three rows of loose
+ * fields.
  *
  * What is active is stated back as removable chips, so a reader who lands on a
  * shared filtered URL can see why they are looking at six products of thirty.
@@ -46,12 +56,16 @@ export interface FacetGroup {
 }
 
 export function ShopControls({
-  groups, finishes, total, showing,
+  groups, finishes, total, showing, children,
 }: {
   groups: FacetGroup[];
   finishes: Facet[];
   total: number;
   showing: number;
+  /** Rendered after the sticky bar, inside this component's own outer
+      wrapper so that wrapper, and therefore the bar's containing block, is
+      as tall as everything the bar filters. See the LAYOUT note above. */
+  children?: ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -127,13 +141,27 @@ export function ShopControls({
     // Docked over the hero's own bottom edge rather than a flush bar under
     // it, reported directly as wanting real presence for the one control a
     // shopper reaches for first. The negative margin here pulls it up over
-    // the photograph; sticky top-20 on the card itself, not this outer
-    // layer, is what still pins it below the header once scrolling starts,
-    // the same behaviour as before, now on a floating panel instead of an
-    // edge to edge strip.
+    // the photograph. `sticky top-20` sits on the gutter layer below, not
+    // the card itself, because THAT is the sticky element's real containing
+    // block: `children` renders after it, still inside this same outer div,
+    // so the div the sticky layer belongs to is as tall as the whole
+    // browsing surface rather than only the card, and it can stay pinned
+    // below the header for that whole scroll rather than for a few pixels.
+    //
+    // An explicit z-index on that sticky layer, not just `z-40` on this
+    // outer div, is load bearing: once `children` render INSIDE this div
+    // rather than after it, the bar and the scrolling content are siblings
+    // competing for the same paint order. `z-10` was tried first and still
+    // lost: `ProductCard`'s own title, price row and action slot are each
+    // `relative z-10` internally (`packages/ui/src/components/product-card.tsx`),
+    // and its card root is `relative` with no z-index of its own, so it
+    // never isolates a stacking context for them. Those z-10 elements tie
+    // directly with a z-10 bar in the SAME stacking context, and a tie goes
+    // to whichever is later in the document, the product grid. `z-30`
+    // clears that with room to spare, short of the header's own z-50.
     <div className="relative z-40 -mt-10 sm:-mt-12 lg:-mt-16">
-      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14">
-        <div className="sticky top-20 rounded-[2px] border border-neutral-200 bg-high-vis-white px-5 py-4 shadow-[0_24px_64px_rgba(16,24,32,0.18)] sm:px-6 sm:py-5">
+      <div className="sticky top-20 z-30 mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
+        <div className="rounded-[2px] border border-neutral-200 bg-high-vis-white px-5 py-4 shadow-[0_24px_64px_rgba(16,24,32,0.18)] sm:px-6 sm:py-5">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {/* Search shares the top row with the Filters button on a phone,
@@ -319,6 +347,7 @@ export function ShopControls({
       </div>
         </div>
       </div>
+      {children}
     </div>
   );
 }

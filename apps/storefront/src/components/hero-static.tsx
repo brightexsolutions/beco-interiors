@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { buttonClasses, cn } from '@beco/ui';
+import { HERO_GRID_INSET } from '@/lib/layout';
 
 /**
  * The home hero when there is no photography to run behind it.
@@ -19,11 +20,6 @@ import { buttonClasses, cn } from '@beco/ui';
  * accent, the same one every section eyebrow carries.
  */
 
-// Matches PinnedHero's own GRID_INSET so the type column lands in the
-// same place whichever hero renders. See its comment for why the lg step
-// adds the section gutter on top of the 1380px centering margin.
-const GRID_INSET = 'pl-8 sm:pl-10 lg:pl-[calc(max(0px,(100vw-1380px)/2)+3.5rem)]';
-
 export function HeroStatic() {
   return (
     <section
@@ -32,7 +28,7 @@ export function HeroStatic() {
     >
       <div
         className={cn(
-          GRID_INSET,
+          HERO_GRID_INSET,
           'beco-hero-content-top relative flex min-h-[68svh] max-w-[52rem] flex-col justify-center pb-14 pr-6',
           'lg:min-h-[78vh] lg:pr-20',
         )}
@@ -44,7 +40,7 @@ export function HeroStatic() {
           </p>
         </div>
 
-        <h1 className="mt-6 max-w-[12ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-high-vis-white sm:text-6xl xl:text-7xl">
+        <h1 className="mt-6 max-w-[12ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-high-vis-white xl:text-6xl">
           Surfaces that outlast the room.
         </h1>
 

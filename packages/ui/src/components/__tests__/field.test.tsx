@@ -107,6 +107,18 @@ describe('Select', () => {
     expect(container.querySelector('svg')?.getAttribute('class')).toContain('pointer-events-none');
   });
 
+  it('puts a passed className on the wrapping span, not the select, so a caller sizing it in a flex row (e.g. sm:flex-1 lg:w-auto) actually affects the element flex layout sees', () => {
+    const { container } = render(
+      <Select aria-label="Range" className="sm:flex-1 lg:w-auto lg:flex-none">
+        <option value="">All</option>
+      </Select>,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.className).toMatch(/sm:flex-1/);
+    expect(wrapper.className).toMatch(/lg:w-auto/);
+    expect(screen.getByLabelText('Range').className).not.toMatch(/sm:flex-1/);
+  });
+
   it('renders option groups, which is how fifteen categories fit in one control', () => {
     render(
       <Select aria-label="Range" defaultValue="">

@@ -106,24 +106,31 @@ export const GALLERY_FILM: { src: string; type: string; poster: string } | null 
  * stone in it. A slab tells a buyer the veining. A room tells them whether
  * it works.
  *
- * The first two, `karen-kitchen-cyprus-grey` and `karen-vanity-sandstone-
- * beige`, are the only two files in the SITE PHOTOS Drive folder that ever
- * named both a stone and a room in the filename itself: "CYPRUS GREY, KAREN
- * KITCHEN" and "SANDSTONE BEIGE, KAREN VANITY". Every other file in that
- * folder, 75 of them, arrives as a bare camera filename such as
- * `IMG_4116.HEIC` with nothing to parse. The rest of this list is those:
- * downloaded, hand reviewed one by one at full resolution, and judged by eye
- * for what room or application each one actually shows, since nothing in
- * the filename says so. A first pass on small previews picked out about
+ * `karen-vanity-sandstone-beige` was one of two files in the SITE PHOTOS
+ * Drive folder that ever named both a stone and a room in the filename
+ * itself, "SANDSTONE BEIGE, KAREN VANITY". Every other file in that folder,
+ * 75 of them, arrives as a bare camera filename such as `IMG_4116.HEIC` with
+ * nothing to parse. Most of the rest of this list is those: downloaded,
+ * hand reviewed one by one at full resolution, and judged by eye for what
+ * room or application each one actually shows, since nothing in the
+ * filename says so. A first pass on small previews picked out about
  * fifteen; three of those did not survive a second look at full size, an
  * outdoor bar with exposed plumbing and a dangling wire still showing, a
  * console shot with moving boxes in frame, a vanity with bare wire hanging
- * off the wall, and were dropped. What is left is the roughly one in eight
- * that were genuinely presentable throughout the frame: in focus, well
- * composed, not a near duplicate angle of one already picked, nothing
- * unfinished or cluttered anywhere in shot. Quality over count, a smaller
- * set that is all real and all clear beats a longer one padded with weak
- * repeats.
+ * off the wall, and were dropped. What is left is meant to be the roughly
+ * one in eight that were genuinely presentable throughout the frame: in
+ * focus, well composed, not a near duplicate angle of one already picked,
+ * nothing unfinished or cluttered anywhere in shot. Quality over count, a
+ * smaller set that is all real and all clear beats a longer one padded with
+ * weak repeats.
+ *
+ * The other of the original two named files, `karen-kitchen-cyprus-grey`
+ * ("CYPRUS GREY, KAREN KITCHEN"), was dropped from this list on D92, on
+ * direct feedback against the running site: it still had the tap's own
+ * protective wrap on and a rough, mid-install window frame in shot, which
+ * the pass that first added it missed. Proof this curation bar needs a
+ * second look now and again, not just a first one. `kitchen-charcoal-
+ * island` now leads the Kitchen group instead.
  *
  * Converted by hand from the source HEIC (sharp's own HEIF decoder failed
  * on some of these files with a seek error; macOS `sips` handled every one)
@@ -142,12 +149,11 @@ export const GALLERY_FILM: { src: string; type: string; poster: string } | null 
 export const SITE_SHOTS: { image: { path: string; alt: string; width: number; height: number }; room: string; productSlug?: string }[] = [
   {
     image: {
-      path: '/site-photos/karen-kitchen-cyprus-grey.webp',
-      alt: 'A kitchen counter in Cyprus Grey sintered stone, Karen, Nairobi',
+      path: '/site-photos/kitchen-charcoal-island.webp',
+      alt: 'A dark stone kitchen island with an integrated sink, against white cabinetry',
       width: 1600, height: 2133,
     },
     room: 'Kitchen',
-    productSlug: 'cyprus-light-grey',
   },
   {
     image: {
@@ -170,14 +176,6 @@ export const SITE_SHOTS: { image: { path: string; alt: string; width: number; he
     image: {
       path: '/site-photos/kitchen-fluted-island.webp',
       alt: 'A stone kitchen island with a fluted panel face, set in a wide open plan kitchen',
-      width: 1600, height: 2133,
-    },
-    room: 'Kitchen',
-  },
-  {
-    image: {
-      path: '/site-photos/kitchen-charcoal-island.webp',
-      alt: 'A dark stone kitchen island with an integrated sink, against white cabinetry',
       width: 1600, height: 2133,
     },
     room: 'Kitchen',
@@ -232,8 +230,17 @@ export const SITE_SHOTS: { image: { path: string; alt: string; width: number; he
   },
 ];
 
-/** Prefilled, so a buyer never has to explain what they are asking about. */
-export const whatsappLink = (context?: string) =>
+/**
+ * Prefilled, so a buyer never has to explain what they are asking about.
+ *
+ * `intent` is a full clause completing "Hi Beco Interiors, ...", not a bare
+ * topic: the caller states what they actually want ("I would like to book a
+ * showroom visit"), not just names a subject for a generic wrapper sentence
+ * to append ("ask about booking a showroom visit"), on direct request for
+ * the message to read as a real opening line rather than a template filled
+ * in around a keyword.
+ */
+export const whatsappLink = (intent?: string) =>
   `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
-    context ? `Hi Beco, I would like to ask about ${context}.` : 'Hi Beco, I would like to enquire.',
+    intent ? `Hi Beco Interiors, ${intent}.` : 'Hi Beco Interiors, I would like to enquire.',
   )}`;

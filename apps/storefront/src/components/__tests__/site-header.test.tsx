@@ -96,11 +96,21 @@ describe('SiteHeader, light chrome over the hero', () => {
   it('carries its own dark scrim rather than trusting the photo behind it', () => {
     // The hero's own gradient is tuned for the type block on the LEFT of
     // the photo, not the header, which spans the full width above it and
-    // can sit over a bright patch of whichever stone is currently showing.
+    // can sit over a bright patch of whichever range is currently showing.
     // Reported directly as nav text disappearing over a light stone.
+    //
+    // Per D92, the scrim moved off the header's own class list onto a
+    // separate, taller decorative layer so the darkening fades into the
+    // photograph rather than stopping dead at the header's own edge. The
+    // header itself now stays transparent; this checks the scrim layer
+    // exists and still carries real charcoal opacity, not the exact stops.
     mockPathname.mockReturnValue('/');
     const { container } = render(<SiteHeader />);
-    expect(container.querySelector('header')?.className).toContain('from-charcoal/75');
+    const header = container.querySelector('header');
+    expect(header?.className).toContain('bg-transparent');
+    const scrim = header?.querySelector('[aria-hidden]');
+    expect(scrim).not.toBeNull();
+    expect(scrim?.getAttribute('style')).toContain('rgba(16,24,32,');
   });
 
   it('reverts to the dark logo and nav once scrolled', () => {

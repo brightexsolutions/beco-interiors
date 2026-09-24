@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { EmptyState, Reveal, CutoutReveal, buttonClasses } from '@beco/ui';
-import { ProductGrid } from '@/components/product-grid';
+import { ProductGridPaginated } from '@/components/product-grid-paginated';
 import {
   getCategoryWithTree, getCategorySlugs, getProductsByCategory, getProductsInCategories,
   categoryIsIndexable, primaryImage, blurProps, type Category, type CatalogueProduct,
@@ -75,7 +75,7 @@ export default async function CategoryPage({ params }: Params) {
           would apply both twice. When nothing sits between them the two
           halves are plain stacked siblings and the page reads exactly as it
           did as one wrapper, per normal margin collapse. */}
-      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pt-16 sm:pt-20 lg:pt-24">
+      <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pt-16 sm:pt-20 lg:pt-24">
       <nav aria-label="Breadcrumb" className="mb-10">
         <ol className="flex flex-wrap items-center gap-2 font-ui text-sm text-neutral-500">
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
@@ -205,8 +205,12 @@ export default async function CategoryPage({ params }: Params) {
         />
       ) : null}
 
-      <div className="mx-auto max-w-[1380px] px-8 sm:px-10 lg:px-14 pb-16 sm:pb-20 lg:pb-24">
-      <div className="mt-16">
+      {/* --- Same neutral-50 surface as /shop's own catalogue grid, per the
+              site-wide note that every surface reading flat white left the
+              product cards nothing to sit on. --- */}
+      <section className="bg-neutral-50">
+      <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-16 pt-16 sm:pb-20 sm:pt-20 lg:pb-24 lg:pt-24">
+      <div>
         {products.length === 0 ? (
           <EmptyState
             title="This range is coming soon"
@@ -225,7 +229,7 @@ export default async function CategoryPage({ params }: Params) {
                 Everything in {category.name.toLowerCase()}
               </h2>
             ) : null}
-            <ProductGrid products={products} />
+            <ProductGridPaginated products={products} />
           </>
         )}
       </div>
@@ -279,6 +283,7 @@ export default async function CategoryPage({ params }: Params) {
         />
       ) : null}
       </div>
+      </section>
     </main>
   );
 }
@@ -320,7 +325,7 @@ function ChildRanges({
         Ranges in {parent.name.toLowerCase()}
       </h2>
 
-      <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
         {children.map((child, i) => {
           const cover = coverFor(child);
           return (

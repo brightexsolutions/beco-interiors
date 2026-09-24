@@ -52,7 +52,7 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
       className="beco-stage relative h-[200vh] lg:h-[240vh]"
     >
       <div className="sticky top-20 h-[calc(100dvh-5rem)] overflow-hidden bg-charcoal">
-        <div className="mx-auto flex h-full w-full max-w-[1380px] flex-col justify-center gap-6 px-8 sm:px-10 lg:px-14 py-8 lg:grid lg:grid-cols-[1.75fr_1fr] lg:items-center lg:gap-16 lg:py-0">
+        <div className="mx-auto flex h-full w-full max-w-[1380px] flex-col justify-center gap-6 px-8 sm:px-24 lg:px-40 py-8 lg:grid lg:grid-cols-[1.75fr_1fr] lg:items-center lg:gap-16 lg:py-0">
 
           {/* --- The parting frame. Grows to fill the leftover height on a
                   phone; a fixed tall panel on desktop. Nothing reflows either
@@ -107,8 +107,19 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
                   the room is behind it. Stacked, so neither shifts the layout
                   as it hands over. Compact on a phone: min height for the
                   short version, the lede and the secondary link only appear
-                  where there is room. --- */}
-          <div className="relative flex min-h-[12.5rem] shrink-0 items-center text-high-vis-white lg:min-h-[30rem] lg:shrink">
+                  where there is room.
+
+                  `min-h-[12.5rem]` alone was sized for THAT compact version,
+                  heading and the "scroll to open it" cue only. The lede
+                  paragraph and the secondary link both switch on at `sm`
+                  (640px) too, the same breakpoint, so between 640 and 1024px
+                  the fuller caption, absolutely positioned to fill this box,
+                  needed more height than the box was actually given and did
+                  not sit well within it, reported directly against a
+                  screenshot in that range. `sm:min-h-[19rem]` gives the
+                  fuller content room without touching the compact phone
+                  height below `sm` or the desktop height at `lg`. --- */}
+          <div className="relative flex min-h-[12.5rem] shrink-0 items-center text-high-vis-white sm:min-h-[19rem] lg:min-h-[30rem] lg:shrink">
 
             <div className="beco-stage-intro absolute inset-0 flex flex-col justify-center">
               <div className="flex items-center gap-4">

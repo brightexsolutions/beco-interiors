@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { PinnedHero, type HeroSlab } from '../pinned-hero';
+import { PinnedHero, type HeroRangeSlide } from '../pinned-hero';
 
 /**
  * jsdom has no `IntersectionObserver`, and the component's own effect
@@ -9,22 +9,21 @@ import { PinnedHero, type HeroSlab } from '../pinned-hero';
  * the scroll driven index change itself is exercised by hand on a real
  * device per D23, not by an automated test.
  */
-const slab = (over: Partial<HeroSlab> & Pick<HeroSlab, 'slug' | 'name'>): HeroSlab => ({
-  category: 'Sintered stone', src: '/img/a.webp', thumbSrc: '/img/a-slab.webp', alt: over.name,
-  width: 1600, height: 1200, ...over,
+const slide = (over: Partial<HeroRangeSlide> & Pick<HeroRangeSlide, 'slug' | 'title'>): HeroRangeSlide => ({
+  src: '/img/a.webp', alt: over.title, width: 1600, height: 1200,
+  body: 'A range Beco stocks.', href: `/shop/${over.slug}`, ...over,
 });
 
 describe('PinnedHero, the lede', () => {
-  it('shows the active slab’s own first sentence, not a generic one', () => {
+  it('shows the active slide’s own first sentence, not the whole body', () => {
     const { container } = render(
       <PinnedHero
-        thickness="12mm"
-        slabs={[
-          slab({
-            slug: 'amber-jade', name: 'Amber Jade',
-            blurb: 'Warm taupe and amber tones run in soft vertical layers. It is quarried in Italy.',
+        slides={[
+          slide({
+            slug: 'sintered-stone', title: 'Sintered stone',
+            body: 'Large format slabs for worktops and vanities. Available in 12mm and 15mm.',
           }),
-          slab({ slug: 'beverly-gold', name: 'Beverly Gold', blurb: 'A soft off white background.' }),
+          slide({ slug: 'lighting', title: 'Lighting', body: 'Decorative and architectural fittings.' }),
         ]}
       />,
     );
@@ -35,8 +34,8 @@ describe('PinnedHero, the lede', () => {
     const active = container.querySelector('p.absolute.inset-0[aria-hidden="false"]');
     // Trimmed to the first sentence only: copy is short, per the site's own
     // rule, and a hero lede is not where the full paragraph belongs.
-    expect(active?.textContent).toBe('Warm taupe and amber tones run in soft vertical layers.');
-    expect(active?.textContent).not.toContain('It is quarried in Italy');
+    expect(active?.textContent).toBe('Large format slabs for worktops and vanities.');
+    expect(active?.textContent).not.toContain('Available in 12mm and 15mm');
   });
 
   it('cuts a long sentence to a word boundary even when its first clause is too short to use', () => {
@@ -46,38 +45,23 @@ describe('PinnedHero, the lede', () => {
     // 122 character sentence under the headline.
     const { container } = render(
       <PinnedHero
-        thickness="12mm"
-        slabs={[
-          slab({
-            slug: 'delfone', name: 'Delfone',
-            blurb:
-              'Warm taupe, greige and amber tones run in soft vertical layers across the surface, '
-              + 'creating the calm, natural look of onyx.',
+        slides={[
+          slide({
+            slug: 'hardware', title: 'Hardware',
+            body:
+              'Handles, hinges and locks in finishes chosen to sit with the surfaces we supply, '
+              + 'stocked alongside the ranges they finish.',
           }),
         ]}
       />,
     );
-    // Single slab: the invisible sizer paragraph duplicates the real lede on
-    // purpose (see the fallback test below), so this scopes to the one
-    // visible crossfade layer rather than matching both.
+    // Single slide: the invisible sizer paragraph duplicates the real lede on
+    // purpose (see the render-every-lede test below), so this scopes to the
+    // one visible crossfade layer rather than matching both.
     const active = container.querySelector('p.absolute.inset-0[aria-hidden="false"]');
     expect(active?.textContent).toBeTruthy();
     expect(active!.textContent!.length).toBeLessThanOrEqual(72);
-    expect(active?.textContent).not.toContain('creating the calm, natural look of onyx');
-  });
-
-  it('falls back to the generic sentence for a slab with no description yet', () => {
-    render(
-      <PinnedHero
-        thickness="12mm"
-        slabs={[slab({ slug: 'cyprus-grey', name: 'Cyprus Grey', blurb: null })]}
-      />,
-    );
-    // getAllByText: with a single slab the fallback appears twice, once in
-    // the invisible sizer and once in the one real crossfade layer, both
-    // showing the same fallback text since there is nothing else to differ
-    // from.
-    expect(screen.getAllByText(/Large format slabs, here in the showroom today/).length).toBeGreaterThan(0);
+    expect(active?.textContent).not.toContain('stocked alongside the ranges they finish');
   });
 
   it('renders every lede in the document, so the crossfade has something to fade between', () => {
@@ -86,16 +70,15 @@ describe('PinnedHero, the lede', () => {
     // purpose, so a bare getByText fails on that one entirely honestly.
     const { container } = render(
       <PinnedHero
-        thickness="12mm"
-        slabs={[
-          slab({ slug: 'a', name: 'A', blurb: 'First stone sentence.' }),
-          slab({ slug: 'b', name: 'B', blurb: 'Second stone sentence.' }),
-          slab({ slug: 'c', name: 'C', blurb: 'Third stone sentence.' }),
+        slides={[
+          slide({ slug: 'a', title: 'A', body: 'First range sentence.' }),
+          slide({ slug: 'b', title: 'B', body: 'Second range sentence.' }),
+          slide({ slug: 'c', title: 'C', body: 'Third range sentence.' }),
         ]}
       />,
     );
     const layers = [...container.querySelectorAll('p.absolute.inset-0')].map((el) => el.textContent);
-    expect(layers).toEqual(['First stone sentence.', 'Second stone sentence.', 'Third stone sentence.']);
+    expect(layers).toEqual(['First range sentence.', 'Second range sentence.', 'Third range sentence.']);
   });
 
   it('keeps exactly one opacity value per lede layer, never two competing for it', () => {
@@ -105,10 +88,9 @@ describe('PinnedHero, the lede', () => {
     // crossfade technique, not a hypothetical one.
     const { container } = render(
       <PinnedHero
-        thickness="12mm"
-        slabs={[
-          slab({ slug: 'a', name: 'A', blurb: 'First stone sentence.' }),
-          slab({ slug: 'b', name: 'B', blurb: 'Second stone sentence.' }),
+        slides={[
+          slide({ slug: 'a', title: 'A', body: 'First range sentence.' }),
+          slide({ slug: 'b', title: 'B', body: 'Second range sentence.' }),
         ]}
       />,
     );
@@ -120,35 +102,34 @@ describe('PinnedHero, the lede', () => {
     expect(layers[1]).not.toHaveClass('opacity-100');
   });
 
-  it('never crashes on an empty slab list', () => {
-    const { container } = render(<PinnedHero thickness="12mm" slabs={[]} />);
+  it('never crashes on an empty slide list', () => {
+    const { container } = render(<PinnedHero slides={[]} />);
     expect(container).toBeInTheDocument();
   });
 });
 
 /**
- * Per D79: the desktop hero went back to a full bleed, crossfading
- * photograph, married with the rest of the current hero rather than a
- * plain revert. Same crossfade technique RotatingStatement and StoneSlider
- * already use, and the same bug class this file already guards the lede
- * against: opacity has to have exactly one source per photograph layer.
+ * Per D79 and D92: the desktop hero is a full bleed, crossfading photograph,
+ * now walking through every range rather than repeating stone. Same
+ * crossfade technique RotatingStatement and StoneSlider already use, and
+ * the same bug class this file already guards the lede against: opacity has
+ * to have exactly one source per photograph layer.
  */
 describe('PinnedHero, the full bleed photograph', () => {
   // The desktop crossfade wrapper is the FIRST .beco-ambient block in the
   // document: mobile's own single background photograph and every
-  // SlabCard's frame also carry the class, so this scopes to the one this
+  // RangeCard's frame also carry the class, so this scopes to the one this
   // describe block is actually about rather than matching all three.
   const desktopLayers = (container: HTMLElement) =>
     Array.from(container.querySelectorAll('.beco-ambient')[0]!.querySelectorAll('img'));
 
-  it('renders one photograph layer per slab, the first fully opaque', () => {
+  it('renders one photograph layer per slide, the first fully opaque', () => {
     const { container } = render(
       <PinnedHero
-        thickness="12mm"
-        slabs={[
-          slab({ slug: 'a', name: 'A', src: '/a.webp' }),
-          slab({ slug: 'b', name: 'B', src: '/b.webp' }),
-          slab({ slug: 'c', name: 'C', src: '/c.webp' }),
+        slides={[
+          slide({ slug: 'a', title: 'A', src: '/a.webp' }),
+          slide({ slug: 'b', title: 'B', src: '/b.webp' }),
+          slide({ slug: 'c', title: 'C', src: '/c.webp' }),
         ]}
       />,
     );
@@ -162,10 +143,7 @@ describe('PinnedHero, the full bleed photograph', () => {
 
   it('never renders two opacity values on the same photograph layer', () => {
     const { container } = render(
-      <PinnedHero
-        thickness="12mm"
-        slabs={[slab({ slug: 'a', name: 'A' }), slab({ slug: 'b', name: 'B' })]}
-      />,
+      <PinnedHero slides={[slide({ slug: 'a', title: 'A' }), slide({ slug: 'b', title: 'B' })]} />,
     );
     for (const layer of desktopLayers(container)) {
       const opacityClasses = layer.className.split(' ').filter((c) => /^opacity-\d+$/.test(c));
@@ -175,7 +153,7 @@ describe('PinnedHero, the full bleed photograph', () => {
 
   it('the first photograph is never marked lazy, since it is the LCP element', () => {
     const { container } = render(
-      <PinnedHero thickness="12mm" slabs={[slab({ slug: 'a', name: 'A' })]} />,
+      <PinnedHero slides={[slide({ slug: 'a', title: 'A' })]} />,
     );
     // next/image drops the loading attribute entirely for a priority image
     // rather than setting it to "eager", so its absence IS the assertion.
@@ -183,55 +161,68 @@ describe('PinnedHero, the full bleed photograph', () => {
   });
 });
 
-describe('PinnedHero, the right side stone chips', () => {
-  const SLABS = [
-    slab({ slug: 'amber-jade', name: 'Amber Jade' }),
-    slab({ slug: 'beverly-gold', name: 'Beverly Gold' }),
-    slab({ slug: 'bianco-fendi', name: 'Bianco Fendi' }),
+describe('PinnedHero, the right side range chips', () => {
+  const SLIDES = [
+    slide({ slug: 'sintered-stone', title: 'Sintered stone' }),
+    slide({ slug: 'lighting', title: 'Lighting' }),
+    slide({ slug: 'wall-panels', title: 'Wall panels' }),
   ];
 
-  // The mobile swipeable row renders a SlabCard for every stone too, a
-  // real link to the same href with a longer accessible name built from
-  // its own image alt and visible plate text. Exact string matches, not
-  // regex, is what tells the chip's own short sr-only name apart from it:
-  // jsdom renders both trees regardless of the lg: classes hiding one.
+  // The mobile swipeable row renders a RangeCard for every range too, a
+  // real link to the same href with a longer accessible name built from its
+  // own visible plate text. Exact string matches, not regex, is what tells
+  // the chip's own short sr-only name apart from it: jsdom renders both
+  // trees regardless of the lg: classes hiding one.
   const chip = (name: string) => screen.getByRole('link', { name });
 
-  it('is a real link to each product, not a decorative control', () => {
-    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
-    expect(chip('Amber Jade, showing now')).toHaveAttribute('href', '/product/amber-jade');
-    expect(chip('Beverly Gold')).toHaveAttribute('href', '/product/beverly-gold');
-    expect(chip('Bianco Fendi')).toHaveAttribute('href', '/product/bianco-fendi');
+  it('is a real link to each range, not a decorative control', () => {
+    render(<PinnedHero slides={SLIDES} />);
+    expect(chip('Sintered stone, showing now')).toHaveAttribute('href', '/shop/sintered-stone');
+    expect(chip('Lighting')).toHaveAttribute('href', '/shop/lighting');
+    expect(chip('Wall panels')).toHaveAttribute('href', '/shop/wall-panels');
   });
 
-  it('names which stone is showing now for assistive technology, without misusing aria-current', () => {
-    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
+  it('renders a range with no stock as a plain span, never a link to a dead shop page', () => {
+    render(
+      <PinnedHero
+        slides={[
+          slide({ slug: 'sintered-stone', title: 'Sintered stone' }),
+          slide({ slug: 'accessories', title: 'Accessories', href: null }),
+        ]}
+      />,
+    );
+    expect(screen.queryByRole('link', { name: 'Accessories' })).toBeNull();
+    expect(screen.getByText('Accessories', { selector: '.sr-only' })).toBeInTheDocument();
+  });
+
+  it('names which range is showing now for assistive technology, without misusing aria-current', () => {
+    render(<PinnedHero slides={SLIDES} />);
     // Active stays at index 0 in jsdom, per this file's own top note: there
     // is no IntersectionObserver here to move it.
-    expect(chip('Amber Jade, showing now')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Beverly Gold, showing now' })).toBeNull();
+    expect(chip('Sintered stone, showing now')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Lighting, showing now' })).toBeNull();
   });
 
   it('rings only the active chip, on its own overlay rather than the link', () => {
     // A separate span, not a class on the link itself, so the ring can
     // pulse on its own opacity without fighting the link's own scale
     // transition on the same element.
-    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
-    expect(chip('Amber Jade, showing now').querySelector('.ring-high-vis-white')).not.toBeNull();
-    expect(chip('Beverly Gold').querySelector('.ring-high-vis-white')).toBeNull();
+    render(<PinnedHero slides={SLIDES} />);
+    expect(chip('Sintered stone, showing now').querySelector('.ring-high-vis-white')).not.toBeNull();
+    expect(chip('Lighting').querySelector('.ring-high-vis-white')).toBeNull();
   });
 
   it('scales up only the active chip, via transform rather than a width change', () => {
     // A width change would reflow its neighbours in the column; scale
     // does not, per the site's own transform-and-opacity-only motion rule.
-    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
-    expect(chip('Amber Jade, showing now').className.split(' ')).toContain('scale-110');
-    expect(chip('Beverly Gold').className.split(' ')).not.toContain('scale-110');
+    render(<PinnedHero slides={SLIDES} />);
+    expect(chip('Sintered stone, showing now').className.split(' ')).toContain('scale-110');
+    expect(chip('Lighting').className.split(' ')).not.toContain('scale-110');
   });
 
   it('labels the active chip with a floating name, replayed on change', () => {
-    render(<PinnedHero thickness="12mm" slabs={SLABS} />);
-    expect(screen.getByText('Amber Jade', { selector: '.beco-chip-label' })).toBeInTheDocument();
-    expect(screen.queryByText('Beverly Gold', { selector: '.beco-chip-label' })).toBeNull();
+    render(<PinnedHero slides={SLIDES} />);
+    expect(screen.getByText('Sintered stone', { selector: '.beco-chip-label' })).toBeInTheDocument();
+    expect(screen.queryByText('Lighting', { selector: '.beco-chip-label' })).toBeNull();
   });
 });

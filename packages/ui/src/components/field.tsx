@@ -99,16 +99,27 @@ export type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement>;
  *
  * The chevron is `pointer-events-none`, or it swallows the click that is
  * supposed to open the menu.
+ *
+ * `className` lands on the WRAPPING span, not the `<select>` itself. The span
+ * is the element that actually sits in a caller's flex row, so a caller
+ * sizing this control with `sm:flex-1 lg:w-auto` needs that class on the
+ * element flex layout sees. Putting it on the `<select>` instead left every
+ * one of those classes inert: the `<select>` was already `w-full` of its own
+ * span regardless, and the span itself, hardcoded `w-full` with no basis
+ * override, claimed the whole row at every breakpoint and forced each
+ * control onto its own line. That was the shop filter bar's real bug, not a
+ * styling gap: `apps/storefront/src/components/shop-controls.tsx` passed
+ * exactly the right classes and none of them were reaching anything.
  */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   { className, children, ...props },
   ref,
 ) {
   return (
-    <span className="relative block w-full min-w-0">
+    <span className={cn('relative block w-full min-w-0', className)}>
       <select
         ref={ref}
-        className={cn(CONTROL, 'h-11 cursor-pointer appearance-none pl-3 pr-9', className)}
+        className={cn(CONTROL, 'h-11 w-full cursor-pointer appearance-none pl-3 pr-9')}
         {...props}
       >
         {children}
