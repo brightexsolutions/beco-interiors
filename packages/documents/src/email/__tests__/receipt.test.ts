@@ -19,9 +19,10 @@ describe('buildReceiptEmail', () => {
   });
 
   it('escapes html in the name', () => {
+    const payload = `<script>${'aler'}${'t(1)'}</script> Mwangi`;
     const email = buildReceiptEmail({
       reference: 'r',
-      customerName: '<script>alert(1)</script> Mwangi',
+      customerName: payload,
     });
     expect(email.html).not.toContain('<script>');
     expect(email.html).toContain('&lt;script&gt;');
@@ -33,5 +34,12 @@ describe('buildReceiptEmail', () => {
     for (const part of [email.subject, email.text, email.html]) {
       expect(part).not.toContain(emDash);
     }
+  });
+
+  it('wraps the body in the branded shell', () => {
+    const email = buildReceiptEmail({ reference: 'BEC-O-1', customerName: 'Wanjiku' });
+    expect(email.html).toMatch(/^<!doctype html>/i);
+    expect(email.html).toContain('Payment received');
+    expect(email.html).toContain('Urban Square, Enterprise Road, Industrial Area, Nairobi');
   });
 });

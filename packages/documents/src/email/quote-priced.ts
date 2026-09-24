@@ -1,3 +1,5 @@
+import { escapeHtml, eyebrow, heading, paragraph, referenceBox, renderEmailShell } from './shell';
+
 /**
  * The email a customer gets once a salesperson has priced the quote and
  * chosen to send it. The PDF is attached by the sender, not inlined here.
@@ -20,13 +22,6 @@ export interface PricedQuoteEmail {
 
 const PHONE = '+254 722 333 730';
 
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-
 export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuoteEmail {
   const firstName = input.customerName.trim().split(/\s+/)[0] || 'there';
   const validity = input.validUntil ? ` It is valid until ${input.validUntil}.` : '';
@@ -47,15 +42,17 @@ export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuote
     'Urban Square, Enterprise Road, Industrial Area, Nairobi',
   ].join('\n');
 
-  const html = [
-    '<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:16px;line-height:1.6;color:#101820">',
-    `<p>Hi ${escapeHtml(firstName)},</p>`,
-    `<p>${escapeHtml(pricedLine)}</p>`,
-    `<p>Your reference is <strong>${escapeHtml(input.reference)}</strong>. If anything looks off, reply to this email or call us on ` +
-      `<a href="tel:+254722333730" style="color:#c8102e">${PHONE}</a>.</p>`,
-    '<p style="color:#5b6670;font-size:14px">Beco Interiors<br>Urban Square, Enterprise Road, Industrial Area, Nairobi</p>',
-    '</div>',
-  ].join('');
+  const bodyHtml =
+    eyebrow('Your quote') +
+    heading(`Hi ${escapeHtml(firstName)},`) +
+    paragraph(escapeHtml(pricedLine)) +
+    referenceBox('Your reference', input.reference) +
+    paragraph(
+      `If anything looks off, reply to this email or call us on ` +
+        `<a href="tel:+254722333730" style="color:#c81419;text-decoration:none">${escapeHtml(PHONE)}</a>.`,
+    );
+
+  const html = renderEmailShell({ preview: pricedLine, bodyHtml });
 
   return { subject, text, html };
 }

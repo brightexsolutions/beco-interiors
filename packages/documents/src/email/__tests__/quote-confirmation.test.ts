@@ -41,4 +41,13 @@ describe('buildQuoteConfirmationEmail', () => {
       expect(part).not.toContain(emDash);
     }
   });
+
+  it('wraps the body in the branded shell, a full document with the wordmark and footer', () => {
+    const email = buildQuoteConfirmationEmail({ reference: 'BEC-Q-1', customerName: 'Wanjiku' });
+    expect(email.html).toMatch(/^<!doctype html>/i);
+    expect(email.html).toContain('BECO');
+    expect(email.html).toContain('INTERIORS');
+    expect(email.html).toContain('Urban Square, Enterprise Road, Industrial Area, Nairobi');
+    expect(email.html).toContain('Request received');
+  });
 });

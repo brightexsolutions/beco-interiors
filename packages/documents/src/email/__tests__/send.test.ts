@@ -120,3 +120,47 @@ describe('sendPricedQuote', () => {
     expect(payload.subject).toContain('BEC-Q-00042');
   });
 });
+
+const { sendReceipt } = await import('../send');
+
+describe('sendReceipt', () => {
+  const OLD_ENV = process.env;
+
+  beforeEach(() => {
+    process.env = { ...OLD_ENV };
+    sendMock.mockReset();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    process.env = OLD_ENV;
+    vi.restoreAllMocks();
+  });
+
+  const receipt = {
+    to: 'buyer@example.com',
+    reference: 'BEC-O-00042',
+    customerName: 'Achieng',
+    pdf: Buffer.from('%PDF'),
+    filename: 'BEC-O-00042.pdf',
+  };
+
+  it('is a no-op without an API key, and does not throw', async () => {
+    delete process.env.RESEND_API_KEY;
+    const result = await sendReceipt(receipt);
+    expect(result).toEqual({ sent: false, reason: 'no-api-key' });
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it('attaches the receipt PDF under the order reference', async () => {
+    process.env.RESEND_API_KEY = 'test-key';
+    sendMock.mockResolvedValue({ data: { id: 'email_receipt' }, error: null });
+    const result = await sendReceipt(receipt);
+    expect(result).toEqual({ sent: true, id: 'email_receipt' });
+    const payload = sendMock.mock.calls[0]![0];
+    expect(payload.to).toBe('buyer@example.com');
+    expect(payload.attachments[0].filename).toBe('BEC-O-00042.pdf');
+    expect(payload.subject).toContain('BEC-O-00042');
+  });
+});

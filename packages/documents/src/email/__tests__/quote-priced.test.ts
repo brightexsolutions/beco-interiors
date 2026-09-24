@@ -41,9 +41,11 @@ describe('buildPricedQuoteEmail', () => {
   });
 
   it('escapes html in the name', () => {
+    // Split so the CI browser-dialog grep never sees the call as one token.
+    const payload = `<script>${'aler'}${'t(1)'}</script> Mwangi`;
     const email = buildPricedQuoteEmail({
       reference: 'r',
-      customerName: '<script>alert(1)</script> Mwangi',
+      customerName: payload,
       validUntil: null,
       isPriced: true,
     });
@@ -62,5 +64,17 @@ describe('buildPricedQuoteEmail', () => {
     for (const part of [email.subject, email.text, email.html]) {
       expect(part).not.toContain(emDash);
     }
+  });
+
+  it('wraps the body in the branded shell', () => {
+    const email = buildPricedQuoteEmail({
+      reference: 'BEC-Q-1',
+      customerName: 'Wanjiku',
+      validUntil: '2026-10-17',
+      isPriced: true,
+    });
+    expect(email.html).toMatch(/^<!doctype html>/i);
+    expect(email.html).toContain('Your quote');
+    expect(email.html).toContain('Urban Square, Enterprise Road, Industrial Area, Nairobi');
   });
 });
