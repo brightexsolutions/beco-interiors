@@ -4,8 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import {
-  Button, ConfirmDialog, EmptyState, Input, Notice, QuantityStepper, Textarea,
-  buttonClasses, Field as UiField,
+  Button, ConfirmDialog, EmptyState, FormSection, Input, Notice, QuantityStepper, Textarea,
+  buttonClasses, cn, Field as UiField,
 } from '@beco/ui';
 import {
   clearList, lineCount, readList, removeLine, setQuantity, subscribe,
@@ -28,6 +28,11 @@ export function QuoteBuilder() {
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [fulfilment, setFulfilment] = useState<'pickup' | 'delivery' | ''>('');
+  // Controlled, like fulfilment above, so the card each sits in can carry a
+  // selected state (border, fill) without reaching for a CSS-only :has()
+  // trick for something this important to get right.
+  const [wantsInstallation, setWantsInstallation] = useState(false);
+  const [wantsSamples, setWantsSamples] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const doneRef = useRef<HTMLDivElement>(null);
@@ -89,7 +94,7 @@ export function QuoteBuilder() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href={whatsappLink(`my quote ${result.reference}`)}
+              href={whatsappLink(`here is my quote reference, ${result.reference}`)}
               data-analytics="whatsapp_click"
               className={buttonClasses({ variant: 'primary' })}
             >
@@ -193,7 +198,18 @@ export function QuoteBuilder() {
           not a marketing section arriving on scroll, and a fade stepped
           across every row is the generic stagger every list like this
           reaches for. */}
-      <section aria-labelledby="list-heading" className="bg-charcoal p-8 text-high-vis-white lg:p-10">
+      <section
+        aria-labelledby="list-heading"
+        // Sticky from lg up, where the two columns actually sit side by
+        // side: the form below is nine fields long and this panel is often
+        // three, so without this the reader scrolls the list out of view
+        // long before "Send my request" and cannot check what they are
+        // actually asking for. top-24 clears the site header (80px plus its
+        // hairline) with room to breathe. Unset below lg, where the columns
+        // stack and "sticky" would just pin the list over the top of the
+        // form as the reader scrolls past it.
+        className="bg-charcoal p-8 text-high-vis-white lg:sticky lg:top-24 lg:p-10"
+      >
         {/* No "Your list" eyebrow here: the page's own PageHeader already
             claims that exact phrase above the title. A second eyebrow one
             beat later was the page repeating itself, so the count carries
@@ -217,7 +233,12 @@ export function QuoteBuilder() {
           </button>
         </div>
 
-        <ul className="mt-8 border-t border-white/15">
+        {/* Capped and internally scrollable from lg up only: a sticky panel
+            with an uncapped list can grow taller than the viewport itself,
+            which pins it in place while leaving its own bottom rows
+            unreachable. A list this size, 60 lines at the schema's own
+            ceiling, is the case this guards, not the ordinary one. */}
+        <ul className="mt-8 border-t border-white/15 lg:max-h-[46vh] lg:overflow-y-auto">
           {lines.map((line) => (
             <li key={line.slug} className="flex gap-6 border-b border-white/15 py-8">
               <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-neutral-100 sm:h-32 sm:w-28 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
@@ -284,7 +305,23 @@ export function QuoteBuilder() {
           ))}
         </ul>
 
-        <Notice className="mt-8 max-w-[52ch] text-neutral-300">
+        {/* Forgetting something is the ordinary case, not the edge case, and
+            until now the only way back to the shop was the header nav,
+            which this panel sits well below by the time the list has any
+            length. A real link, not a button with no destination: it must
+            navigate, per rule 3, which is why it is an <a> via next/link
+            rather than an onClick. */}
+        <Link
+          href="/shop"
+          className="mt-6 flex min-h-11 items-center justify-center gap-2 border border-white/25 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white transition-colors duration-200 ease-brand hover:border-white/50 hover:bg-white/5"
+        >
+          <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 stroke-current" fill="none" strokeWidth="1.8">
+            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+          </svg>
+          Add more materials
+        </Link>
+
+        <Notice className="mt-6 max-w-[52ch] text-neutral-300">
           Everything here is priced on request, so there is no total to show yet. We will send an
           itemised quote with delivery or collection set out.
         </Notice>
@@ -300,36 +337,71 @@ export function QuoteBuilder() {
           price it faster.
         </p>
 
-        <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5">
-          <Field label="Your name" name="customerName" required error={fieldError('customerName')} />
-          <Field
-            label="Phone number" name="customerPhone" type="tel" required
-            autoComplete="tel" placeholder="0722 000 000" error={fieldError('customerPhone')}
-          />
-          <Field
-            label="Email" name="customerEmail" type="email" autoComplete="email"
-            error={fieldError('customerEmail')} hint="Optional"
-          />
-          <Field label="Company" name="company" hint="Optional" error={fieldError('company')} />
-          <Field
-            label="What is the project?" name="projectType" hint="Optional, for example a kitchen refit"
-            error={fieldError('projectType')}
-          />
+        <form onSubmit={onSubmit} noValidate className="mt-8 space-y-10">
+          <FormSection title="Your details" columns={2}>
+            <Field
+              label="Your name" name="customerName" required
+              placeholder="Jane Wanjiru" error={fieldError('customerName')}
+            />
+            <Field
+              label="Phone number" name="customerPhone" type="tel" required
+              autoComplete="tel" placeholder="0722 000 000" error={fieldError('customerPhone')}
+            />
+            <Field
+              label="Email" name="customerEmail" type="email" autoComplete="email"
+              placeholder="jane@email.com" error={fieldError('customerEmail')} hint="Optional"
+            />
+            <Field
+              label="Company" name="company" placeholder="Company name"
+              hint="Optional" error={fieldError('company')}
+            />
+          </FormSection>
+
+          <FormSection title="The project">
+            <Field
+              label="What is the project?" name="projectType"
+              placeholder="Kitchen refit, new build, office fit-out"
+              hint="Optional" error={fieldError('projectType')}
+            />
+            <UiField
+              label="Anything else we should know?"
+              htmlFor="projectDetails"
+              hint="Optional"
+            >
+              <Textarea
+                id="projectDetails"
+                name="projectDetails"
+                placeholder="Room dimensions, finish preferences, timeline, anything else that helps us price it"
+              />
+            </UiField>
+          </FormSection>
 
           <fieldset>
-            <legend className="font-ui text-sm font-semibold text-charcoal">
+            <legend className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Collection or delivery?
             </legend>
-            <div className="mt-2 flex gap-6">
+            {/* A bordered, selectable card each, not a bare radio dot and a
+                label: the dot alone is a small, easy to miss target next to
+                a form full of bordered inputs, and the selected state was
+                otherwise carried by nothing but the dot's own fill. */}
+            <div className="mt-3 grid grid-cols-2 gap-3">
               {[['pickup', 'I will collect'], ['delivery', 'Please deliver']].map(([value, label]) => (
-                <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 font-ui text-base">
+                <label
+                  key={value}
+                  className={cn(
+                    'flex min-h-11 cursor-pointer items-center justify-center gap-2 border px-4 py-3 text-center font-ui text-base transition-colors duration-200 ease-brand',
+                    fulfilment === value
+                      ? 'border-charcoal bg-neutral-50'
+                      : 'border-neutral-300 hover:border-charcoal',
+                  )}
+                >
                   <input
                     type="radio"
                     name="fulfilment"
                     value={value}
                     checked={fulfilment === value}
                     onChange={() => setFulfilment(value as 'pickup' | 'delivery')}
-                    className="h-4 w-4 accent-[var(--color-warm-red-deep)]"
+                    className="h-4 w-4 shrink-0 accent-[var(--color-warm-red-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
                   />
                   {label}
                 </label>
@@ -340,31 +412,39 @@ export function QuoteBuilder() {
                 is 65,000 and a customer who reads that as the delivered price
                 is a customer surprised by the invoice. */}
             {fulfilment === 'delivery' ? (
-              <Notice className="mt-3">
+              <Notice className="mt-4">
                 Delivery is charged separately and depends on where the site is. We will put it
                 on the quote as its own line so you can see it.
               </Notice>
             ) : null}
-          </fieldset>
 
-          {fulfilment === 'delivery' ? (
-            <Field
-              label="Delivery address" name="deliveryAddress" hint="Where is the site?"
-              error={fieldError('deliveryAddress')}
-            />
-          ) : null}
+            {fulfilment === 'delivery' ? (
+              <Field
+                label="Delivery address" name="deliveryAddress" hint="Where is the site?"
+                placeholder="Street, area, estate" error={fieldError('deliveryAddress')}
+                className="mt-4"
+              />
+            ) : null}
+          </fieldset>
 
           {/* Two things people ring up to ask, asked here instead. */}
           <fieldset>
-            <legend className="font-ui text-sm font-semibold text-charcoal">
+            <legend className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Anything else you need?
             </legend>
             <div className="mt-3 space-y-3">
-              <label className="flex cursor-pointer gap-3 font-ui text-base">
+              <label
+                className={cn(
+                  'flex cursor-pointer gap-3 border px-4 py-3.5 font-ui text-base transition-colors duration-200 ease-brand',
+                  wantsInstallation ? 'border-charcoal bg-neutral-50' : 'border-neutral-300 hover:border-charcoal',
+                )}
+              >
                 <input
                   type="checkbox"
                   name="wantsInstallation"
-                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-warm-red-deep)]"
+                  checked={wantsInstallation}
+                  onChange={(event) => setWantsInstallation(event.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-warm-red-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
                 />
                 <span>
                   Installation
@@ -374,11 +454,18 @@ export function QuoteBuilder() {
                   </span>
                 </span>
               </label>
-              <label className="flex cursor-pointer gap-3 font-ui text-base">
+              <label
+                className={cn(
+                  'flex cursor-pointer gap-3 border px-4 py-3.5 font-ui text-base transition-colors duration-200 ease-brand',
+                  wantsSamples ? 'border-charcoal bg-neutral-50' : 'border-neutral-300 hover:border-charcoal',
+                )}
+              >
                 <input
                   type="checkbox"
                   name="wantsSamples"
-                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-warm-red-deep)]"
+                  checked={wantsSamples}
+                  onChange={(event) => setWantsSamples(event.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-warm-red-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
                 />
                 <span>
                   Samples first
@@ -390,14 +477,6 @@ export function QuoteBuilder() {
               </label>
             </div>
           </fieldset>
-
-          <UiField
-            label="Anything else we should know?"
-            htmlFor="projectDetails"
-            hint="Optional"
-          >
-            <Textarea id="projectDetails" name="projectDetails" />
-          </UiField>
 
           {result && !result.ok ? (
             <p role="alert" className="rounded-[2px] border border-error px-4 py-3 font-ui text-base text-error">
@@ -443,13 +522,14 @@ export function QuoteBuilder() {
  * now live in @beco/ui, per rule 5, rather than being written out again here.
  */
 function Field({
-  label, name, type = 'text', required, hint, error, placeholder, autoComplete,
+  label, name, type = 'text', required, hint, error, placeholder, autoComplete, className,
 }: {
   label: string; name: string; type?: string; required?: boolean;
   hint?: string; error?: string | undefined; placeholder?: string; autoComplete?: string;
+  className?: string;
 }) {
   return (
-    <UiField label={label} htmlFor={name} hint={hint} error={error}>
+    <UiField label={label} htmlFor={name} hint={hint} error={error} className={className}>
       <Input
         id={name}
         name={name}

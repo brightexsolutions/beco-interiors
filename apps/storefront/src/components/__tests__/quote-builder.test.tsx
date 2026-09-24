@@ -172,3 +172,35 @@ describe('QuoteBuilder, the per-line quantity stepper', () => {
     expect(readList()[0]?.quantity).toBe(3);
   });
 });
+
+describe('QuoteBuilder, collection or delivery', () => {
+  // Closes the QA checklist's own "NOT CONFIRMED by test" gap on this control.
+  it('reveals the delivery charge notice and the address field only once delivery is chosen', async () => {
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+
+    expect(screen.queryByText(/Delivery is charged separately/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Delivery address/)).not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole('radio', { name: 'Please deliver' }));
+
+    expect(screen.getByText(/Delivery is charged separately/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Delivery address/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'I will collect' }));
+
+    expect(screen.queryByText(/Delivery is charged separately/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Delivery address/)).not.toBeInTheDocument();
+  });
+});
+
+describe('QuoteBuilder, adding more materials', () => {
+  it('links back to the shop rather than leaving the list a dead end', async () => {
+    render(<QuoteBuilder />);
+
+    expect(await screen.findByRole('link', { name: /Add more materials/ })).toHaveAttribute(
+      'href',
+      '/shop',
+    );
+  });
+});
