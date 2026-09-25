@@ -1,0 +1,40 @@
+#!/bin/sh
+# Beco platform commit message rules. See .claude/skills/git-commit.
+# Committed to the repo and activated with:
+#   git config core.hooksPath .githooks
+
+msg_file="$1"
+fail=0
+
+# 1. No agent attribution trailers. Commits are authored by the person
+#    who ran the work, not by the tool that typed it.
+if grep -qiE '^(Co-Authored-By|Co-authored-by).*(Claude|Codex|Copilot|GPT|Anthropic|OpenAI)' "$msg_file"; then
+  echo "commit-msg: agent attribution trailer found. Remove it." >&2
+  grep -inE '^(Co-Authored-By|Co-authored-by).*(Claude|Codex|Copilot|GPT|Anthropic|OpenAI)' "$msg_file" >&2
+  fail=1
+fi
+
+if grep -qiE '(Generated with|Created with).*(Claude|Codex|Copilot)' "$msg_file"; then
+  echo "commit-msg: agent generation notice found. Remove it." >&2
+  fail=1
+fi
+
+# 2. No em dashes, anywhere on this project. Commit messages included.
+if grep -q '—' "$msg_file"; then
+  echo "commit-msg: em dash found. Use a comma, a period, or a colon." >&2
+  grep -n '—' "$msg_file" >&2
+  fail=1
+fi
+
+# 3. Subject line hygiene.
+subject=$(sed -n '1p' "$msg_file")
+if [ ${#subject} -gt 72 ]; then
+  echo "commit-msg: subject is ${#subject} characters, keep it under 72." >&2
+  fail=1
+fi
+case "$subject" in
+  *.) echo "commit-msg: subject should not end with a period." >&2; fail=1 ;;
+esac
+
+[ "$fail" -eq 1 ] && { echo "" >&2; echo "See .claude/skills/git-commit/SKILL.md" >&2; exit 1; }
+exit 0

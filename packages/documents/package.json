@@ -1,0 +1,18 @@
+{
+  "name": "@beco/documents",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
+    "react": "^19.2.8",
+    "resend": "^6.25.0",
+    "@beco/types": "workspace:*",
+    "@beco/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18"
+  }
+}

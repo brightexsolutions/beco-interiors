@@ -1,0 +1,41 @@
+name: Deploy preview
+
+# Vercel's Git integration is deliberately NOT used. Nothing deploys unless
+# CI passed first. See docs/DEPLOYMENT.md section 11.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+jobs:
+  preview:
+    # Only deploy a preview if CI actually passed.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    environment: preview
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+    strategy:
+      matrix:
+        include:
+          - app: storefront
+            project_id_secret: VERCEL_PROJECT_ID_STOREFRONT
+          - app: dashboard
+            project_id_secret: VERCEL_PROJECT_ID_DASHBOARD
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: ${{ github.event.workflow_run.head_sha }} }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+
+      - name: Deploy ${{ matrix.app }} to preview
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets[matrix.project_id_secret] }}
+        run: |
+          npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          npx vercel build --token="$VERCEL_TOKEN"
+          npx vercel deploy --prebuilt --token="$VERCEL_TOKEN"
+        # Preview points at beco-staging, NEVER at production. The Supabase
+        # URL and anon key come from the Vercel preview environment.

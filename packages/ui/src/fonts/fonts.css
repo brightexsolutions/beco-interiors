@@ -1,0 +1,66 @@
+/* ============================================================
+   FONTS, SELF HOSTED
+
+   Titillium Web is the brand's own UI face, named in the April 2025
+   guideline. Cormorant Garamond carries display, from the approved
+   prototype. See D3.
+
+   F1 DISPLAY IS NEVER DEPLOYED. The supplied pack contains only
+   Formula1 Display, downloaded from blogfonts.com, which is not a
+   licensed distribution of Formula One's proprietary corporate
+   typeface. Serving it from a commercial client site is a real
+   trademark exposure, and Brightex would be the party serving it.
+   Both faces below are SIL Open Font License.
+
+   Self hosted, not from Google Fonts, for three reasons: it removes a
+   render blocking third party request, it keeps `font-src 'self'` in
+   the CSP, and it means no visitor is announced to a third party
+   simply for loading a page. The prototype loads three families from
+   Google; that is exactly what this replaces.
+
+   Latin subset only. 69KB for the whole type system.
+   ============================================================ */
+
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./titillium-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193,
+                 U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./titillium-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193,
+                 U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./cormorant-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193,
+                 U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./cormorant-500.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193,
+                 U+2212, U+2215, U+FEFF, U+FFFD;
+}

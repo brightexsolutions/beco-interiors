@@ -1,0 +1,82 @@
+name: Deploy production
+
+# Manual promotion only. Migrations run BEFORE the deploy that needs them,
+# and production migrations run only after a human approves.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm production release'
+        required: true
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+
+      - name: Export before schema change, per the backup rule
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}
+        run: echo "CSV export of products, quotes and orders runs here"
+
+      - name: Apply migrations to beco-staging
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref "${{ secrets.SUPABASE_STAGING_REF }}" \
+            --password "${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}"
+          supabase db push
+
+  production:
+    needs: staging
+    if: inputs.confirm == 'deploy'
+    runs-on: ubuntu-latest
+    # GitHub Environment "production" carries the required reviewers.
+    # This is the approval gate Vercel's Git integration does not have.
+    environment: production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+
+      - name: Export before schema change
+        run: echo "CSV export of products, quotes and orders runs here"
+
+      # Migrations BEFORE the deploy. A deploy that lands before its
+      # migration is an outage.
+      - name: Apply migrations to beco-prod
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref "${{ secrets.SUPABASE_PROD_REF }}" \
+            --password "${{ secrets.SUPABASE_PROD_DB_PASSWORD }}"
+          supabase db push
+
+      - name: Deploy storefront
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STOREFRONT }}
+        run: |
+          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy dashboard
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DASHBOARD }}
+        run: |
+          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"

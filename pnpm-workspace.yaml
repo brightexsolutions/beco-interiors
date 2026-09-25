@@ -1,0 +1,26 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "tools/*"
+
+# pnpm 10+ blocks postinstall scripts by default, which is a good default:
+# a postinstall is arbitrary code execution at install time.
+#
+# These are approved DELIBERATELY, one at a time, not blanket allowed:
+#   esbuild             links its platform binary, used by vitest
+#   @tailwindcss/oxide  Tailwind 4's native engine
+#   sharp               libvips bindings, the image pipeline depends on it
+#
+# Declared here rather than approved interactively, so CI behaves exactly
+# like a laptop and a new clone needs no manual step.
+#
+# `onlyBuiltDependencies` (a plain list) does NOT gate this in pnpm 11: the
+# CLI's own ignored-builds check reads `allowBuilds`, a map to true/false,
+# per package. A stale `onlyBuiltDependencies` list here looked declared but
+# was never actually read, so a fresh checkout (a new worktree, CI, a
+# platform build) hit the interactive-approval prompt and hard failed with
+# no TTY to answer it. Found deploying to Vercel.
+allowBuilds:
+  esbuild: true
+  "@tailwindcss/oxide": true
+  sharp: true

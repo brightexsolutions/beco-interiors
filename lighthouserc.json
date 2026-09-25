@@ -1,0 +1,35 @@
+{
+  "$comment": [
+    "Lighthouse CI, per CLAUDE.md's performance budgets. Runs in .github/workflows/ci.yml",
+    "against a production build of the storefront with a real catalogue seeded but NO images:",
+    "the import does not run in CI. So CLS and total-blocking-time, which the motion and the",
+    "bundle drive regardless of images, are hard errors here. LCP and total byte weight, which",
+    "the hero photograph dominates in production, are warnings in CI and get their real",
+    "enforcement on a preview deploy that has images. See docs/milestones/M4-TODO.md."
+  ],
+  "ci": {
+    "collect": {
+      "startServerCommand": "pnpm --filter @beco/storefront start",
+      "startServerReadyPattern": "Ready in",
+      "startServerReadyTimeout": 60000,
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/shop",
+        "http://localhost:3000/product/amber-jade"
+      ],
+      "numberOfRuns": 3
+    },
+    "assert": {
+      "assertions": {
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
+        "total-blocking-time": ["error", { "maxNumericValue": 200 }],
+        "unsized-images": "error",
+        "largest-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+        "total-byte-weight": ["warn", { "maxNumericValue": 1048576 }],
+        "unused-javascript": ["warn", { "maxNumericValue": 204800 }],
+        "categories:performance": ["warn", { "minScore": 0.9 }]
+      }
+    },
+    "upload": { "target": "temporary-public-storage" }
+  }
+}

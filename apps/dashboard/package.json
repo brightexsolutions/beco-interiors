@@ -1,0 +1,29 @@
+{
+  "name": "@beco/dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1121.0",
+    "@beco/documents": "workspace:*",
+    "@beco/supabase-client": "workspace:*",
+    "@beco/types": "workspace:*",
+    "@beco/ui": "workspace:*",
+    "@beco/validation": "workspace:*",
+    "@supabase/supabase-js": "^2.112.4",
+    "next": "^16.3.3",
+    "pdfjs-dist": "^6.3.289",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "dotenv": "^17.4.2"
+  }
+}
