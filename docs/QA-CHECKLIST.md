@@ -69,6 +69,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Process list | Static | n/a |
 | Services grid, "Book a consultation" per card (D95) | Opens WhatsApp with that specific service named in the prefilled message, `ServiceCardGrid`, shared with `/about` | Test: `service-card-grid.test.tsx`, per-card href, new tab, axe clean. Server: 4 distinct `wa.me` hrefs present, each naming its own service |
 | Cutout section, "Shop handles" | Navigates to `/shop/handles` | Server: anchor confirmed in the rendered HTML |
+| Showroom film | Autoplays muted once half the frame is on screen, pauses on leaving. A phone that refuses autoplay gets a Play control on the frame, which starts the film. No autoplay under reduced motion: native controls instead | Test: `showroom-film.test.tsx`. **Not walked on a device** |
 
 LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN.**
 
@@ -221,7 +222,7 @@ Motion: frame drawn first, photograph wipes up into it, caption plate rises afte
 | Contact channel cards: quote, WhatsApp, call | Navigate and open external channels | Server on hrefs |
 | Directions | Opens Google Maps at the showroom | Server on href |
 | Email link | Opens the mail client | Server on href |
-| Showroom film | Autoplays muted at 50% visibility, pauses on leaving, no autoplay under reduced motion | **NOT CONFIRMED** by test or by hand |
+| Showroom film | Autoplays muted once half the frame is on screen, pauses on leaving. A phone that refuses autoplay gets a Play control on the frame, which starts the film. No autoplay under reduced motion: native controls instead | Test: `showroom-film.test.tsx`. **Not walked on a device** |
 | Services grid, "Book a consultation" per card, `/about` only (D95) | Opens WhatsApp with that specific service named in the prefilled message, same `ServiceCardGrid` `/` uses | Test: `service-card-grid.test.tsx`. Server: 4 distinct `wa.me` hrefs present |
 | Rotating statement, SHOWROOMS frame (D95) | Now Beco's own real showroom, `/video/showroom-poster.jpg`, in place of a stock photo of a home decor shelf that had nothing to do with an interior materials showroom | Server: path present in the rendered HTML. **Not walked on a device** |
 

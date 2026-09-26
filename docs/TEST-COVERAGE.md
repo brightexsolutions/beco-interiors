@@ -116,6 +116,7 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | Gallery project types | `lib/__tests__/project-type-facets.test.ts` | Counts by type with real labels, ignores unclassified shots, returns nothing when nothing is classified. 4 tests. Plus `app/gallery/__tests__/metadata.test.ts` for D29 on `?type=` |
 | Client showcase | `components/__tests__/client-showcase.test.tsx` | Renders nothing until a client is published and permitted; logo, name fallback, sector and project line. 5 tests |
 | Launch banner | `components/__tests__/launch-banner.test.tsx` | Countdown to the date, reveal on the switch, confetti once per browser and skipped under reduced motion. 9 tests |
+| Showroom film | `components/__tests__/showroom-film.test.tsx` | Poster and source, muted inline loop, watermark, reduced-motion controls. Plays at half visibility and pauses on leaving. Retries when the file is not ready. Play control when autoplay is refused, including the next tap. Axe on the poster and on that control |
 | Blog JSON-LD | `app/blog/[slug]/__tests__/blog-posting-schema.test.tsx` | Both ld+json blocks parse; headline, description, absolute image URL, author, publisher, omit-not-null, breadcrumb. 5 tests |
 | Revalidate API | `app/api/revalidate/__tests__/route.test.ts` | Wrong secret is 401. Named product and category tags plus matching paths are revalidated. A path that is not site-relative is ignored. `/` revalidates as a layout so the announcement bar refreshes |
 
