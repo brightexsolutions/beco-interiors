@@ -24,6 +24,11 @@ vi.mock('next/navigation', () => ({
 const { SettingsForm } = await import('../settings-form');
 
 const settings: DashboardSettings = {
+  businessLegalName: 'Beco Interiors Limited',
+  kraPin: 'P051234567X',
+  vatNumber: '',
+  businessAddress: 'Urban Square, Enterprise Road, Nairobi',
+  businessEmail: 'info@beco.co.ke',
   vatPercent: 16,
   quoteValidityDays: 30,
   quoteResponseSlaHours: 2,
@@ -56,6 +61,15 @@ beforeEach(() => {
 });
 
 describe('SettingsForm', () => {
+  it('has a Business tab carrying the legal name and KRA PIN into the saved form', async () => {
+    const user = userEvent.setup();
+    render(<SettingsForm settings={settings} tab="quotes" canGrant={false} />);
+    await user.click(screen.getByRole('tab', { name: 'Business' }));
+    expect(screen.getByLabelText(/kra pin/i)).toHaveValue('P051234567X');
+    expect(screen.getByLabelText(/registered business name/i)).toHaveValue('Beco Interiors Limited');
+    expect(push).toHaveBeenCalledWith('/settings?tab=business');
+  });
+
   it('submits Save settings from the title row without Anniversary launch for Beco admin', async () => {
     const user = userEvent.setup();
     const { container } = render(<SettingsForm settings={settings} tab="quotes" canGrant={false} />);

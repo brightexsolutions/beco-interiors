@@ -87,6 +87,7 @@ export function SettingsForm({
         <TabsList aria-label="Settings sections">
           <TabsTrigger value="quotes">Quotes</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="business">Business</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           {canGrant ? <TabsTrigger value="studio">Studio</TabsTrigger> : null}
@@ -183,6 +184,65 @@ export function SettingsForm({
             </Field>
             <Field label="Account" htmlFor="settings-paybill-account" hint="Optional">
               <Input id="settings-paybill-account" name="paybillAccount" defaultValue={settings.paybillAccount} />
+            </Field>
+          </FormSection>
+        </TabsContent>
+
+        <TabsContent value="business" forceMount>
+          <FormSection
+            columns={2}
+            hint="Printed in the From block of every quote and receipt. KRA details appear only once filled in."
+          >
+            <Field label="Registered business name" htmlFor="settings-legal-name" className="sm:col-span-2">
+              <Input
+                id="settings-legal-name"
+                name="businessLegalName"
+                required
+                autoComplete="organization"
+                defaultValue={settings.businessLegalName}
+              />
+            </Field>
+            <Field label="KRA PIN" htmlFor="settings-kra-pin" hint="For example P051234567X">
+              <Input
+                id="settings-kra-pin"
+                name="kraPin"
+                autoCapitalize="characters"
+                spellCheck={false}
+                maxLength={11}
+                defaultValue={settings.kraPin}
+                className="uppercase tabular-nums"
+              />
+            </Field>
+            <Field label="VAT number" htmlFor="settings-vat-number" hint="Only if different from the PIN">
+              <Input
+                id="settings-vat-number"
+                name="vatNumber"
+                autoCapitalize="characters"
+                spellCheck={false}
+                maxLength={20}
+                defaultValue={settings.vatNumber}
+                className="uppercase tabular-nums"
+              />
+            </Field>
+            <Field label="Business address" htmlFor="settings-address" className="sm:col-span-2">
+              <Textarea
+                id="settings-address"
+                name="businessAddress"
+                rows={2}
+                required
+                autoComplete="street-address"
+                defaultValue={settings.businessAddress}
+              />
+            </Field>
+            <Field label="Business email" htmlFor="settings-business-email" hint="Shown on documents">
+              <Input
+                id="settings-business-email"
+                name="businessEmail"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                defaultValue={settings.businessEmail}
+              />
             </Field>
           </FormSection>
         </TabsContent>

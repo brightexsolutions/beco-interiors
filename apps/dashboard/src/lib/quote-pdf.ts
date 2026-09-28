@@ -25,6 +25,7 @@ export const toPdfInput = (quote: QuoteDetail, settings: QuoteSettings): QuotePd
   paymentTerms: settings.paymentTerms,
   footer: settings.footer,
   phone: settings.phone,
+  business: settings.business,
   issuedAt: quote.createdAt,
 });
 

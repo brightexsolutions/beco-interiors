@@ -26,6 +26,7 @@ export const toReceiptPdfInput = (order: OrderDetail, settings: QuoteSettings): 
   paymentTerms: settings.paymentTerms,
   footer: settings.footer,
   phone: settings.phone,
+  business: settings.business,
   issuedAt: order.createdAt,
   kind: 'receipt',
   paidAt: order.paidAt,

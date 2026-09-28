@@ -87,6 +87,13 @@ export interface QuoteSettings {
   footer: string;
   phone: string;
   whatsapp: string;
+  business: {
+    legalName: string;
+    kraPin: string;
+    vatNumber: string;
+    address: string;
+    email: string;
+  };
 }
 
 const settingText = (value: unknown): string => {
@@ -125,6 +132,11 @@ export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<Quot
       'quote_footer',
       'business_phone',
       'whatsapp_number',
+      'business_legal_name',
+      'kra_pin',
+      'vat_number',
+      'business_address',
+      'business_email',
     ]);
 
   const map = new Map((data ?? []).map((row) => [row.key, row.value]));
@@ -140,6 +152,15 @@ export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<Quot
     footer: settingText(map.get('quote_footer')),
     phone: settingText(map.get('business_phone')) || '+254 722 333 730',
     whatsapp: settingText(map.get('whatsapp_number')) || '254722333730',
+    business: {
+      legalName: settingText(map.get('business_legal_name')) || 'Beco Interiors Limited',
+      kraPin: settingText(map.get('kra_pin')),
+      vatNumber: settingText(map.get('vat_number')),
+      address:
+        settingText(map.get('business_address')) ||
+        'Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi',
+      email: settingText(map.get('business_email')),
+    },
   };
 }
 
