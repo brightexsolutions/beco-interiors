@@ -11,6 +11,10 @@ export interface QuoteListFilters {
   owner?: QuoteOwnerFilter | undefined;
   source?: QuoteSource | undefined;
   search?: string | undefined;
+  /** `pending`: deviates from the catalogue and still waits on an admin (D86). */
+  approval?: 'pending' | undefined;
+  /** Newest first, capped. The list pages at 200; home asks for a handful. */
+  limit?: number | undefined;
 }
 
 export interface QuoteListItem {
@@ -172,9 +176,10 @@ export async function fetchQuotes(
        quote_items(unit_price, line_total)`,
     )
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(filters.limit ?? 200);
 
   if (filters.status) query = query.eq('status', filters.status);
+  if (filters.approval === 'pending') query = query.eq('requires_approval', true).is('approved_at', null);
   if (filters.source) query = query.eq('source', filters.source);
 
   const term = filters.search ? sanitizeSearchTerm(filters.search) : '';
@@ -202,4 +207,19 @@ export async function fetchQuotes(
   const { data, error } = await query.overrideTypes<QuoteRow[]>();
   if (error) throw new Error(`Could not load quotes: ${error.message}`);
   return (data ?? []).map(toListItem);
+}
+
+/**
+ * Open quotes that deviate from the catalogue and still wait on an admin
+ * (D86). Read under RLS; a failure reads as zero rather than breaking home.
+ */
+export async function fetchApprovalCount(supabase: SupabaseClient): Promise<number> {
+  const { count, error } = await supabase
+    .from('quotes')
+    .select('id', { count: 'exact', head: true })
+    .eq('requires_approval', true)
+    .is('approved_at', null)
+    .in('status', ['new', 'reviewing', 'quoted']);
+  if (error || !count) return 0;
+  return count;
 }
