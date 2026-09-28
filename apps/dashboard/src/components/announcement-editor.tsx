@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Field, FormSection, Input, Select, Textarea, useActionToast } from '@beco/ui';
+import { Button, Field, FormSection, Input, Select, Textarea, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import {
   createAnnouncement,
   updateAnnouncement,
@@ -28,6 +28,7 @@ export function AnnouncementEditor({
   const router = useRouter();
   const save = announcement ? updateAnnouncement : createAnnouncement;
   const [state, submit, pending] = useActionState(save, INITIAL);
+  const onSubmitSubmit = useKeepValuesSubmit(submit);
   const [title, setTitle] = useState(announcement?.title ?? '');
   const [body, setBody] = useState(announcement?.body ?? '');
   const [type, setType] = useState<AnnouncementType>(announcement?.type ?? 'notice');
@@ -39,7 +40,7 @@ export function AnnouncementEditor({
   }, [state.announcementId, router]);
 
   return (
-    <form action={submit} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <form onSubmit={onSubmitSubmit} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {announcement ? <input type="hidden" name="announcementId" value={announcement.id} /> : null}
       <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
         <FormSection title="Copy">

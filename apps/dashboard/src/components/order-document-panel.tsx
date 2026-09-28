@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Button, Dialog, Field, Input, buttonClasses, Icon, useActionToast } from '@beco/ui';
+import { Button, Dialog, Field, Input, buttonClasses, Icon, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { markReceiptSharedWhatsApp, sendOrderReceipt, type OrderActionState } from '@/app/(app)/orders/actions';
 import { PdfPreview } from '@/components/pdf-preview';
 import { WhatsAppShare } from '@/components/whatsapp-share';
@@ -30,6 +30,7 @@ export function OrderDocumentPanel({
 }) {
   const [open, setOpen] = useState(false);
   const [mailState, send, sending] = useActionState(sendOrderReceipt, INITIAL);
+  const onSendSubmit = useKeepValuesSubmit(send);
   useActionToast(mailState);
   const previewHref = `/orders/${encodeURIComponent(reference)}/pdf`;
   const downloadHref = `${previewHref}?download=1`;
@@ -61,7 +62,7 @@ export function OrderDocumentPanel({
         <div className="shrink-0 border-t border-neutral-200 bg-high-vis-white px-5 py-4 sm:px-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
             {canMutate ? (
-              <form action={send} className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <form onSubmit={onSendSubmit} className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                 <input type="hidden" name="orderId" value={orderId} />
                 <input type="hidden" name="updatedAt" value={updatedAt} />
                 <Field label="Email to" htmlFor="order-email">

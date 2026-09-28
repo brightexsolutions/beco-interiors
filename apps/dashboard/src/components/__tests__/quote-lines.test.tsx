@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
-import { addCatalogueLines, updateQuoteLines } from '@/app/(app)/quotes/actions';
+import { addCatalogueLines, addCustomLine, updateQuoteLines } from '@/app/(app)/quotes/actions';
 import { QuoteLines } from '../quote-lines';
 import type { QuoteLine } from '@/lib/quote-detail';
 
@@ -152,6 +152,25 @@ describe('QuoteLines', () => {
       />,
     );
     expect(screen.getByText(/removed from catalogue/i)).toBeInTheDocument();
+  });
+
+  it('keeps a refused custom line to fix, and empties the form once one is added', async () => {
+    const user = userEvent.setup();
+    render(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    const description = screen.getByLabelText('What to quote');
+    const add = screen.getByRole('button', { name: 'Add' });
+
+    vi.mocked(addCustomLine).mockResolvedValueOnce({ error: 'This quote changed while you were editing. Reload and try again.' });
+    await user.type(description, 'Delivery to Kilimani');
+    await user.click(add);
+    await waitFor(() => expect(addCustomLine).toHaveBeenCalledTimes(1));
+    await screen.findByRole('button', { name: 'Add' });
+    expect(description).toHaveValue('Delivery to Kilimani');
+
+    vi.mocked(addCustomLine).mockResolvedValueOnce({ ok: 'Item added to the quote.' });
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => expect(description).toHaveValue(''));
+    expect(vi.mocked(addCustomLine).mock.calls.at(-1)?.[1].get('description')).toBe('Delivery to Kilimani');
   });
 
   it('is axe clean in both treatments', async () => {

@@ -61,6 +61,7 @@ export { RangeCardGrid, type RangeCardItem, type RangeCardGridProps } from './co
 export { ChipGroup, type ChipGroupProps, type ChipOption } from './components/chip-group';
 export { cn } from './lib/cn';
 export { useVisualViewport, readVisualViewport, type VisualViewportState } from './lib/use-visual-viewport';
+export { useKeepValuesSubmit } from './lib/use-keep-values-submit';
 export { KeyboardAwareFocus, isTextEntry, needsScroll } from './components/keyboard-aware-focus';
 export { PALETTE } from './tokens/palette';
 export { contrastRatio, PAIRS } from './tokens/contrast-check';
