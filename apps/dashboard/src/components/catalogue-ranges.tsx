@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Fragment, useState, useTransition } from 'react';
+import { Fragment, useEffect, useState, useTransition } from 'react';
 import { Icon, Sheet, StatusPill, buttonClasses, cn } from '@beco/ui';
 import { CategoryEditor } from '@/components/category-editor';
 import { CategoryCreate } from '@/components/category-create';
@@ -51,6 +51,16 @@ export function CatalogueRanges({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const [expanded, setExpanded] = useState(true);
+
+  // On a phone the full range panel is a screen of chips before a single
+  // product. Start it folded there; the heading names the active range.
+  useEffect(() => {
+    if (window.matchMedia?.('(max-width: 1023px)').matches) setExpanded(false);
+  }, []);
+
+  const activeName = selectedId
+    ? (tree.flatMap((g) => [g, ...g.children]).find((c) => c.id === selectedId)?.name ?? null)
+    : null;
 
   const withParam = (key: string, value: string | null, extraClear: string[] = []) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -109,6 +119,9 @@ export function CatalogueRanges({
           >
             <Icon name={expanded ? 'chevron-up' : 'chevron-down'} className="h-3.5 w-3.5" />
             Ranges
+            {!expanded && activeName ? (
+              <span className="ml-1 normal-case tracking-normal text-charcoal">: {activeName}</span>
+            ) : null}
           </button>
         </h2>
         <Link href={newHref} className={buttonClasses({ variant: 'ghost' })}>

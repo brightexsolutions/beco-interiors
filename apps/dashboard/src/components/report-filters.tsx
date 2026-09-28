@@ -86,7 +86,7 @@ export function ReportFilters({ people = [] }: { people?: readonly ReportPersonO
     <div className="flex flex-wrap items-center justify-end gap-2">
       <label className="flex items-center gap-3">
         <span className="sr-only font-ui text-sm font-semibold text-charcoal sm:not-sr-only">Period</span>
-        <span className="block w-28 shrink-0 sm:w-36">
+        <span className="block w-36 shrink-0 sm:w-40">
           <Select
             value={period === 'custom' || period === 'last_month' ? period : 'this_month'}
             onChange={(event) => writeParams({ period: event.target.value })}
