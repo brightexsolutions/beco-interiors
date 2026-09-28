@@ -3,7 +3,7 @@
  * confirmation, a priced quote and a receipt read as the same company.
  *
  * Layout: a quiet grey canvas, one 600px white card. A charcoal band carries
- * the white mark and the wordmark as real text, then a single Warm Red rule,
+ * the red square mark and the wordmark as real text, then a single Warm Red rule,
  * the only red in the message besides the eyebrow. The body leads with an
  * eyebrow and a serif heading, the reference sits in its own card, and the
  * two ways to reach a person (call, WhatsApp) are real buttons. The footer
@@ -193,7 +193,9 @@ export const contactButtons = (whatsappText: string): string =>
  */
 export function renderEmailShell({ preview, bodyHtml }: { preview: string; bodyHtml: string }): string {
   const site = siteUrl();
-  const logo = `${site}/logo-mark-white.png`;
+  // The brand mark: white letters on the Warm Red square, the same file
+  // the PDF header and the site favicon use.
+  const logo = `${site}/logo-mark.png`;
 
   return (
     '<!doctype html>' +
@@ -233,9 +235,9 @@ export function renderEmailShell({ preview, bodyHtml }: { preview: string; bodyH
     `<tr><td class="beco-pad" style="background:${CHARCOAL};padding:24px 40px">` +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
     '<td valign="middle"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
-    `<td style="padding-right:12px"><img src="${logo}" width="30" height="29" alt="Beco" ` +
-    'style="display:block;width:30px;height:29px"></td>' +
-    `<td style="font-family:${SANS};font-size:16px;line-height:29px;color:${PAPER};letter-spacing:0.08em">` +
+    `<td style="padding-right:14px"><img src="${logo}" width="40" height="39" alt="Beco" ` +
+    'style="display:block;width:40px;height:39px"></td>' +
+    `<td style="font-family:${SANS};font-size:16px;line-height:39px;color:${PAPER};letter-spacing:0.08em">` +
     '<span style="font-weight:700">BECO</span> <span style="font-weight:400">INTERIORS</span>' +
     '</td></tr></table></td>' +
     `<td class="beco-hide" align="right" valign="middle" style="${text(14, '#c4cad0')}">` +

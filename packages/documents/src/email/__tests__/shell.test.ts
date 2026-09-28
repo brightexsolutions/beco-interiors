@@ -110,7 +110,7 @@ describe('renderEmailShell', () => {
     process.env = { ...OLD_ENV };
     delete process.env.STOREFRONT_URL;
     const html = renderEmailShell({ preview: 'x', bodyHtml: '<p>x</p>' });
-    expect(html).toContain('src="https://www.beco.co.ke/logo-mark-white.png"');
+    expect(html).toContain('src="https://www.beco.co.ke/logo-mark.png"');
     expect(html).not.toMatch(/src="\/logo-mark/);
     process.env = OLD_ENV;
   });
@@ -132,7 +132,7 @@ describe('renderEmailShell', () => {
     const OLD_ENV = process.env;
     process.env = { ...OLD_ENV, STOREFRONT_URL: 'https://staging.beco.co.ke' };
     const html = renderEmailShell({ preview: 'x', bodyHtml: '<p>x</p>' });
-    expect(html).toContain('src="https://staging.beco.co.ke/logo-mark-white.png"');
+    expect(html).toContain('src="https://staging.beco.co.ke/logo-mark.png"');
     process.env = OLD_ENV;
   });
 
