@@ -32,9 +32,56 @@ vi.mock('@/lib/catalogue', () => ({
   ]),
 }));
 
+vi.mock('@/lib/customers', () => ({
+  searchCustomers: vi.fn(async () => [
+    {
+      name: 'Achieng Otieno',
+      phone: '0722333730',
+      email: 'achieng@example.com',
+      company: null,
+      quoteCount: 2,
+      lastQuotedAt: '2026-09-12T08:00:00Z',
+    },
+  ]),
+}));
+
 const saveButtons = () => screen.getAllByRole('button', { name: 'Save quote' });
 
 describe('NewQuoteForm', () => {
+  it('fills the customer from an earlier quote, and Clear empties it again', async () => {
+    const user = userEvent.setup();
+    render(<NewQuoteForm />);
+    await user.type(screen.getByRole('searchbox', { name: /returning customer/i }), 'Achieng');
+    await user.click(await screen.findByRole('button', { name: /Achieng Otieno/ }));
+    expect(screen.getByLabelText(/^name/i)).toHaveValue('Achieng Otieno');
+    expect(screen.getByLabelText(/^phone/i)).toHaveValue('0722333730');
+    expect(screen.getByLabelText(/^email/i)).toHaveValue('achieng@example.com');
+    expect(screen.getByText(/filled from 2 earlier quotes/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(screen.getByLabelText(/^name/i)).toHaveValue('');
+    expect(screen.queryByText(/filled from/i)).toBeNull();
+  });
+
+  it('keeps a phone action bar with the running total and Save', async () => {
+    const user = userEvent.setup();
+    render(<NewQuoteForm />);
+    const bar = screen.getByTestId('quote-action-bar');
+    expect(within(bar).getByText('No items yet')).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Save quote' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    await user.click(await screen.findByRole('checkbox', { name: /Amber Jade/i }));
+    await user.click(screen.getByRole('button', { name: 'Add 1 item' }));
+    expect(within(bar).getByText('1 item')).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Save quote' })).toBeEnabled();
+  });
+
+  it('uses phone friendly keyboards on the customer fields', () => {
+    render(<NewQuoteForm />);
+    expect(screen.getByLabelText(/^phone/i)).toHaveAttribute('type', 'tel');
+    expect(screen.getByLabelText(/^email/i)).toHaveAttribute('inputmode', 'email');
+    expect(screen.getByLabelText(/^name/i)).toHaveAttribute('autocapitalize', 'words');
+  });
+
   it('autofocuses Add from catalogue so no tap is spent reaching it', () => {
     render(<NewQuoteForm />);
     expect(screen.getByRole('button', { name: 'Add from catalogue' })).toHaveFocus();

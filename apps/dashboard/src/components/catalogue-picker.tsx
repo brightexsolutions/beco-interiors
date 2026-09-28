@@ -1,9 +1,9 @@
 'use client';
 
 import { forwardRef, useEffect, useId, useRef, useState, useTransition } from 'react';
-import { Button, Dialog, Field, Input, Select, cn } from '@beco/ui';
+import { Button, Dialog, Field, Input, cn } from '@beco/ui';
 import { listCatalogueRanges, searchCatalogue, type CatalogueHit, type CatalogueRange } from '@/lib/catalogue';
-import { groupHitsByCategory, splitCatalogueRanges } from '@/lib/catalogue-search';
+import { groupHitsByCategory } from '@/lib/catalogue-search';
 
 const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
@@ -85,7 +85,9 @@ export const CataloguePicker = forwardRef<
 
   const chosen = Array.from(selected.values());
   const addLabel = chosen.length === 1 ? 'Add 1 item' : `Add ${chosen.length} items`;
-  const split = splitCatalogueRanges(ranges);
+  // Stocked ranges first, in the catalogue's own order, empty ones after,
+  // so the chips a salesperson actually needs are the first ones visible.
+  const orderedRanges = [...ranges.filter((r) => r.productCount > 0), ...ranges.filter((r) => r.productCount === 0)];
   const hitGroups = groupHitsByCategory(hits);
   const selectedRange = ranges.find((item) => item.id === range);
   const emptyMessage = selectedRange
@@ -123,35 +125,13 @@ export const CataloguePicker = forwardRef<
       >
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="shrink-0 space-y-3 px-5 pt-4 sm:px-6">
-            <Field label="Range" htmlFor={rangeId}>
-              <Select
-                id={rangeId}
-                value={range}
-                onChange={(event) => setRange(event.target.value)}
-              >
-                <option value="">All ranges</option>
-                {split.ungrouped.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-                {split.groups.map((group) => (
-                  <optgroup key={group.name} label={group.name}>
-                    {group.ranges.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Search" htmlFor={searchId} hint="Type to filter">
+            <Field label="Search" htmlFor={searchId} hint="Name or range">
               <Input
                 ref={searchRef}
                 id={searchId}
                 type="search"
                 autoComplete="off"
+                enterKeyHint="search"
                 value={query}
                 placeholder="Amber Jade or a handle"
                 aria-controls={listId}
@@ -161,16 +141,37 @@ export const CataloguePicker = forwardRef<
                 }}
               />
             </Field>
+            {/* Ranges as chips: one tap, and every range visible at a glance,
+                rather than a native select that hides them behind a wheel. */}
+            <div
+              role="group"
+              aria-labelledby={rangeId}
+              className="scrollbar-none -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-6 sm:px-6"
+            >
+              <span id={rangeId} className="sr-only">
+                Range
+              </span>
+              <RangeChip label="All ranges" active={range === ''} onClick={() => setRange('')} />
+              {orderedRanges.map((item) => (
+                <RangeChip
+                  key={item.id}
+                  label={item.name}
+                  count={item.productCount}
+                  active={range === item.id}
+                  onClick={() => setRange(range === item.id ? '' : item.id)}
+                />
+              ))}
+            </div>
           </div>
 
-          <ul id={listId} className="min-h-0 flex-1 overflow-y-auto px-2 py-3 sm:px-3">
+          <ul id={listId} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-3">
             {searching && hits.length === 0 ? (
               <li className="px-3 py-3 font-ui text-base text-neutral-500">Searching</li>
             ) : null}
             {hitGroups.map((group) => (
               <li key={group.name} className="mb-2">
                 {range ? null : (
-                  <h3 className="px-3 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+                  <h3 className="sticky top-0 z-10 bg-high-vis-white px-3 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
                     {group.name}
                   </h3>
                 )}
@@ -181,18 +182,33 @@ export const CataloguePicker = forwardRef<
                       <li key={hit.id}>
                         <label
                           className={cn(
-                            'flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2 font-ui text-base text-charcoal',
+                            'flex min-h-16 cursor-pointer items-center gap-3 border-l-4 px-3 py-2 font-ui text-base text-charcoal',
                             'hover:bg-neutral-50',
-                            checked ? 'bg-neutral-50' : null,
+                            checked ? 'border-charcoal bg-neutral-50' : 'border-transparent',
                           )}
                         >
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggle(hit)}
-                            className="size-4 shrink-0 accent-charcoal"
+                            className="size-5 shrink-0 accent-charcoal"
                           />
-                          <span className="min-w-0 flex-1">{hit.name}</span>
+                          {hit.thumb ? (
+                            <img
+                              src={hit.thumb}
+                              alt=""
+                              width={48}
+                              height={48}
+                              loading="lazy"
+                              className="size-12 shrink-0 bg-neutral-100 object-cover"
+                            />
+                          ) : (
+                            <span aria-hidden className="size-12 shrink-0 bg-neutral-100" />
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <span className="block">{hit.name}</span>
+                            {hit.unit ? <span className="block text-sm text-neutral-500">{hit.unit}</span> : null}
+                          </span>
                           <span className="shrink-0 tabular-nums text-neutral-500">
                             {hit.price ? money(hit.price) : 'POA'}
                           </span>
@@ -221,3 +237,34 @@ export const CataloguePicker = forwardRef<
     </div>
   );
 });
+
+function RangeChip({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count?: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        'inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap border px-3 font-ui text-sm font-semibold transition-colors',
+        active
+          ? 'border-charcoal bg-charcoal text-high-vis-white'
+          : 'border-neutral-300 text-charcoal hover:border-charcoal',
+      )}
+    >
+      {label}
+      {count !== undefined ? (
+        <span className={cn('tabular-nums', active ? 'text-neutral-300' : 'text-neutral-500')}>{count}</span>
+      ) : null}
+    </button>
+  );
+}

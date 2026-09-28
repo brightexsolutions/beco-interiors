@@ -2,6 +2,7 @@
 
 import { getSupabase } from '@/lib/supabase';
 import { requirePath } from '@/lib/session';
+import { parseProductImages, productImageUrl } from '@/lib/products';
 
 export interface CatalogueHit {
   id: string;
@@ -11,6 +12,9 @@ export interface CatalogueHit {
   unit: string | null;
   priceDisplayMode: 'fixed' | 'poa';
   categoryName: string | null;
+  /** A 400px derivative of the first photograph, so the counter can pick
+   *  by eye. Null for a product with no photography yet. */
+  thumb: string | null;
 }
 
 export interface CatalogueRange {
@@ -89,7 +93,7 @@ export async function searchCatalogue(term: string, rangeId?: string | null): Pr
   const supabase = await getSupabase();
   let request = supabase
     .from('products')
-    .select('id, name, slug, price, unit, price_display_mode, categories(name)')
+    .select('id, name, slug, price, unit, price_display_mode, images, categories(name)')
     .is('deleted_at', null)
     .eq('is_published', true)
     .order('name', { referencedTable: 'categories' })
@@ -133,6 +137,7 @@ export async function searchCatalogue(term: string, rangeId?: string | null): Pr
   return (data ?? []).map((row) => {
     const category = row.categories as { name: string } | { name: string }[] | null;
     const categoryName = Array.isArray(category) ? (category[0]?.name ?? null) : (category?.name ?? null);
+    const first = parseProductImages(row.images)[0];
     return {
       id: row.id,
       name: row.name,
@@ -141,6 +146,7 @@ export async function searchCatalogue(term: string, rangeId?: string | null): Pr
       unit: row.unit,
       priceDisplayMode: row.price_display_mode,
       categoryName,
+      thumb: first ? productImageUrl(first.path, 400) : null,
     };
   });
 }

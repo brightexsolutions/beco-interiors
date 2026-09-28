@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { cn } from '../lib/cn';
 import { useScrollLock } from '../lib/use-scroll-lock';
+import { useVisualViewport } from '../lib/use-visual-viewport';
 
 /**
  * A branded modal. Same rules as ConfirmDialog: no <dialog>, no browser
@@ -28,6 +29,12 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
   useScrollLock(open, panelRef);
+  const viewport = useVisualViewport();
+  // On a phone the sheet is pinned to the bottom of the layout viewport,
+  // which iOS leaves behind the keyboard. While a keyboard is open, pin the
+  // overlay to the visible area instead, so the footer action stays above
+  // the keys rather than under them.
+  const fitToKeyboard = viewport?.keyboardOpen ? { top: viewport.offsetTop, height: viewport.height, bottom: 'auto' } : undefined;
 
   useEffect(() => {
     if (!open) return;
@@ -66,13 +73,18 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center sm:items-center sm:p-6">
+    <div
+      className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center sm:items-center sm:p-6"
+      style={fitToKeyboard}
+      data-keyboard-open={viewport?.keyboardOpen ? 'true' : undefined}
+    >
       <div aria-hidden onClick={close} className="absolute inset-0 bg-ink/60" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
+        style={fitToKeyboard ? { height: '100%', maxHeight: '100%' } : undefined}
         className={cn(
           'relative flex h-[min(100dvh,56rem)] w-full max-w-[34rem] flex-col overflow-hidden bg-high-vis-white shadow-[0_24px_60px_-16px_rgba(16,24,32,0.28)] sm:h-[min(92dvh,56rem)] sm:max-h-[min(92dvh,56rem)] sm:rounded-[4px]',
           className,
