@@ -137,37 +137,53 @@ const columns: DataTableColumn<QuoteListItem>[] = [
 ];
 
 function QuoteCard({ quote }: { quote: QuoteListItem }) {
+  const fresh = quote.status === 'new';
   return (
-    <li>
+    <li className="min-w-0">
       <Link
         href={`/quotes/${quote.referenceNumber}`}
-        aria-label={`View ${quote.referenceNumber}`}
-        className="block rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
+        aria-label={`View ${quote.referenceNumber}, ${quote.customerName}`}
+        className={cn(
+          'group flex items-stretch gap-3 overflow-hidden rounded-panel border border-neutral-200 bg-high-vis-white py-3 pl-4 pr-3',
+          'transition-shadow hover:shadow-panel active:bg-neutral-50',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal',
+          // A new, untouched quote carries a charcoal edge: the queue reads
+          // at a glance without spending Warm Red on every arrival.
+          fresh ? 'border-l-4 border-l-charcoal' : null,
+        )}
       >
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="font-ui text-base font-semibold text-charcoal">{quote.referenceNumber}</span>
-          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
-            View
-          </span>
-        </div>
-        <div className="mt-1 flex items-baseline justify-between gap-3">
-          <p className="min-w-0 truncate font-ui text-base text-charcoal">
-            {quote.customerName}
-            <span className="ml-2 text-neutral-500">{quote.customerPhone}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="min-w-0 truncate font-ui text-base font-semibold text-charcoal">{quote.customerName}</p>
+            <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
+              {quote.isPriced ? <span className="tabular-nums">{money(quote.value)}</span> : <span className="text-neutral-500">POA</span>}
+            </p>
+          </div>
+          <p className="mt-0.5 truncate font-ui text-sm text-neutral-500">
+            <span className="tabular-nums">{quote.referenceNumber}</span> · {quote.customerPhone}
           </p>
-          <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
-            <ValueCell quote={quote} />
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <BadgeRow quote={quote} />
+            <p className="min-w-0 font-ui text-sm text-neutral-500">
+              <OwnerLine quote={quote} />
+              <span className="ml-2 whitespace-nowrap tabular-nums">
+                {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
+              </span>
+            </p>
+          </div>
         </div>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <BadgeRow quote={quote} />
-          <p className="font-ui text-sm text-neutral-500">
-            <OwnerLine quote={quote} />
-            <span className="ml-2 whitespace-nowrap tabular-nums">
-              {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
-            </span>
-          </p>
-        </div>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="h-5 w-5 shrink-0 self-center text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal motion-reduce:transition-none"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </Link>
     </li>
   );
@@ -211,7 +227,7 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
         />
       </div>
 
-      <ul className="grid gap-2 lg:hidden">
+      <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 lg:hidden">
         {paged.items.map((q) => (
           <QuoteCard key={q.id} quote={q} />
         ))}

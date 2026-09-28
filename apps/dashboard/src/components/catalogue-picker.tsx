@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useId, useRef, useState, useTransition } from 'react';
-import { Button, Dialog, Field, Input, cn } from '@beco/ui';
+import { Button, ChipGroup, Dialog, Field, Input, cn } from '@beco/ui';
 import { listCatalogueRanges, searchCatalogue, type CatalogueHit, type CatalogueRange } from '@/lib/catalogue';
 import { groupHitsByCategory } from '@/lib/catalogue-search';
 
@@ -31,7 +31,6 @@ export const CataloguePicker = forwardRef<
   }
 >(function CataloguePicker({ onAdd, disabled, disabledHint, className }, ref) {
   const searchId = useId();
-  const rangeId = useId();
   const listId = `${searchId}-results`;
   const searchRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -143,25 +142,17 @@ export const CataloguePicker = forwardRef<
             </Field>
             {/* Ranges as chips: one tap, and every range visible at a glance,
                 rather than a native select that hides them behind a wheel. */}
-            <div
-              role="group"
-              aria-labelledby={rangeId}
-              className="scrollbar-none -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-6 sm:px-6"
-            >
-              <span id={rangeId} className="sr-only">
-                Range
-              </span>
-              <RangeChip label="All ranges" active={range === ''} onClick={() => setRange('')} />
-              {orderedRanges.map((item) => (
-                <RangeChip
-                  key={item.id}
-                  label={item.name}
-                  count={item.productCount}
-                  active={range === item.id}
-                  onClick={() => setRange(range === item.id ? '' : item.id)}
-                />
-              ))}
-            </div>
+            <ChipGroup
+              label="Range"
+              value={range}
+              clearValue=""
+              onChange={setRange}
+              className="-mx-5 px-5 sm:-mx-6 sm:px-6"
+              options={[
+                { value: '', label: 'All ranges' },
+                ...orderedRanges.map((item) => ({ value: item.id, label: item.name, count: item.productCount })),
+              ]}
+            />
           </div>
 
           <ul id={listId} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-3">
@@ -238,33 +229,3 @@ export const CataloguePicker = forwardRef<
   );
 });
 
-function RangeChip({
-  label,
-  count,
-  active,
-  onClick,
-}: {
-  label: string;
-  count?: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        'inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap border px-3 font-ui text-sm font-semibold transition-colors',
-        active
-          ? 'border-charcoal bg-charcoal text-high-vis-white'
-          : 'border-neutral-300 text-charcoal hover:border-charcoal',
-      )}
-    >
-      {label}
-      {count !== undefined ? (
-        <span className={cn('tabular-nums', active ? 'text-neutral-300' : 'text-neutral-500')}>{count}</span>
-      ) : null}
-    </button>
-  );
-}

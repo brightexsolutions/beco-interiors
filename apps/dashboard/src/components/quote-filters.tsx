@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
-import { Input, Select } from '@beco/ui';
+import { ChipGroup, Input, Select } from '@beco/ui';
 import type { QuoteOwnerFilter } from '@/lib/quotes';
 
 /**
@@ -45,7 +45,7 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
   const [, startTransition] = useTransition();
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
 
-  const owner = searchParams.get('owner') ?? ownerOptions[0]?.value ?? 'all';
+  const owner = searchParams.get('owner') || ownerOptions[0]?.value || 'all';
   const status = searchParams.get('status') ?? '';
   const source = searchParams.get('source') ?? '';
 
@@ -67,51 +67,81 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
   }, [search]);
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <label className="flex-1 basis-full sm:basis-64">
-        <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Search</span>
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Name, phone or reference"
-          aria-label="Search quotes"
-        />
-      </label>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex-1 basis-full sm:basis-64">
+          <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Search</span>
+          <Input
+            type="search"
+            enterKeyHint="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Name, phone or reference"
+            aria-label="Search quotes"
+          />
+        </label>
 
-      {ownerOptions.length > 1 ? (
-        <label>
-          <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Owner</span>
-          <Select value={owner} onChange={(e) => setParam('owner', e.target.value)} aria-label="Filter by owner">
-            {ownerOptions.map((o) => (
+        {ownerOptions.length > 1 ? (
+          <label className="hidden lg:block">
+            <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Owner</span>
+            <Select value={owner} onChange={(e) => setParam('owner', e.target.value)} aria-label="Filter by owner">
+              {ownerOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </label>
+        ) : null}
+
+        <label className="hidden lg:block">
+          <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Status</span>
+          <Select value={status} onChange={(e) => setParam('status', e.target.value)} aria-label="Filter by status">
+            {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
             ))}
           </Select>
         </label>
-      ) : null}
 
-      <label>
-        <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Status</span>
-        <Select value={status} onChange={(e) => setParam('status', e.target.value)} aria-label="Filter by status">
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
-      </label>
+        <label className="hidden lg:block">
+          <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Source</span>
+          <Select value={source} onChange={(e) => setParam('source', e.target.value)} aria-label="Filter by source">
+            {SOURCE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </label>
+      </div>
 
-      <label>
-        <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Source</span>
-        <Select value={source} onChange={(e) => setParam('source', e.target.value)} aria-label="Filter by source">
-          {SOURCE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
-      </label>
+      {/* Phone: owner and status as one tap chips rather than two wheels. */}
+      <div className="space-y-2 lg:hidden">
+        {ownerOptions.length > 1 ? (
+          <ChipGroup
+            label="Owner"
+            value={owner}
+            onChange={(value) => setParam('owner', value)}
+            options={ownerOptions.map((o) => ({ value: o.value, label: o.label }))}
+          />
+        ) : null}
+        <ChipGroup
+          label="Status"
+          value={status}
+          clearValue=""
+          onChange={(value) => setParam('status', value)}
+          options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.value ? o.label : 'All' }))}
+        />
+        <ChipGroup
+          label="Source"
+          value={source}
+          clearValue=""
+          onChange={(value) => setParam('source', value)}
+          options={SOURCE_OPTIONS.map((o) => ({ value: o.value, label: o.value ? o.label : 'Any source' }))}
+        />
+      </div>
     </div>
   );
 }
