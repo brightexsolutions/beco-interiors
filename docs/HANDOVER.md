@@ -104,7 +104,7 @@ attempted.
 | 1 | Beco creates a Vercel account, or nominates a successor agency's | Beco | Account exists, billing set |
 | 2 | Repository transferred or cloned to a Beco owned account | Brightex, or Beco alone using the read only copy | `git clone` from the new location succeeds |
 | 3 | Both Vercel projects created against the new repository | Beco or successor | Both build successfully |
-| 4 | Environment variables recreated from `docs/ENVIRONMENT.md` | Beco or successor | Each surface boots and reaches the database |
+| 4 | Environment variables recreated from `docs/ENVIRONMENT.md`. **`OPS_ALERT_EMAIL` set to the new owner's address**: unset, failure alerts, which can carry a lost customer's name and phone, keep going to Brightex | Beco or successor | Each surface boots and reaches the database; a test alert arrives at the new address |
 | 5 | DNS records repointed on Beco's Cloudflare zone | Beco | All hostnames resolve to the new deployments over HTTPS |
 | 6 | Certificate issuance confirmed, per the ordering in `docs/RUNBOOK.md` | Beco or successor | No redirect loop, padlock present on all hostnames |
 | 7 | Brightex memberships removed: Cloudflare, Supabase, Resend, cron-job.org, UptimeRobot | Beco | Member list shows no Brightex account |

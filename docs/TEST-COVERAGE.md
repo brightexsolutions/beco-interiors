@@ -41,6 +41,20 @@ mobile filter panel, contracts otherwise unchanged), `pinned-hero` (the shortene
 lede), `product-card` (the specimen plate is `aria-hidden`, the heading link is the accessible
 name), and `quote-builder` (the confirmed hours string).
 
+## 28 September 2026 pass
+
+Suites added or extended, all in the jsdom and unit projects unless noted:
+
+- **Operational alerts.** `packages/documents/.../ops-alert.test.ts` (email layout, escaping, subject clip, default recipient, provider failure), `apps/dashboard/src/lib/__tests__/ops-alert.test.ts` (throttle window, hourly cap, bounded keys, structured log line, never throws, production-only missing key alert), `api/ops-alert/__tests__/route.test.ts` (secret, timing safe compare, schema, 202), `apps/storefront/src/lib/__tests__/ops-alert.test.ts` (log always, relay, dashboard down), `validation/.../ops-alert.test.ts`, and `storefront-revalidate.test.ts` now proves a 401 or 500 from the storefront is reported rather than treated as success.
+- **Home.** `dashboard-summary.test.ts` (`toFocus`, trends, meters, segments, links, no Warm Red on a month tile), `home-focus.test.tsx`, `recent-quotes.test.tsx`, `stat-card.test.tsx` (delta, clamped meter, proportional segments, empty segments, stretched link).
+- **Phone sales flow.** `customer-search.test.ts`, `customers.test.ts` (route gate, phone branch, filter injection), `customer-finder.test.tsx`, `new-quote-form.test.tsx` (returning customer fill and Clear, phone action bar, input modes), `catalogue-picker.test.tsx` (chips, stocked first, photographs), `chip-group.test.tsx`, `keyboard-aware-focus.test.tsx`, `dialog.test.tsx` (fits the visual viewport while a keyboard is open), `quote-filters.test.tsx` and `order-filters.test.tsx` (chips).
+- **WhatsApp send.** `whatsapp-share.test.tsx` (share sheet with the file, desktop fallback, cancel records nothing, unsaved lines stop it, failure), `document-path.test.ts`, the share actions refuse another quote's or order's path, and the quote PDF route returns `X-Document-Path`.
+- **Names.** `staff-names.test.ts`; pgTAP 31.
+- **KRA and business details.** `dashboard-settings.test.ts` (PIN shape and uppercase, blanks allowed), settings action and form tests, `quote-document.test.ts` (`quoteFromLines`: defaults, PIN, VAT only when different, multi line address); pgTAP 30.
+- **Everything else.** `nav-counts.test.ts` plus an integration case in `quotes.integration.test.ts`; dashboard `error-pages.test.tsx`; `images.test.ts` for the importer's EXIF dimensions against a real Sharp-rotated JPEG; `product-thumb.test.tsx`; `customer-contact.test.tsx`; `announcement-preview.test.tsx`; `quote-builder.test.tsx` (step guide, focus on the rejected field, stepper floor, WhatsApp).
+
+Verified together on 28 September: `pnpm typecheck` across all 9 packages; the unit (41 files, 316 tests), component (80 files, 581) and dashboard (115 files, 655) projects; the type floor, contrast, secret scan, em dash and browser dialog checks; `pnpm build` for both apps; the full pgTAP suite (32 files, 348 assertions) replayed against a local PostgreSQL 16 with a minimal Supabase shim; and the HTTP integration project (9 files, 37 tests) against that same database behind real GoTrue and PostgREST 12.2.3 binaries. Running the integration project is what found the stale edit hang: SQLSTATE `40001` made PostgREST retry a stale write forever. Fixed in migration 56, D102, and guarded by pgTAP 32 and an assertion on `PT409` in `quote-mutations.integration.test.ts`.
+
 ## How to run it
 
 ```
@@ -97,6 +111,9 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `27_announcements_admin.test.sql` | Anon sees a live row and not one that starts tomorrow. Once the window includes `now()`, anon can read it. Sales and product manager cannot write. Beco admin can, and the write is audited |
 | `28_settings_blog_audit_grants.test.sql` | Sales cannot write settings; admin can. Anon cannot read bank details or the Brightex allowlist. Brightex can write a blog post, read the audit log and grant `can_write_blog` / `can_read_audit` to a salesperson; the grant opens audit reading but never blog write, Studio stays Brightex-only regardless of the flag (D42, migration 48). Product manager cannot grant either. 18 tests |
 | `29_category_admin.test.sql` | Closes the write-side gap `06` left open: `beco_product_manager` and admins can create and update a category, sales and editor cannot (an INSERT denial raises 42501, an UPDATE denial just matches zero rows under USING, both asserted correctly). Anon cannot write. A rename records the former slug in `category_slugs` and survives a second rename; anon can read that history, which the storefront redirect depends on, and cannot write it. 12 tests. Migration 49, D91 |
+| `30_business_identity.test.sql` | The five business identity keys (legal name, KRA PIN, VAT number, address, email) are seeded. Sales can read the PIN its quotes print but cannot change it; the product manager cannot write; `beco_admin` and `brightex_admin` can. Anon can neither read nor write any of them. 9 tests. Migration 54 |
+| `31_staff_names.test.sql` | `staff_names()` returns a colleague's display name to sales while the colleague's `users` row stays unreadable; only the ids asked for, a deactivated owner included so history keeps its name; nothing to a product manager; anon cannot execute. 6 tests. Migration 55 |
+| `32_stale_edit_errcode.test.sql` | No public function raises SQLSTATE `40001` (PostgREST retries it, so a stale edit hung forever); every stale edit check raises `PT409`; the in-place rewrite kept `security definer`. Files 12, 15, 16 and 19 now expect `PT409`. 3 tests. Migration 56 |
 
 ## Storefront
 

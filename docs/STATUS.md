@@ -203,7 +203,7 @@ below, unchanged: one product per folder, not one per real item.
 
 ## Decisions
 
-Recorded through D91. D1 to roughly D45 are architectural, made before the build started, and
+Recorded through D102. D1 to roughly D45 are architectural, made before the build started, and
 live in `files/BUILD-PLAN.md`, gitignored internal Brightex material. From D46 on, every decision
 discovered or made DURING the build is recorded in the committed `docs/DECISIONS.md`: D50 is the
 VAT arithmetic every quote document depends on, D52 through D65 are the M4 storefront's taxonomy
@@ -214,6 +214,9 @@ front of the Cloudflare edge rule, D82 the post-M4 storefront modernisation pass
 D89 the M5 dashboard's authorization model, shell, quote approval gate, an RLS gap closed, the
 shadcn construction standard and where stock lives, and D90 and D91 (23 September) the Drive
 importer's ownership fix and the `/categories` range editor.
+D92 to D101 are the storefront and dashboard refinements of 24 September. D102 (28 September)
+is the polish and hardening pass: operational alerts to Brightex, the `PT409` stale edit fix,
+staff names for sales, business identity on quotes, and the red square mark on the dashboard.
 
 ## Known weaknesses
 
