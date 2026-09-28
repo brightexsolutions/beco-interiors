@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { DashboardSettings, GrantStaffRow } from '@/lib/settings';
@@ -75,11 +75,11 @@ describe('SettingsForm', () => {
     const { container } = render(<SettingsForm settings={settings} tab="quotes" canGrant={false} />);
     const title = screen.getByRole('heading', { level: 1, name: 'Settings' });
     const row = title.parentElement;
-    expect(row).toContainElement(screen.getByRole('button', { name: 'Save settings' }));
+    const titleSave = within(row!).getByRole('button', { name: 'Save settings' });
     expect(screen.queryByRole('link', { name: 'Anniversary launch' })).not.toBeInTheDocument();
     expect(row?.className).toContain('justify-between');
     expect(container.querySelector('#settings-save')).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: 'Save settings' }));
+    await user.click(titleSave);
     expect(saveDashboardSettings).toHaveBeenCalled();
   });
 
@@ -116,7 +116,7 @@ describe('SettingsForm', () => {
   it('keeps every field in the save payload from another tab', async () => {
     const user = userEvent.setup();
     render(<SettingsForm settings={settings} tab="payments" canGrant={false} />);
-    await user.click(screen.getByRole('button', { name: 'Save settings' }));
+    await user.click(screen.getAllByRole('button', { name: 'Save settings' })[0]!);
     const form = saveDashboardSettings.mock.calls[0]?.[1] as FormData;
     expect(form.get('vatPercent')).toBe('16');
     expect(form.get('bankDetails')).toBe('KCB Bank Kenya.');
@@ -135,9 +135,55 @@ describe('SettingsForm', () => {
     );
     expect(screen.getByRole('tab', { name: 'Permissions' })).toHaveAttribute('data-state', 'active');
     expect(screen.getByText('Sam Odhiambo')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Save settings' })).toBeInTheDocument();
+    // The title row keeps Save; the phone bar steps aside on a tab with no fields.
+    expect(screen.getAllByRole('button', { name: 'Save settings' })).toHaveLength(1);
+    expect(screen.queryByTestId('settings-save-bar')).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Quotes' }));
     expect(push).toHaveBeenCalledWith('/settings');
+  });
+
+  it('previews the quote From block and payment box as fields are typed', async () => {
+    const user = userEvent.setup();
+    render(<SettingsForm settings={settings} tab="business" canGrant={false} />);
+    const panel = screen.getByRole('tabpanel', { name: 'Business' });
+    const preview = within(panel).getByRole('figure', { name: 'As printed on a quote' });
+    expect(within(preview).getByTestId('preview-tax')).toHaveTextContent('KRA PIN P051234567X');
+
+    const name = screen.getByLabelText('Registered business name');
+    await user.clear(name);
+    await user.type(name, 'Beco Stone Limited');
+    expect(within(preview).getByTestId('preview-from-name')).toHaveTextContent('Beco Stone Limited');
+
+    await user.type(screen.getByLabelText(/^Till number/), '555123');
+    expect(within(preview).getByText('Till')).toBeInTheDocument();
+    expect(within(preview).getByText('555123')).toBeInTheDocument();
+  });
+
+  it('says when a change is unsaved on the phone bar, and clears once saved', async () => {
+    const user = userEvent.setup();
+    render(<SettingsForm settings={settings} tab="quotes" canGrant={false} />);
+    const bar = screen.getByTestId('settings-save-bar');
+    expect(bar).toHaveTextContent('All saved');
+    await user.type(screen.getByLabelText('Payment terms'), ' Deposit first.');
+    expect(bar).toHaveTextContent('Unsaved changes');
+    await user.click(within(bar).getByRole('button', { name: 'Save settings' }));
+    expect(saveDashboardSettings).toHaveBeenCalledTimes(1);
+    expect(await within(bar).findByText('All saved')).toBeInTheDocument();
+  });
+
+  it('keeps the unsaved note when the save is refused', async () => {
+    saveDashboardSettings.mockResolvedValueOnce({ error: 'Check the KRA PIN.' } as never);
+    const user = userEvent.setup();
+    render(<SettingsForm settings={settings} tab="business" canGrant={false} />);
+    const vat = screen.getByLabelText(/^VAT number/);
+    await user.type(vat, 'V0012345');
+    const bar = screen.getByTestId('settings-save-bar');
+    await user.click(within(bar).getByRole('button', { name: 'Save settings' }));
+    expect(saveDashboardSettings).toHaveBeenCalledTimes(1);
+    expect(bar).toHaveTextContent('Unsaved changes');
+    // What was typed survives the refusal, so fixing one field is not
+    // retyping the whole tab.
+    expect(vat).toHaveValue('V0012345');
   });
 
   it('has no accessibility violations', async () => {

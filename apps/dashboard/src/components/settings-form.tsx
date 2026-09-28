@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useActionState, useEffect, useState, useTransition, type FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -16,6 +16,8 @@ import {
   buttonClasses,
   cn,
   useActionToast,
+  useVisualViewport,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import { saveDashboardSettings, type SettingsActionState } from '@/app/(app)/settings/actions';
 import {
@@ -26,9 +28,27 @@ import {
   type SettingsTab,
 } from '@/lib/settings';
 import { PageHeading } from './page-heading';
+import { SettingsDocumentPreview, type DocumentPreviewValues } from './settings-document-preview';
 import { SettingsGrants } from './settings-grants';
 
 const INITIAL: SettingsActionState = {};
+
+const PREVIEW_KEYS = [
+  'businessLegalName',
+  'businessAddress',
+  'businessEmail',
+  'kraPin',
+  'vatNumber',
+  'businessPhone',
+  'bankDetails',
+  'tillNumber',
+  'paybillNumber',
+  'paybillAccount',
+  'sendMoneyNumber',
+] as const satisfies readonly (keyof DocumentPreviewValues)[];
+
+const previewFrom = (read: (key: keyof DocumentPreviewValues) => string): DocumentPreviewValues =>
+  Object.fromEntries(PREVIEW_KEYS.map((key) => [key, read(key)])) as unknown as DocumentPreviewValues;
 
 export function SettingsForm({
   settings,
@@ -44,12 +64,28 @@ export function SettingsForm({
   viewerId?: string;
 }) {
   const [state, submit, pending] = useActionState(saveDashboardSettings, INITIAL);
+  const onSubmitSubmit = useKeepValuesSubmit(submit);
   useActionToast(state);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const [current, setCurrent] = useState(() => parseSettingsTab(tab, canGrant));
+  const [preview, setPreview] = useState(() => previewFrom((key) => settings[key]));
+  const [dirty, setDirty] = useState(false);
+  const keyboardOpen = useVisualViewport()?.keyboardOpen ?? false;
+
+  // A save that went through leaves nothing unsaved; a rejected one does.
+  useEffect(() => {
+    if (state.ok) setDirty(false);
+  }, [state]);
+
+  // Every tab stays mounted, so one listener on the form sees every field.
+  const onFormChange = (event: FormEvent<HTMLFormElement>) => {
+    const form = new FormData(event.currentTarget);
+    setPreview(previewFrom((key) => String(form.get(key) ?? '')));
+    setDirty(true);
+  };
 
   useEffect(() => {
     setCurrent(parseSettingsTab(tab, canGrant));
@@ -72,7 +108,7 @@ export function SettingsForm({
         title="Settings"
         actions={
           <>
-            <Button type="submit" form="settings-save" disabled={pending}>
+            <Button type="submit" form="settings-save" disabled={pending} className="hidden sm:inline-flex">
               {pending ? 'Saving' : 'Save settings'}
             </Button>
             {canGrant ? (
@@ -94,7 +130,7 @@ export function SettingsForm({
           {canGrant ? <TabsTrigger value="permissions">Permissions</TabsTrigger> : null}
         </TabsList>
 
-      <form id="settings-save" action={submit} className="mt-2">
+      <form id="settings-save" onSubmit={onSubmitSubmit} onChange={onFormChange} className="mt-2">
         <TabsContent value="quotes" forceMount>
           <FormSection
             columns={3}
@@ -148,6 +184,7 @@ export function SettingsForm({
         </TabsContent>
 
         <TabsContent value="payments" forceMount>
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <FormSection
             columns={2}
             hint="Bank, till, paybill or send money. Leave a channel blank if it is not offered."
@@ -186,9 +223,12 @@ export function SettingsForm({
               <Input id="settings-paybill-account" name="paybillAccount" defaultValue={settings.paybillAccount} />
             </Field>
           </FormSection>
+          <SettingsDocumentPreview values={preview} />
+          </div>
         </TabsContent>
 
         <TabsContent value="business" forceMount>
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <FormSection
             columns={2}
             hint="Printed in the From block of every quote and receipt. KRA details appear only once filled in."
@@ -245,6 +285,8 @@ export function SettingsForm({
               />
             </Field>
           </FormSection>
+          <SettingsDocumentPreview values={preview} />
+          </div>
         </TabsContent>
 
         <TabsContent value="contact" forceMount>
@@ -285,6 +327,25 @@ export function SettingsForm({
           </FormSection>
         </TabsContent>
       </form>
+
+      {/* Phone save bar: Save stays under the thumb on a long tab, and says
+          when something is not saved yet. Steps aside for the keyboard. */}
+      {current !== 'permissions' ? (
+        <div
+          data-testid="settings-save-bar"
+          className={cn(
+            'sticky bottom-0 z-20 -mx-6 mt-6 flex items-center gap-4 border-t border-neutral-200 bg-high-vis-white px-6 py-3 shadow-dock sm:hidden',
+            keyboardOpen ? 'hidden' : null,
+          )}
+        >
+          <p className="min-w-0 flex-1 font-ui text-sm text-neutral-500" aria-live="polite">
+            {dirty ? 'Unsaved changes' : 'All saved'}
+          </p>
+          <Button type="submit" form="settings-save" disabled={pending}>
+            {pending ? 'Saving' : 'Save settings'}
+          </Button>
+        </div>
+      ) : null}
 
       {canGrant && viewerId ? (
         <TabsContent value="permissions">

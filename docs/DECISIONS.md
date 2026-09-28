@@ -2212,5 +2212,21 @@ visual viewport and scrolls a focused field into the part of the screen the on s
 leaves; `Dialog` pins itself to that same area. Mounted once in each root layout rather than per
 form, so no form can forget it.
 
+**A refused save keeps what was typed.** React 19 resets every uncontrolled field of a
+`<form action={fn}>` once the action settles, success or not. On `/settings` that meant a
+refused save, one mistyped KRA PIN, blanked every field on every tab, and the product,
+category, announcement, blog, user, launch, sign in and custom line forms had the same
+behaviour. Found while testing the Settings save bar, not reported. `useKeepValuesSubmit` in
+`@beco/ui` hands the same FormData to the dispatcher from `onSubmit`, so nothing resets; the
+custom quote line form resets itself after a successful add, the one place the old clearing was
+wanted. Status buttons (claim, approve, status changes) keep `action`, since they carry no typed
+text to lose.
+
+**Settings shows what it prints.** The Payments and Business tabs carry a live preview of the
+quote's From block and How to pay box, drawn by the same functions as the PDF, so an admin sees
+the KRA PIN and the till number where a customer will. A `./layout` export on
+`@beco/documents` lets a client component import those functions without pulling react-pdf or
+Resend into the browser bundle.
+
 *Reverses if:* the alert volume proves noisy in practice, in which case the throttle window
 widens before any alert is removed; a silent failure is the problem this closes.
