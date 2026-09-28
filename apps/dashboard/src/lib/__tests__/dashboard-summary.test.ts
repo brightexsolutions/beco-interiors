@@ -81,7 +81,7 @@ describe('toStatCards: comparisons', () => {
     const c = card(summary(), 'Quote to won');
     // A dash, not a sentence: the value slot is display size and holds a
     // figure. The explanation goes in the line beneath it.
-    expect(c.value).toBe('—');
+    expect(c.value).toBe('None');
     expect(c.value).not.toContain('0%');
     expect(c.implication).toBe('Nothing won or lost yet this month');
   });

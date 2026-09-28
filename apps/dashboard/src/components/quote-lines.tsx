@@ -67,7 +67,7 @@ function LineEditor({
             {discounted ? <span className="ml-2 line-through">{money(line.listPrice!)}</span> : null}
           </span>
           <span className="font-ui text-base font-semibold tabular-nums text-charcoal">
-            {line.unitPrice > 0 ? money(line.lineTotal) : '—'}
+            {line.unitPrice > 0 ? money(line.lineTotal) : 'POA'}
           </span>
         </div>
       </div>

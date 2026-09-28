@@ -93,8 +93,8 @@ export const toStatCards = (s: DashboardSummary): StatCardProps[] => {
       // A month with nothing decided has no rate. Printing 0% would read as
       // a bad month rather than an empty one, and spelling that out in the
       // value slot puts a sentence where a figure belongs, at display size.
-      // The dash holds the shape; the line beneath says why.
-      value: s.conversion.rate === null ? '—' : `${s.conversion.rate}%`,
+      // A short 'None' holds the shape; the line beneath says why.
+      value: s.conversion.rate === null ? 'None' : `${s.conversion.rate}%`,
       comparison:
         s.conversion.prev_rate === null
           ? 'No decisions last month'
