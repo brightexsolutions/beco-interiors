@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BackLink, StatusPill } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
+import { CustomerContact } from '@/components/customer-contact';
 import { QuoteActions } from '@/components/quote-actions';
 import { QuoteDates } from '@/components/quote-dates';
 import { QuoteDocumentPanel } from '@/components/quote-document-panel';
@@ -75,47 +76,11 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
         {expired ? <StatusPill label="Expired" tone="muted" /> : null}
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0">
-          <QuoteLines
-            lines={quote.lines}
-            quoteId={quote.id}
-            updatedAt={quote.updatedAt}
-            canMutate={canMutate}
-          />
-
-          <div className="mt-4 flex justify-end">
-            {totals.isPriced ? (
-              <div className="text-right font-ui">
-                <p className="text-sm text-neutral-500">Subtotal {money(totals.net)}</p>
-                <p className="text-sm text-neutral-500">VAT included {money(totals.vat)}</p>
-                <p className="text-lg font-semibold text-charcoal">Total {money(totals.gross)}</p>
-              </div>
-            ) : (
-              <p className="font-ui text-base text-neutral-500">Pricing on application</p>
-            )}
-          </div>
-
-          {quote.projectDetails ? (
-            <div className="mt-8">
-              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                Project details
-              </h2>
-              <p className="mt-2 max-w-[68ch] font-ui text-base text-neutral-700">{quote.projectDetails}</p>
-            </div>
-          ) : null}
-
-          {quote.status === 'lost' && quote.lostReason ? (
-            <div className="mt-8">
-              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                Lost reason
-              </h2>
-              <p className="mt-2 font-ui text-base text-neutral-700">{quote.lostReason}</p>
-            </div>
-          ) : null}
-        </div>
-
-        <aside className="min-w-0 space-y-4 border-t border-neutral-200 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr] lg:gap-y-0">
+        {/* What someone acts on, first on a phone: status actions and the
+            one-tap ways to reach the customer come before the line editor.
+            On desktop it is the top of the right hand rail. */}
+        <aside className="min-w-0 space-y-4 border-b border-neutral-200 pb-6 lg:col-start-2 lg:row-start-1 lg:border-b-0 lg:border-l lg:pb-0 lg:pl-8">
           <div>
             <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Actions
@@ -146,15 +111,15 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
               Customer
             </h2>
             <dl className="mt-2 space-y-1 break-words font-ui text-sm text-charcoal">
-              <div>{quote.customerName}</div>
-              <div>
-                <a className="text-neutral-500 underline-offset-2 hover:underline" href={`tel:${quote.customerPhone}`}>
-                  {quote.customerPhone}
-                </a>
-              </div>
+              <div className="text-base font-semibold">{quote.customerName}</div>
+              <div className="tabular-nums text-neutral-500">{quote.customerPhone}</div>
               {quote.customerEmail ? <div className="text-neutral-500">{quote.customerEmail}</div> : null}
               {quote.company ? <div className="text-neutral-500">{quote.company}</div> : null}
             </dl>
+            {/* One tap to the person, the counter's most common next move. */}
+            <div className="mt-3">
+              <CustomerContact phone={quote.customerPhone} email={quote.customerEmail} reference={quote.reference} kind="quote" />
+            </div>
           </div>
 
           {quote.fulfilment === 'delivery' || quote.wantsInstallation || quote.wantsSamples ? (
@@ -180,7 +145,61 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
             </div>
           ) : null}
 
-          <div>
+        </aside>
+        <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          <QuoteLines
+            lines={quote.lines}
+            quoteId={quote.id}
+            updatedAt={quote.updatedAt}
+            canMutate={canMutate}
+          />
+
+          <div className="mt-6 flex justify-end">
+            <dl className="w-full border border-neutral-200 border-l-4 border-l-charcoal bg-neutral-50 px-5 py-4 font-ui sm:max-w-sm">
+              {totals.isPriced ? (
+                <>
+                  <div className="flex items-baseline justify-between gap-4 text-sm text-neutral-500">
+                    <dt>Subtotal</dt>
+                    <dd className="tabular-nums">{money(totals.net)}</dd>
+                  </div>
+                  <div className="mt-1 flex items-baseline justify-between gap-4 text-sm text-neutral-500">
+                    <dt>VAT {Math.round(quote.vatRate * 100)}%, included</dt>
+                    <dd className="tabular-nums">{money(totals.vat)}</dd>
+                  </div>
+                  <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-neutral-200 pt-3">
+                    <dt className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">Total</dt>
+                    <dd className="font-display text-2xl leading-none tabular-nums text-charcoal sm:text-3xl">{money(totals.gross)}</dd>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">Total</dt>
+                  <dd className="text-base text-neutral-700">Pricing on application</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
+          {quote.projectDetails ? (
+            <div className="mt-8">
+              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                Project details
+              </h2>
+              <p className="mt-2 max-w-[68ch] font-ui text-base text-neutral-700">{quote.projectDetails}</p>
+            </div>
+          ) : null}
+
+          {quote.status === 'lost' && quote.lostReason ? (
+            <div className="mt-8">
+              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                Lost reason
+              </h2>
+              <p className="mt-2 font-ui text-base text-neutral-700">{quote.lostReason}</p>
+            </div>
+          ) : null}
+        </div>
+
+        <aside className="min-w-0 space-y-4 border-t border-neutral-200 pt-6 lg:col-start-2 lg:row-start-2 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-6">          <div>
             <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Ownership
             </h2>
@@ -206,7 +225,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
             reopenedAt={quote.reopenedAt}
             validUntil={quote.validUntil}
           />
-        </aside>
+                </aside>
       </div>
     </QuoteDraftFlushProvider>
   );
