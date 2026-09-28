@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import type { Database } from '@beco/types';
+import { fetchNewQuoteCount } from './nav-counts';
 import { fetchQuotes } from './quotes';
 
 /**
@@ -155,5 +156,27 @@ describe('fetchQuotes', () => {
 
     const unpriced = rows.find((r) => r.customerName === `${PREFIX} Unassigned`)!;
     expect(unpriced.isPriced).toBe(false);
+  });
+});
+
+describe('fetchNewQuoteCount', () => {
+  it('counts a new quote, and stops counting it once it is soft deleted or opened', async () => {
+    const { client } = await signInAs('zz-int-quotes-sales@beco.co.ke');
+    const before = await fetchNewQuoteCount(client, 'beco_sales');
+
+    const sb = service();
+    const { data: added } = await sb
+      .from('quotes')
+      .insert({ customer_name: `${PREFIX} Badge`, customer_phone: '0700000004', source: 'web' })
+      .select('id')
+      .single();
+    quoteIds.push(added!.id);
+    expect(await fetchNewQuoteCount(client, 'beco_sales')).toBe(before + 1);
+
+    await sb.from('quotes').update({ status: 'reviewing' }).eq('id', added!.id);
+    expect(await fetchNewQuoteCount(client, 'beco_sales')).toBe(before);
+
+    await sb.from('quotes').update({ status: 'new', deleted_at: new Date().toISOString() }).eq('id', added!.id);
+    expect(await fetchNewQuoteCount(client, 'beco_sales')).toBe(before);
   });
 });

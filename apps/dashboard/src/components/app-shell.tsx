@@ -16,7 +16,8 @@ import { TopNav } from './top-nav';
  * only after that header has scrolled away, on a phone and on desktop, so the
  * page stays named without a second bar sitting under the pills at rest.
  *
- * `newQuotes` is 0 until the realtime nav count lands (M5 section L / M).
+ * `newQuotes` is read on each server render of the layout. Live push is
+ * still M5 section L.
  */
 export function AppShell({
   user,

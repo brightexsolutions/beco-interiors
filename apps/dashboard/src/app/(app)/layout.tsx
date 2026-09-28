@@ -1,5 +1,7 @@
 import { AppShell } from '@/components/app-shell';
+import { fetchNewQuoteCount } from '@/lib/nav-counts';
 import { requireUser } from '@/lib/session';
+import { getSupabase } from '@/lib/supabase';
 
 /**
  * Wraps every signed-in dashboard route in the app shell. `/login`,
@@ -9,5 +11,10 @@ import { requireUser } from '@/lib/session';
  */
 export default async function AppGroupLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  return <AppShell user={user}>{children}</AppShell>;
+  const newQuotes = await fetchNewQuoteCount(await getSupabase(), user.role);
+  return (
+    <AppShell user={user} newQuotes={newQuotes}>
+      {children}
+    </AppShell>
+  );
 }

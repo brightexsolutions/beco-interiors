@@ -61,6 +61,15 @@ describe('AppShell', () => {
     expect(screen.queryByRole('navigation', { name: 'You are here' })).toBeNull();
   });
 
+  it('passes the new-quote count through to the Quotes pill', () => {
+    render(
+      <AppShell user={admin} newQuotes={5}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    expect(screen.getByLabelText('5 new')).toHaveTextContent('5');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(
       <AppShell user={admin}>
