@@ -22,6 +22,7 @@ import { getSupabase } from '@/lib/supabase';
 import { mutationMessage } from '@/lib/quote-errors';
 import { fetchQuote, fetchQuoteSettings } from '@/lib/quote-detail';
 import { persistQuotePdf, quotePdfFilename } from '@/lib/quote-pdf';
+import { reportSendFailure } from '@/lib/ops-alert';
 
 export interface QuoteActionState {
   error?: string;
@@ -406,6 +407,11 @@ export async function sendQuoteEmail(
     filename: quotePdfFilename(row.reference_number, row.customer_name),
   });
   if (!sent.sent) {
+    await reportSendFailure(sent, {
+      area: 'quote.email',
+      summary: `Quote email for ${row.reference_number} did not send`,
+      context: { quote: row.reference_number },
+    });
     return {
       error:
         sent.reason === 'no-api-key'

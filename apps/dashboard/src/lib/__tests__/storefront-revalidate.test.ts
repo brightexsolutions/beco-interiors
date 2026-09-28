@@ -3,10 +3,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const revalidatePath = vi.fn();
 vi.mock('next/cache', () => ({ revalidatePath: (...a: Parameters<typeof revalidatePath>) => revalidatePath(...a) }));
 
+const reportOpsFailure = vi.fn(async () => {});
+vi.mock('../ops-alert', () => ({
+  reportOpsFailure: (...a: unknown[]) => reportOpsFailure(...(a as [])),
+  environmentName: () => process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
+}));
+
 const { revalidateStorefront, revalidateCategory } = await import('../storefront-revalidate');
 
 afterEach(() => {
   revalidatePath.mockReset();
+  reportOpsFailure.mockClear();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -48,6 +55,49 @@ describe('revalidateStorefront', () => {
     vi.stubGlobal('fetch', fetchMock);
     await revalidateStorefront({ productSlug: 'limestone-ivory' });
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(reportOpsFailure).not.toHaveBeenCalled();
+  });
+
+  it('alerts when production is missing the config, since edits would never reach the site', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('STOREFRONT_URL', '');
+    vi.stubGlobal('fetch', vi.fn());
+    await revalidateStorefront({ productSlug: 'limestone-ivory' });
+    expect(reportOpsFailure).toHaveBeenCalledWith(
+      expect.objectContaining({ area: 'storefront.revalidate', detail: 'STOREFRONT_URL is not set' }),
+    );
+  });
+
+  it('treats a 401 as a failure and names the mismatched secret', async () => {
+    vi.stubEnv('STOREFRONT_URL', 'http://localhost:3000');
+    vi.stubEnv('REVALIDATE_SECRET', 'wrong');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 401, statusText: 'Unauthorized' }));
+    await revalidateStorefront({ productSlug: 'limestone-ivory' });
+    expect(reportOpsFailure).toHaveBeenCalledWith(
+      expect.objectContaining({
+        area: 'storefront.revalidate',
+        summary: expect.stringContaining('HTTP 401'),
+        detail: 'REVALIDATE_SECRET does not match the storefront',
+      }),
+    );
+  });
+
+  it('alerts on an unreachable storefront without throwing, so the write still succeeds', async () => {
+    vi.stubEnv('STOREFRONT_URL', 'http://localhost:3000');
+    vi.stubEnv('REVALIDATE_SECRET', 's3cret');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('ECONNREFUSED')));
+    await expect(revalidateStorefront({ productSlug: 'limestone-ivory' })).resolves.toBeUndefined();
+    expect(reportOpsFailure).toHaveBeenCalledWith(
+      expect.objectContaining({ summary: expect.stringContaining('could not be reached') }),
+    );
+  });
+
+  it('does not alert on success', async () => {
+    vi.stubEnv('STOREFRONT_URL', 'http://localhost:3000');
+    vi.stubEnv('REVALIDATE_SECRET', 's3cret');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }));
+    await revalidateStorefront({ productSlug: 'limestone-ivory' });
+    expect(reportOpsFailure).not.toHaveBeenCalled();
   });
 });
 

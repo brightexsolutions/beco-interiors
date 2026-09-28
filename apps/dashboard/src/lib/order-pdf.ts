@@ -1,4 +1,5 @@
 import { renderReceiptPdf, type QuotePdfInput } from '@beco/documents';
+import { reportOpsFailure } from './ops-alert';
 import type { OrderDetail } from './order-detail';
 import type { QuoteSettings } from './quote-detail';
 
@@ -51,6 +52,12 @@ export async function renderReceiptPdfBytes(
     return { ok: true, bytes, isPriced: order.totals.isPriced };
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'unknown error';
+    await reportOpsFailure({
+      area: 'pdf.render',
+      summary: `Receipt PDF for ${order.reference} did not render`,
+      detail,
+      context: { order: order.reference, lines: order.lines.length },
+    });
     return { ok: false, error: `Could not render the PDF: ${detail}` };
   }
 }
@@ -84,7 +91,15 @@ export async function persistReceiptPdf(
     contentType: 'application/pdf',
     upsert: false,
   });
-  if (uploadError) return { ok: false, error: `Could not store the PDF: ${uploadError.message}` };
+  if (uploadError) {
+    await reportOpsFailure({
+      area: 'pdf.store',
+      summary: `Receipt PDF for ${order.reference} could not be stored`,
+      detail: uploadError.message,
+      context: { order: order.reference, bucket: 'documents' },
+    });
+    return { ok: false, error: `Could not store the PDF: ${uploadError.message}` };
+  }
 
   const { error: rowError } = await supabase.from('documents').insert({
     type: 'receipt',
@@ -94,7 +109,15 @@ export async function persistReceiptPdf(
     storage_path: path,
     generated_by: userId,
   });
-  if (rowError) return { ok: false, error: rowError.message ?? 'Could not record the PDF.' };
+  if (rowError) {
+    await reportOpsFailure({
+      area: 'pdf.record',
+      summary: `Receipt PDF for ${order.reference} was stored but its documents row was not written`,
+      detail: rowError.message,
+      context: { order: order.reference, path },
+    });
+    return { ok: false, error: rowError.message ?? 'Could not record the PDF.' };
+  }
 
   return { ok: true, bytes: rendered.bytes, path };
 }
