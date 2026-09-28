@@ -61,6 +61,17 @@ describe('AppShell', () => {
     expect(screen.queryByRole('navigation', { name: 'You are here' })).toBeNull();
   });
 
+  it('carries the red square Beco mark in the home link', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const home = screen.getByRole('link', { name: 'Beco Operations, home' });
+    expect(home).toHaveAttribute('href', '/');
+    expect(container.querySelector('a[href="/"] img[src="/logo-mark.png"]')).not.toBeNull();
+  });
+
   it('passes the new-quote count through to the Quotes pill', () => {
     render(
       <AppShell user={admin} newQuotes={5}>
