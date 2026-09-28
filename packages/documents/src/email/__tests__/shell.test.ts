@@ -1,5 +1,17 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { escapeHtml, eyebrow, heading, paragraph, referenceBox, renderEmailShell, siteUrl } from '../shell';
+import {
+  attachmentNote,
+  buttons,
+  contactButtons,
+  escapeHtml,
+  eyebrow,
+  heading,
+  paragraph,
+  referenceBox,
+  renderEmailShell,
+  siteUrl,
+  steps,
+} from '../shell';
 
 describe('escapeHtml', () => {
   it('escapes the five characters that let markup or an attribute break out', () => {
@@ -98,8 +110,8 @@ describe('renderEmailShell', () => {
     process.env = { ...OLD_ENV };
     delete process.env.STOREFRONT_URL;
     const html = renderEmailShell({ preview: 'x', bodyHtml: '<p>x</p>' });
-    expect(html).toContain('src="https://www.beco.co.ke/logo-mark.png"');
-    expect(html).not.toMatch(/src="\/logo-mark\.png"/);
+    expect(html).toContain('src="https://www.beco.co.ke/logo-mark-white.png"');
+    expect(html).not.toMatch(/src="\/logo-mark/);
     process.env = OLD_ENV;
   });
 
@@ -120,7 +132,7 @@ describe('renderEmailShell', () => {
     const OLD_ENV = process.env;
     process.env = { ...OLD_ENV, STOREFRONT_URL: 'https://staging.beco.co.ke' };
     const html = renderEmailShell({ preview: 'x', bodyHtml: '<p>x</p>' });
-    expect(html).toContain('src="https://staging.beco.co.ke/logo-mark.png"');
+    expect(html).toContain('src="https://staging.beco.co.ke/logo-mark-white.png"');
     process.env = OLD_ENV;
   });
 
@@ -135,5 +147,56 @@ describe('renderEmailShell', () => {
     const html = renderEmailShell({ preview: 'x', bodyHtml: '<p>x</p>' });
     expect(html).toContain('name="color-scheme" content="light"');
     expect(html).toContain('name="supported-color-schemes" content="light"');
+  });
+});
+
+describe('premium building blocks', () => {
+  it('keeps every font size at or above the 14px small print floor', () => {
+    const html =
+      renderEmailShell({ preview: 'x', bodyHtml: '' }) +
+      eyebrow('x') +
+      heading('x') +
+      paragraph('x') +
+      referenceBox('Ref', 'BEC-Q-1', [['Valid until', '2026-10-17']]) +
+      attachmentNote('BEC-Q-1.pdf', 'Attached') +
+      steps(['One', 'Two']) +
+      contactButtons('hi');
+    const sizes = [...html.matchAll(/font-size:(\d+)px/g)].map((m) => Number(m[1]));
+    expect(sizes.length).toBeGreaterThan(10);
+    // font-size:0 is the spacer idiom on empty rule rows, not text.
+    expect(sizes.filter((n) => n !== 0).every((n) => n >= 14)).toBe(true);
+  });
+
+  it('lists the reference card detail rows, escaped', () => {
+    const box = referenceBox('Ref', 'BEC-Q-1', [['Valid until', '<b>soon</b>']]);
+    expect(box).toContain('Valid until');
+    expect(box).toContain('&lt;b&gt;soon&lt;/b&gt;');
+  });
+
+  it('numbers the steps in order', () => {
+    const html = steps(['Price it', 'Send it']);
+    expect(html.indexOf('>1<')).toBeLessThan(html.indexOf('>2<'));
+    expect(html).toContain('Price it');
+  });
+
+  it('renders buttons as real links with escaped hrefs', () => {
+    const html = buttons([{ label: 'Call', href: 'tel:+254722333730', primary: true }, { label: 'Site', href: 'https://x.test/?a="b"' }]);
+    expect(html).toContain('href="tel:+254722333730"');
+    expect(html).toContain('href="https://x.test/?a=&quot;b&quot;"');
+  });
+
+  it('offers a call and a prefilled WhatsApp chat', () => {
+    const html = contactButtons('Hi Beco, about quote BEC-Q-1');
+    expect(html).toContain('href="tel:+254722333730"');
+    expect(html).toContain('https://wa.me/254722333730?text=Hi%20Beco%2C%20about%20quote%20BEC-Q-1');
+  });
+
+  it('has a sharp cornered layout, no border radius anywhere', () => {
+    const html = renderEmailShell({ preview: 'x', bodyHtml: contactButtons('x') + referenceBox('a', 'b') });
+    expect(html).not.toMatch(/border-radius\s*:\s*[1-9]/);
+  });
+
+  it('carries the showroom hours in the footer', () => {
+    expect(renderEmailShell({ preview: 'x', bodyHtml: '' })).toContain('Mon to Fri 8am to 4pm, Sat 8am to 2pm');
   });
 });

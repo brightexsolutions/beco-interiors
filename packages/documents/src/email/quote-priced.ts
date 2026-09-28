@@ -1,4 +1,16 @@
-import { escapeHtml, eyebrow, heading, paragraph, referenceBox, renderEmailShell } from './shell';
+import {
+  PHONE_DISPLAY,
+  attachmentNote,
+  contactButtons,
+  divider,
+  escapeHtml,
+  eyebrow,
+  heading,
+  paragraph,
+  referenceBox,
+  renderEmailShell,
+  signOff,
+} from './shell';
 
 /**
  * The email a customer gets once a salesperson has priced the quote and
@@ -12,6 +24,8 @@ export interface PricedQuoteEmailInput {
   customerName: string;
   validUntil: string | null;
   isPriced: boolean;
+  /** The attachment's file name, shown so the reader knows what to open. */
+  filename?: string | undefined;
 }
 
 export interface PricedQuoteEmail {
@@ -20,14 +34,12 @@ export interface PricedQuoteEmail {
   html: string;
 }
 
-const PHONE = '+254 722 333 730';
-
 export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuoteEmail {
   const firstName = input.customerName.trim().split(/\s+/)[0] || 'there';
   const validity = input.validUntil ? ` It is valid until ${input.validUntil}.` : '';
   const pricedLine = input.isPriced
     ? `Your quote is attached.${validity}`
-    : `Your quote is attached. Some items are still priced on application, so the document does not show a total.`;
+    : 'Your quote is attached. Some items are still priced on application, so the document does not show a total.';
 
   const subject = `Your Beco quote, ${input.reference}`;
 
@@ -36,21 +48,27 @@ export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuote
     '',
     pricedLine,
     '',
-    `Your reference is ${input.reference}. If anything looks off, reply to this email or call us on ${PHONE}.`,
+    `Your reference is ${input.reference}. To go ahead, reply to this email or call us on ${PHONE_DISPLAY}.`,
+    'We reserve stock once you confirm.',
     '',
-    'Beco Interiors',
+    'The Beco Interiors team',
     'Urban Square, Enterprise Road, Industrial Area, Nairobi',
   ].join('\n');
 
+  const rows: Array<[string, string]> = [];
+  if (input.validUntil) rows.push(['Valid until', input.validUntil]);
+  rows.push(['Pricing', input.isPriced ? 'VAT inclusive' : 'Some items on application']);
+
   const bodyHtml =
     eyebrow('Your quote') +
-    heading(`Hi ${escapeHtml(firstName)},`) +
+    heading(`Here is your quote, ${escapeHtml(firstName)}.`) +
     paragraph(escapeHtml(pricedLine)) +
-    referenceBox('Your reference', input.reference) +
-    paragraph(
-      `If anything looks off, reply to this email or call us on ` +
-        `<a href="tel:+254722333730" style="color:#c81419;text-decoration:none">${escapeHtml(PHONE)}</a>.`,
-    );
+    referenceBox('Quote reference', input.reference, rows) +
+    attachmentNote(input.filename ?? `${input.reference}.pdf`, 'Attached. Open it for every line, the VAT and how to pay.') +
+    paragraph('Ready to go ahead, or want something changed? Reply to this email, or reach us directly. We reserve stock once you confirm.') +
+    contactButtons(`Hi Beco, about quote ${input.reference}`) +
+    divider() +
+    signOff();
 
   const html = renderEmailShell({ preview: pricedLine, bodyHtml });
 
