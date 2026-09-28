@@ -237,3 +237,23 @@ describe('QuoteBuilder: guidance and recovery', () => {
     expect(screen.getByText(/We reply in working hours/)).toBeDefined();
   });
 });
+
+describe('QuoteBuilder: the list summary', () => {
+  it('never deletes a line from the minus button: it stops at one step, and Remove deletes', async () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([{ ...line, quantity: 0.5 }]));
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+    const minus = await screen.findByRole('button', { name: /decrease quantity of amber jade/i });
+    expect(minus).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: /increase quantity of amber jade/i }));
+    expect(readList()[0]?.quantity).toBe(1);
+    await user.click(screen.getByRole('button', { name: /remove amber jade/i }));
+    expect(readList()).toHaveLength(0);
+  });
+
+  it('heads the list with its count', async () => {
+    render(<QuoteBuilder />);
+    const heading = await screen.findByRole('heading', { name: /your list/i });
+    expect(heading.textContent).toMatch(/^Your list\d+items?$/);
+  });
+});
