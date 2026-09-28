@@ -1,6 +1,7 @@
 import type { QuoteSource, QuoteStatus } from '@beco/types';
 import type { StatusTone } from '@beco/ui';
 import { createServerClient } from '@beco/supabase-client';
+import { fetchStaffNames, staffName } from './staff-names';
 
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
@@ -206,7 +207,17 @@ export async function fetchQuotes(
 
   const { data, error } = await query.overrideTypes<QuoteRow[]>();
   if (error) throw new Error(`Could not load quotes: ${error.message}`);
-  return (data ?? []).map(toListItem);
+  const items = (data ?? []).map(toListItem);
+  const missing = items.flatMap((q) => [
+    q.assignedTo && !q.assignedToName ? q.assignedTo : null,
+    q.createdBy && !q.createdByName ? q.createdBy : null,
+  ]);
+  const names = await fetchStaffNames(supabase, missing);
+  return items.map((q) => ({
+    ...q,
+    assignedToName: staffName(q.assignedTo, q.assignedToName, names),
+    createdByName: staffName(q.createdBy, q.createdByName, names),
+  }));
 }
 
 /**

@@ -1292,6 +1292,13 @@ export type Database = {
         Returns: undefined
       }
       slugify: { Args: { input: string }; Returns: string }
+      staff_names: {
+        Args: { p_ids: string[] }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       submit_quote: {
         Args: {
           p_budget_note?: string
