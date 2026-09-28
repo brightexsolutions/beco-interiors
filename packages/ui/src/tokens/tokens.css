@@ -334,6 +334,13 @@ body[data-announcement] .beco-hero-content-top {
      typed. Body Cormorant is rare on this site, so the floor is safe. */
   .font-display {
     letter-spacing: -0.015em;
+    /* Lining figures. Cormorant defaults to old-style numerals, whose 1
+       reads as a capital I and whose 3, 4, 5 drop below the line: a count
+       of "1 item" or "3 waiting" set in display type misread. */
+    font-variant-numeric: lining-nums;
+    /* Tailwind's tabular-nums and friends rebuild font-variant-numeric from
+       these variables, which would drop the lining figures set above. */
+    --tw-numeric-figure: lining-nums;
   }
 }
 

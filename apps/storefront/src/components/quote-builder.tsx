@@ -36,6 +36,18 @@ export function QuoteBuilder() {
   const [pending, startTransition] = useTransition();
 
   const doneRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // A rejected send leaves focus on the button at the foot of a long form,
+  // so on a phone the field that needs fixing is off screen and the reader
+  // sees nothing change. Focus moves to the first field the server named,
+  // and the page's keyboard-aware scroll brings it into view.
+  useEffect(() => {
+    if (!result || result.ok || !result.fieldErrors) return;
+    const first = Object.keys(result.fieldErrors).find((name) => result.fieldErrors?.[name]?.length);
+    if (!first) return;
+    formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
+  }, [result]);
 
   useEffect(() => {
     const update = () => setLines(readList());
@@ -188,6 +200,42 @@ export function QuoteBuilder() {
     // form's height, leaving a dead void of plain charcoal below the last row.
     // Confirmed directly by screenshot, not assumed. Each column now ends
     // where its own content ends.
+    <div>
+    {/* Where the reader is in three short steps. Orientation, not a control:
+        the page is one form, so nothing here is clickable. */}
+    <ol className="mb-10 grid grid-cols-3 border-y border-neutral-200 font-ui text-sm" aria-label="How a quote works">
+      {[
+        { n: '1', label: 'Your list', done: true },
+        { n: '2', label: 'Your details', done: false },
+        { n: '3', label: 'We price it', done: false },
+      ].map((step, index) => (
+        <li
+          key={step.n}
+          aria-current={index === 1 ? 'step' : undefined}
+          className={`flex items-center gap-2 py-3 sm:gap-3 ${index > 0 ? 'border-l border-neutral-200 pl-3 sm:pl-5' : ''}`}
+        >
+          <span
+            aria-hidden
+            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center font-semibold tabular-nums ${
+              step.done
+                ? 'bg-charcoal text-high-vis-white'
+                : index === 1
+                  ? 'border border-charcoal text-charcoal'
+                  : 'border border-neutral-300 text-neutral-500'
+            }`}
+          >
+            {step.done ? (
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12.5l4.5 4.5L19 7.5" />
+              </svg>
+            ) : (
+              step.n
+            )}
+          </span>
+          <span className={`font-semibold ${index === 2 ? 'text-neutral-500' : 'text-charcoal'}`}>{step.label}</span>
+        </li>
+      ))}
+    </ol>
     <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
       {/* --- The list ---
           A charcoal panel, not a third white block beside the form: the same
@@ -332,12 +380,7 @@ export function QuoteBuilder() {
         <h2 id="details-heading" className="font-display text-3xl text-charcoal">
           Where should we send it?
         </h2>
-        <p className="mt-3 max-w-[52ch] font-ui text-sm text-neutral-500">
-          Your name and phone number are all we genuinely need. Everything else just helps us
-          price it faster.
-        </p>
-
-        <form onSubmit={onSubmit} noValidate className="mt-8 space-y-10">
+        <form ref={formRef} onSubmit={onSubmit} noValidate className="mt-8 space-y-10">
           <FormSection title="Your details" columns={2}>
             <Field
               label="Your name" name="customerName" required
@@ -488,16 +531,32 @@ export function QuoteBuilder() {
             {pending ? 'Sending…' : 'Send my request'}
           </Button>
 
-          <p className="font-ui text-sm text-neutral-500">
-            Would rather talk? Call{' '}
-            <a href={SITE.phoneHref} data-analytics="call_click" className="font-semibold text-charcoal underline-offset-4 hover:underline">
-              {SITE.phone}
-            </a>
-            .
-          </p>
+          <div className="border-t border-neutral-200 pt-5 font-ui text-sm text-neutral-500">
+            <p>
+              We reply in working hours, {SITE.hours.replace('. ', ', ')}.
+            </p>
+            <p className="mt-1">
+              Would rather talk? Call{' '}
+              <a href={SITE.phoneHref} data-analytics="call_click" className="font-semibold text-charcoal underline-offset-4 hover:underline">
+                {SITE.phone}
+              </a>{' '}
+              or{' '}
+              <a
+                href={whatsappLink('I would like a quote for the items on my list')}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-analytics="whatsapp_click"
+                className="font-semibold text-charcoal underline-offset-4 hover:underline"
+              >
+                message us on WhatsApp
+              </a>
+              .
+            </p>
+          </div>
         </form>
       </section>
 
+      </div>
       <ConfirmDialog
         open={confirmClear}
         onOpenChange={setConfirmClear}

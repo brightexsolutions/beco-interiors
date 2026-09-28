@@ -204,3 +204,36 @@ describe('QuoteBuilder, adding more materials', () => {
     );
   });
 });
+
+describe('QuoteBuilder: guidance and recovery', () => {
+  it('shows where the reader is in three steps, the details step current', async () => {
+    render(<QuoteBuilder />);
+    const steps = await screen.findByRole('list', { name: 'How a quote works' });
+    const items = steps.querySelectorAll('li');
+    expect([...items].map((li) => li.textContent)).toEqual(['Your list', '2Your details', '3We price it']);
+    expect(items[1]).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('moves focus to the first field the server rejected, so it is not left off screen', async () => {
+    const { submitQuote } = await import('@/app/quote/actions');
+    vi.mocked(submitQuote).mockResolvedValueOnce({
+      ok: false,
+      error: 'Please check the highlighted fields.',
+      fieldErrors: { customerPhone: ['Enter a valid Kenyan phone number'] },
+    } as never);
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+    await user.type(await screen.findByLabelText(/Your name/), 'Achieng');
+    await user.type(screen.getByLabelText(/Phone number/), '123');
+    await user.click(screen.getByRole('button', { name: 'Send my request' }));
+    expect(await screen.findByText('Enter a valid Kenyan phone number')).toBeDefined();
+    expect(screen.getByLabelText(/Phone number/)).toHaveFocus();
+  });
+
+  it('offers WhatsApp beside the phone line, and says when we reply', async () => {
+    render(<QuoteBuilder />);
+    const link = await screen.findByRole('link', { name: 'message us on WhatsApp' });
+    expect(link.getAttribute('href')).toContain('wa.me');
+    expect(screen.getByText(/We reply in working hours/)).toBeDefined();
+  });
+});
