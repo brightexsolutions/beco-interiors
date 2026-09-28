@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { createRateLimiter, webQuoteSubmissionSchema } from '@beco/validation';
-import { reportOpsFailure } from '@/lib/ops-alert';
+import { reportOpsFailure } from '../../lib/ops-alert';
 
 /**
  * The public quote submission.
