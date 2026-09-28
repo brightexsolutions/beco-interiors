@@ -15,6 +15,7 @@ import { fetchOrder } from '@/lib/order-detail';
 import { persistReceiptPdf, receiptPdfFilename } from '@/lib/order-pdf';
 import { fetchQuoteSettings } from '@/lib/quote-detail';
 import { reportSendFailure } from '@/lib/ops-alert';
+import { isDocumentPathFor } from '@/lib/document-path';
 
 export interface OrderActionState {
   error?: string;
@@ -220,4 +221,18 @@ export async function sendOrderReceipt(
 
   revalidateOrder(order.reference, order.quoteReference);
   return { ok: `Sent to ${parsed.data.to}.` };
+}
+
+export async function markReceiptSharedWhatsApp(reference: string, path: string): Promise<OrderActionState> {
+  const user = await requirePath('/orders');
+  if (!isDocumentPathFor('receipts', reference, path)) return { error: 'That document does not belong to this order.' };
+  const supabase = await getSupabase();
+  const { error } = await supabase
+    .from('documents')
+    .update({ sent_channel: 'whatsapp', sent_at: new Date().toISOString() })
+    .eq('storage_path', path)
+    .eq('generated_by', user.userId);
+  if (error) return { error: 'Shared, but the send was not recorded.' };
+  revalidatePath(`/orders/${reference}`);
+  return { ok: 'Recorded as sent on WhatsApp.' };
 }

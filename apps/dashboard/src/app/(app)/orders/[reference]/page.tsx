@@ -52,6 +52,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
               updatedAt={order.updatedAt}
               reference={order.reference}
               customerEmail={order.customerEmail}
+              customerPhone={order.customerPhone}
               canMutate={canMutate}
               paid
               layout="compact"
@@ -88,6 +89,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
                   updatedAt={order.updatedAt}
                   reference={order.reference}
                   customerEmail={order.customerEmail}
+              customerPhone={order.customerPhone}
                   canMutate={canMutate}
                   paid
                   layout="block"

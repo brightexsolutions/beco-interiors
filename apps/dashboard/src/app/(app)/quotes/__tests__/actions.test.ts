@@ -179,3 +179,17 @@ describe('quote actions', () => {
     );
   });
 });
+
+describe('markQuoteSharedWhatsApp', () => {
+  it('refuses a document path that belongs to another quote, before touching the database', async () => {
+    const { markQuoteSharedWhatsApp } = await import('../actions');
+    getSupabase.mockClear();
+    const result = await markQuoteSharedWhatsApp(
+      'BEC-Q-00042',
+      'quotes/BEC-Q-00043/3f2504e0-4f89-41d3-9a0c-0305e82c3301.pdf',
+    );
+    expect(result.error).toBe('That document does not belong to this quote.');
+    expect(requirePath).toHaveBeenCalledWith('/quotes');
+    expect(getSupabase).not.toHaveBeenCalled();
+  });
+});

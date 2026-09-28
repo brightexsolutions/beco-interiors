@@ -58,6 +58,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
             updatedAt={quote.updatedAt}
             reference={quote.reference}
             customerEmail={quote.customerEmail}
+            customerPhone={quote.customerPhone}
             canMutate={canMutate}
           />
         }

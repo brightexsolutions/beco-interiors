@@ -107,3 +107,12 @@ describe('order actions', () => {
     expect(result.ok).toMatch(/sent to ada@example.com/i);
   });
 });
+
+describe('markReceiptSharedWhatsApp', () => {
+  it('refuses a quote path or another order\'s receipt', async () => {
+    const { markReceiptSharedWhatsApp } = await import('../actions');
+    const uuid = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+    expect((await markReceiptSharedWhatsApp('BEC-O-00001', `quotes/BEC-O-00001/${uuid}.pdf`)).error).toBeDefined();
+    expect((await markReceiptSharedWhatsApp('BEC-O-00001', `receipts/BEC-O-00002/${uuid}.pdf`)).error).toBeDefined();
+  });
+});

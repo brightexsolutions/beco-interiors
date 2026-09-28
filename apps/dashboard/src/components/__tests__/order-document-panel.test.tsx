@@ -7,6 +7,7 @@ import { OrderDocumentPanel } from '../order-document-panel';
 
 vi.mock('@/app/(app)/orders/actions', () => ({
   sendOrderReceipt: vi.fn(async () => ({ ok: 'Sent to a@example.com.' })),
+  markReceiptSharedWhatsApp: vi.fn(async () => ({ ok: 'Recorded as sent on WhatsApp.' })),
 }));
 
 const props = {
@@ -14,6 +15,7 @@ const props = {
   updatedAt: 't',
   reference: 'BEC-O-00042',
   customerEmail: 'a@example.com',
+  customerPhone: '0722333730',
   canMutate: true,
   paid: true,
 };
@@ -47,7 +49,7 @@ describe('OrderDocumentPanel', () => {
       'href',
       '/orders/BEC-O-00042/pdf?download=1',
     );
-    expect(screen.getByText(/download the file to send it on whatsapp/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /whatsapp/i })).toBeInTheDocument();
   });
 
   it('lets you type an address when the order has none', async () => {

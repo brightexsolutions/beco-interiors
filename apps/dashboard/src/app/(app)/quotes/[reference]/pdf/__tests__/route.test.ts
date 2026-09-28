@@ -71,5 +71,7 @@ describe('GET /quotes/[reference]/pdf', () => {
     expect(persistQuotePdf).toHaveBeenCalled();
     expect(res.headers.get('content-disposition')).toMatch(/^attachment;/);
     expect(res.headers.get('content-disposition')).toContain('BEC-Q-00042 Achieng Otieno.pdf');
+    // A WhatsApp share records the send against exactly this stored copy.
+    expect(res.headers.get('x-document-path')).toBe('quotes/BEC-Q-00042/x.pdf');
   });
 });

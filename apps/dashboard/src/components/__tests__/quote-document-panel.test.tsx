@@ -10,6 +10,7 @@ import type { QuoteLine } from '@/lib/quote-detail';
 
 vi.mock('@/app/(app)/quotes/actions', () => ({
   sendQuoteEmail: vi.fn(async () => ({})),
+  markQuoteSharedWhatsApp: vi.fn(async () => ({ ok: 'Recorded as sent on WhatsApp.' })),
   updateQuoteLines: vi.fn(async () => ({ ok: 'Items saved.', updatedAt: '2026-09-17T12:00:00.000Z' })),
   addCustomLine: vi.fn(async () => ({})),
   addCatalogueLines: vi.fn(async () => ({})),
@@ -25,6 +26,7 @@ const props = {
   updatedAt: 't',
   reference: 'BEC-Q-00042',
   customerEmail: 'a@example.com',
+  customerPhone: '0722333730',
   canMutate: true,
 };
 
@@ -143,6 +145,7 @@ describe('QuoteDocumentPanel', () => {
           updatedAt="lock"
           reference="BEC-Q-00042"
           customerEmail="a@example.com"
+          customerPhone="0722333730"
           canMutate
         />
         <QuoteLines lines={[line]} quoteId="11111111-1111-4111-8111-111111111111" updatedAt="lock" canMutate />

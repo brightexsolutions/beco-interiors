@@ -2,8 +2,10 @@
 
 import { useActionState, useState } from 'react';
 import { Button, Dialog, Field, Input, buttonClasses, Icon, useActionToast } from '@beco/ui';
-import { sendOrderReceipt, type OrderActionState } from '@/app/(app)/orders/actions';
+import { markReceiptSharedWhatsApp, sendOrderReceipt, type OrderActionState } from '@/app/(app)/orders/actions';
 import { PdfPreview } from '@/components/pdf-preview';
+import { WhatsAppShare } from '@/components/whatsapp-share';
+import { whatsAppChatLink } from '@/lib/whatsapp';
 
 const INITIAL: OrderActionState = {};
 
@@ -12,6 +14,7 @@ export function OrderDocumentPanel({
   updatedAt,
   reference,
   customerEmail,
+  customerPhone,
   canMutate,
   paid,
   layout = 'compact',
@@ -20,6 +23,7 @@ export function OrderDocumentPanel({
   updatedAt: string;
   reference: string;
   customerEmail: string | null;
+  customerPhone: string;
   canMutate: boolean;
   paid: boolean;
   layout?: 'compact' | 'block';
@@ -76,11 +80,19 @@ export function OrderDocumentPanel({
                 </Button>
               </form>
             ) : null}
-            <a href={downloadHref} className={buttonClasses({ variant: 'outline' })}>
-              Download
-            </a>
+            <div className="grid grid-cols-2 gap-2 lg:flex">
+              <WhatsAppShare
+                downloadHref={downloadHref}
+                fallbackFilename={`${reference}.pdf`}
+                chatHref={whatsAppChatLink(customerPhone, `Beco receipt ${reference}`)}
+                message={`Beco receipt ${reference}`}
+                onShared={(path) => markReceiptSharedWhatsApp(reference, path)}
+              />
+              <a href={downloadHref} className={buttonClasses({ variant: 'outline' })}>
+                Download
+              </a>
+            </div>
           </div>
-          <p className="mt-3 font-ui text-sm text-neutral-500">Download the file to send it on WhatsApp.</p>
         </div>
       </Dialog>
     </>
