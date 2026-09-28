@@ -52,7 +52,7 @@ describe('quote actions', () => {
   });
 
   it('refuses a stale lock with the salesperson-facing sentence', async () => {
-    rpc.mockResolvedValue({ error: { code: '40001', message: 'This quote changed while you were editing' } });
+    rpc.mockResolvedValue({ error: { code: 'PT409', message: 'This quote changed while you were editing' } });
     const result = await updateQuoteLine(
       {},
       lockForm({

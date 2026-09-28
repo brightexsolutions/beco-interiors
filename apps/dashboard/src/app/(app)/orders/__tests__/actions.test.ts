@@ -56,7 +56,7 @@ describe('order actions', () => {
   });
 
   it('refuses a stale lock with the salesperson-facing sentence', async () => {
-    rpc.mockResolvedValue({ error: { code: '40001', message: 'This order changed while you were editing' } });
+    rpc.mockResolvedValue({ error: { code: 'PT409', message: 'This order changed while you were editing' } });
     const result = await setOrderStatus({}, form({ status: 'confirmed' }));
     expect(result.error).toMatch(/changed while you were editing/i);
   });

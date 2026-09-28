@@ -134,6 +134,9 @@ describe('create_counter_quote', () => {
       p_expected_updated_at: '1999-01-01T00:00:00.000Z',
     });
     expect(error?.message).toMatch(/changed while you were editing/i);
+    // PT409, not 40001: PostgREST retries a serialization failure, and a
+    // stale timestamp is stale on every retry, so 40001 hung this request.
+    expect(error?.code).toBe('PT409');
   });
 
   it('adds a later catalogue product onto an existing quote', async () => {

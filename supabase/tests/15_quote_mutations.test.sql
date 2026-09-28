@@ -123,7 +123,7 @@ select throws_ok(
       'a3000000-0000-4000-8000-000000000020'::uuid,
       3, 65000,
       '1999-01-01 00:00:00+00'::timestamptz)$$,
-  '40001',
+  'PT409',
   'This quote changed while you were editing',
   'a stale lock token is refused rather than overwriting'
 );

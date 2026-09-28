@@ -92,7 +92,7 @@ select throws_ok(
       'a3800000-0000-4000-8000-000000000010'::uuid,
       '[{"product_id":"a3800000-0000-4000-8000-0000000000aa","quantity":1,"unit_price":65000}]'::jsonb,
       '1999-01-01 00:00:00+00'::timestamptz)$$,
-  '40001',
+  'PT409',
   'This quote changed while you were editing',
   'a stale lock token is refused rather than overwriting'
 );

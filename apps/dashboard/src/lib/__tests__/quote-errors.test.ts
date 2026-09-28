@@ -3,7 +3,7 @@ import { mutationMessage } from '../quote-errors';
 
 describe('mutationMessage', () => {
   it('names a stale lock so the salesperson reloads rather than retrying blindly', () => {
-    expect(mutationMessage({ code: '40001', message: 'This quote changed while you were editing' })).toMatch(
+    expect(mutationMessage({ code: 'PT409', message: 'This quote changed while you were editing' })).toMatch(
       /changed while you were editing/i,
     );
   });

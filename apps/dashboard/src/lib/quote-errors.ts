@@ -6,7 +6,7 @@
 export function mutationMessage(error: { message?: string; code?: string } | null | undefined): string {
   const message = error?.message ?? '';
   const code = error?.code ?? '';
-  if (code === '40001' || /changed while you were editing/i.test(message)) {
+  if (code === 'PT409' || /changed while you were editing/i.test(message)) {
     return 'This quote changed while you were editing. Reload and try again.';
   }
   if (code === '23514' || /finalized_requires_approval/i.test(message)) {
