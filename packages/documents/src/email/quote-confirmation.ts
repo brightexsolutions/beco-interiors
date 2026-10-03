@@ -2,6 +2,7 @@ import {
   PHONE_DISPLAY,
   contactButtons,
   divider,
+  emailHero,
   escapeHtml,
   eyebrow,
   heading,
@@ -25,6 +26,8 @@ import {
 export interface QuoteConfirmationInput {
   reference: string;
   customerName: string;
+  /** How many lines the request carried, so the reader knows the list arrived whole. */
+  itemCount?: number | undefined;
 }
 
 export interface QuoteConfirmationEmail {
@@ -40,8 +43,10 @@ const NEXT_STEPS = [
 ];
 
 export function buildQuoteConfirmationEmail(input: QuoteConfirmationInput): QuoteConfirmationEmail {
-  const { reference, customerName } = input;
+  const { reference, customerName, itemCount } = input;
   const firstName = customerName.trim().split(/\s+/)[0] || 'there';
+  const itemsLine =
+    itemCount && itemCount > 0 ? `${itemCount} ${itemCount === 1 ? 'item' : 'items'} on your list` : null;
 
   const subject = `We have your request, ${reference}`;
 
@@ -49,6 +54,7 @@ export function buildQuoteConfirmationEmail(input: QuoteConfirmationInput): Quot
     `Hi ${firstName},`,
     '',
     `We have your request and it is with our team. Your reference is ${reference}.`,
+    ...(itemsLine ? [itemsLine + '.'] : []),
     '',
     'What happens next:',
     ...NEXT_STEPS.map((step, i) => `${i + 1}. ${step}`),
@@ -63,7 +69,7 @@ export function buildQuoteConfirmationEmail(input: QuoteConfirmationInput): Quot
     eyebrow('Request received') +
     heading(`Thank you, ${escapeHtml(firstName)}.`) +
     paragraph('We have your request and it is with our team. Keep this reference, it is how we find your list.') +
-    referenceBox('Your reference', reference) +
+    referenceBox('Your reference', reference, itemsLine ? [['Request', itemsLine]] : []) +
     sectionLabel('What happens next') +
     steps(NEXT_STEPS) +
     paragraph('Need it sooner? Reply to this email, or reach us directly.') +
@@ -71,7 +77,11 @@ export function buildQuoteConfirmationEmail(input: QuoteConfirmationInput): Quot
     divider() +
     signOff();
 
-  const html = renderEmailShell({ preview: `We have your request. Reference ${reference}.`, bodyHtml });
+  const html = renderEmailShell({
+    preview: `We have your request. Reference ${reference}.`,
+    bodyHtml,
+    hero: emailHero('request'),
+  });
 
   return { subject, text, html };
 }

@@ -11,7 +11,7 @@ import {
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { orderMutationMessage } from '@/lib/order-errors';
-import { fetchOrder } from '@/lib/order-detail';
+import { fetchOrder, type OrderDetail } from '@/lib/order-detail';
 import { persistReceiptPdf, receiptPdfFilename } from '@/lib/order-pdf';
 import { fetchQuoteSettings } from '@/lib/quote-detail';
 import { reportSendFailure } from '@/lib/ops-alert';
@@ -50,6 +50,22 @@ async function orderRow(orderId: string): Promise<{
   const quoteReference = Array.isArray(quote) ? (quote[0]?.reference_number ?? null) : (quote?.reference_number ?? null);
   return { reference: data.reference_number, quoteReference };
 }
+
+/**
+ * What the receipt email says beyond the attachment: the amount, the day it
+ * was paid in Nairobi's calendar, and the lines (D109).
+ */
+const receiptEmailBody = (order: OrderDetail) => ({
+  amountPaid: order.totals.gross,
+  paidOn: order.paidAt
+    ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Nairobi' }).format(new Date(order.paidAt))
+    : null,
+  lines: order.lines.map((line) => ({
+    description: line.description,
+    quantity: line.quantity,
+    lineTotal: line.lineTotal,
+  })),
+});
 
 export async function convertQuoteToOrder(
   _prev: OrderActionState,
@@ -131,6 +147,7 @@ export async function markOrderPaid(_prev: OrderActionState, form: FormData): Pr
       to: order.customerEmail,
       reference: order.reference,
       customerName: order.customerName,
+      ...receiptEmailBody(order),
       pdf: stored.bytes,
       filename: receiptPdfFilename(order.reference, order.customerName),
     });
@@ -192,6 +209,7 @@ export async function sendOrderReceipt(
     to: parsed.data.to,
     reference: order.reference,
     customerName: order.customerName,
+    ...receiptEmailBody(order),
     pdf: stored.bytes,
     filename: receiptPdfFilename(order.reference, order.customerName),
   });

@@ -50,4 +50,15 @@ describe('buildQuoteConfirmationEmail', () => {
     expect(email.html).toContain('Urban Square, Enterprise Road, Industrial Area, Nairobi');
     expect(email.html).toContain('Request received');
   });
+
+  it('names how many items arrived, and opens on the request photograph (D109)', () => {
+    const one = buildQuoteConfirmationEmail({ reference: 'r', customerName: 'A', itemCount: 1 });
+    const many = buildQuoteConfirmationEmail({ reference: 'r', customerName: 'A', itemCount: 4 });
+    expect(one.html).toContain('1 item on your list');
+    expect(many.html).toContain('4 items on your list');
+    expect(many.text).toContain('4 items on your list.');
+    expect(many.html).toContain('/email/hero-request.jpg');
+    // Still no figure: the request is not priced.
+    expect(many.text).not.toMatch(/KES|total|subtotal/i);
+  });
 });

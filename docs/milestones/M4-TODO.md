@@ -95,7 +95,10 @@ Verification for this milestone was done against a running dev server on
 - [x] **Submission verified end to end** by integration test against the local database: the
       row exists, the items exist, the reference is minted, the quote arrives unowned, and a
       crafted request cannot supply its own description or price. **7 tests**
-- [~] Confirmation email through Resend. **Template built, delivery deferred.**
+- [x] Confirmation email through Resend. **Resolved 3 October 2026, D109:** the storefront relays
+      the send to the dashboard's `POST /api/quote-confirmation` behind the existing relay secret,
+      so it still never holds the Resend key and no edge function was needed. The original note,
+      kept for the record: **Template built, delivery deferred.**
       `buildQuoteConfirmationEmail` and `sendQuoteConfirmation` are in `@beco/documents`, tested,
       no-op without `RESEND_API_KEY`. NOT wired into `submitQuote`: the storefront must never
       hold the Resend key, per the ownership split and its own `.env.example`. The web

@@ -2414,3 +2414,32 @@ bounded policy is the same safety without a second migration later.
 *Reverses if:* a third-party script ever has to run on the storefront, at which point the nonce
 is built and the ISR cost paid.
 
+## D109, 3 October 2026: the emails carry the figure, and the confirmation finally sends
+
+**Decision.** Three changes to the transactional email, together. Each template opens on a
+photograph of a finished Beco interior, a JPEG crop of the site's own photography served from the
+storefront, on charcoal so a client that blocks images shows a calm band. The priced quote and the
+receipt carry their lines and the figure that matters, the VAT inclusive total or the amount paid,
+set large in the serif on a charcoal block, with the total also leading the preheader so the inbox
+list on a phone shows it before the message is opened. And the web confirmation, whose template has
+existed since M4 with no sender, now sends: the storefront asks the dashboard's new
+`POST /api/quote-confirmation`, behind the existing relay secret, and the dashboard holds the Resend
+key as it always has.
+
+**Why.** An email that says "your quote is attached" and nothing else makes the customer open a
+PDF on a phone to learn the one number they care about. The figure in the body, and in the
+preheader, is the difference between a message that is read and one that is filed. The photograph
+is the brand doing in email what the storefront does on every page: leading with the material. The
+confirmation had been deferred to an edge function nobody had built, while the ops alert relay,
+built since, was exactly the mechanism it needed; a customer who gave an address and heard nothing
+was the one gap left in the web path.
+
+**Rejected.** The storefront holding the Resend key: the ownership rule stands, a compromised
+storefront leaks the anon key and nothing else. A database trigger calling Resend through
+`pg_net`: a second place that sends email, with its own secret, its own failure path and no shared
+template. WebP for the heroes: Outlook's engine does not render it. Every line in the email: eight,
+then the PDF, since the email is a summary and the document is the record.
+
+*Reverses if:* Resend's deliverability reports show image heavy messages landing in promotions
+tabs for Gmail recipients, in which case the hero goes and the total block stays.
+

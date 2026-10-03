@@ -24,3 +24,18 @@ export const opsAlertRelaySchema = z.object({
 });
 
 export type OpsAlertRelay = z.infer<typeof opsAlertRelaySchema>;
+
+/**
+ * The second thing the storefront relays to the dashboard, behind the same
+ * secret: a request to send the quote confirmation to the customer, since the
+ * storefront must never hold the Resend key (D109). Bounded, so a leaked
+ * secret can at most send a short branded confirmation to one address.
+ */
+export const quoteConfirmationRelaySchema = z.object({
+  reference: z.string().trim().min(1).max(40).regex(/^[A-Z0-9-]+$/, 'reference is a quote reference'),
+  customerName: z.string().trim().min(1).max(120),
+  to: z.string().trim().email().max(254),
+  itemCount: z.number().int().min(0).max(500).optional(),
+});
+
+export type QuoteConfirmationRelay = z.infer<typeof quoteConfirmationRelaySchema>;
