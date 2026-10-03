@@ -9,8 +9,9 @@
  */
 export const SITE = {
   name: 'Beco Interiors',
-  /** From the brand guideline strapline, on every page of it. */
-  strapline: 'Sintered Stone · Lighting · Panels · Accessories',
+  /** The brand guideline strapline, with Lighting removed on Beco's own
+      instruction (D103) and Hardware, which they do sell, in its place. */
+  strapline: 'Sintered Stone · Panels · Hardware · Accessories',
   phone: '+254 722 333 730',
   phoneHref: 'tel:+254722333730',
   whatsapp: '254722333730',

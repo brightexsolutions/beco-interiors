@@ -178,7 +178,7 @@ run.** `docs/milestones/M4-HANDOVER.md` section 3 predates this resync and is no
 table is the current short form.
 
 Resolved since 3 September, removed from the table below: product prices and descriptions,
-"10+ years" vs "new entrant", does Lighting stay a category (yes, confirmed top level with no
+"10+ years" vs "new entrant", does Lighting stay a category (it did until 3 October 2026, when Beco confirmed they no longer sell it: retired by migration 57, D103; it had been top level with no
 Drive folder, see D47 and D52). **Changed by the 23 September import, not resolved**: the six
 categories once stuck at literally zero products (Door Locks, Furniture Legs, Kitchen
 Accessories, Hinges, Floating Shelf Accessories, Office Accessories) now each hold one umbrella

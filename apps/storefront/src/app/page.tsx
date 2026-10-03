@@ -467,10 +467,10 @@ export default async function HomePage() {
               stat band, "What we deal in", the featured stone grid and the
               signature moment above, and every one of those except the
               overview grid was about sintered stone specifically. Hardware
-              gets its own cutout section further down; lighting, wall
+              gets its own cutout section further down; wall
               panels, SPC flooring and accessories did not get a section of
               their own anywhere on the page. This is that section, for the
-              four ranges with no other spotlight, so scrolling the page
+              ranges with no other spotlight, so scrolling the page
               stops reading as a stone catalogue with everything else
               mentioned once in a grid. Reuses the same photography the
               hero already carries, `HERO_RANGE_IMAGES`, rather than

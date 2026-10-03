@@ -2230,3 +2230,28 @@ Resend into the browser bundle.
 
 *Reverses if:* the alert volume proves noisy in practice, in which case the throttle window
 widens before any alert is removed; a silent failure is the problem this closes.
+
+## D103, 3 October 2026: Lighting is retired, on Beco's own word
+
+Beco's team told Brown they no longer sell lighting. D47 seeded a Lighting category with no
+Drive folder behind it because the brand guideline named it as a pillar and its strapline
+carried it on every page; D52 kept it top level with no children. Both were the right call
+against the guideline. The guideline has now been overtaken by the business, and a site that
+offers a range the showroom cannot supply costs more credibility than a strapline that differs
+from the artwork.
+
+Migration 57 unpublishes the Lighting category and soft deletes anything filed under it. The
+row stays: `categories` has no `deleted_at`, the row is the importer's identity for its
+`source_path`, and keeping it is what stops the "Lights" folder still sitting in Drive from
+recreating the range. Anonymous readers only see published categories, so the shop, the footer
+and the sitemap drop it without a code path. The importer now skips `LIGHTING` and `LIGHTS`
+outright and reports the skip once per run, so nobody wonders where the photographs went.
+
+On the storefront, `RANGE_GROUPS` loses its lighting entry and its licensed Pexels hero image is
+deleted. The strapline reads "Sintered Stone · Panels · Hardware · Accessories": Hardware is a
+range Beco holds on the floor, and four pillars keeps the splash sequence and the About page's
+grid at the shape they were designed for. `docs/BRAND-GUIDELINE-NOTES.md` section on lighting
+is kept as history with a note pointing here.
+
+*Reverses if:* Beco starts stocking lighting again, in which case the category is republished
+from the dashboard, the folder names leave `RETIRED_FOLDERS`, and the strapline is revisited.

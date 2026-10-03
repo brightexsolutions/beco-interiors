@@ -166,6 +166,24 @@ describe('buildPlan incrementality', () => {
     expect(issue?.reason).not.toContain('Imported as ONE product');
   });
 
+  it('leaves a retired range alone and says so once', () => {
+    // Beco stopped selling lighting (D103). The "Lights" folder of loose
+    // phone photographs is still in Drive and must never become a range again.
+    const listing = [
+      f('l1', 'Lights/IMG_4193.HEIC'),
+      f('l2', 'Lights/IMG_4189.HEIC'),
+      f('l3', 'LIGHTING/PENDANT/SLAB.JPG'),
+      f('s1', '12MM SINTERED STONES/BVLGARI/SLAB.JPG'),
+    ];
+    const plan = buildPlan(listing, [], []);
+    expect(plan.files.map((x) => x.path)).toEqual(['12MM SINTERED STONES/BVLGARI/SLAB.JPG']);
+    expect(plan.looseFolders).toEqual([]);
+    const reasons = plan.issues.filter((i) => i.path === 'LIGHTS' || i.path === 'LIGHTING');
+    expect(reasons).toHaveLength(2);
+    expect(reasons.find((i) => i.path === 'LIGHTS')?.reason).toContain('2 file(s)');
+    expect(reasons[0]?.reason).toContain('no longer sells');
+  });
+
   it('gallery and brand folders are NOT reported as errors', () => {
     // Site photos and videos legitimately have no products. Flagging them as
     // mistakes would bury the categories that genuinely need fixing.

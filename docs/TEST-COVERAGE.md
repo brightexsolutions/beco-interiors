@@ -115,6 +115,7 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `30_business_identity.test.sql` | The five business identity keys (legal name, KRA PIN, VAT number, address, email) are seeded. Sales can read the PIN its quotes print but cannot change it; the product manager cannot write; `beco_admin` and `brightex_admin` can. Anon can neither read nor write any of them. 9 tests. Migration 54 |
 | `31_staff_names.test.sql` | `staff_names()` returns a colleague's display name to sales while the colleague's `users` row stays unreadable; only the ids asked for, a deactivated owner included so history keeps its name; nothing to a product manager; anon cannot execute. 6 tests. Migration 55 |
 | `32_stale_edit_errcode.test.sql` | No public function raises SQLSTATE `40001` (PostgREST retries it, so a stale edit hung forever); every stale edit check raises `PT409`; the in-place rewrite kept `security definer`. Files 12, 15, 16 and 19 now expect `PT409`. 3 tests. Migration 56 |
+| `33_retire_lighting.test.sql` | Lighting is unpublished but its row and `source_path` are kept, a product filed under it is soft deleted and unpublished, and anon sees neither. 5 tests. Migration 57 |
 
 ## Storefront
 

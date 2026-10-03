@@ -109,7 +109,7 @@ export interface Category {
   description: string | null;
   /** Drive folder of origin. The category's identity, not its slug. */
   source_path: string | null;
-  /** The group this sits under, or null for a group and for Lighting. */
+  /** The group this sits under, or null for a group or a top level range. */
   parent_id: string | null;
   product_count: number;
 }
@@ -176,7 +176,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
  * the reader to hold the whole range in their head to find anything.
  *
  * A top level category with no children is returned as a group of one with an
- * empty `children`, so Lighting does not need a wrapper group invented for it
+ * empty `children`, so a lone top level range needs no wrapper group invented for it
  * and callers do not need a second code path. `total_count` is the subtree
  * total, because that is the number a reader is counting.
  *
