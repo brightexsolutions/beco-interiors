@@ -95,5 +95,6 @@ export const config = {
   // routes never contain a dot. `/change-password` deliberately goes THROUGH
   // the proxy. `/api/ops-alert` is the storefront's server to server relay:
   // it carries no session and is gated by its own shared secret instead.
-  matcher: ['/((?!login|api/ops-alert|_next/static|_next/image|favicon.ico|robots.txt|.*\\.).*)'],
+  // `/api/health` is the uptime monitor's probe: anon key, public allowlist.
+  matcher: ['/((?!login|api/ops-alert|api/health|_next/static|_next/image|favicon.ico|robots.txt|.*\\.).*)'],
 };

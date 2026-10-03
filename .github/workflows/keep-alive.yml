@@ -1,0 +1,53 @@
+name: Keep alive
+
+# Supabase pauses a free project after roughly a week without API activity,
+# and a paused project takes the site down. Each project pauses on its own,
+# so each is touched on its own: one real REST read with the anon key,
+# which is the same thing a visitor's page load does. See docs/DEPLOYMENT.md
+# section 3.12.
+#
+# Two things to know about GitHub's scheduler. It runs late under load,
+# sometimes by an hour, which is why this fires every two days rather than
+# every six. And GitHub disables the schedule after 60 days with no commits
+# to the repository; docs/RETAINER.md's monthly check covers that, and the
+# cron-job.org monitor against /api/health is the independent second leg.
+
+on:
+  schedule:
+    - cron: '17 3 */2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: staging
+            ref_secret: SUPABASE_STAGING_REF
+            key_secret: SUPABASE_STAGING_ANON_KEY
+          - name: production
+            ref_secret: SUPABASE_PROD_REF
+            key_secret: SUPABASE_PROD_ANON_KEY
+    steps:
+      - name: Touch ${{ matrix.name }}
+        env:
+          REF: ${{ secrets[matrix.ref_secret] }}
+          KEY: ${{ secrets[matrix.key_secret] }}
+        run: |
+          if [ -z "$REF" ] || [ -z "$KEY" ]; then
+            echo "::warning::${{ matrix.name }}: ${{ matrix.ref_secret }} or ${{ matrix.key_secret }} is not set, nothing pinged. See docs/ENVIRONMENT.md"
+            exit 0
+          fi
+          url="https://${REF}.supabase.co/rest/v1/settings?select=key&limit=1"
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' --max-time 30 \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" "$url")
+          echo "${{ matrix.name }}: HTTP ${code}"
+          if [ "$code" != "200" ]; then
+            echo "::error::${{ matrix.name }} did not answer 200. Body: $(head -c 300 /tmp/body)"
+            exit 1
+          fi
