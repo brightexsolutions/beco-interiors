@@ -5,6 +5,22 @@
 Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, `BLOCKED`
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
+**3 October 2026, on `dev`, nothing merged to `main`.** Since the 23 September close, merged
+through descriptive feature branches: the storefront quote page and sales flow polish, ops alerts
+to Brightex, KRA and payment details on quotes (D101, D102); Lighting retired (D103); the three
+level taxonomy with Handles a major category (D104); the Drive import run from the dashboard
+through GitHub Actions (D105); the dashboard redesigned on shadcn with charts, table toolbars and
+the sidebar shell (D106); the old WordPress addresses taken over and SEO tightened per page, with
+`docs/SEO-MIGRATION.md` for Beco's own Search Console (D107); the security review closed (D108);
+the emails opening on a photograph, carrying the figure, and the web confirmation finally sending
+(D109); `docs/SYSTEM.md` and `docs/SKETCHES.md` for the handover. **Headline numbers, 3 October:**
+60 migrations replaying clean, **37 pgTAP files, 393 assertions**, unit 359, storefront 627,
+dashboard 734, integration 37, 9 packages typechecking clean, both apps building. **Still open:**
+`main` untouched until Beco verify; `GITHUB_ACTIONS_TOKEN` not yet set so no real dispatch has run;
+the cron-job.org jobs not yet created; Search Console not yet verified under Beco's account; the
+next real `drive:import` creates the sub ranges; real phone QA of the redesigned dashboard; the
+confirmation email not yet observed in a real inbox.
+
 Last updated: 23 September 2026. M0 through M4 done. M5 (operations dashboard)
 is **WIP** on branch `dev`, approaching close. `dev` is now the primary
 developer branch, forked from `m5-dashboard` and always kept ahead of `main`;
