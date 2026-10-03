@@ -11,6 +11,8 @@ export { buildReceiptEmail } from './email/receipt';
 export type { ReceiptEmailInput, ReceiptEmail } from './email/receipt';
 export { sendQuoteConfirmation, sendPricedQuote, sendReceipt } from './email/send';
 export type { SendResult } from './email/send';
+export { formatKes } from './email/money-format';
+export type { EmailLine } from './email/shell';
 export { buildOpsAlertEmail, sendOpsAlert, DEFAULT_OPS_ALERT_EMAIL } from './email/ops-alert';
 export type { OpsAlert, OpsAlertApp, OpsAlertContext } from './email/ops-alert';
 export { renderQuotePdf, renderReceiptPdf, renderReportPdf } from './pdf/render';

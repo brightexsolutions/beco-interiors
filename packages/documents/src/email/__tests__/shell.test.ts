@@ -10,8 +10,7 @@ import {
   referenceBox,
   renderEmailShell,
   siteUrl,
-  steps,
-} from '../shell';
+  steps, emailHero, lineTable, totalBlock, MAX_EMAIL_LINES } from '../shell';
 
 describe('escapeHtml', () => {
   it('escapes the five characters that let markup or an attribute break out', () => {
@@ -160,6 +159,8 @@ describe('premium building blocks', () => {
       referenceBox('Ref', 'BEC-Q-1', [['Valid until', '2026-10-17']]) +
       attachmentNote('BEC-Q-1.pdf', 'Attached') +
       steps(['One', 'Two']) +
+      lineTable([{ description: 'Slab', quantity: 2, unit: 'slab', lineTotal: 1000 }], (n) => `KES ${n}`) +
+      totalBlock('Total', 'KES 1,000', [['VAT', 'KES 138']]) +
       contactButtons('hi');
     const sizes = [...html.matchAll(/font-size:(\d+)px/g)].map((m) => Number(m[1]));
     expect(sizes.length).toBeGreaterThan(10);
@@ -198,5 +199,84 @@ describe('premium building blocks', () => {
 
   it('carries the showroom hours in the footer', () => {
     expect(renderEmailShell({ preview: 'x', bodyHtml: '' })).toContain('Mon to Fri 8am to 4pm, Sat 8am to 2pm');
+  });
+
+  it('offers directions and the two social accounts in the footer, as real links', () => {
+    const html = renderEmailShell({ preview: 'x', bodyHtml: '' });
+    expect(html).toContain('href="https://www.google.com/maps/search/?api=1&query=Urban%20Square');
+    expect(html).toContain('href="https://www.instagram.com/becointeriorskenya"');
+    expect(html).toContain('href="https://www.tiktok.com/@beco.interiors"');
+  });
+});
+
+describe('hero photograph (D109)', () => {
+  it('opens on the photograph when one is given, absolute, JPEG, with alt text, on charcoal', () => {
+    delete process.env.STOREFRONT_URL;
+    const hero = emailHero('quote');
+    expect(hero.src).toBe('https://www.beco.co.ke/email/hero-quote.jpg');
+    const html = renderEmailShell({ preview: 'x', bodyHtml: '', hero });
+    expect(html).toContain('src="https://www.beco.co.ke/email/hero-quote.jpg"');
+    expect(html).toMatch(/alt="A charcoal sintered stone island/);
+    expect(html).toMatch(/background:#101820;padding:0;font-size:0;line-height:0"><img/);
+  });
+
+  it('is simply absent when no hero is given, with no empty band left behind', () => {
+    const html = renderEmailShell({ preview: 'x', bodyHtml: '' });
+    expect(html).not.toContain('/email/hero-');
+    expect(html).not.toContain('height="220"');
+  });
+
+  it('builds from STOREFRONT_URL so a preview deploy shows its own photograph', () => {
+    process.env.STOREFRONT_URL = 'https://preview.example/';
+    expect(emailHero('request').src).toBe('https://preview.example/email/hero-request.jpg');
+    delete process.env.STOREFRONT_URL;
+  });
+});
+
+describe('lineTable', () => {
+  const money = (n: number) => `KES ${n}`;
+
+  it('draws nothing for no lines', () => {
+    expect(lineTable([], money)).toBe('');
+  });
+
+  it('lists description, quantity with its unit, and the formatted amount, escaped', () => {
+    const html = lineTable(
+      [
+        { description: 'Calacatta <Gold> 12mm', quantity: 2, unit: 'slab', lineTotal: 130000 },
+        { description: 'Custom cut', quantity: 1.5, unit: null, lineTotal: 0 },
+      ],
+      money,
+    );
+    expect(html).toContain('Calacatta &lt;Gold&gt; 12mm');
+    expect(html).toContain('2 slab');
+    expect(html).toContain('KES 130000');
+    expect(html).toContain('1.5');
+    expect(html).toContain('On application');
+  });
+
+  it('caps the table and names how many more lines the PDF carries', () => {
+    const lines = Array.from({ length: MAX_EMAIL_LINES + 3 }, (_, i) => ({
+      description: `Line ${i + 1}`,
+      quantity: 1,
+      lineTotal: 100,
+    }));
+    const html = lineTable(lines, money);
+    expect(html).toContain(`Line ${MAX_EMAIL_LINES}`);
+    expect(html).not.toContain(`Line ${MAX_EMAIL_LINES + 1}`);
+    expect(html).toContain('and 3 more lines in the attached PDF');
+    expect(lineTable(lines.slice(0, MAX_EMAIL_LINES + 1), money)).toContain('and 1 more line in');
+  });
+});
+
+describe('totalBlock', () => {
+  it('sets the figure large in the serif on charcoal, with escaped detail rows', () => {
+    const html = totalBlock('Total, VAT inclusive', 'KES 265,000', [['VAT at 16%', 'KES 36,552'], ['<x>', '&']]);
+    expect(html).toContain('background:#101820');
+    expect(html).toMatch(/font-family:Georgia[^"]*font-size:40px[^"]*">KES 265,000</);
+    expect(html).toContain('VAT at 16%');
+    expect(html).toContain('&lt;x&gt;');
+    expect(html).toContain('&amp;');
+    expect(html).not.toMatch(/border-radius\s*:\s*[1-9]/);
   });
 });

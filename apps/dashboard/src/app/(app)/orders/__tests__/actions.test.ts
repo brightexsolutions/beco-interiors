@@ -91,6 +91,9 @@ describe('order actions', () => {
       reference: 'BEC-O-00001',
       customerName: 'Ada',
       quoteReference: 'BEC-Q-1',
+      paidAt: '2026-10-03T09:30:00.000Z',
+      totals: { isPriced: true, gross: 145000, net: 125000, vat: 20000 },
+      lines: [{ id: 'l1', description: 'Calacatta Gold 12mm', quantity: 2, unitPrice: 65000, listPrice: null, lineTotal: 130000, productId: null }],
     } as never);
     vi.mocked(fetchQuoteSettings).mockResolvedValue({} as never);
     vi.mocked(persistReceiptPdf).mockResolvedValue({
@@ -102,7 +105,14 @@ describe('order actions', () => {
 
     const result = await sendOrderReceipt({}, form({ to: 'ada@example.com' }));
     expect(sendReceipt).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'ada@example.com', reference: 'BEC-O-00001' }),
+      expect.objectContaining({
+        to: 'ada@example.com',
+        reference: 'BEC-O-00001',
+        // The body carries the figure, the Nairobi date and the lines (D109).
+        amountPaid: 145000,
+        paidOn: '3 October 2026',
+        lines: [{ description: 'Calacatta Gold 12mm', quantity: 2, lineTotal: 130000 }],
+      }),
     );
     expect(result.ok).toMatch(/sent to ada@example.com/i);
   });

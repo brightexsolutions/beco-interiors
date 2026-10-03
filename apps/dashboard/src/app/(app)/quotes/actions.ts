@@ -20,7 +20,7 @@ import {
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { mutationMessage } from '@/lib/quote-errors';
-import { fetchQuote, fetchQuoteSettings } from '@/lib/quote-detail';
+import { fetchQuote, fetchQuoteSettings, type QuoteDetail } from '@/lib/quote-detail';
 import { persistQuotePdf, quotePdfFilename } from '@/lib/quote-pdf';
 import { reportSendFailure } from '@/lib/ops-alert';
 import { isDocumentPathFor } from '@/lib/document-path';
@@ -364,7 +364,8 @@ export async function createCounterQuote(
 }
 
 async function storeQuotePdf(reference: string): Promise<
-  { ok: true; bytes: Buffer; path: string; isPriced: boolean } | { ok: false; error: string }
+  | { ok: true; bytes: Buffer; path: string; isPriced: boolean; quote: QuoteDetail }
+  | { ok: false; error: string }
 > {
   const user = await requirePath('/quotes');
   const supabase = await getSupabase();
@@ -373,7 +374,8 @@ async function storeQuotePdf(reference: string): Promise<
     fetchQuoteSettings(supabase),
   ]);
   if (!quote) return { ok: false, error: 'That quote is no longer here.' };
-  return persistQuotePdf(supabase, quote, settings, user.userId);
+  const stored = await persistQuotePdf(supabase, quote, settings, user.userId);
+  return stored.ok ? { ...stored, quote } : stored;
 }
 
 export async function sendQuoteEmail(
@@ -404,6 +406,16 @@ export async function sendQuoteEmail(
     customerName: row.customer_name,
     validUntil: row.valid_until,
     isPriced: stored.isPriced,
+    // The lines and the total in the body, so the figure reads in the inbox
+    // before the attachment is opened (D109).
+    lines: stored.quote.lines.map((line) => ({
+      description: line.description,
+      quantity: line.quantity,
+      unit: line.unit,
+      lineTotal: line.unitPrice > 0 ? line.lineTotal : null,
+    })),
+    totals: stored.quote.totals,
+    vatRate: stored.quote.vatRate,
     pdf: stored.bytes,
     filename: quotePdfFilename(row.reference_number, row.customer_name),
   });

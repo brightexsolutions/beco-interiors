@@ -66,7 +66,7 @@ anything there you would not print on a billboard.
 | `REVALIDATE_SECRET` | Shared token for `POST /api/revalidate`. Busts ISR, cannot read rows | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
 | `OPS_ALERT_EMAIL` | Where operational failure alerts are emailed. Comma separate several | Defaults to `info.brightexsolutions@gmail.com` when unset | dashboard |
 | `OPS_ALERT_FROM_EMAIL` | Sender for those alerts | Optional. Falls back to `QUOTE_FROM_EMAIL` | dashboard |
-| `OPS_ALERT_SECRET` | Bearer token the storefront sends to the dashboard's `POST /api/ops-alert`. Leaking it lets someone send a rate limited, bounded alert, nothing more | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
+| `OPS_ALERT_SECRET` | Bearer token the storefront sends to the dashboard's `POST /api/ops-alert` and `POST /api/quote-confirmation` (D109). Leaking it lets someone send a rate limited, bounded alert or a short branded confirmation to one address, nothing more | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
 | `GITHUB_ACTIONS_TOKEN` | Lets the dashboard's Catalogue, Drive import screen start the import workflow and list its runs | GitHub, Settings, Developer settings, Fine-grained tokens. Resource owner `brightexsolutions`, only this repository, permission Actions: Read and write, nothing else. Expiry one year, noted in `docs/RETAINER.md`. Brightex's, since the repository is | dashboard |
 | `GITHUB_REPOSITORY` | `owner/repo` the workflow lives in | `brightexsolutions/beco-interiors` | dashboard |
 | `GITHUB_WORKFLOW_REF` | The branch whose copy of `drive-import.yml` runs | `main` for production use, `dev` while testing | dashboard |

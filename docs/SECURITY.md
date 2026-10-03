@@ -76,6 +76,7 @@ has always been, not forgotten.
 |---|---|---|---|
 | Dashboard pages and actions | Proxy (layer 1) plus `requirePath`, `requireRole` or `requireAdmin` in every action (layer 2 is RLS) | zod in every action that takes a form | Sign-in, 10 a minute per address; import dispatch, 1 a minute per user |
 | `POST /api/ops-alert` (dashboard) | `OPS_ALERT_SECRET`, constant time | zod, bounded | 60 a minute |
+| `POST /api/quote-confirmation` (dashboard) | `OPS_ALERT_SECRET`, constant time | zod: a reference shape, a name, one address, a count | 60 a minute |
 | `POST /api/revalidate` (storefront) | `REVALIDATE_SECRET`, **now constant time** | typed, **now capped at 100 tags and 100 paths** | by the secret |
 | `GET /api/img/*` (both) | none, read only, one bucket | key refused on `..`, a leading slash, **now a backslash too** | CDN cache |
 | `GET /api/health` (both) | none, anon key, one row | none | none, it is the uptime probe |
