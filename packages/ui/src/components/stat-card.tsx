@@ -127,8 +127,10 @@ export function StatCard({
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className={cn('min-w-0 break-words font-ui text-sm font-semibold leading-snug', t.label)}>{label}</p>
+      {/* The trend chip drops under the label when the card is narrow, so a
+          two word label never breaks letter by letter beside it. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
+        <p className={cn('min-w-[6.5rem] flex-1 break-words font-ui text-sm font-semibold leading-snug', t.label)}>{label}</p>
         {delta ? (
           <span
             className={cn(

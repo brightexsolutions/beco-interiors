@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
+  RankedBars,
   StatCard,
   Tabs,
   TabsContent,
@@ -22,7 +23,6 @@ import {
   type LeaderboardPerson,
   type LeaderboardReport,
 } from '@/lib/reports';
-import { ReportBars } from './report-bars';
 
 const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
@@ -152,7 +152,7 @@ const categoryColumns: DataTableColumn<ConversionRow>[] = [
 ];
 
 function ChartCard({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-panel border border-neutral-200 p-5">{children}</div>;
+  return <div className="rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel">{children}</div>;
 }
 
 function PersonCard({ person }: { person: LeaderboardPerson }) {
@@ -246,8 +246,10 @@ function FunnelView({
     <div className="space-y-8">
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard>
-          <ReportBars
-            caption="Funnel"
+          <RankedBars
+            title="Funnel"
+            description="Views, then the two steps that follow them"
+            valueLabel="Events"
             items={[
               { label: 'Views', value: funnel.views },
               { label: 'Add to cart', value: funnel.add_to_cart },
@@ -256,8 +258,9 @@ function FunnelView({
           />
         </ChartCard>
         <ChartCard>
-          <ReportBars
-            caption={kind === 'product' ? 'Most viewed' : 'Views by category'}
+          <RankedBars
+            title={kind === 'product' ? 'Most viewed' : 'Views by category'}
+            valueLabel="Views"
             items={top.map((row) => ({ label: row.name, value: row.views }))}
           />
         </ChartCard>
@@ -361,7 +364,7 @@ export function ReportResults({
           ) : (
             <div className="space-y-8">
               <ChartCard>
-                <ReportBars caption="Won value" items={wonBars} format={money} />
+                <RankedBars title="Won value" description="By salesperson, this period" valueLabel="KES" items={wonBars} format={money} />
               </ChartCard>
               <div className="hidden lg:block">
                 <DataTable

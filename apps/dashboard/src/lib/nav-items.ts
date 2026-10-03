@@ -1,5 +1,5 @@
 import type { UserRole } from '@beco/types';
-import { canAccess, type AccessGrants } from './access';
+import { ROLE_LANDING, canAccess, type AccessGrants } from './access';
 
 export interface NavItem {
   href: string;
@@ -29,6 +29,38 @@ const ALL: readonly NavItem[] = [
 
 export const navItemsFor = (role: UserRole, grants: AccessGrants = {}): NavItem[] =>
   ALL.filter((item) => canAccess(role, item.href, grants));
+
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+/**
+ * The same sections, grouped for the desktop sidebar (D106): a group heading
+ * names the job, the items under it are the screens. A group with nothing a
+ * role may reach is not drawn. Overview leads for the roles that land on it;
+ * a salesperson's first screen is Quotes, so for them it is not listed.
+ */
+const GROUPS: ReadonlyArray<{ label: string; hrefs: readonly string[] }> = [
+  { label: 'Sales', hrefs: ['/quotes', '/orders'] },
+  { label: 'Catalogue', hrefs: ['/products'] },
+  { label: 'Content', hrefs: ['/announcements', '/studio/blog'] },
+  { label: 'Insight', hrefs: ['/reports'] },
+  { label: 'Admin', hrefs: ['/users', '/settings', '/audit'] },
+];
+
+export const navGroupsFor = (role: UserRole, grants: AccessGrants = {}): NavGroup[] => {
+  const allowed = navItemsFor(role, grants);
+  const groups: NavGroup[] = [];
+  if (ROLE_LANDING[role] === '/') groups.push({ label: 'Home', items: [{ href: '/', label: 'Overview' }] });
+  for (const group of GROUPS) {
+    const items = group.hrefs
+      .map((href) => allowed.find((item) => item.href === href))
+      .filter((item): item is NavItem => item !== undefined);
+    if (items.length > 0) groups.push({ label: group.label, items });
+  }
+  return groups;
+};
 
 export interface NavContext {
   sectionHref: string;

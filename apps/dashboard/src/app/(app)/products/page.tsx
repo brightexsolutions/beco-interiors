@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { buttonClasses } from '@beco/ui';
+import { Panel, TableToolbar, buttonClasses } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { NewProductFab } from '@/components/new-product';
 import { CatalogueRanges } from '@/components/catalogue-ranges';
@@ -84,12 +84,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         creating={creatingRange}
         selectedId={selectedCategoryId}
       />
-      <div className="mb-4">
-        <ProductFilters />
-      </div>
-      <div className="pb-24">
-        <ProductResults products={products} editing={editing} creating={creating} categories={productCategories} />
-      </div>
+      <Panel className="mb-24">
+        <TableToolbar
+          filters={<ProductFilters />}
+          count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`}
+        />
+        <div className="px-4 pb-4 sm:px-5 lg:px-0 lg:pb-0">
+          <ProductResults products={products} editing={editing} creating={creating} categories={productCategories} />
+        </div>
+      </Panel>
       <NewProductFab />
     </>
   );

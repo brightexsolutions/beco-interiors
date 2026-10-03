@@ -156,3 +156,24 @@ the look. `apps/storefront` does not import these widgets.
 - Center the page heading
 - Use shadcn, Radix menus, or the shadcn CLI on the storefront
 
+
+## 3 October 2026: the sidebar shell, charts and toolbars (D106)
+
+Brown lifted the dashboard's original design constraints on 3 October so the admin could be
+polished properly. What changed, and what did not:
+
+- **Desktop gets a sidebar.** White, 248px, the mark at the top, sections grouped by job, the
+  current one filled charcoal with a Warm Red tick. A slim top bar names where the reader is and
+  holds appearance, settings and the account. The screen sits on a floating white panel over the
+  off-white ground. The phone keeps the D85 header card and pill strip: a sidebar has no room on
+  a 390px screen.
+- **Charts, where they carry a figure the tiles cannot.** Home: quotes raised against won by
+  week, and the pipeline from new to lost. Reports: invoiced against collected by week, and the
+  ranked bars redrawn in Recharts. Every chart is the emphasis form from the dataviz method
+  (charcoal for the series that matters, a light neutral for context, Warm Red for one attention
+  stage), with a legend, direct labels, a tooltip in text tokens and a hidden table. No chart was
+  added because a dashboard is expected to have one; each answers a question someone asked.
+- **Tables open the same way.** A toolbar above every list: search, filters, the count. Headers in
+  small caps with the sort state visible, a sticky header, row hover, numbers flush right.
+- **Unchanged.** Type floor, touch targets, the no browser dialog rule, the ban on a dark sidebar
+  (this one is white), text over icons, and the storefront, whose own rules were not lifted.

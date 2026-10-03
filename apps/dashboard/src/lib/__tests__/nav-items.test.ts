@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { UserRole } from '@beco/types';
 import { canAccess } from '../access';
-import { navContext, navItemsFor } from '../nav-items';
+import { navContext, navGroupsFor, navItemsFor } from '../nav-items';
 
 const ALL_ROLES: UserRole[] = [
   'beco_admin',
@@ -12,6 +12,15 @@ const ALL_ROLES: UserRole[] = [
 ];
 
 describe('navItemsFor', () => {
+  it('groups the sidebar by job, skipping a group a role cannot reach and Overview for a salesperson', () => {
+    expect(navGroupsFor('beco_sales').map((g) => [g.label, g.items.map((i) => i.label)])).toEqual([
+      ['Sales', ['Quotes', 'Orders']],
+    ]);
+    const admin = navGroupsFor('brightex_admin');
+    expect(admin.map((g) => g.label)).toEqual(['Home', 'Sales', 'Catalogue', 'Content', 'Insight', 'Admin']);
+    expect(admin.find((g) => g.label === 'Admin')!.items.map((i) => i.label)).toEqual(['Users', 'Settings', 'Audit']);
+  });
+
   it('names the Drive import screen under Catalogue on the phone breadcrumb', () => {
     expect(navContext('/products/import')).toEqual({ sectionHref: '/products', sectionLabel: 'Catalogue', pageLabel: 'Drive import' });
   });

@@ -497,6 +497,19 @@ both still unconfirmed.
 | Editor | FormSections for copy, schedule (Nairobi), CTA, preview. Save writes the row and busts the storefront layout | Test: `AnnouncementEditor`, create/update actions |
 | Live window | A row that starts tomorrow is absent from anon today, present once the window includes now | pgTAP `27_announcements_admin`. Integration against local Postgres |
 
+### Dashboard shell, 3 October (D106)
+
+| Control | What it does | Status |
+|---|---|---|
+| Sidebar (desktop) | Sections grouped by job; the current one filled charcoal with a red tick; Quotes carries the new count; Overview first for admins, absent for sales. Hidden under `lg` | Test: `AppShell`, `SideNav` via shell tests, `navGroupsFor`. Seen at 1440px |
+| Top bar crumb (desktop) | Section, then page, the section a link back to its list | Test: `AppShell`. Seen on Overview, Quotes, Catalogue, Reports |
+| Phone header and pill strip | Unchanged from D85, over the showroom still; the docked breadcrumb is phone only now | Test: `ShellContext`. Seen at iPhone 13 size |
+| Home: Quotes, week by week | Raised against won, last eight weeks, from `activity_series()`. Legend, labels on the won bars, tooltip, hidden table. "Reports" link | Test: `HomeActivity`, `TrendBars`. Seen with eight weeks of local demo rows |
+| Home: Where quotes stand | One bar from new to lost with counts under it; New in Warm Red only when the response target is breached. "Open the list" link | Test: `StageBar`, `toStages`. Seen |
+| Reports: Money, week by week | Invoiced against collected, last eight weeks | Test: `ReportCharts`. Seen |
+| Reports: ranked bars | Won value by salesperson, funnel, most viewed, as Recharts horizontal bars with the value at the end | Test: `RankedBars`, `ReportResults`. Seen |
+| List toolbars | Quotes, Orders, Catalogue: search and filters in one row above the table, the count beside them announced on change | Test: `TableToolbar` via page render. Seen |
+
 ### `/products/import`
 
 Product manager, Beco admin, Brightex admin, the same roles as `/products`. Reached from the
