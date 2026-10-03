@@ -244,7 +244,9 @@ at the end, which is why it is worth reading rather than skimming.
 
 | Document | For whom |
 |---|---|
-| `docs/ARCHITECTURE.md` | The incoming developer. Fifteen flows, drawn |
+| `docs/SYSTEM.md` | The incoming developer, first. How the system was built, the stack, the layout, how to run, ship and where it stands |
+| `docs/SKETCHES.md` | The incoming developer. The architecture and the user flows in Mermaid, rendered by GitHub |
+| `docs/ARCHITECTURE.md` | The incoming developer. Seventeen flows, drawn in ASCII, a level deeper than the sketches |
 | `docs/SCHEMA.md` | Tables, relationships, RLS intent per table |
 | `docs/RUNBOOK.md` | Deploy, roll back, restore, DNS and certificate ordering, incidents |
 | `docs/ENVIRONMENT.md` | Every variable by name and where its value lives |
