@@ -2543,3 +2543,26 @@ scrolls sideways hides its action column, which is the one column a reader needs
 *Reverses if:* staff work on 1024px laptops and report the single column detail pages as too
 long, in which case the detail pages alone move back to two columns with a narrower side pane.
 
+## D114, 3 October 2026: the catalogue browses one level at a time
+
+**Decision.** The catalogue's range panel is a browser, not a strip. The first row shows the
+major categories alone; opening one reveals its ranges on a second row, and opening a range with
+sub ranges reveals a third. Every pill filters the product list to its whole subtree and carries
+that count. Editing moves off the pills and onto the selection: a line under the rows names the
+path and count and offers Edit and Add range for that node, with New category in the heading.
+Add range opens the create sheet with the parent already chosen.
+
+**Why.** Beco looked at the catalogue and found the categorisation confusing, and the earlier
+strip earned that: it put every level on one row and asked the reader to infer the tree from
+which pill followed which, then hung a pencil on each. The three level taxonomy (D104) is simple
+when seen one level at a time, which is how a folder opens and how staff already think about
+"Sintered Stone, then 12mm, then the stone". Showing the tree whole was the confusion.
+
+**Rejected.** A tree view with expand arrows in a side pane: right on a desktop, a second column
+the phone does not have. A select per level: three dropdowns hide the counts and the drafts, and
+a tap per level is the same cost as a pill with none of the orientation. Keeping the pencil per
+pill: nine pencils in a row is nine controls nobody wanted until they had chosen a range.
+
+*Reverses if:* the catalogue grows past a dozen major categories, at which point the first row
+itself needs a search and the browser becomes a tree.
+

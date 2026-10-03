@@ -237,3 +237,14 @@ action is an arrow with a screen reader label rather than a second word. The pho
 the page alone; the screen's own back link names the section. New quote is a heading button on
 desktop and the bar's tile on a phone; the pill that floated over the table is retired.
 
+## 3 October 2026, the range browser (D114)
+
+The flat strip of every category and range in one wrapping row, with a pencil on each, read as
+a wall: nine groups and their ranges and sub ranges all at once, with nothing but adjacency to
+say which belonged to which. It now opens one level at a time. The first row is the major
+categories. Choose one and its ranges appear on a second row beneath it; choose a range with sub
+ranges and a third row appears. The rows a reader is not inside are not drawn. A line under the
+rows names the path, "Sintered Stone / 12mm Sintered Stones, 24 products", and carries Edit and
+Add range for that selection alone; New category sits in the heading. Drafts are dashed and say
+so. The collapse toggle is gone because there is nothing left to collapse.
+

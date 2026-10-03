@@ -86,6 +86,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         editing={editingRange}
         creating={creatingRange}
         selectedId={selectedCategoryId}
+        createParentId={one(params.parent) || null}
       />
       <Panel>
         <TableToolbar

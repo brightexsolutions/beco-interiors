@@ -52,4 +52,9 @@ describe('CategoryCreate', () => {
     const { container } = render(<CategoryCreate groupOptions={groupOptions} returnTo="/categories" />);
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('preselects the home it was opened under, from the browser\'s Add range (D114)', () => {
+    render(<CategoryCreate groupOptions={[{ id: 'group-1', name: 'Sintered Stone' }]} returnTo="/products" defaultParentId="group-1" />);
+    expect(screen.getByLabelText(/file under/i)).toHaveValue('group-1');
+  });
 });
