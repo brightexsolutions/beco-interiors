@@ -77,6 +77,7 @@ export function navContext(pathname: string): NavContext | null {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function nestedPageLabel(sectionHref: string, page: string): string {
+  if (page === 'import' && sectionHref === '/products') return 'Drive import';
   if (page === 'new') {
     if (sectionHref === '/quotes') return 'New quote';
     if (sectionHref === '/studio/blog') return 'New article';

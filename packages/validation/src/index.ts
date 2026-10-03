@@ -15,3 +15,4 @@ export * from './dashboard-user';
 export * from './dashboard-announcement';
 export * from './dashboard-settings';
 export * from './dashboard-blog';
+export * from './dashboard-import';

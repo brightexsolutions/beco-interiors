@@ -497,6 +497,22 @@ both still unconfirmed.
 | Editor | FormSections for copy, schedule (Nairobi), CTA, preview. Save writes the row and busts the storefront layout | Test: `AnnouncementEditor`, create/update actions |
 | Live window | A row that starts tomorrow is absent from anon today, present once the window includes now | pgTAP `27_announcements_admin`. Integration against local Postgres |
 
+### `/products/import`
+
+Product manager, Beco admin, Brightex admin, the same roles as `/products`. Reached from the
+Catalogue heading's "Drive import" button and by URL.
+
+| Control | What it does | Status |
+|---|---|---|
+| What (chips: Check only, Import, Re-encode everything) | Picks the workflow mode; the hint under the row changes with it | Test: `ImportRunner` |
+| Where (chips: Staging, Production) | Picks the target database and bucket | Test: `ImportRunner` |
+| Check Drive / Start import | Dispatches `drive-import.yml` through the GitHub API with exactly `mode` and `target`. A check run or anything on staging starts at once; an import or re-encode on production asks first in a `ConfirmDialog` that names the live site. One start a minute per person. The run appears under Recent runs | Test: `ImportRunner`, `startImport`, `dispatchImport`. **Dispatch against the real repository NOT YET RUN: needs `GITHUB_ACTIONS_TOKEN` on the dashboard** |
+| Not connected notice | Shown with the missing variable names when the token or repository is unset; the button is disabled with the reason | Test: `ImportRunner` |
+| Recent runs | Every run GitHub lists, status in words (Queued, Running, Done, Failed, Cancelled, Waiting for approval), who started it, when. "Open log" is a real link to the run on github.com, only when GitHub gave a github.com URL | Test: `ImportWorkflowRuns`, `toWorkflowRun`, `describeRun` |
+| Last import | Counts from `import_runs.summary` and every `import_issues` row for that run, grouped by top Drive folder, biggest group first, each with the path and the reason the importer wrote | Test: `ImportReport`, `groupImportIssues`. RLS: pgTAP migration 8 policies |
+| How Drive is read | Static guide to the four folder shapes and the price list rule | Test: `DriveShapeGuide` axe |
+| Catalogue (back link) | Returns to `/products` | Component test on `BackLink` |
+
 ### `/settings`
 
 `beco_admin` (`irene.kariuki@beco.co.ke`) and `brightex_admin`. No FAB. Launch date stays on `/launch`.

@@ -12,6 +12,10 @@ const ALL_ROLES: UserRole[] = [
 ];
 
 describe('navItemsFor', () => {
+  it('names the Drive import screen under Catalogue on the phone breadcrumb', () => {
+    expect(navContext('/products/import')).toEqual({ sectionHref: '/products', sectionLabel: 'Catalogue', pageLabel: 'Drive import' });
+  });
+
   it('gives a salesperson just Quotes and Orders', () => {
     expect(navItemsFor('beco_sales').map((i) => i.href)).toEqual(['/quotes', '/orders']);
   });
