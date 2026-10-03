@@ -6,7 +6,7 @@ import { SlabRail } from '@/components/slab-rail';
 import { CinematicBackground } from '@/components/cinematic-background';
 import { ShopControls, type Facet, type FacetGroup } from '@/components/shop-controls';
 import {
-  getPublishedProducts, getCategoryTree,
+  getPublishedProducts, getCategoryTree, flattenTree, subtreeSlugs,
   type CatalogueProduct, type CategoryGroup,
 } from '@/lib/products';
 import { RANGE_GROUPS } from '@/lib/ranges';
@@ -40,8 +40,7 @@ export async function generateMetadata(
 const finishOf = (p: CatalogueProduct) => p.specs?.['Finish'] ?? null;
 
 /** Every category slug in a range, so a group filters to its whole subtree. */
-const subtreeSlugs = (group: CategoryGroup) =>
-  new Set([group.slug, ...group.children.map((c) => c.slug)]);
+const slugSetOf = (group: CategoryGroup) => new Set(subtreeSlugs(group));
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<Search> }) {
   const params = await searchParams;
@@ -62,11 +61,13 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const facetGroups: FacetGroup[] = groups.map((group) => ({
     value: group.slug,
     label: group.name,
-    count: countIn(subtreeSlugs(group)),
-    children: group.children.map((child) => ({
+    count: countIn(slugSetOf(group)),
+    // Sub ranges sit in the same list as their parent range, named after it,
+    // so a native select can still offer every level without nesting.
+    children: flattenTree(group.children).map((child) => ({
       value: child.slug,
-      label: child.name,
-      count: child.product_count,
+      label: child.parent_id === group.id ? child.name : `${flattenTree(group.children).find((c) => c.id === child.parent_id)?.name ?? ''} › ${child.name}`,
+      count: child.total_count,
     })),
   }));
 
@@ -80,7 +81,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     .map(([value, count]) => ({ value, label: value, count }));
 
   const activeGroup = groups.find((g) => g.slug === range);
-  const rangeSlugs = activeGroup ? subtreeSlugs(activeGroup) : null;
+  const rangeSlugs = activeGroup ? slugSetOf(activeGroup) : null;
 
   let products = all.filter((p) => {
     if (q && !p.name.toLowerCase().includes(q)) return false;
@@ -130,7 +131,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const featured = RANGE_GROUPS.flatMap((spec) => {
     const group = groups.find((g) => g.slug === spec.slug);
     if (!group) return [];
-    const inGroup = all.filter((p) => p.category && subtreeSlugs(group).has(p.category.slug));
+    const inGroup = all.filter((p) => p.category && slugSetOf(group).has(p.category.slug));
     const badged = inGroup.filter((p) => p.badge === 'hot' || p.badge === 'new');
     return (badged.length > 0 ? badged : inGroup).slice(0, 3);
   });

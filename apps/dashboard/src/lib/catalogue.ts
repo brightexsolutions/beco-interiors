@@ -32,9 +32,11 @@ interface CategoryRow {
 }
 
 /**
- * Leaf ranges for the quote picker, including empty ones. A counter
- * salesperson must be able to open Handles even when the first page of
- * published products is all stone.
+ * Ranges for the quote picker: every category that holds products of its
+ * own, plus every empty leaf, so a counter salesperson can open Handles
+ * even when the first page of published products is all stone. A range
+ * that has sub ranges AND its own products (12mm Sintered Stones beside
+ * Heixin 12mm) is listed too, named for what it holds directly.
  */
 export async function listCatalogueRanges(): Promise<CatalogueRange[]> {
   await requirePath('/quotes');
@@ -63,7 +65,7 @@ export async function listCatalogueRanges(): Promise<CatalogueRange[]> {
   }
 
   return rows
-    .filter((row) => !parentIds.has(row.id))
+    .filter((row) => !parentIds.has(row.id) || (counts.get(row.id) ?? 0) > 0)
     .map((row) => {
       const parent = row.parent_id ? byId.get(row.parent_id) : undefined;
       return {

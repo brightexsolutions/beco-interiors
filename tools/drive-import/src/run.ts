@@ -70,6 +70,58 @@ export const productWriteFields = (
 ): ProductPhotography | (ProductIdentity & ProductPhotography) =>
   isExisting ? { images: fields.images, source_path: fields.source_path } : fields;
 
+/**
+ * Creates every category folder the plan names, parents first, and returns
+ * source_path to id. A new sub range whose derived slug is already taken by
+ * another folder ("BLACK" under both HANDLES and KNOBS) gets its parent's
+ * slug in front, so two folders never share one page.
+ */
+export const ensureCategories = async (
+  sb: ReturnType<typeof db>,
+  plan: ImportPlan,
+): Promise<Map<string, string>> => {
+  const nodes = new Map<string, { path: string; slug: string; name: string; parentPath: string | null }>();
+  for (const f of plan.files) {
+    f.categoryChain.forEach((node, index) => {
+      if (!nodes.has(node.path)) {
+        nodes.set(node.path, { ...node, parentPath: index > 0 ? f.categoryChain[index - 1]!.path : null });
+      }
+    });
+  }
+  const ordered = [...nodes.values()].sort((a, b) => a.path.split('/').length - b.path.split('/').length);
+
+  const { data: existingRows } = await sb.from('categories').select('id,slug,source_path');
+  const bySource = new Map((existingRows ?? []).map((c) => [c.source_path as string | null, c.id as string]));
+  const slugTaken = new Map((existingRows ?? []).map((c) => [c.slug as string, c.source_path as string | null]));
+
+  for (const node of ordered) {
+    if (bySource.has(node.path)) continue;
+    const parentId = node.parentPath ? (bySource.get(node.parentPath) ?? null) : null;
+    const parentSlug = node.parentPath ? slugify(node.parentPath.split('/').pop()!) : '';
+    const owner = slugTaken.get(node.slug);
+    const slug = owner !== undefined && owner !== node.path && parentSlug ? `${parentSlug}-${node.slug}` : node.slug;
+    const { data, error } = await sb
+      .from('categories')
+      .upsert(
+        { slug, name: node.name, is_published: true, source_path: node.path, parent_id: parentId },
+        { onConflict: 'source_path', ignoreDuplicates: true },
+      )
+      .select('id')
+      .maybeSingle();
+    if (error) throw new Error(`could not create category ${node.path}: ${error.message}`);
+    let id = data?.id as string | undefined;
+    if (!id) {
+      const { data: found } = await sb.from('categories').select('id').eq('source_path', node.path).maybeSingle();
+      id = found?.id as string | undefined;
+    }
+    if (id) {
+      bySource.set(node.path, id);
+      slugTaken.set(slug, node.path);
+    }
+  }
+  return new Map([...bySource].filter((entry): entry is [string, string] => entry[0] !== null));
+};
+
 export const executePlan = async (
   plan: ImportPlan,
   source: DriveSource,
@@ -93,21 +145,17 @@ export const executePlan = async (
     );
   }
 
-  // Category, from the folder name, so the taxonomy stays traceable.
+  // Categories, from the folder names, so the taxonomy stays traceable.
   // A category is identified by the Drive folder it came from, never by its
   // slug. The slug is derived, and it is editable in the dashboard, so keying
   // on it means an edited slug reappears as a second category on the next run.
   // That already happened once: the seeded row and an imported row described
   // the same folder, and the empty one would have shipped as a real page.
-  const categories = new Map(plan.files.map((f) => [f.categoryPath, f.categorySlug]));
-  for (const [sourcePath, slug] of categories) {
-    await sb.from('categories').upsert(
-      { slug, name: titleise(slug.replace(/-/g, ' ')), is_published: true, source_path: sourcePath },
-      { onConflict: 'source_path', ignoreDuplicates: true },
-    );
-  }
-  const { data: cats } = await sb.from('categories').select('id,source_path');
-  const catId = new Map((cats ?? []).map((c) => [c.source_path, c.id]));
+  //
+  // A chain is written top first, so a sub range (HANDLES/BLACK HANDLES)
+  // finds its parent's id. Existing rows are never re-parented from here:
+  // where a range is filed is the dashboard's decision once it exists.
+  const catId = await ensureCategories(sb, plan);
 
   // Folders the plan says hold more than one product. Their rows are created
   // for provenance, so the photographs and their source are recorded, but they

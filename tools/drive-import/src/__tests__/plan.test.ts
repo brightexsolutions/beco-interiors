@@ -159,9 +159,9 @@ describe('buildPlan incrementality', () => {
     // above it whatsoever: there is no category to import it against, so
     // this stays skip and report only, unlike a file one level inside a
     // real category folder.
-    const plan = buildPlan([f('stray', 'Product Descriptions.docx')], [], []);
+    const plan = buildPlan([f('stray', 'IMG_0001.heic')], [], []);
     expect(plan.files).toHaveLength(0);
-    const issue = plan.issues.find((i) => i.path === 'Product Descriptions.docx');
+    const issue = plan.issues.find((i) => i.path === '(root)');
     expect(issue?.reason).toContain('nothing to import this against');
     expect(issue?.reason).not.toContain('Imported as ONE product');
   });
@@ -184,6 +184,20 @@ describe('buildPlan incrementality', () => {
     expect(reasons[0]?.reason).toContain('no longer sells');
   });
 
+  it('reports documents once per folder and never tries to decode them', () => {
+    // HANDLES/HANDLE SIZES AND PRICES holds an xlsx price list and a pdf.
+    const plan = buildPlan([
+      f('d1', 'HANDLES/HANDLE SIZES AND PRICES/BECO HANDLES PRICELIST.xlsx'),
+      f('d2', 'HANDLES/HANDLE SIZES AND PRICES/BECO Product Prices.pdf'),
+      f('d3', '12MM Sintered Stone Descriptions.docx'),
+    ], [], []);
+    expect(plan.files).toHaveLength(0);
+    const prices = plan.issues.find((i) => i.path === 'HANDLES/HANDLE SIZES AND PRICES');
+    expect(prices?.reason).toContain('2 document(s)');
+    expect(prices?.reason).toContain('entered in the dashboard');
+    expect(plan.issues.find((i) => i.path === '(root)')?.reason).toContain('1 document(s)');
+  });
+
   it('gallery and brand folders are NOT reported as errors', () => {
     // Site photos and videos legitimately have no products. Flagging them as
     // mistakes would bury the categories that genuinely need fixing.
@@ -195,5 +209,127 @@ describe('buildPlan incrementality', () => {
     expect(plan.issues).toHaveLength(0);
     expect(plan.looseFolders).toHaveLength(0);
     expect(plan.galleryFiles).toBe(3);
+  });
+});
+
+describe('buildPlan against the taxonomy Beco actually keep, D104', () => {
+  it('files a sub range: a folder of folders under a category', () => {
+    // 12MM SINTERED STONES/HEIXIN 12MM/INK WHITE/... Heixin holds only stone
+    // folders, so it is a sub range and Ink White is a product under it.
+    const listing = [
+      f('h1', '12MM SINTERED STONES/HEIXIN 12MM/INK WHITE/SLAB.jpg'),
+      f('h2', '12MM SINTERED STONES/HEIXIN 12MM/INK WHITE/APP 1.jpg'),
+      f('h3', '12MM SINTERED STONES/HEIXIN 12MM/PRADA GREEN/SLAB.jpg'),
+      f('a1', '12MM SINTERED STONES/AMBER JADE/SLAB.jpg'),
+    ];
+    const folders: FolderNode[] = [
+      { path: 'AMBER JADE', name: 'AMBER JADE', depth: 1 },
+      { path: 'HEIXIN 12MM', name: 'HEIXIN 12MM', depth: 1 },
+      { path: 'HEIXIN 12MM/INK WHITE', name: 'INK WHITE', depth: 2 },
+      { path: 'HEIXIN 12MM/PRADA GREEN', name: 'PRADA GREEN', depth: 2 },
+    ];
+    const plan = buildPlan(listing, folders, []);
+    expect(plan.misnests).toEqual([]);
+    const ink = plan.files.find((x) => x.driveFileId === 'h1')!;
+    expect(ink.productSlug).toBe('ink-white');
+    expect(ink.productName).toBe('Ink White');
+    expect(ink.role).toBe('slab');
+    expect(ink.categoryPath).toBe('12MM SINTERED STONES/HEIXIN 12MM');
+    expect(ink.categorySlug).toBe('heixin-12mm');
+    expect(ink.categoryChain.map((c) => c.path)).toEqual(['12MM SINTERED STONES', '12MM SINTERED STONES/HEIXIN 12MM']);
+    expect(ink.categoryChain[1]!.name).toBe('Heixin 12mm');
+    const amber = plan.files.find((x) => x.driveFileId === 'a1')!;
+    expect(amber.categoryChain.map((c) => c.path)).toEqual(['12MM SINTERED STONES']);
+  });
+
+  it('still skips a folder nested inside a product folder', () => {
+    // AMBER JADE holds photographs itself, so a folder inside it is a misnest.
+    const listing = [
+      f('a1', '12MM SINTERED STONES/AMBER JADE/SLAB.jpg'),
+      f('a2', '12MM SINTERED STONES/AMBER JADE/CYPRUS LIGHT GREY/SLAB.jpg'),
+    ];
+    const folders: FolderNode[] = [
+      { path: 'AMBER JADE', name: 'AMBER JADE', depth: 1 },
+      { path: 'AMBER JADE/CYPRUS LIGHT GREY', name: 'CYPRUS LIGHT GREY', depth: 2 },
+    ];
+    const plan = buildPlan(listing, folders, []);
+    expect(plan.files.map((x) => x.driveFileId)).toEqual(['a1']);
+    expect(plan.misnests.map((m) => m.path)).toEqual(['AMBER JADE/CYPRUS LIGHT GREY']);
+  });
+
+  it('makes one product per photograph when every file in a folder names its own item', () => {
+    // HANDLES/BLACK HANDLES as Beco uploaded it: each file is a handle.
+    const listing = [
+      f('b1', 'HANDLES/BLACK HANDLES/B762 BLACK.HEIC'),
+      f('b2', 'HANDLES/BLACK HANDLES/HT-8350 BLACK GOLD.HEIC'),
+      f('b3', 'HANDLES/BLACK HANDLES/HT-8350 GOLD BLACK 2.HEIC'),
+      f('b4', 'HANDLES/BLACK HANDLES/HT-8350 NICKEL BRUSHED BROWN.HEIC'),
+      f('b5', 'HANDLES/BLACK HANDLES/HT-8350 NICKEL BRUSHED BROWN 2.HEIC'),
+    ];
+    const plan = buildPlan(listing, [{ path: 'BLACK HANDLES', name: 'BLACK HANDLES', depth: 1 }], []);
+    expect(plan.files).toHaveLength(5);
+    const slugs = new Set(plan.files.map((x) => x.productSlug));
+    expect(slugs).toEqual(new Set(['b762-black', 'ht-8350-black-gold', 'ht-8350-nickel-brushed-brown']));
+    // "GOLD BLACK 2" is the same words as "BLACK GOLD" in another order, so
+    // it is the second photograph of that handle, not a second handle.
+    expect(plan.files.find((x) => x.driveFileId === 'b3')!.productSlug).toBe('ht-8350-black-gold');
+    expect(plan.files.find((x) => x.driveFileId === 'b3')!.role).toBe('application');
+    const b2 = plan.files.find((x) => x.driveFileId === 'b2')!;
+    expect(b2.productName).toBe('HT-8350 Black Gold');
+    expect(b2.productPath).toBe('HANDLES/BLACK HANDLES/HT-8350 BLACK GOLD');
+    expect(b2.categoryChain.map((c) => c.slug)).toEqual(['handles', 'black-handles']);
+    expect(b2.categorySlug).toBe('black-handles');
+    expect(b2.role).toBe('slab');
+    // The second photograph of the same item joins its gallery.
+    const brown = plan.files.filter((x) => x.productSlug === 'ht-8350-nickel-brushed-brown');
+    expect(brown.map((x) => x.role)).toEqual(['slab', 'application']);
+    expect(plan.productsWithoutSlab).toEqual([]);
+    expect(plan.productsWithUnknowns).toEqual([]);
+    expect(plan.itemFolders).toEqual([{ folder: 'HANDLES/BLACK HANDLES', items: 3, files: 5 }]);
+    const issue = plan.issues.find((i) => i.path === 'HANDLES/BLACK HANDLES');
+    expect(issue?.reason).toContain('5 file(s) were imported as 3 product(s)');
+    expect(plan.looseFolders).toEqual([]);
+  });
+
+  it('keeps a stone folder of supplier coded files as ONE product, with its unknowns reported', () => {
+    const listing = [
+      f('s1', '12MM SINTERED STONES/SANDSTONE BEIGE/2201632A01171.jpg'),
+      f('s2', '12MM SINTERED STONES/SANDSTONE BEIGE/Sandstone Beige 2201632A01171.jpg'),
+    ];
+    const plan = buildPlan(listing, [], []);
+    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['sandstone-beige']));
+    expect(plan.productsWithUnknowns).toContain('sandstone-beige');
+    expect(plan.itemFolders).toEqual([]);
+  });
+
+  it('keeps a folder of camera named files as ONE umbrella product', () => {
+    const listing = [
+      f('c1', '15MM SINTERED STONES/IMG_4197.heic'),
+      f('c2', '15MM SINTERED STONES/IMG_4200.heic'),
+    ];
+    const plan = buildPlan(listing, [], []);
+    expect(plan.files.every((x) => x.productSlug === '15mm-sintered-stones')).toBe(true);
+    expect(plan.itemFolders).toEqual([]);
+  });
+
+  it('gives two items with the same name in different folders two products', () => {
+    const listing = [
+      f('k1', 'HANDLES/BLACK HANDLES/B100 BLACK.HEIC'),
+      f('k2', 'HANDLES/BLACK HANDLES/B200 BLACK.HEIC'),
+      f('k3', 'HANDLES/KNOBS/B100 BLACK.HEIC'),
+      f('k4', 'HANDLES/KNOBS/K7 BRASS.HEIC'),
+    ];
+    const plan = buildPlan(listing, [], []);
+    const slugs = plan.files.map((x) => x.productSlug);
+    expect(slugs).toContain('b100-black');
+    expect(slugs).toContain('knobs-b100-black');
+  });
+
+  it('skips and reports anything more than two folders below a range', () => {
+    const listing = [f('x1', 'HANDLES/BLACK HANDLES/PULLS/H1/SLAB.jpg')];
+    const plan = buildPlan(listing, [], []);
+    expect(plan.files).toEqual([]);
+    const issue = plan.issues.find((i) => i.path === 'HANDLES/BLACK HANDLES/PULLS/H1');
+    expect(issue?.reason).toContain('more than two folders below a range');
   });
 });

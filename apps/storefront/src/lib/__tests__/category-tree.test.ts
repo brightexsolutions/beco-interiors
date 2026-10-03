@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCategoryTree, indexableCategories, type Category } from '../products';
+import { buildCategoryTree, indexableCategories, placeInTree, subtreeSlugs, type Category } from '../products';
 
 /**
  * The browse tree, tested as a pure function.
@@ -132,5 +132,34 @@ describe('indexableCategories', () => {
   it('keeps out a childless top level category with nothing in it', () => {
     const out = indexableCategories(tree([cat({ id: 'l1', slug: 'flooring' })]));
     expect(out).toEqual([]);
+  });
+});
+
+describe('three levels, D104', () => {
+  const all = [
+    cat({ id: 'g1', slug: 'sintered-stone' }),
+    cat({ id: 'c1', slug: '12mm', parent_id: 'g1', product_count: 24 }),
+    cat({ id: 's1', slug: 'heixin-12mm', parent_id: 'c1', product_count: 5 }),
+    cat({ id: 'c2', slug: '15mm', parent_id: 'g1' }),
+  ];
+
+  it('nests a sub range under its range and counts the whole subtree at every level', () => {
+    const tree = buildCategoryTree(all);
+    expect(tree[0]!.total_count).toBe(29);
+    expect(tree[0]!.children[0]!.total_count).toBe(29);
+    expect(tree[0]!.children[0]!.children[0]!.slug).toBe('heixin-12mm');
+    expect(subtreeSlugs(tree[0]!)).toEqual(['sintered-stone', '12mm', 'heixin-12mm', '15mm']);
+  });
+
+  it('indexes a sub range on its own products and keeps out an empty sibling', () => {
+    expect(indexableCategories(buildCategoryTree(all)).map((c) => c.slug)).toEqual(['sintered-stone', '12mm', 'heixin-12mm']);
+  });
+
+  it('places a slug with every ancestor above it, for the breadcrumb', () => {
+    const place = placeInTree(buildCategoryTree(all), 'heixin-12mm');
+    expect(place?.ancestors.map((c) => c.slug)).toEqual(['sintered-stone', '12mm']);
+    expect(place?.parent?.slug).toBe('12mm');
+    expect(place?.children).toEqual([]);
+    expect(placeInTree(buildCategoryTree(all), 'missing')).toBeNull();
   });
 });

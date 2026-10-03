@@ -72,7 +72,7 @@ export function CategoryEditor({
         <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
           <div className="min-w-0 border border-neutral-200 px-4 py-4">
             <p className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
-              {isGroup ? 'Top level group' : 'Range'}
+              {category.depth === 1 ? 'Major category' : category.depth === 2 ? 'Range' : 'Sub range'}
             </p>
             <p className="mt-2 font-ui text-lg font-semibold text-charcoal">{name.trim() || 'Unnamed range'}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -119,18 +119,18 @@ export function CategoryEditor({
                 label="File under"
                 htmlFor="cat-parent"
                 hint={
-                  category.childCount > 0
-                    ? 'This group has ranges under it, so it has to stay a top level group'
-                    : 'Leave as Top level group to keep it above the shop'
+                  groupOptions.length === 0
+                    ? 'This category has two levels under it, so it stays a major category'
+                    : 'Leave as Major category to keep it at the top of the shop. A sub range files under a range'
                 }
               >
                 <Select
                   id="cat-parent"
                   name="parentId"
                   defaultValue={category.parentId ?? ''}
-                  disabled={category.childCount > 0}
+                  disabled={groupOptions.length === 0}
                 >
-                  <option value="">Top level group</option>
+                  <option value="">Major category</option>
                   {groupOptions.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}

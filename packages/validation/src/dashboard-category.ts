@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
 /**
- * Category admin writes. The two level depth (a group, and the ranges under
- * it) is enforced in Postgres by a trigger, migration 19, because a CHECK
- * cannot see another row. This schema still refuses the shapes it can catch
- * client side, so the form fails with a real message instead of a database
- * error string.
+ * Category admin writes. The three level depth (a major category, the
+ * ranges under it, their sub ranges) is enforced in Postgres by a trigger,
+ * migrations 19 and 58, because a CHECK cannot see another row. This schema
+ * still refuses the shapes it can catch client side, so the form fails with
+ * a real message instead of a database error string.
  */
 
 export const slugifyCategoryName = (name: string): string =>
@@ -36,8 +36,8 @@ const optionalText = (max: number) => z.preprocess(emptyToNull, z.string().trim(
 export const createCategorySchema = z.object({
   name: categoryName,
   slug: categorySlug,
-  /** Null makes this a top level group. A uuid nests it under one. Which one
-   *  is which is not decided here, the depth trigger is the authority. */
+  /** Null makes this a major category. A uuid nests it under a major
+   *  category or a range. The depth trigger is the authority on what fits. */
   parentId: z.preprocess(emptyToNull, z.uuid().nullable()),
 });
 

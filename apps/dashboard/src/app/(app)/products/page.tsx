@@ -4,7 +4,7 @@ import { NewProductFab } from '@/components/new-product';
 import { CatalogueRanges } from '@/components/catalogue-ranges';
 import { ProductFilters } from '@/components/product-filters';
 import { ProductResults } from '@/components/product-results';
-import { categoryIdsInSelection, fetchCategoryGroupOptions, fetchCategoryTree } from '@/lib/categories';
+import { categoryIdsInSelection, categoryParentOptions, fetchCategoryTree, flattenCategoryTree } from '@/lib/categories';
 import { fetchProductBySlug, fetchProductCategories, fetchProducts, type ProductListFilters } from '@/lib/products';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
@@ -34,9 +34,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const params = await searchParams;
 
   const supabase = await getSupabase();
-  const [tree, groupOptions, productCategories] = await Promise.all([
+  const [tree, productCategories] = await Promise.all([
     fetchCategoryTree(supabase),
-    fetchCategoryGroupOptions(supabase),
     fetchProductCategories(supabase),
   ]);
 
@@ -58,8 +57,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   const editRangeId = one(params.range);
   const creatingRange = one(params.newRange) === '1' && !editRangeId;
-  const flatRanges = tree.flatMap((group) => [group, ...group.children]);
-  const editingRange = editRangeId ? (flatRanges.find((row) => row.id === editRangeId) ?? null) : null;
+  const editingRange = editRangeId ? (flattenCategoryTree(tree).find((row) => row.id === editRangeId) ?? null) : null;
+  // Where this range may be filed: computed against the range being edited,
+  // so it is never offered its own sub ranges or a home too deep for the
+  // levels it already carries.
+  const groupOptions = categoryParentOptions(tree, editingRange?.id);
 
   return (
     <>

@@ -24,6 +24,7 @@ const file = (
   md5: 'x',
   categorySlug: '12mm-sintered-stones',
   categoryPath: '12MM SINTERED STONES',
+  categoryChain: [],
   productSlug: 'amber-jade',
   productPath: '12MM SINTERED STONES/AMBER JADE',
   productName: 'Amber Jade',

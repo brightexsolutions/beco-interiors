@@ -46,6 +46,29 @@ A filename matching the folder name resolves to `slab`. A filename matching noth
 `unknown`, imports with a null role and filename sort, and is listed in the report. **It is
 never guessed into a role.**
 
+## What a folder means, D104
+
+| Shape | Result |
+|---|---|
+| `CATEGORY/PRODUCT/photos` | A range and its products, the original convention |
+| `CATEGORY/SUB RANGE/PRODUCT/photos` | A sub range under the range, its products under it. `HEIXIN 12MM` |
+| `CATEGORY/SUB RANGE/one photo per item` | Every file names its own item (`B762 BLACK`, `HT-8350 BLACK GOLD`), so each becomes a product and the folder becomes a sub range. `BLACK HANDLES` |
+| `CATEGORY/photos` | Camera named files with no product folder: one umbrella product, reported |
+| Deeper than two folders below a range | Reported and skipped. The site shows three levels, no more |
+
+A folder is a PRODUCT when it holds photographs directly and a CATEGORY when it holds only
+folders. A folder nested inside a product folder is a misnest, as before. A folder of
+documents (`.xlsx`, `.pdf`) is reference material, reported once and never decoded; prices are
+entered in the dashboard.
+
+An item folder is decided per folder, not per file: every file must fail role resolution, none
+may carry a camera name (`IMG_4197`), and the folder must name at least two different things once
+its own words and the role words are set aside. "GOLD BLACK 2" is the second photograph of
+"BLACK GOLD": same words, any order, and a trailing counter. The item's first photograph is its
+own shot and sorts first. A stone folder of supplier coded files still imports as one product.
+
+Retired ranges (`LIGHTING`, `LIGHTS`) are skipped whatever they hold, D103.
+
 ## Known defects in the real data, all covered by fixtures
 
 - `AMBER JADE` contains `CYPRUS LIGHT GREY` and `GALAXY BIANCO` nested by mistake, byte

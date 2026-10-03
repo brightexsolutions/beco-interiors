@@ -386,11 +386,12 @@ tested):
 | Control | What it does | Status |
 |---|---|---|
 | Ranges heading (disclosure) | Collapses or re-expands the whole panel, `aria-expanded` | Test: `CatalogueRanges` |
-| Range or group pill | Sets `?category=`, filters the product list below it. A group pill shows the SUM of its ranges' product counts, not its own (a group with children is never itself assignable, so its own count is always 0), and matches every range filed under it when clicked | Test: `CatalogueRanges`. `categoryIds` filter: integration against local Postgres |
+| Range or group pill | Sets `?category=`, filters the product list below it. Every pill counts its whole subtree, own products included, and clicking it matches that subtree (3 October, D104: a range can hold products beside its sub ranges). A sub range follows its range with a leading mark | Test: `CatalogueRanges`. `categoryIds` filter: integration against local Postgres |
 | "All products" | Clears `?category=`. No edit segment, unlike every other pill | Test: `CatalogueRanges` |
 | Draft mark | Shown on a group or range pill when it is not published | Test: `CatalogueRanges` |
 | Edit (small pencil, inside the pill) | Opens a detail sheet at `?range=id`, a separate control from the pill's own click-to-filter even though it shares the pill's outline | Test: `CatalogueRanges` plus `CategoryEditor` |
-| New range | Ghost button beside the "Ranges" heading. Opens `?newRange=1`, picks Top level group or an existing group | Test: `CategoryCreate`, `createCategory` action |
+| New range | Ghost button beside the "Ranges" heading. Opens `?newRange=1`. File under: Major category, or any major category or range (a range is named after its major category). Three levels is the cap, the trigger refuses a fourth | Test: `CategoryCreate`, `createCategory` action, pgTAP 34 |
+| File under (editor) | Offers only homes that fit: never the range's own sub ranges, never a parent that would push its existing levels past three. Disabled, with the reason, when nothing fits | Test: `categoryParentOptions`, `CategoryEditor` |
 | File under | Select of top level groups. Locked, with the reason stated, when the row already has children | Test: `CategoryEditor` |
 | Save (range) | Writes name, slug, parent, description, SEO overrides, published, sort order. Busts the storefront `/shop` pages for the range, its former slug and its parent. Closes the sheet on success | Test: `updateCategory` action, integration against local Postgres. Sheet close: `category-editor.test.tsx` |
 | Delete range | `ConfirmDialog` names the range. Disabled, with the blocking count in its own label, when products or child ranges are still filed under it. Refused server side too if reached anyway. Closes the sheet | Test: `CategoryEditor` plus `deleteCategory` action |

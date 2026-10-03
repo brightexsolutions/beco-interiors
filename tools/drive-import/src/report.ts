@@ -72,6 +72,18 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('');
   }
 
+  if (plan.itemFolders.length) {
+    L.push('FOLDERS WHERE EACH PHOTOGRAPH IS ITS OWN ITEM');
+    L.push('--------------------------------------------');
+    L.push('  Every file names an item, so each became a product under that folder as a');
+    L.push('  sub range. Prices are entered in the dashboard.');
+    L.push('');
+    for (const { folder, items, files } of plan.itemFolders) {
+      L.push(`  ${String(items).padStart(4)} item(s) from ${files} file(s)  ${folder}`);
+    }
+    L.push('');
+  }
+
   if (plan.galleryFiles) {
     L.push(`  ${plan.galleryFiles} gallery and brand file(s) skipped, which is correct.`);
     L.push('  Site photos, site videos and brand identity are not products.');

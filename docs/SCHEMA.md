@@ -67,22 +67,26 @@ and writes all. Nobody may change their own `role`, enforced by policy not by UI
 
 Self referential, so subcategories need no second table.
 
-**Exactly two levels, enforced by a trigger** rather than by convention, because the
-storefront's browse tree assumes it and a third level would render as a group with neither
-products nor children. `enforce_category_depth` refuses a grandchild on insert and on update, a
-category made its own parent, and a category with children being given a parent. See migration
-19 and D52.
+**Three levels at most, enforced by a trigger** rather than by convention: a major category,
+the ranges under it, and their sub ranges. Products may sit at any level. `enforce_category_depth`
+measures the whole chain, the depth of the new parent plus the height of the subtree being moved,
+and refuses a fourth level, a cycle and a self reference, on insert and on update. Migration 19
+set two levels (D52); migration 58 raised it to three (D104) once Beco's Drive carried
+`HANDLES/BLACK HANDLES/<one photo per handle>` and `12MM SINTERED STONES/HEIXIN 12MM/<stones>`.
+`category_subtree_ids(id)`, `category_depth(id)` and `category_height(id)` are security invoker
+helpers for the same questions.
 
-Five GROUPS sit above the Drive folders: Sintered Stone, Wall Panels, Flooring, Hardware and
-Accessories. Lighting, once top level with no children, is retired and unpublished since D103. A group is an editorial row,
-so `source_path` is null on it, which is what keeps the importer, which upserts on
-`source_path`, from ever colliding with one.
+Major categories: Sintered Stone, Handles (since D104, where Beco place it), Wall Panels,
+Flooring, Hardware and Accessories. Lighting, once top level with no children, is retired and
+unpublished since D103. An editorial group carries `source_path` null, which is what keeps the
+importer, which upserts on `source_path`, from ever colliding with one. A range the importer
+creates under a Drive folder carries the folder path, `HANDLES/BLACK HANDLES`, as its identity.
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid PK | |
 | `name`, `slug` | text, slug unique | Slug derives from the Drive folder name |
-| `parent_id` | uuid FK categories | Null on a group and on a range filed under none. Depth capped at two by trigger |
+| `parent_id` | uuid FK categories | Null on a major category. Depth capped at three by trigger, migration 58 |
 | `description` | text | 150 to 400 words. **A grid alone does not rank** |
 | `meta_title`, `meta_description` | text | SEO overrides, editable without a deploy |
 | `hero_image` | jsonb | |

@@ -33,7 +33,7 @@ export function CategoryCreate({
       <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
         <FormSection
           title="Name"
-          hint="A top level group sits above the shop, like Sintered Stone. A range sits under one, like Limestone under Sintered Stone."
+          hint="A major category sits at the top of the shop, like Sintered Stone or Handles. A range sits under one, like 12mm Sintered Stones. A sub range sits under a range, like Black Handles under Handles, and each level can hold priced products."
         >
           <Field label="Name" htmlFor="new-cat-name">
             <Input
@@ -60,9 +60,9 @@ export function CategoryCreate({
               }}
             />
           </Field>
-          <Field label="File under" htmlFor="new-cat-parent" hint="Leave as Top level group to create a new group instead of a range">
+          <Field label="File under" htmlFor="new-cat-parent" hint="Leave as Major category to create one, or pick the category or range this sits under">
             <Select id="new-cat-parent" name="parentId" defaultValue="">
-              <option value="">Top level group</option>
+              <option value="">Major category</option>
               {groupOptions.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}

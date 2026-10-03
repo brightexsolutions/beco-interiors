@@ -2255,3 +2255,46 @@ is kept as history with a note pointing here.
 
 *Reverses if:* Beco starts stocking lighting again, in which case the category is republished
 from the dashboard, the folder names leave `RETIRED_FOLDERS`, and the strapline is revisited.
+
+## D104, 3 October 2026: the taxonomy browses three levels, and a photograph can be an item
+
+Beco's team reported the catalogue as "all mixed up": sintered stone should read as a major
+category with 12mm and 15mm under it and the stones under those, handles as a major category
+with colours under it and each handle, with its code and price, under those. Checked against
+the live Drive rather than assumed: `HANDLES/` now holds `BLACK HANDLES`, `GOLD HANDLES`,
+`GREY HANDLES`, `WHITE HANDLES`, `KNOBS`, `LEATHER HANDLES` and a `HANDLE SIZES AND PRICES`
+folder of spreadsheets, and inside each colour folder every photograph is named for the handle
+it shows, `B762 BLACK`, `HT-8350 BLACK GOLD`. `12MM SINTERED STONES/` holds a `HEIXIN 12MM`
+folder of stone folders beside the stones themselves. The two level cap from D52 made the
+importer collapse each colour into one product with thirty photographs and skip Heixin's
+stones as misnests. So the data was right and the model was one level short.
+
+**Three levels.** Migration 58 raises the trigger's cap to three and measures the whole chain,
+so moving a category with sub ranges under something else is refused when the result would be
+four deep. The storefront tree, the sitemap, the index gate, the category page's breadcrumb and
+the dashboard's ranges panel, selects and filters all walk the tree recursively now instead of
+assuming two levels; every count is a subtree count, since a range can hold products beside its
+sub ranges (12mm holds stones and Heixin). Handles moves to the top level beside Sintered Stone,
+which is where Beco place it; Hardware keeps hinges, locks, legs and drawer rails.
+
+**The importer reads what Beco actually do.** A folder is a product when it holds photographs
+and a category when it holds only folders, which is what tells a sub range from a misnest. In a
+folder where every file names its own item (no role word, no camera name, at least two distinct
+subjects), each file becomes a product named exactly as the file is, its first photograph as its
+own shot, a trailing "2" folding into the same item, and the folder becomes a sub range. This is
+not a guess: the product name is what Beco typed. A stone folder of supplier codes names one
+thing and stays one product; a folder of `IMG_` files stays one umbrella product. Price lists are
+reported and never decoded: prices are entered where they are checked, in the dashboard.
+Anything more than two folders below a range is reported and skipped. Each of these is a fixture.
+
+**The admin does not need Drive.** Brown's own line: with or without the import, the admin must
+be able to create major categories, sub categories and priced products at any level. New range
+files under a major category or a range; the editor offers only homes that fit; the product
+range select lists every level, a sub range named after its range; prices, codes, names and
+photographs are the product editor's, which the importer never overwrites once a row exists
+(D54). The handles price list will be keyed in there, not parsed.
+
+*Reverses if:* Beco's folders settle into a shape the three levels cannot carry, in which case
+the cap moves again and the recursion already handles it; or if item folders turn out to hold
+several photographs per item under unrelated names, in which case the item rule tightens to
+require a code prefix rather than loosening into guesswork.

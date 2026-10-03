@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal } from '@beco/ui';
-import { blurProps, primaryImage, type CategoryGroup, type CatalogueProduct } from '@/lib/products';
+import { blurProps, primaryImage, subtreeSlugs, type CategoryGroup, type CatalogueProduct } from '@/lib/products';
 
 /**
  * Browse by range, which is the taxonomy made visible.
@@ -31,7 +31,7 @@ export function RangeBrowse({
   // null everywhere, and inventing a stock photograph for a range Beco has not
   // shot would be exactly the thing the gallery page is a corrective to.
   const coverFor = (group: CategoryGroup) => {
-    const slugs = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+    const slugs = new Set(subtreeSlugs(group));
     return products
       .filter((p) => (p.category ? slugs.has(p.category.slug) : false))
       .map(primaryImage)

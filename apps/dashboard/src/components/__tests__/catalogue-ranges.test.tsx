@@ -22,13 +22,14 @@ vi.mock('@/components/category-create', () => ({
 
 const { CatalogueRanges } = await import('../catalogue-ranges');
 
-const range = (over: Partial<CategoryRow> = {}): CategoryRow => ({
+const range = (over: Partial<CategoryGroupRow> = {}): CategoryGroupRow => ({
   id: 'range-1',
   name: 'Limestone',
   slug: 'limestone',
   description: null,
   metaTitle: null,
   metaDescription: null,
+  depth: 2,
   parentId: 'group-1',
   parentName: 'Sintered Stone',
   sortOrder: 10,
@@ -36,6 +37,7 @@ const range = (over: Partial<CategoryRow> = {}): CategoryRow => ({
   productCount: 4,
   childCount: 0,
   updatedAt: '2026-09-23T10:00:00.000Z',
+  children: [],
   ...over,
 });
 
@@ -43,6 +45,7 @@ const group = (over: Partial<CategoryGroupRow> = {}): CategoryGroupRow => ({
   id: 'group-1',
   name: 'Sintered Stone',
   slug: 'sintered-stone',
+  depth: 1,
   description: null,
   metaTitle: null,
   metaDescription: null,
@@ -213,5 +216,18 @@ describe('CatalogueRanges', () => {
       <CatalogueRanges tree={[group()]} groupOptions={[]} editing={null} creating={false} selectedId={null} />,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('CatalogueRanges, three levels', () => {
+  it('draws a sub range after its range with a leading mark, and counts the whole subtree on every pill', () => {
+    const sub = range({ id: 'sub-1', name: 'Heixin 12mm', slug: 'heixin-12mm', depth: 3, parentId: 'range-1', parentName: 'Limestone', productCount: 5 });
+    const tree = [group({ productCount: 0, children: [range({ productCount: 4, childCount: 1, children: [sub] })] })];
+    render(<CatalogueRanges tree={tree} groupOptions={[]} editing={null} creating={false} selectedId={null} />);
+    // "All products" is the pressed one; the rest read group, range, then
+    // its sub range, in that order, each counting its whole subtree.
+    const pressables = screen.getAllByRole('button', { pressed: false }).map((b) => b.textContent);
+    expect(pressables).toEqual(['Sintered Stone9', 'Limestone9', '›Heixin 12mm5']);
+    expect(screen.getByRole('link', { name: 'Edit Heixin 12mm' })).toBeInTheDocument();
   });
 });

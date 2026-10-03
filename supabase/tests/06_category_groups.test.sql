@@ -1,11 +1,12 @@
--- The two level taxonomy, proven rather than assumed.
+-- The taxonomy's shape, proven rather than assumed.
 --
--- The storefront's browse tree renders groups above categories and assumes
--- exactly two levels. That assumption is held up by a trigger, so this file
--- attacks the trigger from every direction the dashboard's category editor
--- could reach it.
+-- Migration 19 capped the tree at two levels; migration 58 raised that to
+-- three (D104), and supabase/tests/34_three_level_taxonomy.test.sql attacks
+-- the new cap from every direction. This file keeps the checks that still
+-- hold: no self reference, the seeded groups keep their shape, and anon can
+-- read a group.
 begin;
-select plan(9);
+select plan(8);
 
 -- Fixtures are prefixed and the assertions are scoped to them, so seeding a
 -- sixteenth real category never breaks this file.
@@ -20,24 +21,12 @@ select lives_ok(
   'a top level category accepts a child'
 );
 
--- One level down is the whole taxonomy. A grandchild would render as a group
--- with neither products nor children, which reads as a broken page.
-select throws_ok(
+-- A third level is allowed since migration 58; a fourth is not. The full
+-- attack on the new cap is file 34, this keeps the one that still applies.
+select lives_ok(
   $$update categories set parent_id = 'a0000000-0000-0000-0000-000000000002'
      where slug = 'zz-test-loose'$$,
-  '23514',
-  null,
-  'a category cannot sit under a category that already has a parent'
-);
-
--- The same violation approached from the other end: giving a parent to a
--- category that already has children.
-select throws_ok(
-  $$update categories set parent_id = 'a0000000-0000-0000-0000-000000000003'
-     where slug = 'zz-test-group'$$,
-  '23514',
-  null,
-  'a category with children cannot itself be given a parent'
+  'a category can sit under a category that already has a parent, three levels in all'
 );
 
 select throws_ok(
@@ -51,10 +40,10 @@ select throws_ok(
 -- updating into one. The importer inserts, so this path is real.
 select throws_ok(
   $$insert into categories (name, slug, parent_id, is_published)
-    values ('ZZ Test Deep', 'zz-test-deep', 'a0000000-0000-0000-0000-000000000002', true)$$,
+    values ('ZZ Test Deep', 'zz-test-deep', 'a0000000-0000-0000-0000-000000000003', true)$$,
   '23514',
   null,
-  'a grandchild cannot be inserted directly either'
+  'a fourth level cannot be inserted directly either'
 );
 
 -- The seeded taxonomy itself. These assert SHAPE, not counts of everything:
@@ -88,11 +77,11 @@ select is_empty(
      where c.source_path in (
        '12MM SINTERED STONES', '15MM SINTERED STONES', 'ACCOUSTIC WALL PANELS',
        'BAMBOO VENEER WALL PANELS', 'SPC WALL PANELS', 'WALL PANEL ACCESSORIES',
-       'SPC FLOORING', 'HANDLES', 'HINGES', 'DOOR LOCKS', 'FURNITURE LEGS',
+       'SPC FLOORING', 'HINGES', 'DOOR LOCKS', 'FURNITURE LEGS',
        'FLOATING SHELF ACCESSORIES', 'KITCHEN ACCESSORIES', 'OFFICE ACCESSORIES'
      )
        and c.parent_id is null$$,
-  'every Drive folder category migration 13 seeded a home for is still filed under a group'
+  'every Drive folder category migration 13 filed under a group is still there, Handles aside, which is a major category since D104'
 );
 
 -- Anonymous has to be able to read a group, or the shop cannot draw the tree.
