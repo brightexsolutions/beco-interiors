@@ -29,9 +29,9 @@ describe('startImport', () => {
     requirePath.mockResolvedValue({ userId: `u-${Math.random()}`, email: 'irene.kariuki@beco.co.ke', role: 'beco_admin' });
   });
 
-  it('re-checks the caller against /products before anything else', async () => {
+  it('re-checks the caller against /products/import, the Brightex only rule, before anything else (D115)', async () => {
     await startImport({}, form('dry-run', 'staging'));
-    expect(requirePath).toHaveBeenCalledWith('/products');
+    expect(requirePath).toHaveBeenCalledWith('/products/import');
   });
 
   it('refuses a mode or target the workflow does not declare, without dispatching', async () => {

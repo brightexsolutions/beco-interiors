@@ -8,6 +8,7 @@ import { ProductFilters } from '@/components/product-filters';
 import { ProductResults } from '@/components/product-results';
 import { categoryIdsInSelection, categoryParentOptions, fetchCategoryTree, flattenCategoryTree } from '@/lib/categories';
 import { fetchProductBySlug, fetchProductCategories, fetchProducts, type ProductListFilters } from '@/lib/products';
+import { canAccess } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import type { Availability } from '@beco/types';
@@ -32,7 +33,8 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
  * `/categories` still exists as a redirect so an old link does not 404.
  */
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<Search> }) {
-  await requirePath('/products');
+  const user = await requirePath('/products');
+  const canImport = canAccess(user.role, '/products/import');
   const params = await searchParams;
 
   const supabase = await getSupabase();
@@ -73,9 +75,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         lede="Every range and product Beco sells."
         actions={
           <>
-            <Link href="/products/import" className={buttonClasses({ variant: 'outline' })}>
-              Drive import
-            </Link>
+            {canImport ? (
+              <Link href="/products/import" className={buttonClasses({ variant: 'outline' })}>
+                Drive import
+              </Link>
+            ) : null}
             <NewProductFab />
           </>
         }

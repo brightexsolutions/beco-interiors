@@ -142,9 +142,9 @@ describe('bottomNavFor (D111)', () => {
     expect(nav.more.map((i) => i.href)).toEqual(expect.arrayContaining(['/users', '/settings', '/studio/blog', '/audit']));
   });
 
-  it('gives the product manager Catalogue and Import side by side, no New quote', () => {
+  it('gives the product manager Catalogue alone, no Import and no New quote (D115)', () => {
     const nav = bottomNavFor('beco_product_manager');
-    expect(nav.items.map((i) => i.href)).toEqual(['/products', '/products/import']);
+    expect(nav.items.map((i) => i.href)).toEqual(['/products']);
     expect(nav.newQuote).toBe(false);
     expect(nav.more).toEqual([]);
   });

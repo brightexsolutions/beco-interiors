@@ -25,7 +25,7 @@ export const dynamic = 'force-dynamic';
  * `import_issues` the last time it touched this database.
  */
 export default async function ImportPage() {
-  const user = await requirePath('/products');
+  const user = await requirePath('/products/import');
   const supabase = await getSupabase();
   const connection = importConnection();
 
