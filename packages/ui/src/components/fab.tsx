@@ -18,7 +18,8 @@ import { cn } from '../lib/cn';
  */
 const fab = cva([
   'fixed z-40 inline-flex items-center justify-center',
-  'right-4 bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))]',
+  // Above the dashboard's bottom bar where there is one (`--dock`), else the thumb's reach.
+  'right-4 bottom-[calc(var(--dock,0px)+max(1rem,calc(env(safe-area-inset-bottom,0px)+0.5rem)))]',
   'lg:right-8 lg:bottom-8',
   'min-h-14 px-6',
   'font-ui font-semibold uppercase tracking-[0.09em] text-sm',

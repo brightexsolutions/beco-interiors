@@ -298,7 +298,7 @@ real phone** (M5 section D).
 
 | Control | What it does | Status |
 |---|---|---|
-| Section nav | Text links, role-scoped via `navItemsFor`. The current section is charcoal with a Warm Red underline; a nested path keeps its section highlighted | **Server** confirmed: signed in as each role, the nav listed exactly that role's sections, `/quotes` and `/quotes/...` both underlined Quotes. `TopNav` tested, 6 tests |
+| Section nav | Desktop: the sidebar (`SideNav`). Phone: the bottom bar (`BottomNav`, D111), role-scoped via the same access map. The current section is charcoal; a nested path keeps its section highlighted | Test: `bottom-nav.test.tsx` 9 tests, `nav-items.test.ts`. Seen at iPhone 13 size as admin, sales and product manager, 3 October |
 | Docked chrome | The pill header scrolls away. A breadcrumb then docks at the top on a phone and on desktop, and names the screen. Nested screens: section / page, section is a link back to the list | Tested: `ShellContext` hidden while the header intersects, docks after, no `lg:hidden`. **Walk on a phone and desktop** |
 | Mobile section strip | Horizontal scroll, no hamburger, right-edge fade | **Server** confirmed at 390px: the strip scrolls, Quotes stays first. **Real-device swipe still to walk** |
 | New-quote count | Warm Red badge on Quotes: undeleted quotes in status new, under RLS. Read on each server render of the layout; live push is still section L | `fetchNewQuoteCount` unit and integration tested. **Server** confirmed: 1 on the seed |
@@ -438,6 +438,9 @@ both still unconfirmed.
 
 ### `/orders`
 
+D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cancel order; as an admin, Cancel order opens the ConfirmDialog. Test: `order-actions.test.tsx`. **Not walked on a device.**
+
+
 `beco_sales` and admins. No blank New order FAB: conversion is from a won quote. Stock does not auto-decrement (D89).
 
 | Control | What it does | Status |
@@ -514,7 +517,10 @@ both still unconfirmed.
 |---|---|---|
 | Sidebar (desktop) | Sections grouped by job; the current one filled charcoal with a red tick; Quotes carries the new count; Overview first for admins, absent for sales. Hidden under `lg` | Test: `AppShell`, `SideNav` via shell tests, `navGroupsFor`. Seen at 1440px |
 | Top bar crumb (desktop) | Section, then page, the section a link back to its list | Test: `AppShell`. Seen on Overview, Quotes, Catalogue, Reports |
-| Phone header and pill strip | Unchanged from D85, over the showroom still; the docked breadcrumb is phone only now | Test: `ShellContext`. Seen at iPhone 13 size |
+| Phone header | The D85 card over the showroom still, now naming the screen; the docked breadcrumb is phone only | Test: `ShellContext`, `app-shell.test.tsx`. Seen at iPhone 13 size |
+| Bottom bar, New quote (D111) | Navigates to `/quotes/new` | Test: `bottom-nav.test.tsx`. Seen |
+| Bottom bar, More (D111) | Opens the sheet with the remaining sections, Change password and Sign out (a POST); closes on navigation | Test: `bottom-nav.test.tsx`. Seen |
+| Docked save bars and floating pills above the bar (D111) | `--dock` lifts the new quote and settings save bars and every `fabClasses()` pill above the bar | Test: `app-shell.test.tsx` on the variable; `new-quote-form` and `settings-form` bar classes. **Not walked on a device** |
 | Home: Quotes, week by week | Raised against won, last eight weeks, from `activity_series()`. Legend, labels on the won bars, tooltip, hidden table. "Reports" link | Test: `HomeActivity`, `TrendBars`. Seen with eight weeks of local demo rows |
 | Home: Where quotes stand | One bar from new to lost with counts under it; New in Warm Red only when the response target is breached. "Open the list" link | Test: `StageBar`, `toStages`. Seen |
 | Reports: Money, week by week | Invoiced against collected, last eight weeks | Test: `ReportCharts`. Seen |
@@ -522,6 +528,9 @@ both still unconfirmed.
 | List toolbars | Quotes, Orders, Catalogue: search and filters in one row above the table, the count beside them announced on change | Test: `TableToolbar` via page render. Seen |
 
 ### `/products/import`
+
+D110: as `beco_product_manager` the target offers staging only; as an admin, production too, behind the ConfirmDialog. Test: `import/__tests__/actions.test.ts` for the POST. **Not walked on a device.**
+
 
 Product manager, Beco admin, Brightex admin, the same roles as `/products`. Reached from the
 Catalogue heading's "Drive import" button and by URL.
@@ -538,6 +547,9 @@ Catalogue heading's "Drive import" button and by URL.
 | Catalogue (back link) | Returns to `/products` | Component test on `BackLink` |
 
 ### `/settings`
+
+D110: as `beco_admin` the Studio tab and the Brightex allowlist are absent and a save leaves the stored list untouched. Test: `settings/__tests__/actions.test.ts`.
+
 
 `beco_admin` (`irene.kariuki@beco.co.ke`) and `brightex_admin`. No FAB. Launch date stays on `/launch`.
 

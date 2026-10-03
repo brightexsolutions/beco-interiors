@@ -18,4 +18,11 @@ describe('NewQuoteFab', () => {
     const { container } = render(<NewQuoteFab />);
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('shows from lg up only, since the bottom bar carries New quote on a phone (D111)', () => {
+    render(<NewQuoteFab />);
+    const link = screen.getByRole('link', { name: 'New quote' });
+    expect(link.className).toContain('hidden');
+    expect(link.className).toContain('lg:inline-flex');
+  });
 });

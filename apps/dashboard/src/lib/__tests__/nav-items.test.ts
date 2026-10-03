@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { UserRole } from '@beco/types';
 import { canAccess } from '../access';
-import { navContext, navGroupsFor, navItemsFor } from '../nav-items';
+import { navContext, navGroupsFor, navItemsFor, bottomNavFor } from '../nav-items';
 
 const ALL_ROLES: UserRole[] = [
   'beco_admin',
@@ -119,5 +119,45 @@ describe('navContext', () => {
 
   it('keeps a malformed encoding as the raw segment', () => {
     expect(navContext('/orders/BEC-O-%')?.pageLabel).toBe('BEC-O-%');
+  });
+});
+
+describe('bottomNavFor (D111)', () => {
+  it('gives a salesperson Quotes and Orders with New quote raised, and nothing behind More', () => {
+    const nav = bottomNavFor('beco_sales');
+    expect(nav.items.map((i) => i.href)).toEqual(['/quotes', '/orders']);
+    expect(nav.newQuote).toBe(true);
+    expect(nav.more).toEqual([]);
+  });
+
+  it('gives an admin Overview, Quotes and Orders on the bar and the rest behind More', () => {
+    const nav = bottomNavFor('beco_admin');
+    expect(nav.items.map((i) => i.href)).toEqual(['/', '/quotes', '/orders']);
+    expect(nav.more.map((i) => i.href)).toEqual(['/products', '/announcements', '/reports', '/settings']);
+  });
+
+  it('gives Brightex the same bar, with Users, Blog and Audit behind More', () => {
+    const nav = bottomNavFor('brightex_admin');
+    expect(nav.items.map((i) => i.href)).toEqual(['/', '/quotes', '/orders']);
+    expect(nav.more.map((i) => i.href)).toEqual(expect.arrayContaining(['/users', '/settings', '/studio/blog', '/audit']));
+  });
+
+  it('gives the product manager Catalogue and Import side by side, no New quote', () => {
+    const nav = bottomNavFor('beco_product_manager');
+    expect(nav.items.map((i) => i.href)).toEqual(['/products', '/products/import']);
+    expect(nav.newQuote).toBe(false);
+    expect(nav.more).toEqual([]);
+  });
+
+  it('gives the editor nothing, since it has no operations screen', () => {
+    expect(bottomNavFor('beco_editor').items).toEqual([]);
+  });
+
+  it('never lists a path the access map would deny that role', () => {
+    for (const role of ['beco_sales', 'beco_product_manager', 'beco_editor', 'beco_admin', 'brightex_admin'] as const) {
+      const nav = bottomNavFor(role);
+      for (const item of [...nav.items, ...nav.more]) expect(canAccess(role, item.href)).toBe(true);
+      if (nav.newQuote) expect(canAccess(role, '/quotes/new')).toBe(true);
+    }
   });
 });
