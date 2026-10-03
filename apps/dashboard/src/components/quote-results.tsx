@@ -41,8 +41,8 @@ const formatTime = (iso: string) =>
   });
 
 function ValueCell({ quote }: { quote: QuoteListItem }) {
-  if (!quote.isPriced) return <span className="text-neutral-500">Pricing on application</span>;
-  return <span className="tabular-nums">{money(quote.value)}</span>;
+  if (!quote.isPriced) return <span className="whitespace-nowrap text-neutral-500">Pricing on application</span>;
+  return <span className="whitespace-nowrap tabular-nums">{money(quote.value)}</span>;
 }
 
 function BadgeRow({ quote }: { quote: QuoteListItem }) {
@@ -72,7 +72,7 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     render: (q) => (
       <Link
         href={`/quotes/${q.referenceNumber}`}
-        className="font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
+        className="whitespace-nowrap font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
       >
         {q.referenceNumber}
       </Link>
@@ -84,17 +84,18 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     sortable: true,
     sortValue: (q) => q.customerName,
     render: (q) => (
-      <div>
+      <div className="min-w-[11rem]">
         <p className="text-charcoal">{q.customerName}</p>
         <p className="text-neutral-500">{q.customerPhone}</p>
       </div>
     ),
   },
   { key: 'status', header: 'Status', render: (q) => <BadgeRow quote={q} /> },
-  { key: 'owner', header: 'Owner', render: (q) => <OwnerLine quote={q} /> },
+  { key: 'owner', header: 'Owner', render: (q) => <span className="whitespace-nowrap"><OwnerLine quote={q} /></span> },
   {
     key: 'source',
     header: 'Source',
+    showFrom: '2xl',
     sortable: true,
     sortValue: (q) => q.source,
     render: (q) => QUOTE_SOURCE_LABEL[q.source],
@@ -122,15 +123,16 @@ const columns: DataTableColumn<QuoteListItem>[] = [
   {
     key: 'actions',
     header: 'Actions',
+    headerHidden: true,
     align: 'right',
     render: (q) => (
       <Link
         href={`/quotes/${q.referenceNumber}`}
         aria-label={`View ${q.referenceNumber}`}
-        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
+        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 w-11 px-0 py-0')}
       >
         <Icon name="arrow-right" />
-        View
+        <span className="sr-only">View</span>
       </Link>
     ),
   },
@@ -218,7 +220,7 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
     <>
       {/* Desktop: the sortable table. Per D38, quotes are a decision per
           row, so mobile gets full cards instead, not a squeezed table. */}
-      <div className="hidden lg:block">
+      <div className="hidden xl:block">
         <DataTable
           caption={`${paged.total} quotes`}
           columns={columns}
@@ -227,14 +229,14 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
         />
       </div>
 
-      <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 lg:hidden">
+      <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 xl:hidden">
         {paged.items.map((q) => (
           <QuoteCard key={q.id} quote={q} />
         ))}
       </ul>
 
       <Pagination
-        className="mt-4 lg:px-5 lg:pb-4"
+        className="mt-4 xl:px-5 xl:pb-4"
         page={paged.page}
         pageCount={paged.pageCount}
         from={paged.from}

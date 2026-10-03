@@ -23,12 +23,12 @@ export function TableToolbar({
   className?: string | undefined;
 }) {
   return (
-    <div className={cn('flex flex-col gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5 lg:flex-row lg:items-end lg:justify-between', className)}>
-      <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-end">
-        {search ? <div className="min-w-0 lg:w-80">{search}</div> : null}
+    <div className={cn('flex flex-col gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5 xl:flex-row xl:items-end xl:justify-between', className)}>
+      <div className="flex min-w-0 flex-1 flex-col gap-3 xl:flex-row xl:items-end">
+        {search ? <div className="min-w-0 xl:w-80">{search}</div> : null}
         {filters ? <div className="min-w-0 flex-1">{filters}</div> : null}
       </div>
-      <div className="flex shrink-0 items-center justify-between gap-3 lg:justify-end">
+      <div className="flex shrink-0 items-center justify-between gap-3 xl:justify-end">
         {count ? (
           <p aria-live="polite" className="font-ui text-sm tabular-nums text-neutral-500">
             {count}

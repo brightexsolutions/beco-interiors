@@ -246,7 +246,7 @@ export function ProductResults({
     <>
       {/* Desktop keeps the sortable table. Phone gets cards so the list
           cannot scroll sideways. Do not collapse desktop to cards. */}
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 xl:block">
         <DataTable
           caption={`${paged.total} products`}
           columns={desktopColumns(editHref)}
@@ -255,14 +255,14 @@ export function ProductResults({
         />
       </div>
 
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden lg:hidden">
+      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
         {paged.items.map((product) => (
           <ProductCard key={product.id} product={product} href={editHref(product.slug)} />
         ))}
       </ul>
 
       <Pagination
-        className="mt-4 lg:px-5 lg:pb-4"
+        className="mt-4 xl:px-5 xl:pb-4"
         page={paged.page}
         pageCount={paged.pageCount}
         from={paged.from}

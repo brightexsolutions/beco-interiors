@@ -8,9 +8,9 @@ export default function Loading() {
         <Skeleton className="h-10 w-44" />
         <Skeleton className="h-11 w-52" />
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} className="h-20 lg:h-24" />
+          <Skeleton key={i} className="h-20 xl:h-24" />
         ))}
       </div>
       <Skeleton className="mt-8 h-11 w-full" />

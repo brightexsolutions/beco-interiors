@@ -40,7 +40,7 @@ export function HomeFocus({ focus, approvals }: { focus: HomeFocusData; approval
       className="overflow-hidden rounded-panel bg-charcoal text-high-vis-white shadow-panel"
     >
       {focus.breached ? <div aria-hidden className="h-1 bg-warm-red-deep" /> : null}
-      <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10">
+      <div className="grid gap-6 p-5 sm:p-7 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-10">
         <div className="min-w-0">
           <h2 id="home-focus-title" className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-300">
             Waiting on a response
@@ -78,7 +78,7 @@ export function HomeFocus({ focus, approvals }: { focus: HomeFocusData; approval
           </div>
         </div>
 
-        <div className="min-w-0 lg:border-l lg:border-high-vis-white/10 lg:pl-10">
+        <div className="min-w-0 xl:border-l xl:border-high-vis-white/10 xl:pl-10">
           <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-300">Also on your plate</h2>
           {rows.length === 0 ? (
             <p className="mt-4 font-ui text-base text-neutral-300">Nothing else needs you today.</p>

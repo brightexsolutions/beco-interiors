@@ -244,7 +244,7 @@ function FunnelView({
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard>
           <RankedBars
             title="Funnel"
@@ -265,7 +265,7 @@ function FunnelView({
           />
         </ChartCard>
       </div>
-      <div className="hidden overflow-x-hidden lg:block">
+      <div className="hidden overflow-x-hidden xl:block">
         <DataTable
           caption={kind === 'product' ? 'Conversion by product' : 'Conversion by category'}
           columns={columns}
@@ -273,7 +273,7 @@ function FunnelView({
           getRowKey={(row) => row.id}
         />
       </div>
-      <ul className="grid gap-2 lg:hidden">
+      <ul className="grid gap-2 xl:hidden">
         {rows.map((row) => (
           <FunnelCard key={row.id} row={row} kind={kind} />
         ))}
@@ -319,7 +319,7 @@ export function ReportResults({
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         <StatCard
           size="compact"
           label="Invoiced"
@@ -366,7 +366,7 @@ export function ReportResults({
               <ChartCard>
                 <RankedBars title="Won value" description="By salesperson, this period" valueLabel="KES" items={wonBars} format={money} />
               </ChartCard>
-              <div className="hidden lg:block">
+              <div className="hidden xl:block">
                 <DataTable
                   caption="Salesperson leaderboard"
                   columns={personColumns}
@@ -374,7 +374,7 @@ export function ReportResults({
                   getRowKey={(row) => row.id}
                 />
               </div>
-              <ul className="grid gap-2 lg:hidden">
+              <ul className="grid gap-2 xl:hidden">
                 {leaderboard.people.map((person) => (
                   <PersonCard key={person.id} person={person} />
                 ))}

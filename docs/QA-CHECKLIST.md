@@ -328,7 +328,7 @@ real phone** (M5 section D).
 
 | Control | What it does | Status |
 |---|---|---|
-| New quote (FAB) | Fixed charcoal pill, bottom right. Navigates to `/quotes/new`. Stays on screen while the list scrolls | `NewQuoteFab` tested, 3 tests. `Fab` in `@beco/ui`, 5 tests |
+| New quote | Phone: the raised tile in the bottom bar. Desktop: the charcoal button in the heading (D113). Both navigate to `/quotes/new`; the pill that floated over the table's Actions column is retired | Test: `bottom-nav.test.tsx`; the heading link is a plain anchor |
 | Search | Debounced, narrows to a matching name, phone or reference | **Server** confirmed: `?search=Mutua` returned exactly that quote |
 | Status / source filters | Narrow the row set via the URL. The `web` source is labelled Website. Below lg they are chip rows (owner, status, source), tap the active chip to clear | **Server** confirmed: `?status=quoted`, `?owner=unassigned` each returned the right subset and count. `QuoteFilters` tested, chips included |
 | Needs approval chip | `?approval=pending`, linked from home. A removable chip says the filter is on | **Server** confirmed |

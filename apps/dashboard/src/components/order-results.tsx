@@ -30,8 +30,8 @@ const formatTime = (iso: string) =>
   });
 
 function ValueCell({ order }: { order: OrderListItem }) {
-  if (!order.isPriced) return <span className="text-neutral-500">Pricing on application</span>;
-  return <span className="tabular-nums">{money(order.value)}</span>;
+  if (!order.isPriced) return <span className="whitespace-nowrap text-neutral-500">Pricing on application</span>;
+  return <span className="whitespace-nowrap tabular-nums">{money(order.value)}</span>;
 }
 
 function BadgeRow({ order }: { order: OrderListItem }) {
@@ -54,7 +54,7 @@ const columns: DataTableColumn<OrderListItem>[] = [
     render: (order) => (
       <Link
         href={`/orders/${order.referenceNumber}`}
-        className="font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
+        className="whitespace-nowrap font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
       >
         {order.referenceNumber}
       </Link>
@@ -66,7 +66,7 @@ const columns: DataTableColumn<OrderListItem>[] = [
     sortable: true,
     sortValue: (order) => order.customerName,
     render: (order) => (
-      <div>
+      <div className="min-w-[11rem]">
         <p className="text-charcoal">{order.customerName}</p>
         <p className="text-neutral-500">{order.customerPhone}</p>
       </div>
@@ -83,11 +83,12 @@ const columns: DataTableColumn<OrderListItem>[] = [
   {
     key: 'owner',
     header: 'Owner',
-    render: (order) => order.salespersonName ?? <span className="text-neutral-500">Unassigned</span>,
+    render: (order) => <span className="whitespace-nowrap">{order.salespersonName ?? <span className="text-neutral-500">Unassigned</span>}</span>,
   },
   {
     key: 'source',
     header: 'Source',
+    showFrom: '2xl',
     sortable: true,
     sortValue: (order) => order.source,
     render: (order) => ORDER_SOURCE_LABEL[order.source],
@@ -115,15 +116,16 @@ const columns: DataTableColumn<OrderListItem>[] = [
   {
     key: 'actions',
     header: 'Actions',
+    headerHidden: true,
     align: 'right',
     render: (order) => (
       <Link
         href={`/orders/${order.referenceNumber}`}
         aria-label={`View ${order.referenceNumber}`}
-        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
+        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 w-11 px-0 py-0')}
       >
         <Icon name="arrow-right" />
-        View
+        <span className="sr-only">View</span>
       </Link>
     ),
   },
@@ -201,7 +203,7 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
 
   return (
     <>
-      <div className="hidden lg:block">
+      <div className="hidden xl:block">
         <DataTable
           caption={`${paged.total} orders`}
           columns={columns}
@@ -210,14 +212,14 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
         />
       </div>
 
-      <ul className="grid gap-2 lg:hidden">
+      <ul className="grid gap-2 xl:hidden">
         {paged.items.map((order) => (
           <OrderCard key={order.id} order={order} />
         ))}
       </ul>
 
       <Pagination
-        className="mt-4 lg:px-5 lg:pb-4"
+        className="mt-4 xl:px-5 xl:pb-4"
         page={paged.page}
         pageCount={paged.pageCount}
         from={paged.from}

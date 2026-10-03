@@ -146,7 +146,7 @@ export function UserResults({
 
   return (
     <>
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 xl:block">
         <DataTable
           caption={`${paged.total} users`}
           columns={desktopColumns(viewHref)}
@@ -155,7 +155,7 @@ export function UserResults({
         />
       </div>
 
-      <div className="min-w-0 overflow-x-hidden lg:hidden">
+      <div className="min-w-0 overflow-x-hidden xl:hidden">
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">{`${paged.total} users`}</caption>
           <thead>

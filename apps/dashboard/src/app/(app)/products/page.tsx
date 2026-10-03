@@ -92,7 +92,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           filters={<ProductFilters />}
           count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`}
         />
-        <div className="px-4 pb-4 sm:px-5 lg:px-0 lg:pb-0">
+        <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
           <ProductResults products={products} editing={editing} creating={creating} categories={productCategories} />
         </div>
       </Panel>

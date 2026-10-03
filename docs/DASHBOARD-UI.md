@@ -220,3 +220,20 @@ the rest wrapped badly in ways a desktop never shows. What changed:
 
 The audit script is the proof: zero offenders on every screen, every role, after the pass.
 
+## 3 October 2026, the three width review (D113)
+
+Every screen captured at 390, 820 and 1440 side by side, then at 1024, and read as a reader
+would. The finding that mattered: the sidebar appears at 1024px and takes 248px, so the content
+pane is about 776px wide, tablet width, yet every screen switched to its two column and full
+table layout at that same breakpoint. The quote detail squashed into two narrow columns, the line
+item headers overlapped, and the quotes and orders tables clipped their Actions column.
+
+The rule now: **screens treat the sidebar breakpoint like a tablet and go wide at 1280px.**
+Two column detail pages, the new quote form, the settings layout, the home plate and charts,
+the report charts, and every desktop table switch at `xl`, not `lg`. The shell's own `lg:` rules
+(sidebar, bottom bar, `--dock`) are unchanged. On the tables, Source steps aside below 1536px so
+the laptop table fits, references, owners and figures never break across lines, and the row
+action is an arrow with a screen reader label rather than a second word. The phone header names
+the page alone; the screen's own back link names the section. New quote is a heading button on
+desktop and the bar's tile on a phone; the pill that floated over the table is retired.
+

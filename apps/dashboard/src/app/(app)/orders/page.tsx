@@ -55,7 +55,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           filters={<OrderFilters ownerOptions={ownerOptions} />}
           count={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'}`}
         />
-        <div className="px-4 pb-4 sm:px-5 lg:px-0 lg:pb-0">
+        <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
           <OrderResults orders={orders} />
         </div>
       </Panel>

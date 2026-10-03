@@ -34,8 +34,8 @@ export function ProductFilters() {
   // Phone: search full width, three filters under it. Desktop (lg):
   // search plus the three selects share one row. Do not stack them on lg.
   return (
-    <div className="grid min-w-0 grid-cols-3 gap-2 overflow-x-hidden lg:flex lg:items-end">
-      <label className="col-span-full min-w-0 lg:min-w-0 lg:flex-1">
+    <div className="grid min-w-0 grid-cols-3 gap-2 overflow-x-hidden xl:flex xl:items-end">
+      <label className="col-span-full min-w-0 xl:min-w-0 xl:flex-1">
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -44,7 +44,7 @@ export function ProductFilters() {
           className="min-w-0"
         />
       </label>
-      <label className="min-w-0 lg:w-44 lg:shrink-0">
+      <label className="min-w-0 xl:w-44 xl:shrink-0">
         <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Availability</span>
         <Select
           value={availability}
@@ -59,7 +59,7 @@ export function ProductFilters() {
           <option value="out">Out of stock</option>
         </Select>
       </label>
-      <label className="min-w-0 lg:w-40 lg:shrink-0">
+      <label className="min-w-0 xl:w-40 xl:shrink-0">
         <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Published</span>
         <Select
           value={published}
@@ -72,7 +72,7 @@ export function ProductFilters() {
           <option value="draft">Draft</option>
         </Select>
       </label>
-      <label className="min-w-0 lg:w-40 lg:shrink-0">
+      <label className="min-w-0 xl:w-40 xl:shrink-0">
         <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Stock</span>
         <Select
           value={stock}

@@ -7,7 +7,8 @@ import { cn } from '../lib/cn';
  * The desktop table. Per D38 the mobile treatment is per screen, built at
  * the call site (full cards for quotes, orders and products, a reduced-column
  * table plus a detail sheet for users), so this component is
- * wrapped in a `hidden lg:block` there and never asked to be both.
+ * wrapped in a `hidden xl:block` there and never asked to be both (D113:
+ * with the sidebar in place the content pane is tablet width until 1280px).
  *
  * Sorting lives here, because every table needs it and a column is either
  * sortable or it is not. Search and filtering do not: they change the
@@ -27,6 +28,12 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   /** Raw value used to sort. Falls back to `render`'s string form when absent. */
   sortValue?: (row: T) => string | number;
+  /** Shown only from this width up. For the column a reader can live without
+   *  on a laptop, so the table fits instead of scrolling sideways (D113). */
+  showFrom?: '2xl' | undefined;
+  /** Keep the header for assistive tech but do not print it: an icon-only
+   *  action column needs no visible word above it. */
+  headerHidden?: boolean | undefined;
   render: (row: T) => React.ReactNode;
 }
 
@@ -103,6 +110,7 @@ export function DataTable<T>({
                   index === 0 && 'pl-4 sm:pl-5',
                   index === columns.length - 1 && 'pr-4 sm:pr-5',
                   col.align === 'right' && 'text-right',
+                  col.showFrom === '2xl' && 'hidden 2xl:table-cell',
                 )}
               >
                 {col.sortable ? (
@@ -118,6 +126,8 @@ export function DataTable<T>({
                     {col.header}
                     <SortIcon direction={sort?.key === col.key ? sort.direction : null} />
                   </button>
+                ) : col.headerHidden ? (
+                  <span className="sr-only">{col.header}</span>
                 ) : (
                   col.header
                 )}
@@ -136,6 +146,7 @@ export function DataTable<T>({
                     index === 0 && 'pl-4 sm:pl-5',
                     index === columns.length - 1 && 'pr-4 sm:pr-5',
                     col.align === 'right' && 'text-right tabular-nums',
+                    col.showFrom === '2xl' && 'hidden 2xl:table-cell',
                   )}
                 >
                   {col.render(row)}

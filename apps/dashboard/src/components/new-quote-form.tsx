@@ -144,7 +144,7 @@ export function NewQuoteForm() {
         actions={<div className="hidden sm:block">{saveButton()}</div>}
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <Panel
           title={
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
@@ -207,7 +207,7 @@ export function NewQuoteForm() {
               Customer
             </h2>
           }
-          className="lg:sticky lg:top-4"
+          className="xl:sticky xl:top-4"
         >
           <div className="grid gap-4 p-5">
             <CustomerFinder onPick={pickCustomer} />
