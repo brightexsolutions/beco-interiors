@@ -8,7 +8,7 @@ import { ShowroomFilm } from '@/components/showroom-film';
 import { CompletedInteriors } from '@/components/completed-interiors';
 import { ServiceCardGrid } from '@/components/service-card-grid';
 import {
-  getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages,
+  getPublishedProducts, getCategoryTree, blurProps, primaryImage, orderedImages, subtreeSlugs,
 } from '@/lib/products';
 import { SITE, SITE_SHOTS, SHOWROOM_FILM } from '@/lib/site';
 import { SERVICES } from '@/lib/services';
@@ -138,7 +138,7 @@ export default async function AboutPage() {
   const shotForGroup = (slug: string) => {
     const group = groups.find((g) => g.slug === slug);
     if (!group) return undefined;
-    const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+    const inGroup = new Set(subtreeSlugs(group));
     for (const p of products) {
       if (!p.category || !inGroup.has(p.category.slug)) continue;
       const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);

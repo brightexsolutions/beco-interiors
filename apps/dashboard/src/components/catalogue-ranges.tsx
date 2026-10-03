@@ -6,7 +6,7 @@ import { Fragment, useEffect, useState, useTransition } from 'react';
 import { Icon, Sheet, StatusPill, buttonClasses, cn } from '@beco/ui';
 import { CategoryEditor } from '@/components/category-editor';
 import { CategoryCreate } from '@/components/category-create';
-import type { CategoryGroupRow, CategoryParentOption, CategoryRow } from '@/lib/categories';
+import { flattenCategoryTree, subtreeProductCount, type CategoryGroupRow, type CategoryParentOption, type CategoryRow } from '@/lib/categories';
 
 /**
  * The ranges panel, folded into the catalogue rather than kept on its own
@@ -59,7 +59,7 @@ export function CatalogueRanges({
   }, []);
 
   const activeName = selectedId
-    ? (tree.flatMap((g) => [g, ...g.children]).find((c) => c.id === selectedId)?.name ?? null)
+    ? (flattenCategoryTree(tree).find((c) => c.id === selectedId)?.name ?? null)
     : null;
 
   const withParam = (key: string, value: string | null, extraClear: string[] = []) => {
@@ -139,43 +139,28 @@ export function CatalogueRanges({
           ) : (
             <div className="flex flex-wrap items-center gap-2 p-1">
               <RangePill label="All products" active={!selectedId} onClick={() => filterTo(null)} />
-              {tree.map((group) => {
-                // A group with ranges under it is never itself assignable
-                // (see groupCategoryOptions), so its own count is always 0
-                // and would read as "Sintered Stone, 0" beside 26 real
-                // products right next to it. The sum of its own ranges is
-                // what clicking the group's own pill actually filters to,
-                // so it is the number that belongs here.
-                const groupCount =
-                  group.children.length > 0
-                    ? group.children.reduce((sum, child) => sum + child.productCount, 0)
-                    : group.productCount;
-                return (
-                  <Fragment key={group.id}>
+              {tree.map((group) => (
+                <Fragment key={group.id}>
+                  {/* Depth first: a major category, then its ranges, each
+                      followed by its own sub ranges, so adjacency alone reads
+                      as the taxonomy. A sub range carries a leading mark. The
+                      count on any pill is what clicking it filters to: the
+                      whole subtree, own products included. */}
+                  {flattenCategoryTree([group]).map((node) => (
                     <RangePill
-                      label={group.name}
-                      count={groupCount}
-                      draft={!group.isPublished}
-                      active={selectedId === group.id}
-                      onClick={() => filterTo(group.id)}
-                      editHref={editHref(group.id)}
-                      editName={group.name}
+                      key={node.id}
+                      label={node.name}
+                      sub={node.depth === 3}
+                      count={subtreeProductCount(node)}
+                      draft={!node.isPublished}
+                      active={selectedId === node.id}
+                      onClick={() => filterTo(node.id)}
+                      editHref={editHref(node.id)}
+                      editName={node.name}
                     />
-                    {group.children.map((range) => (
-                      <RangePill
-                        key={range.id}
-                        label={range.name}
-                        count={range.productCount}
-                        draft={!range.isPublished}
-                        active={selectedId === range.id}
-                        onClick={() => filterTo(range.id)}
-                        editHref={editHref(range.id)}
-                        editName={range.name}
-                      />
-                    ))}
-                  </Fragment>
-                );
-              })}
+                  ))}
+                </Fragment>
+              ))}
             </div>
           )}
         </div>
@@ -194,6 +179,7 @@ export function CatalogueRanges({
  */
 function RangePill({
   label,
+  sub,
   count,
   draft,
   active,
@@ -202,6 +188,8 @@ function RangePill({
   editName,
 }: {
   label: string;
+  /** A third level range, drawn with a leading mark after its range. */
+  sub?: boolean | undefined;
   count?: number | undefined;
   draft?: boolean | undefined;
   active: boolean;
@@ -226,6 +214,7 @@ function RangePill({
           !active && 'hover:bg-neutral-50',
         )}
       >
+        {sub ? <span aria-hidden className={cn('-ml-0.5', active ? 'text-high-vis-white/60' : 'text-neutral-400')}>›</span> : null}
         {label}
         {count != null ? (
           <span className={cn('font-normal tabular-nums', active ? 'text-high-vis-white/70' : 'text-neutral-500')}>

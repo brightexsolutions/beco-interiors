@@ -44,6 +44,19 @@ describe('detectMisnests', () => {
     expect(found[0]!.reason).toContain('must sit directly under their category');
   });
 
+  it('does NOT flag a folder nested inside a folder that holds only folders: that is a sub range', () => {
+    // 12MM SINTERED STONES/HEIXIN 12MM/INK WHITE: Heixin holds no photographs
+    // itself, only stone folders, so Ink White is a product of a sub range.
+    const holdsPhotos = (path: string) => path !== 'HEIXIN 12MM';
+    const found = detectMisnests([
+      { path: 'AMBER JADE', name: 'AMBER JADE', depth: 1 },
+      { path: 'HEIXIN 12MM', name: 'HEIXIN 12MM', depth: 1 },
+      { path: 'HEIXIN 12MM/INK WHITE', name: 'INK WHITE', depth: 2 },
+      { path: 'AMBER JADE/CYPRUS LIGHT GREY', name: 'CYPRUS LIGHT GREY', depth: 2 },
+    ], holdsPhotos);
+    expect(found.map((m) => m.path)).toEqual(['AMBER JADE/CYPRUS LIGHT GREY']);
+  });
+
   it('reports nothing for a clean category', () => {
     expect(detectMisnests([
       { path: 'AMBER JADE', name: 'AMBER JADE', depth: 1 },

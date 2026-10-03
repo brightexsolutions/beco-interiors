@@ -26,6 +26,7 @@ const range: CategoryRow = {
   sortOrder: 10,
   isPublished: true,
   productCount: 0,
+  depth: 2,
   childCount: 0,
   updatedAt: '2026-09-23T10:00:00.000Z',
 };

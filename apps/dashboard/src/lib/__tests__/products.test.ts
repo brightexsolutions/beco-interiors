@@ -51,9 +51,20 @@ describe('groupCategoryOptions', () => {
     expect(grouped).toEqual([{ group: sintered, children: [limestone] }]);
   });
 
-  it('keeps a childless top level category, like Lighting, as its own selectable option', () => {
-    const lighting = opt({ id: 'group-2', name: 'Lighting' });
-    expect(groupCategoryOptions([lighting])).toEqual([{ group: lighting, children: [] }]);
+  it('keeps a childless top level category, like Flooring, as its own selectable option', () => {
+    const flooring = opt({ id: 'group-2', name: 'Flooring' });
+    expect(groupCategoryOptions([flooring])).toEqual([{ group: flooring, children: [] }]);
+  });
+
+  it('lists a sub range after its range, named after it, so a product can file at any level', () => {
+    const stone = opt({ id: 'g', name: 'Sintered Stone' });
+    const twelve = opt({ id: 'r', name: '12mm Sintered Stones', parentId: 'g' });
+    const heixin = opt({ id: 's', name: 'Heixin 12mm', parentId: 'r' });
+    const [grouped] = groupCategoryOptions([stone, twelve, heixin]);
+    expect(grouped!.children.map((c) => [c.id, c.name])).toEqual([
+      ['r', '12mm Sintered Stones'],
+      ['s', '12mm Sintered Stones › Heixin 12mm'],
+    ]);
   });
 
   it('never lists a range at the top level: only categories with no parent are groups', () => {

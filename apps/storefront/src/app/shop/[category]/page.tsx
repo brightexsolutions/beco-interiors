@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -6,7 +7,8 @@ import { EmptyState, Reveal, CutoutReveal, buttonClasses } from '@beco/ui';
 import { ProductGridPaginated } from '@/components/product-grid-paginated';
 import {
   getCategoryWithTree, getCategorySlugs, getProductsByCategory, getProductsInCategories,
-  categoryIsIndexable, primaryImage, blurProps, type Category, type CatalogueProduct,
+  categoryIsIndexable, primaryImage, blurProps, flattenTree, subtreeSlugs,
+  type Category, type CategoryGroup, type CatalogueProduct,
 } from '@/lib/products';
 import { SITE } from '@/lib/site';
 
@@ -47,15 +49,17 @@ export default async function CategoryPage({ params }: Params) {
   const { category: slug } = await params;
   const tree = await getCategoryWithTree(slug);
   if (!tree) notFound();
-  const { category, parent, children } = tree;
+  const { category, parent, ancestors, children } = tree;
 
-  // One route, two jobs. A group shows the ranges beneath it and everything
-  // in them; a range shows its own products. Branching here rather than in two
-  // routes keeps /shop/<anything> a single URL shape, which is what the
-  // breadcrumbs, the sitemap and every existing link already assume.
+  // One route, one job at every level. A category with ranges beneath it
+  // shows those ranges and everything in them, its own products included
+  // (12mm Sintered Stones holds stones of its own beside the Heixin sub
+  // range); a leaf shows its own products. Branching here rather than in
+  // several routes keeps /shop/<anything> a single URL shape, which is what
+  // the breadcrumbs, the sitemap and every existing link already assume.
   const isGroup = children.length > 0;
   const products = isGroup
-    ? await getProductsInCategories([category.id, ...children.map((c) => c.id)])
+    ? await getProductsInCategories(flattenTree([category]).map((c) => c.id))
     : await getProductsByCategory(slug);
 
   // The right-hand column leads with a bookmatched pair where the range has
@@ -81,16 +85,16 @@ export default async function CategoryPage({ params }: Params) {
           <li><Link href="/" className="hover:text-charcoal">Home</Link></li>
           <li aria-hidden>/</li>
           <li><Link href="/shop" className="hover:text-charcoal">Shop</Link></li>
-          {parent ? (
-            <>
+          {ancestors.map((ancestor) => (
+            <Fragment key={ancestor.id}>
               <li aria-hidden>/</li>
               <li>
-                <Link href={`/shop/${parent.slug}`} className="hover:text-charcoal">
-                  {parent.name}
+                <Link href={`/shop/${ancestor.slug}`} className="hover:text-charcoal">
+                  {ancestor.name}
                 </Link>
               </li>
-            </>
-          ) : null}
+            </Fragment>
+          ))}
           <li aria-hidden>/</li>
           <li aria-current="page" className="text-charcoal">{category.name}</li>
         </ol>
@@ -310,14 +314,16 @@ function ChildRanges({
   parent, children, products,
 }: {
   parent: Category;
-  children: Category[];
+  children: CategoryGroup[];
   products: CatalogueProduct[];
 }) {
-  const coverFor = (child: Category) =>
-    products
-      .filter((p) => p.category?.slug === child.slug)
+  const coverFor = (child: CategoryGroup) => {
+    const slugs = new Set(subtreeSlugs(child));
+    return products
+      .filter((p) => (p.category ? slugs.has(p.category.slug) : false))
       .map(primaryImage)
       .find((img) => img !== undefined);
+  };
 
   return (
     <section className="mt-20 border-t border-neutral-200 pt-12">
@@ -355,8 +361,8 @@ function ChildRanges({
                   />
                 </p>
                 <p className="mt-1 font-ui text-sm text-neutral-500">
-                  {child.product_count > 0
-                    ? `${child.product_count} in stock`
+                  {child.total_count > 0
+                    ? `${child.total_count} in stock`
                     : 'Being photographed'}
                 </p>
               </Link>
