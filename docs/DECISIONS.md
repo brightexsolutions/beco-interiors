@@ -2298,3 +2298,27 @@ photographs are the product editor's, which the importer never overwrites once a
 the cap moves again and the recursion already handles it; or if item folders turn out to hold
 several photographs per item under unrelated names, in which case the item rule tightens to
 require a code prefix rather than loosening into guesswork.
+
+## D105, 3 October 2026: the Drive import runs from the dashboard, through GitHub Actions
+
+Brown's instruction: the import had only ever been run by the agent on his own machine, and it
+has to be something Beco manage from the admin panel. The importer itself cannot live on Vercel:
+it decodes 44MB HEIC files with Sharp for twenty minutes on a cold cache, it holds the Drive
+service account, and it writes with the service role key, none of which belong in a request
+handler. So the import runs where it already could, in GitHub Actions, and the dashboard becomes
+the hand on the lever. `drive-import.yml` takes two inputs, mode and target; the Catalogue, Drive
+import screen dispatches it through the GitHub API with a fine grained token scoped to Actions on
+this one repository, lists the runs GitHub knows about, and shows what the importer itself
+recorded in `import_runs` and `import_issues`, grouped by the Drive folder a person would open to
+fix it. A production write asks first; a check run never does, it writes nothing. One start a
+minute per person, and the workflow's own concurrency group serialises the rest.
+
+Considered and set aside: a Supabase edge function (no Sharp), a long running Vercel function
+(no twenty minutes), and the dashboard shelling out (no Vercel shell). GitHub Actions already
+holds the repository, the secrets per environment and the approval gate, so the import inherits
+all three. The screen also carries the folder shapes the importer reads, because the person who
+needs that is the one looking at a skipped folder in the report and deciding what to rename.
+
+*Reverses if:* GitHub's dispatch latency or the token's annual expiry proves to be a recurring
+support cost, in which case the same screen fronts a small worker on Beco's own account instead
+and nothing above the `dispatchImport` boundary changes.

@@ -80,6 +80,13 @@ Retired ranges (`LIGHTING`, `LIGHTS`) are skipped whatever they hold, D103.
 - `BEVERLY GOLD.jpg` and `STATUARIO GOLD.jpg` are slab shots named only after the product
 - Five products have no on stand shot at all
 
+## Running it
+
+From the dashboard: Catalogue, Drive import. Check only, Import, or Re-encode everything,
+against staging or production; the screen dispatches `.github/workflows/drive-import.yml` and
+shows the runs and the last report (D105). From a terminal: `pnpm drive:import --dry-run`, then
+`pnpm drive:import`. Both paths run the same code against the same tables.
+
 ## Rules
 
 - Incremental and re runnable. **Running twice must produce zero changes on the second run**

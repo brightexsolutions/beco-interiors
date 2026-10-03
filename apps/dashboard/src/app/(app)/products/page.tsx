@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { buttonClasses } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { NewProductFab } from '@/components/new-product';
 import { CatalogueRanges } from '@/components/catalogue-ranges';
@@ -69,6 +71,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         eyebrow="Catalogue"
         title="Catalogue"
         lede="Every range and product Beco sells."
+        actions={
+          <Link href="/products/import" className={buttonClasses({ variant: 'outline' })}>
+            Drive import
+          </Link>
+        }
       />
       <CatalogueRanges
         tree={tree}

@@ -261,6 +261,29 @@ exactly the quiet period in which a database would pause.
 `curl -i https://www.beco.co.ke/api/health` returns 200. Check monthly rather than assuming, per
 `docs/RETAINER.md` section 8.
 
+### 3.12a Catalogue import from the dashboard
+
+`.github/workflows/drive-import.yml` runs `pnpm drive:import` against staging or production on
+`workflow_dispatch`. The dashboard's Catalogue, Drive import screen dispatches it with
+`GITHUB_ACTIONS_TOKEN` and reads its runs, so a product manager imports from a phone, D105.
+Sharp, the Drive service account and the service role key stay in Actions, never on Vercel.
+
+Each GitHub Environment (`staging`, `production`) carries the import's secrets:
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+`R2_SECRET_ACCESS_KEY`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `REVALIDATE_SECRET`, and the variables
+`DRIVE_ROOT_FOLDER_ID`, `R2_BUCKET` and `STOREFRONT_URL`. The run refuses to start without the
+Drive credential rather than silently running against fixtures. After an import that wrote
+anything it POSTs `/api/revalidate` for `/` and `/shop`, so the new range is live on the next
+request rather than within the hour. The report is kept as a run artifact for 30 days, and the
+importer's own `import_runs` and `import_issues` rows are what the screen shows.
+
+If `production` carries required reviewers for deploys, an import to production waits for the
+same approval. To let Beco import without a Brightex approval, create an environment named
+`production-import` holding only the secrets above and point the workflow's `environment` at it.
+
+**Verify:** a dry-run from the screen appears under Recent runs within a minute and finishes
+green; the Last import panel shows its counts.
+
 ### 3.13 Backups
 
 The GitHub Actions workflow runs nightly: `pg_dump`, gzip, `age` encrypt, upload to the
