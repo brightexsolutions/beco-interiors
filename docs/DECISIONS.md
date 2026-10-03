@@ -2566,3 +2566,19 @@ pill: nine pencils in a row is nine controls nobody wanted until they had chosen
 *Reverses if:* the catalogue grows past a dozen major categories, at which point the first row
 itself needs a search and the browser becomes a tree.
 
+## D115, 3 October 2026: the Drive import is Brightex's to run
+
+**Decision.** `/products/import` admits `brightex_admin` only, as a route rule narrower than
+`/products` (longest prefix wins), re-checked by the page and the action. The Drive import button
+on the catalogue heading is drawn for that role alone, and the product manager's phone bar no
+longer carries an Import tile. This tightens D110, which had left staging imports to the product
+manager and production to any admin.
+
+**Why.** Beco asked for it directly. The import rewrites ranges and products from a Drive folder
+in one run, and a folder arranged wrongly rewrites them wrongly; the person who reads the report
+and fixes the folder is Brightex, so the button belongs to Brightex. Staff add and edit products
+and ranges by hand in the same screen, which was always theirs.
+
+*Reverses if:* Beco take over the Drive folder's upkeep, at which point the rule widens to
+`beco_admin` with the production confirm dialog as the gate.
+

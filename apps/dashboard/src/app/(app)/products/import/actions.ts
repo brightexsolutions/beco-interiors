@@ -27,7 +27,7 @@ const formString = (form: FormData, key: string): string => String(form.get(key)
  * the record of what happened.
  */
 export async function startImport(_prev: ImportActionState, form: FormData): Promise<ImportActionState> {
-  const user = await requirePath('/products');
+  const user = await requirePath('/products/import');
   const parsed = startImportSchema.safeParse({
     mode: formString(form, 'mode'),
     target: formString(form, 'target'),

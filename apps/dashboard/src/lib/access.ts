@@ -45,6 +45,8 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/quotes', roles: ['beco_sales', ...ADMINS] },
   { prefix: '/orders', roles: ['beco_sales', ...ADMINS] },
   { prefix: '/products', roles: ['beco_product_manager', ...ADMINS] },
+  // The Drive import rewrites the catalogue from a folder. Brightex runs it (D115).
+  { prefix: '/products/import', roles: ['brightex_admin'] },
   { prefix: '/announcements', roles: [...ADMINS] },
   { prefix: '/reports', roles: [...ADMINS] },
   { prefix: '/leaderboard', roles: [...ADMINS] },

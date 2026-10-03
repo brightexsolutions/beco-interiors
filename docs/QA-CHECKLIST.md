@@ -530,7 +530,7 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 
 ### `/products/import`
 
-D110: as `beco_product_manager` the target offers staging only; as an admin, production too, behind the ConfirmDialog. Test: `import/__tests__/actions.test.ts` for the POST. **Not walked on a device.**
+D115: the screen, the Drive import button on the catalogue heading and the POST admit `brightex_admin` only; a product manager or Beco admin opening `/products/import` is sent to their landing. Test: `access.test.ts`, `import/__tests__/actions.test.ts`. **Not walked on a device.**
 
 
 Product manager, Beco admin, Brightex admin, the same roles as `/products`. Reached from the

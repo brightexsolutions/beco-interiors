@@ -138,7 +138,7 @@ export interface BottomNav {
  * the proxy would refuse.
  *
  *   sales            Quotes, New quote, Orders
- *   product manager  Catalogue, Import
+ *   product manager  Catalogue
  *   admins           Overview, Quotes, New quote, Orders, More
  */
 export const bottomNavFor = (role: UserRole, grants: AccessGrants = {}): BottomNav => {
@@ -150,11 +150,6 @@ export const bottomNavFor = (role: UserRole, grants: AccessGrants = {}): BottomN
   if (ROLE_LANDING[role] === '/') base.push({ href: '/', label: 'Overview' });
   base.push(...allowed);
   const newQuote = canAccess(role, '/quotes', grants);
-  // A role with one screen gets its one nested screen beside it rather than
-  // a bar with a single button on it.
-  if (!newQuote && base.length === 1 && base[0]?.href === '/products') {
-    base.push({ href: '/products/import', label: 'Import' });
-  }
   const slots = newQuote ? 3 : 4;
   const items = base.slice(0, slots);
   const more = base.slice(slots);

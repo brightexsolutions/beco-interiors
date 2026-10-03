@@ -55,11 +55,11 @@ describe('BottomNav (D111)', () => {
     expect(screen.getByRole('button', { name: 'More' }).className).toContain('text-charcoal');
   });
 
-  it('gives the product manager Catalogue and Import, with no New quote', () => {
+  it('gives the product manager Catalogue alone, with no New quote', () => {
     mockPathname.mockReturnValue('/products');
     render(<BottomNav nav={bottomNavFor('beco_product_manager')} name="Aisha" />);
     const nav = screen.getByRole('navigation', { name: 'Sections' });
-    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/products', '/products/import']);
+    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/products']);
     expect(within(nav).queryByRole('link', { name: 'New quote' })).toBeNull();
   });
 
