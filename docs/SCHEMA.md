@@ -74,7 +74,7 @@ category made its own parent, and a category with children being given a parent.
 19 and D52.
 
 Five GROUPS sit above the Drive folders: Sintered Stone, Wall Panels, Flooring, Hardware and
-Accessories. Lighting stays top level with no children by design. A group is an editorial row,
+Accessories. Lighting, once top level with no children, is retired and unpublished since D103. A group is an editorial row,
 so `source_path` is null on it, which is what keeps the importer, which upserts on
 `source_path`, from ever colliding with one.
 
@@ -82,7 +82,7 @@ so `source_path` is null on it, which is what keeps the importer, which upserts 
 |---|---|---|
 | `id` | uuid PK | |
 | `name`, `slug` | text, slug unique | Slug derives from the Drive folder name |
-| `parent_id` | uuid FK categories | Null on a group and on Lighting. Depth capped at two by trigger |
+| `parent_id` | uuid FK categories | Null on a group and on a range filed under none. Depth capped at two by trigger |
 | `description` | text | 150 to 400 words. **A grid alone does not rank** |
 | `meta_title`, `meta_description` | text | SEO overrides, editable without a deploy |
 | `hero_image` | jsonb | |

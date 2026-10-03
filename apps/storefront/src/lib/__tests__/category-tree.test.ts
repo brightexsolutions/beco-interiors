@@ -45,10 +45,10 @@ describe('buildCategoryTree', () => {
   });
 
   it('treats a top level category with no children as a group of one', () => {
-    // Lighting is a brand pillar and a single Drive folder, so it stays top
-    // level rather than having a wrapper group invented for it. Callers must
-    // not need a second code path for it.
-    const tree = buildCategoryTree([cat({ id: 'l1', slug: 'lighting', product_count: 3 })]);
+    // A new Drive folder lands at the top level until someone files it under
+    // a group, so it stays a group of one rather than having a wrapper
+    // invented for it. Callers must not need a second code path for it.
+    const tree = buildCategoryTree([cat({ id: 'l1', slug: 'drawer-rails', product_count: 3 })]);
 
     expect(tree).toHaveLength(1);
     expect(tree[0]!.children).toEqual([]);
@@ -58,12 +58,12 @@ describe('buildCategoryTree', () => {
   it('keeps the order it was given, which is sort_order from the query', () => {
     const tree = buildCategoryTree([
       cat({ id: 'g1', slug: 'stone' }),
-      cat({ id: 'g2', slug: 'lighting' }),
+      cat({ id: 'g2', slug: 'flooring' }),
       cat({ id: 'g3', slug: 'panels' }),
       cat({ id: 'c1', slug: 'acoustic', parent_id: 'g3' }),
     ]);
 
-    expect(tree.map((g) => g.slug)).toEqual(['stone', 'lighting', 'panels']);
+    expect(tree.map((g) => g.slug)).toEqual(['stone', 'flooring', 'panels']);
   });
 
   it('drops a child whose parent is not in the list rather than inventing a group', () => {
@@ -125,12 +125,12 @@ describe('indexableCategories', () => {
   });
 
   it('indexes a childless top level category on its own products', () => {
-    const out = indexableCategories(tree([cat({ id: 'l1', slug: 'lighting', product_count: 3 })]));
-    expect(out.map((c) => c.slug)).toEqual(['lighting']);
+    const out = indexableCategories(tree([cat({ id: 'l1', slug: 'flooring', product_count: 3 })]));
+    expect(out.map((c) => c.slug)).toEqual(['flooring']);
   });
 
   it('keeps out a childless top level category with nothing in it', () => {
-    const out = indexableCategories(tree([cat({ id: 'l1', slug: 'lighting' })]));
+    const out = indexableCategories(tree([cat({ id: 'l1', slug: 'flooring' })]));
     expect(out).toEqual([]);
   });
 });

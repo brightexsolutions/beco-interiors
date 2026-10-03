@@ -18,7 +18,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: 'About Beco Interiors',
   description:
-    'A Nairobi supplier of sintered stone, lighting, panels and interior accessories, holding stock on the ground at Urban Square, Industrial Area.',
+    'A Nairobi supplier of sintered stone, wall panels, hardware and interior accessories, holding stock on the ground at Urban Square, Industrial Area.',
   alternates: { canonical: '/about' },
 };
 
@@ -37,16 +37,13 @@ export const metadata: Metadata = {
  * is here, in Nairobi, on the floor, today. For a buyer specifying a project
  * that matters more than a founding date.
  *
- * The four pillars come from the guideline's own strapline, which appears on
- * every page of it. Lighting is named there but has no Drive folder yet, so it
- * is described as part of the range without a link to a category that would be
- * empty. That mismatch is recorded in docs/BRAND-GUIDELINE-NOTES.md as a
- * decision for Beco rather than something to paper over.
+ * The four pillars come from the guideline's own strapline, with Lighting
+ * replaced by Hardware: Beco confirmed on 3 October 2026 that they no longer
+ * sell lighting (D103), and hardware is a range they hold on the floor.
  *
- * Each pillar carries a photograph now: a real installation shot where one
- * exists, and Lighting and Panels, which have no photography yet, get the
- * same charcoal name plate the shop's range tiles use rather than an
- * invented stock image.
+ * Each pillar carries a photograph: a real installation shot where one
+ * exists, and a range with no photography yet gets the same charcoal name
+ * plate the shop's range tiles use rather than an invented stock image.
  *
  * Redesigned 14 September on direct feedback that the page "does not look
  * the part": the statement of intent was text against a blank column, and
@@ -80,20 +77,20 @@ const PILLARS = [
     groupSlug: 'sintered-stone',
   },
   {
-    title: 'Lighting',
-    body: 'Decorative and architectural fittings, specified alongside the surfaces they sit in.',
-    href: '/shop/lighting',
-    groupSlug: 'lighting',
-  },
-  {
     title: 'Panels',
     body: 'Wall panelling and cladding systems for interiors that need to go up quickly and cleanly.',
     href: '/shop/wall-panels',
     groupSlug: 'wall-panels',
   },
   {
+    title: 'Hardware',
+    body: 'Handles, hinges, locks and legs, in finishes chosen to sit with the surfaces we supply.',
+    href: '/shop/hardware',
+    groupSlug: 'hardware',
+  },
+  {
     title: 'Accessories',
-    body: 'Handles, hinges, legs and the hardware that finishes a piece of joinery properly.',
+    body: 'Floating shelf fittings, kitchen organisers and office accessories that finish a piece of joinery properly.',
     href: '/shop/accessories',
     groupSlug: 'accessories',
   },
@@ -135,8 +132,8 @@ export default async function AboutPage() {
 
   // One real photograph per pillar, matched through the group tree rather
   // than a hand maintained list of category slugs, so it stays correct if a
-  // range moves groups. A pillar with no photography yet, Lighting and
-  // Panels today, gets a charcoal plate in the markup below instead of a
+  // range moves groups. A pillar with no photography yet gets a charcoal
+  // plate in the markup below instead of a
   // guessed stock image.
   const shotForGroup = (slug: string) => {
     const group = groups.find((g) => g.slug === slug);
@@ -364,9 +361,9 @@ export default async function AboutPage() {
             down the page: large tile, small tile, small tile, large tile,
             mirrored so the eye does not read it as four identical boxes.
             Every tile fills with a real installation shot where one exists.
-            Lighting and Panels, which do not yet, keep the same charcoal
-            name plate the shop's range tiles use, at full tile size now
-            rather than a thumbnail, so the two without photography still
+            A pillar without one keeps the same charcoal name plate the
+            shop's range tiles use, at full tile size now rather than a
+            thumbnail, so a range without photography still
             read as a considered choice rather than a gap in the row. */}
         <div className="mt-14 grid gap-6 lg:grid-cols-12 lg:gap-8">
           {PILLARS.map((pillar, i) => {

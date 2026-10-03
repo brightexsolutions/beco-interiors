@@ -34,7 +34,7 @@ import { RotatingRoomWord } from './rotating-room-word';
  * SlabCard frames and the mobile background this replaces.
  */
 export interface HeroRangeSlide {
-  /** The range's own title, "Lighting", "Wall panels", never a single
+  /** The range's own title, "Hardware", "Wall panels", never a single
    *  product's name: this hero sells the range, not one item in it. */
   title: string;
   slug: string;
@@ -354,7 +354,7 @@ export function PinnedHero({ slides }: { slides: HeroRangeSlide[] }) {
  *
  * The photograph, then a charcoal caption carrying the range's name and its
  * position in the set. No thickness or category line any more, per D92: a
- * single hero now spans stone, lighting, hardware and more, and those two
+ * single hero now spans stone, panels, hardware and more, and those two
  * facts stopped being something every range shares.
  *
  * A range with no stock yet renders without a `Link` wrapper entirely,

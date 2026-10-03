@@ -28,7 +28,7 @@ export async function generateMetadata(
   return {
     title: 'Shop interior finishing materials',
     description:
-      'Sintered stone slabs, panels, lighting and accessories, stocked in Nairobi. Search the range, filter by finish, and request a quote.',
+      'Sintered stone slabs, wall panels, hardware and accessories, stocked in Nairobi. Search the range, filter by finish, and request a quote.',
     // D29: every filtered view canonicalises to the base and carries noindex,
     // so a multi facet grid cannot generate hundreds of thin duplicate URLs.
     alternates: { canonical: '/shop' },
@@ -114,7 +114,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   // One rail, standing for the whole business rather than the range with the
   // most photography: up to three products per RANGE_GROUPS entry, badged
   // stock preferred within each, so sintered stone cannot fill the row on
-  // its own and lighting, panels, hardware and accessories actually appear
+  // its own and panels, flooring, hardware and accessories actually appear
   // in it too. A second rail per range was tried and reported back as
   // repetitive right after this one, so this is the only curated row before
   // the general grid.
@@ -163,7 +163,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             Interior finishing materials.
           </h1>
           <p className="mt-4 max-w-[46ch] text-base leading-[1.6] text-neutral-300">
-            Sintered stone, lighting, panels and accessories, stocked in Nairobi and priced the
+            Sintered stone, wall panels, hardware and accessories, stocked in Nairobi and priced the
             day you ask.
           </p>
         </div>

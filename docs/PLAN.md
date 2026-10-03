@@ -494,6 +494,6 @@ Anything cut or deferred is recorded here with a reason, never silently dropped.
 | Pre migration baseline capture | Brightex | M6, and it stops existing at cutover |
 | Brand guideline pages 20 to 21, Website Design Application | Beco or Brightex, they are images | M3 |
 | Confirm "10+ years" versus the guideline's "new entrant" | Beco | M4 About page copy |
-| Confirm whether Lighting stays a category | Beco | M4 navigation and taxonomy |
+| ~~Confirm whether Lighting stays a category~~ Resolved 3 October: Beco no longer sells lighting, retired in migration 57, D103 | Beco | Done |
 | Which Sandstone Beige file is the slab | Beco | M2 |
 | Vercel Pro upgrade | Brightex | M6 cutover |

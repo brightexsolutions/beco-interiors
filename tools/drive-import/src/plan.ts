@@ -67,6 +67,14 @@ const NON_PRODUCT_FOLDERS = new Set([
   'SITE PHOTOS', 'SITE VIDEOS', 'BRAND IDENTITY', 'BECO BACKUPS',
 ]);
 
+/**
+ * Ranges Beco no longer sells. A folder with one of these names is left
+ * alone, whatever it holds, and reported once so nobody wonders where its
+ * photographs went. Lighting was retired on Beco's own instruction, D103,
+ * and the "Lights" folder of loose phone photographs still exists in Drive.
+ */
+export const RETIRED_FOLDERS = new Set(['LIGHTING', 'LIGHTS']);
+
 export const buildPlan = (
   listing: readonly DriveFile[],
   folders: readonly FolderNode[],
@@ -84,13 +92,28 @@ export const buildPlan = (
   const categoryRelative = (path: string): string =>
     path.split('/').slice(1).join('/');
 
+  const retired = new Map<string, number>();
   const usable = listing.filter((f) => {
     if (IGNORE.test(f.path)) return false;
+    const top = (f.path.split('/')[0] ?? '').toUpperCase();
+    if (RETIRED_FOLDERS.has(top)) {
+      retired.set(top, (retired.get(top) ?? 0) + 1);
+      return false;
+    }
     const rel = categoryRelative(f.path);
     // Anything under a misnested folder is skipped along with its parent.
     for (const bad of excluded) if (rel === bad || rel.startsWith(`${bad}/`)) return false;
     return true;
   });
+
+  for (const [folder, count] of retired) {
+    issues.push({
+      path: folder,
+      reason:
+        `Beco no longer sells this range, so the ${count} file(s) in "${folder}" are not ` +
+        'imported. The folder can be archived in Drive; nothing on the site reads it.',
+    });
+  }
 
   const classified = classify(usable, known);
   const files: PlannedFile[] = [];

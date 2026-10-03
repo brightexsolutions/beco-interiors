@@ -168,7 +168,7 @@ export function SiteHeader() {
             <li>
               {/* About's own active state is /about alone, not derived from
                   every item it links to: Sintered stone and The showroom are
-                  each already Shop's and Contact's own page, and lighting
+                  each already Shop's and Contact's own page, and lighting up
                   About too would put two "you are here" claims on the bar
                   for the same route. */}
               <NavDropdown
