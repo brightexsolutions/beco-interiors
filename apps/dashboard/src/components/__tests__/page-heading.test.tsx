@@ -15,15 +15,17 @@ describe('PageHeading', () => {
     expect(screen.getByText('Everything awaiting a price.')).toBeInTheDocument();
   });
 
-  it('keeps actions on the same row as the title, to the right', () => {
+  it('puts actions beside the title from sm, and after the lede at full width on a phone (D112)', () => {
     const { container } = render(
-      <PageHeading title="BEC-Q-00001" actions={<button type="button">View</button>} />,
+      <PageHeading title="BEC-Q-00001" lede="Achieng Otieno" actions={<button type="button">View</button>} />,
     );
     const row = container.querySelector('h1')?.parentElement;
-    expect(row?.className).toContain('justify-between');
-    expect(row?.className).toContain('items-center');
-    expect(row?.className).not.toContain('flex-col');
-    expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument();
+    expect(row?.className).toContain('sm:grid-cols-[minmax(0,1fr)_auto]');
+    const actions = screen.getByRole('button', { name: 'View' }).parentElement;
+    expect(actions?.className).toContain('order-3');
+    expect(actions?.className).toContain('[&>*]:w-full');
+    expect(actions?.className).toContain('sm:col-start-2');
+    expect(screen.getByText('Achieng Otieno').className).toContain('order-2');
   });
 
   it('has no accessibility violations', async () => {

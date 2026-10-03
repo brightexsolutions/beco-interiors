@@ -226,8 +226,8 @@ describe('ReportFilters', () => {
     const { container } = render(<PageHeading title="Reports" actions={<ReportFilters />} />);
     const row = container.querySelector('h1')?.parentElement;
     expect(row).toContainElement(screen.getByLabelText('Filter by period'));
-    expect(row?.className).toContain('justify-between');
-    expect(row?.className).toContain('items-center');
+    expect(row?.className).toContain('sm:grid-cols-[minmax(0,1fr)_auto]');
+    expect(row?.className).toContain('sm:items-center');
   });
 
   it('has no accessibility violations', async () => {

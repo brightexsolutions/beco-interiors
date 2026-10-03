@@ -35,6 +35,14 @@ describe('ChipGroup', () => {
     expect(onChange).toHaveBeenCalledWith('');
   });
 
+  it('wraps by default so no chip is cut at the edge, and scrolls only when asked (D112)', () => {
+    const { container, rerender } = render(<ChipGroup label="Status" options={options} value="" onChange={() => {}} />);
+    expect(container.firstElementChild?.className).toContain('flex-wrap');
+    expect(container.firstElementChild?.className).not.toContain('overflow-x-auto');
+    rerender(<ChipGroup label="Status" options={options} value="" onChange={() => {}} scroll />);
+    expect(container.firstElementChild?.className).toContain('overflow-x-auto');
+  });
+
   it('keeps every chip a 44px target', () => {
     render(<ChipGroup label="Status" options={options} value="" onChange={vi.fn()} />);
     for (const chip of screen.getAllByRole('button')) expect(chip.className).toContain('min-h-11');

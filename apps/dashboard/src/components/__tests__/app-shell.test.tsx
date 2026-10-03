@@ -55,7 +55,7 @@ describe('AppShell', () => {
         <p>Overview</p>
       </AppShell>,
     );
-    expect(container.firstElementChild?.className).toContain('[--dock:calc(4.25rem+env(safe-area-inset-bottom,0px))]');
+    expect(container.firstElementChild?.className).toContain('[--dock:calc(3.5625rem+env(safe-area-inset-bottom,0px))]');
     expect(container.firstElementChild?.className).toContain('lg:[--dock:0px]');
     expect(container.querySelector('main')?.className).toContain('pb-[calc(var(--dock)+1rem)]');
   });

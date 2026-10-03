@@ -46,7 +46,7 @@ export function AppShell({
       <div
         className={
           bottom.items.length > 0
-            ? 'min-h-screen bg-neutral-50 [--dock:calc(4.25rem+env(safe-area-inset-bottom,0px))] lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:[--dock:0px]'
+            ? 'min-h-screen bg-neutral-50 [--dock:calc(3.5625rem+env(safe-area-inset-bottom,0px))] lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:[--dock:0px]'
             : 'min-h-screen bg-neutral-50 [--dock:0px] lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]'
         }
       >

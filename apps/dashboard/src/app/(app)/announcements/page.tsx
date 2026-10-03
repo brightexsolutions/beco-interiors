@@ -49,7 +49,7 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
 
   return (
     <>
-      <PageHeading eyebrow="Storefront" title="Announcements" />
+      <PageHeading eyebrow="Storefront" title="Announcements" actions={<NewAnnouncementFab />} />
       <section aria-labelledby="on-site-now" className="mb-8 rounded-panel border border-neutral-200 bg-neutral-50 p-4 sm:p-5">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="on-site-now" className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
@@ -76,7 +76,6 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
       <div className="pb-24">
         <AnnouncementResults announcements={announcements} editing={editing} creating={creating} />
       </div>
-      <NewAnnouncementFab />
     </>
   );
 }

@@ -196,3 +196,27 @@ on `/quotes` shows from `lg` up only; the bar carries it below that.
 The bar reads the same access map as everything else (`bottomNavFor` over `navItemsFor`), so it
 cannot offer a screen the proxy would refuse, and a role with no sections gets no bar.
 
+## 3 October 2026, the phone layout pass (D112)
+
+Measured with a script that walks every screen at 390px and lists each element whose right edge
+leaves the viewport. Two screens overflowed outright (the orders list and the Drive import), and
+the rest wrapped badly in ways a desktop never shows. What changed:
+
+- **List cards** (quotes, orders): the customer owns a row and wraps; the figure sits on the
+  next row with the status chips; nothing is truncated to make room. A chevron marks the card as
+  the link, no "View" word
+- **Chips wrap.** `ChipGroup` no longer scrolls sideways with a chip cut at the edge; every
+  option is on screen. A group with five or more options is a select on the phone: source on
+  quotes, status on orders
+- **Headings**: title, lede, then the actions at full width; from `sm` the actions sit beside
+  the title. The four "New" controls (product, user, announcement, article) are heading buttons,
+  charcoal, not pills floating over the list under the bottom bar
+- **Home**: the plate rows size the figure at xl on a phone so the label stays whole; the pipeline
+  legend wraps rather than truncating "Reviewing"
+- **Reports**: the person cards stack label and value in one column; the ranked bars size the
+  label column to the longest name, so the bars have room
+- **Settings** tabs wrap into two rows; the new quote's empty list is shorter so the customer
+  card is reached sooner; `--dock` matches the bar's real height so the docked save bars sit on it
+
+The audit script is the proof: zero offenders on every screen, every role, after the pass.
+

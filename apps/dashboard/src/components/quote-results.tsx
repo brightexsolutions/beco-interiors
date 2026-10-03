@@ -152,25 +152,25 @@ function QuoteCard({ quote }: { quote: QuoteListItem }) {
           fresh ? 'border-l-4 border-l-charcoal' : null,
         )}
       >
+        {/* The name owns its row and wraps; the figure sits on the next row
+            with the status, so neither is ever cut to make room (D112). */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="min-w-0 truncate font-ui text-base font-semibold text-charcoal">{quote.customerName}</p>
-            <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
-              {quote.isPriced ? <span className="tabular-nums">{money(quote.value)}</span> : <span className="text-neutral-500">POA</span>}
-            </p>
-          </div>
-          <p className="mt-0.5 truncate font-ui text-sm text-neutral-500">
+          <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{quote.customerName}</p>
+          <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
             <span className="tabular-nums">{quote.referenceNumber}</span> · {quote.customerPhone}
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <BadgeRow quote={quote} />
-            <p className="min-w-0 font-ui text-sm text-neutral-500">
-              <OwnerLine quote={quote} />
-              <span className="ml-2 whitespace-nowrap tabular-nums">
-                {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
-              </span>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <p className="font-ui text-base font-semibold text-charcoal">
+              {quote.isPriced ? <span className="tabular-nums">{money(quote.value)}</span> : <span className="text-neutral-500">Pricing on application</span>}
             </p>
+            <BadgeRow quote={quote} />
           </div>
+          <p className="mt-1.5 font-ui text-sm text-neutral-500">
+            <OwnerLine quote={quote} />
+            <span className="ml-2 whitespace-nowrap tabular-nums">
+              {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
+            </span>
+          </p>
         </div>
         <svg
           aria-hidden

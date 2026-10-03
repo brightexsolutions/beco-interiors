@@ -17,21 +17,25 @@ export interface ChipGroupProps {
   onChange: (value: string) => void;
   /** Tapping the active chip again clears to this value, for an "All" chip. */
   clearValue?: string | undefined;
+  /** Scroll sideways in one row instead of wrapping. Off by default: a chip
+   *  cut in half at the screen's edge reads as a layout fault (D112). */
+  scroll?: boolean | undefined;
   className?: string | undefined;
 }
 
 /**
- * One tap filters for a phone: a horizontal strip of 44px chips instead of
- * a native select that hides its options behind a wheel. Pressed state is
- * `aria-pressed`, so each chip is a real toggle button, and the strip
- * scrolls sideways rather than wrapping into a wall of chips.
+ * One tap filters for a phone: 44px chips instead of a native select that
+ * hides its options behind a wheel. Pressed state is `aria-pressed`, so each
+ * chip is a real toggle button. The chips wrap, so every option is on
+ * screen and none is cut at the edge; a group with many options belongs in
+ * a select instead (D112).
  */
-export function ChipGroup({ label, options, value, onChange, clearValue, className }: ChipGroupProps) {
+export function ChipGroup({ label, options, value, onChange, clearValue, scroll = false, className }: ChipGroupProps) {
   return (
     <div
       role="group"
       aria-label={label}
-      className={cn('scrollbar-none flex gap-2 overflow-x-auto pb-1', className)}
+      className={cn('flex gap-2', scroll ? 'scrollbar-none overflow-x-auto pb-1' : 'flex-wrap', className)}
     >
       {options.map((option) => {
         const active = option.value === value;

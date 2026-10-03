@@ -161,7 +161,7 @@ export function NewQuoteForm() {
           }
         >
           {lines.length === 0 ? (
-            <div className="min-h-72">
+            <div className="min-h-40 sm:min-h-72">
               <EmptyState
                 fill
                 title="No items yet"

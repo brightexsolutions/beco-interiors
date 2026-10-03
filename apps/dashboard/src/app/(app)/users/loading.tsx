@@ -1,5 +1,4 @@
 import { Skeleton, SkeletonScreen } from '@beco/ui';
-import { NewUserFab } from '@/components/new-user';
 
 export default function Loading() {
   return (
@@ -16,7 +15,6 @@ export default function Loading() {
           <Skeleton key={i} className="h-14" />
         ))}
       </div>
-      <NewUserFab />
     </SkeletonScreen>
   );
 }

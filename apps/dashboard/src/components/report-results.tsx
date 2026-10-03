@@ -159,21 +159,21 @@ function PersonCard({ person }: { person: LeaderboardPerson }) {
   return (
     <li className="rounded-panel border border-neutral-200 px-4 py-3">
       <p className="font-ui text-base font-semibold text-charcoal">{person.full_name}</p>
-      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 font-ui text-sm">
+      <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 font-ui text-sm sm:grid-cols-2">
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Raised</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Raised</dt>
           <dd className="tabular-nums text-charcoal">{person.raised}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Won</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Won</dt>
           <dd className="tabular-nums text-charcoal">{person.won}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Won value</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Won value</dt>
           <dd className="tabular-nums text-charcoal">{money(person.won_value)}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Conversion</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Conversion</dt>
           <dd className="tabular-nums text-charcoal">{rateLabel(person.conversion)}</dd>
         </div>
       </dl>
@@ -186,29 +186,29 @@ function FunnelCard({ row, kind }: { row: ConversionRow; kind: 'product' | 'cate
     <li className="rounded-panel border border-neutral-200 px-4 py-3">
       <p className="font-ui text-base font-semibold text-charcoal">{row.name}</p>
       {kind === 'product' && row.category ? <p className="font-ui text-sm text-neutral-500">{row.category}</p> : null}
-      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 font-ui text-sm">
+      <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 font-ui text-sm sm:grid-cols-2">
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Views</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Views</dt>
           <dd className="tabular-nums">{row.views}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Add to cart</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Add to cart</dt>
           <dd className="tabular-nums">{row.add_to_cart}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Quoted</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Quoted</dt>
           <dd className="tabular-nums">{row.quote_submitted}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">WhatsApp</dt>
+          <dt className="whitespace-nowrap text-neutral-500">WhatsApp</dt>
           <dd className="tabular-nums">{row.whatsapp}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Calls</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Calls</dt>
           <dd className="tabular-nums">{row.calls}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">View to cart</dt>
+          <dt className="whitespace-nowrap text-neutral-500">View to cart</dt>
           <dd className="tabular-nums">{rateLabel(row.view_to_cart)}</dd>
         </div>
       </dl>

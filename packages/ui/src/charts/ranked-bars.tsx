@@ -37,6 +37,10 @@ export function RankedBars({
   const series: ChartSeries[] = [{ key: 'value', label: valueLabel, color: theme.primary, format }];
   const rows = items.map((item) => ({ label: item.label, value: item.value }));
   const height = Math.max(96, items.length * 40 + 8);
+  // The label column takes what the longest name needs and no more, so a
+  // phone keeps room for the bars themselves (D112). 8.5px a character at 14px.
+  const longest = items.reduce((max, item) => Math.max(max, item.label.length), 0);
+  const labelWidth = Math.min(150, Math.max(72, Math.round(longest * 8.5) + 12));
 
   return (
     <ChartFrame title={title} description={description} series={series} rows={rows} rowLabel="label" className={className}>
@@ -46,12 +50,12 @@ export function RankedBars({
         <div style={{ height }} className="w-full">
           {mounted ? (
           <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 480, height }}>
-            <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 104, bottom: 0, left: 0 }} barCategoryGap={8}>
+            <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 84, bottom: 0, left: 0 }} barCategoryGap={8}>
               <XAxis type="number" hide />
               <YAxis
                 type="category"
                 dataKey="label"
-                width={150}
+                width={labelWidth}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: theme.text, fontSize: 14, fontFamily: 'inherit' }}
