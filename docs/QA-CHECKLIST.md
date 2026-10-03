@@ -397,7 +397,7 @@ tested):
 | Control | What it does | Status |
 |---|---|---|
 | Ranges heading (disclosure) | Collapses or re-expands the whole panel, `aria-expanded` | Test: `CatalogueRanges` |
-| Range or group pill | Sets `?category=`, filters the product list below it. Every pill counts its whole subtree, own products included, and clicking it matches that subtree (3 October, D104: a range can hold products beside its sub ranges). A sub range follows its range with a leading mark | Test: `CatalogueRanges`. `categoryIds` filter: integration against local Postgres |
+| Range browser (D114) | First row: the major categories, each counting its whole subtree. Open one and its ranges appear on a second row; open a range with sub ranges and a third. Every pill sets `?category=` and filters the list below. The line under the rows names the path and count, with Edit and Add range for the selection only; New category in the heading. Add range opens the sheet with the parent preselected | Test: `catalogue-ranges.test.tsx`, 11 tests; `category-create.test.tsx` for the preselected parent. Seen at three widths, 3 October |
 | "All products" | Clears `?category=`. No edit segment, unlike every other pill | Test: `CatalogueRanges` |
 | Draft mark | Shown on a group or range pill when it is not published | Test: `CatalogueRanges` |
 | Edit (small pencil, inside the pill) | Opens a detail sheet at `?range=id`, a separate control from the pill's own click-to-filter even though it shares the pill's outline | Test: `CatalogueRanges` plus `CategoryEditor` |

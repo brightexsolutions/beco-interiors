@@ -12,9 +12,12 @@ const INITIAL: CategoryActionState = {};
 export function CategoryCreate({
   groupOptions,
   returnTo,
+  defaultParentId = null,
 }: {
   groupOptions: CategoryParentOption[];
   returnTo: string;
+  /** Preselected home, from the browser's "Add range under" (D114). */
+  defaultParentId?: string | null;
 }) {
   const router = useRouter();
   const [state, create, pending] = useActionState(createCategory, INITIAL);
@@ -61,7 +64,7 @@ export function CategoryCreate({
             />
           </Field>
           <Field label="File under" htmlFor="new-cat-parent" hint="Leave as Major category to create one, or pick the category or range this sits under">
-            <Select id="new-cat-parent" name="parentId" defaultValue="">
+            <Select id="new-cat-parent" name="parentId" defaultValue={defaultParentId ?? ''}>
               <option value="">Major category</option>
               {groupOptions.map((group) => (
                 <option key={group.id} value={group.id}>

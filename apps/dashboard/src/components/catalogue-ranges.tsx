@@ -2,36 +2,30 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Fragment, useEffect, useState, useTransition } from 'react';
-import { Icon, Sheet, StatusPill, buttonClasses, cn } from '@beco/ui';
+import { useTransition } from 'react';
+import { Icon, Sheet, buttonClasses, cn } from '@beco/ui';
 import { CategoryEditor } from '@/components/category-editor';
 import { CategoryCreate } from '@/components/category-create';
 import { flattenCategoryTree, subtreeProductCount, type CategoryGroupRow, type CategoryParentOption, type CategoryRow } from '@/lib/categories';
 
 /**
- * The ranges panel, folded into the catalogue rather than kept on its own
- * screen (D91 reversed, see docs/DECISIONS.md). A range is now a filter on
- * the product list below it, not a destination of its own: click a pill to
- * see what is filed under it, click its own small pencil to rename, publish
- * or delete it.
+ * The range browser (D114): one level at a time, the way a folder opens.
  *
- * Third iteration, all on Brown's own screenshots against the real taxonomy,
- * nine groups deep. First a group-per-row layout fixed chips blending into
- * each other, but pushed the actual product list most of a screen down.
- * Then a bordered "cluster" per group packed more onto a line, but read as
- * two different kinds of control, a heading-weight group name and a boxed
- * range chip, when Brown's own direction was one form throughout: every
- * range and group is now the same `RangePill`, same height, same shape, in
- * one flat wrapping row, ordered group name then its own ranges so adjacency
- * alone still reads as a taxonomy. Its own edit pencil sits inside the pill,
- * a narrow bordered-off segment rather than a separate floating button, and
- * is drawn small on purpose. The whole panel can also be collapsed via the
- * chevron beside "New range", so it costs nothing once a product manager
- * already knows the range they want and would rather see the product list.
+ * The first row is the major categories, Sintered Stone, Handles, Wall
+ * Panels. Choose one and its ranges appear on a second row under it; choose
+ * a range with sub ranges and a third row appears. Every pill filters the
+ * product list below to its whole subtree and carries that count. The row a
+ * reader is not inside is not drawn, so the screen never shows all nine
+ * groups and their twenty ranges at once, which is what made the earlier
+ * flat strip read as a wall.
  *
- * `range` and `newRange` are deliberately not `edit`/`new`: this page also
- * carries a product sheet at those exact param names, and the two sheets
- * must never both read the same key.
+ * Editing lives on the selection, not on every pill: the line under the rows
+ * names where you are, "Sintered Stone / 12mm Sintered Stones, 24 products",
+ * with Edit and Add a range beside it. New category sits in the heading.
+ *
+ * `range`, `newRange` and `parent` are deliberately not `edit`/`new`: this
+ * page also carries a product sheet at those exact param names, and the two
+ * sheets must never both read the same key.
  */
 export function CatalogueRanges({
   tree,
@@ -39,47 +33,50 @@ export function CatalogueRanges({
   editing,
   creating,
   selectedId,
+  createParentId = null,
 }: {
   tree: CategoryGroupRow[];
   groupOptions: CategoryParentOption[];
   editing: CategoryRow | null;
   creating: boolean;
   selectedId: string | null;
+  /** Where a new range is filed by default, from `?parent=`. */
+  createParentId?: string | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
-  const [expanded, setExpanded] = useState(true);
 
-  // On a phone the full range panel is a screen of chips before a single
-  // product. Start it folded there; the heading names the active range.
-  useEffect(() => {
-    if (window.matchMedia?.('(max-width: 1023px)').matches) setExpanded(false);
-  }, []);
+  const all = flattenCategoryTree(tree);
+  const byId = new Map(all.map((node) => [node.id, node]));
+  const selected = selectedId ? (byId.get(selectedId) ?? null) : null;
 
-  const activeName = selectedId
-    ? (flattenCategoryTree(tree).find((c) => c.id === selectedId)?.name ?? null)
-    : null;
+  // The path from the major category down to the selection, so each row
+  // knows which of its pills is open.
+  const path: CategoryGroupRow[] = [];
+  for (let node = selected; node; node = node.parentId ? (byId.get(node.parentId) ?? null) : null) path.unshift(node);
+  const rows: { parent: CategoryGroupRow | null; nodes: CategoryGroupRow[] }[] = [{ parent: null, nodes: tree }];
+  for (const node of path) if (node.children.length > 0) rows.push({ parent: node, nodes: node.children });
 
-  const withParam = (key: string, value: string | null, extraClear: string[] = []) => {
+  const withParam = (set: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
-    for (const clear of extraClear) params.delete(clear);
-    if (value) params.set(key, value);
-    else params.delete(key);
+    for (const [key, value] of Object.entries(set)) {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    }
     const query = params.toString();
     return query ? `${pathname}?${query}` : pathname;
   };
 
   const filterTo = (id: string | null) => {
-    startTransition(() => router.push(withParam('category', id, ['page'])));
+    startTransition(() => router.push(withParam({ category: id, page: null })));
   };
 
-  const editHref = (id: string) => withParam('range', id, ['newRange']);
-  const newHref = withParam('newRange', '1', ['range']);
-
+  const editHref = (id: string) => withParam({ range: id, newRange: null, parent: null });
+  const newHref = (parentId: string | null) => withParam({ newRange: '1', parent: parentId, range: null });
   const closeSheet = () => {
-    startTransition(() => router.push(withParam('range', null, ['newRange'])));
+    startTransition(() => router.push(withParam({ range: null, newRange: null, parent: null })));
   };
 
   const sheetOpen = Boolean(editing) || creating;
@@ -93,7 +90,7 @@ export function CatalogueRanges({
   const sheet = (
     <Sheet open={sheetOpen} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle} description={sheetDescription}>
       {creating ? (
-        <CategoryCreate groupOptions={groupOptions} returnTo={withParam('newRange', null)} />
+        <CategoryCreate groupOptions={groupOptions} defaultParentId={createParentId} returnTo={withParam({ newRange: null, parent: null })} />
       ) : editing ? (
         <CategoryEditor
           key={`${editing.id}-${editing.updatedAt}`}
@@ -106,136 +103,134 @@ export function CatalogueRanges({
     </Sheet>
   );
 
+  const total = tree.reduce((sum, node) => sum + subtreeProductCount(node), 0);
+  const levelName = (depth: number) => (depth === 1 ? 'category' : depth === 2 ? 'range' : 'sub range');
+
   return (
     <section aria-labelledby="ranges-heading" className="mb-8">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 id="ranges-heading" className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            aria-expanded={expanded}
-            aria-controls="ranges-body"
-            className="flex min-h-11 items-center gap-1.5 hover:text-charcoal"
-          >
-            <Icon name={expanded ? 'chevron-up' : 'chevron-down'} className="h-3.5 w-3.5" />
-            Ranges
-            {!expanded && activeName ? (
-              <span className="ml-1 normal-case tracking-normal text-charcoal">: {activeName}</span>
-            ) : null}
-          </button>
+          Browse
         </h2>
-        <Link href={newHref} className={buttonClasses({ variant: 'ghost' })}>
+        <Link href={newHref(null)} className={buttonClasses({ variant: 'ghost' })}>
           <Icon name="plus" />
-          New range
+          New category
         </Link>
       </div>
 
-      {expanded ? (
-        <div id="ranges-body" className="rounded-panel border border-neutral-200 bg-high-vis-white p-3">
-          {tree.length === 0 ? (
-            <p className="px-1 py-1 font-ui text-base text-neutral-500">
-              No ranges yet. Start with a group, like Sintered Stone.
-            </p>
-          ) : (
-            <div className="flex flex-wrap items-center gap-2 p-1">
-              <RangePill label="All products" active={!selectedId} onClick={() => filterTo(null)} />
-              {tree.map((group) => (
-                <Fragment key={group.id}>
-                  {/* Depth first: a major category, then its ranges, each
-                      followed by its own sub ranges, so adjacency alone reads
-                      as the taxonomy. A sub range carries a leading mark. The
-                      count on any pill is what clicking it filters to: the
-                      whole subtree, own products included. */}
-                  {flattenCategoryTree([group]).map((node) => (
-                    <RangePill
-                      key={node.id}
-                      label={node.name}
-                      sub={node.depth === 3}
-                      count={subtreeProductCount(node)}
-                      draft={!node.isPublished}
-                      active={selectedId === node.id}
-                      onClick={() => filterTo(node.id)}
-                      editHref={editHref(node.id)}
-                      editName={node.name}
-                    />
-                  ))}
-                </Fragment>
+      {tree.length === 0 ? (
+        <div className="rounded-panel border border-neutral-200 bg-high-vis-white p-4">
+          <p className="font-ui text-base text-neutral-500">No ranges yet. Start with a major category, like Sintered Stone.</p>
+        </div>
+      ) : (
+        <div className="rounded-panel border border-neutral-200 bg-high-vis-white">
+          {rows.map(({ parent, nodes }, index) => (
+            <div
+              key={parent?.id ?? 'root'}
+              role="group"
+              aria-label={parent ? `Ranges in ${parent.name}` : 'Categories'}
+              className={cn('flex flex-wrap items-center gap-2 p-3', index > 0 && 'border-t border-neutral-200 bg-neutral-50')}
+            >
+              {index > 0 ? (
+                <span aria-hidden className="mr-1 font-ui text-sm text-neutral-400">
+                  in {parent!.name}
+                </span>
+              ) : null}
+              <RangePill
+                label={parent ? 'All' : 'All products'}
+                count={parent ? subtreeProductCount(parent) : total}
+                active={(parent?.id ?? null) === (selected?.id ?? null)}
+                onClick={() => filterTo(parent?.id ?? null)}
+              />
+              {nodes.map((node) => (
+                <RangePill
+                  key={node.id}
+                  label={node.name}
+                  count={subtreeProductCount(node)}
+                  draft={!node.isPublished}
+                  active={path.some((p) => p.id === node.id)}
+                  onClick={() => filterTo(node.id)}
+                />
               ))}
             </div>
-          )}
+          ))}
+
+          {/* Where you are, and what you can do to it. */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-neutral-200 px-4 py-2.5">
+            <p className="min-w-0 font-ui text-sm text-neutral-500">
+              {selected ? (
+                <>
+                  {path.map((node, i) => (
+                    <span key={node.id}>
+                      {i > 0 ? <span aria-hidden className="mx-1.5 text-neutral-300">/</span> : null}
+                      <span className={cn(i === path.length - 1 && 'font-semibold text-charcoal')}>{node.name}</span>
+                    </span>
+                  ))}
+                  <span className="ml-2 tabular-nums">
+                    {subtreeProductCount(selected)} {subtreeProductCount(selected) === 1 ? 'product' : 'products'}
+                  </span>
+                  {!selected.isPublished ? <span className="ml-2 text-neutral-400">Draft</span> : null}
+                </>
+              ) : (
+                <>Every range, {total} {total === 1 ? 'product' : 'products'}</>
+              )}
+            </p>
+            {selected ? (
+              <span className="flex shrink-0 items-center gap-1">
+                <Link href={editHref(selected.id)} aria-label={`Edit ${selected.name}`} className={cn(buttonClasses({ variant: 'ghost' }), 'h-10 px-3 py-0')}>
+                  <Icon name="pencil" className="h-3.5 w-3.5" />
+                  Edit {levelName(selected.depth)}
+                </Link>
+                {selected.depth < 3 ? (
+                  <Link href={newHref(selected.id)} aria-label={`Add a range under ${selected.name}`} className={cn(buttonClasses({ variant: 'ghost' }), 'h-10 px-3 py-0')}>
+                    <Icon name="plus" className="h-3.5 w-3.5" />
+                    Add {selected.depth === 1 ? 'range' : 'sub range'}
+                  </Link>
+                ) : null}
+              </span>
+            ) : null}
+          </div>
         </div>
-      ) : null}
+      )}
       {sheet}
     </section>
   );
 }
 
-/**
- * Every range and group in the panel is this same pill: one height, one
- * shape. Its own edit pencil is a second, narrower control sharing the pill's
- * outline rather than a separate button beside it, so the pill reads as one
- * unit, not a chip plus a floating icon. "All products" has no `editHref`,
- * so it renders as a plain pill with no divider or pencil at all.
- */
+/** One pill for every level: same height, same shape. The open one is charcoal. */
 function RangePill({
   label,
-  sub,
   count,
   draft,
   active,
   onClick,
-  editHref,
-  editName,
 }: {
   label: string;
-  /** A third level range, drawn with a leading mark after its range. */
-  sub?: boolean | undefined;
   count?: number | undefined;
   draft?: boolean | undefined;
   active: boolean;
   onClick: () => void;
-  editHref?: string | undefined;
-  editName?: string | undefined;
 }) {
   return (
-    <span
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        'inline-flex h-11 shrink-0 items-stretch overflow-hidden rounded-button border transition-colors duration-200',
-        active ? 'border-charcoal bg-charcoal text-high-vis-white' : 'border-neutral-300 bg-high-vis-white text-charcoal',
+        'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-button border px-3.5 font-ui text-sm font-semibold transition-colors duration-200',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red',
+        active
+          ? 'border-charcoal bg-charcoal text-high-vis-white'
+          : draft
+            ? 'border-dashed border-neutral-300 bg-high-vis-white text-neutral-500 hover:border-charcoal hover:text-charcoal'
+            : 'border-neutral-300 bg-high-vis-white text-charcoal hover:border-charcoal',
       )}
     >
-      <button
-        type="button"
-        onClick={onClick}
-        aria-pressed={active}
-        className={cn(
-          'inline-flex items-center gap-1.5 px-3 font-ui text-sm font-semibold transition-colors duration-200',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-warm-red',
-          !active && 'hover:bg-neutral-50',
-        )}
-      >
-        {sub ? <span aria-hidden className={cn('-ml-0.5', active ? 'text-high-vis-white/60' : 'text-neutral-400')}>›</span> : null}
-        {label}
-        {count != null ? (
-          <span className={cn('font-normal tabular-nums', active ? 'text-high-vis-white/70' : 'text-neutral-500')}>
-            {count}
-          </span>
-        ) : null}
-        {draft ? <StatusPill label="Draft" tone="muted" /> : null}
-      </button>
-      {editHref ? (
-        <Link
-          href={editHref}
-          aria-label={`Edit ${editName}`}
-          className={cn(
-            'inline-flex w-8 shrink-0 items-center justify-center border-l transition-colors duration-200',
-            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-warm-red',
-            active ? 'border-white/20 hover:bg-white/10' : 'border-neutral-300 hover:bg-neutral-100',
-          )}
-        >
-          <Icon name="pencil" className="h-3 w-3" />
-        </Link>
+      {label}
+      {count != null ? (
+        <span className={cn('font-normal tabular-nums', active ? 'text-high-vis-white/70' : 'text-neutral-500')}>{count}</span>
       ) : null}
-    </span>
+      {draft ? <span className="sr-only">, draft</span> : null}
+    </button>
   );
 }
