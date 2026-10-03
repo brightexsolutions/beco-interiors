@@ -119,3 +119,19 @@ describe('StatCard visuals and link', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe('StatCard figures never wrap', () => {
+  it('never breaks inside a money figure, and steps a long one down a size', () => {
+    render(<StatCard label="Invoiced this month" value="Ksh 96,000" />);
+    const figure = screen.getByText('Ksh 96,000');
+    // break-words is overflow-wrap:anywhere, which split "96,000" after the comma.
+    expect(figure.className).not.toContain('break-words');
+    expect(figure.className).toContain('[overflow-wrap:normal]');
+    expect(figure.className).toContain('text-2xl');
+  });
+
+  it('keeps the full size for a short figure', () => {
+    render(<StatCard label="Products live" value="24" />);
+    expect(screen.getByText('24').className).toContain('text-3xl');
+  });
+});

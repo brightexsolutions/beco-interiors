@@ -116,6 +116,11 @@ export function StatCard({
   const t = TONES[tone];
   const compact = size === 'compact';
   const segmentTotal = segments?.reduce((sum, s) => sum + s.value, 0) ?? 0;
+  // A figure never breaks inside itself: `break-words` let "Ksh 96,000" split
+  // after the comma and read as two numbers on the phone grid. Normal wrapping
+  // may still break at the space, "Ksh" over "96,000", which reads correctly,
+  // and a long figure steps down a size so that is rarely needed.
+  const longFigure = String(value).length > 8;
 
   return (
     <div
@@ -148,8 +153,8 @@ export function StatCard({
       <p
         className={cn(
           // Lining figures: Cormorant's default old-style "1" reads as "I".
-          'mt-2 break-words font-display leading-none tabular-nums lining-nums',
-          compact ? 'text-lg sm:text-xl' : 'text-3xl sm:text-4xl',
+          'mt-2 [overflow-wrap:normal] font-display leading-none tabular-nums lining-nums',
+          compact ? 'text-lg sm:text-xl' : longFigure ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl',
           t.value,
         )}
       >
