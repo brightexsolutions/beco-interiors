@@ -366,7 +366,8 @@ The one sequence where order genuinely matters. Budget half a day, not an aftern
 - [ ] Backup restore drill completed successfully
 - [ ] **Pre migration baseline captured:** current traffic, indexed page count, and positions
       for the five target terms. This stops existing the moment DNS moves
-- [ ] 301 redirect map complete and every old URL tested
+- [ ] 301 redirect map complete and every old URL tested. `docs/SEO-MIGRATION.md` is the
+      procedure, `apps/storefront/src/lib/legacy-redirects.ts` the map
 - [ ] Search Console and GA4 verified under **Beco's own** Google account
 - [ ] Lower the DNS TTL to 300 seconds, at least an hour before cutover
 - [ ] Cut DNS over
@@ -652,6 +653,7 @@ rather than forgetting it.
 | Staging | Same, plus deployment protection |
 | Empty categories | `noindex` automatically while `published_product_count` is 0, per D27 |
 | Filtered category URLs | Canonical to the base category, `noindex`, per D29 |
+| Old WordPress addresses | 301 to the page that now does the job, from `LEGACY_REDIRECTS`; 410 for WordPress-only paths, from `proxy.ts`. D107, `docs/SEO-MIGRATION.md` |
 
 ### 8.7 Post setup verification
 
@@ -694,7 +696,8 @@ is one of the few decisions here that is genuinely hard to reverse.
 4. Settings, Users and permissions, add Brightex as **Full** user
 
 **Do before cutover**, so the pre migration baseline is capturable. After cutover, submit
-`https://www.beco.co.ke/sitemap.xml`.
+`https://www.beco.co.ke/sitemap.xml`. The full procedure for taking over the old WordPress
+addresses, including finding the exact URLs Google still holds, is `docs/SEO-MIGRATION.md`.
 
 Also capture, before DNS moves: total indexed pages, top queries, top pages, and positions for
 the five target terms. **That data stops existing once the old site is gone**, and without it

@@ -9,23 +9,9 @@ import { SiteFooter } from '@/components/site-footer';
 import { WhatsAppFab } from '@/components/whatsapp-fab';
 import { getLiveAnnouncements, buildAnnouncementItems } from '@/lib/announcements';
 import { getLaunchState } from '@/lib/launch';
-import { SITE } from '@/lib/site';
+import { buildRootMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://www.beco.co.ke'),
-  title: {
-    default: 'Beco Interiors | Sintered stone and interior materials in Nairobi',
-    // Every page states the brand without each page having to remember to.
-    template: '%s | Beco Interiors',
-  },
-  description:
-    'Sintered stone slabs, wall panels, hardware and interior accessories, stocked in Nairobi. Request a quote for the whole list at once.',
-  openGraph: {
-    type: 'website',
-    locale: 'en_KE',
-    siteName: SITE.name,
-  },
-};
+export const metadata: Metadata = buildRootMetadata();
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Fetched here rather than inside the bars themselves, per D79: the home

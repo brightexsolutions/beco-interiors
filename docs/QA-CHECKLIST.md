@@ -71,6 +71,15 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Cutout section, "Shop handles" | Navigates to `/shop/handles` | Server: anchor confirmed in the rendered HTML |
 | Showroom film | Autoplays muted once half the frame is on screen, pauses on leaving. A phone that refuses autoplay gets a Play control on the frame, which starts the film. No autoplay under reduced motion: native controls instead | Test: `showroom-film.test.tsx`. **Not walked on a device** |
 
+| `/?p=42`, `/?page_id=7`, `/?s=handles` (D107) | Old WordPress permalink and search shapes 301 to `/` and to `/shop?q=handles`. Campaign parameters pass through untouched | Test: `__tests__/proxy.test.ts` |
+| `/product-category/handles`, `/about-us`, `/cart`, `/2024/05/post-slug` and the rest of `LEGACY_REDIRECTS` | 301 to the page that does the job now | Test: `lib/__tests__/legacy-redirects.test.ts` holds every destination to a real route. **Not yet curled against a deploy** |
+| `/wp-login.php`, `/feed/`, `/wp-sitemap.xml` | 410 Gone, plain text, cached a day | Test: `__tests__/proxy.test.ts` |
+
+`<LocalBusinessSchema />` is one component on `/`, `/about` and `/contact`, with `@id`, logo,
+image and the confirmed hours. The root layout carries the Search Console tag when
+`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is set, a share image and `summary_large_image`.
+**Server confirmed by parsing. NOT validated in Google's Rich Results Test.**
+
 LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN.**
 
 ---
@@ -162,6 +171,7 @@ Index gating asked of the subtree: `/shop/wall-panels` noindex, `/shop/hardware`
 | WhatsApp | Opens `wa.me` prefilled with the product name | Server: confirmed on two products. **The SKU half of the message has never rendered**, because no product carries a SKU, 0 of 31 |
 | Call | Opens the dialler | Server on href |
 | Related product cards | Navigate | Server |
+| An unknown slug (D107) | 301 to `/shop?q=<words from the slug>` rather than a 404, because WooCommerce lived at `/product/<slug>` too. A former slug from `product_slugs` still 301s to the current product first | Test: `shopSearchFor` in `legacy-redirects.test.ts`; the order of the two lookups is `loadProduct` in `page.tsx` |
 
 `Product` with a real `Offer` and `InStock`, plus `BreadcrumbList`. **Server confirmed by
 parsing. NOT validated in Google's Rich Results Test.**

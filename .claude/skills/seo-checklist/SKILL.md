@@ -43,7 +43,9 @@ Validate in Google's Rich Results Test, not by eye.
 
 NAP identical on the page, in `LocalBusiness` schema, and on the Google Business Profile:
 Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi. +254 722 333 730.
-Mon to Sat, 8am to 6pm. A mismatch between those three is a real ranking drag and free to fix.
+Mon to Fri, 8am to 4pm; Sat, 8am to 2pm, as `SITE.hours` in `lib/site.ts` has it. The schema is
+`<LocalBusinessSchema />` in `components/local-business-schema.tsx`, one definition for `/`,
+`/about` and `/contact`. A mismatch between those three is a real ranking drag and free to fix.
 
 ## Conversion, which is the actual point
 

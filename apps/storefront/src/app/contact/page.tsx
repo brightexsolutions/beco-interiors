@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal, buttonClasses } from '@beco/ui';
 import { ShowroomFilm } from '@/components/showroom-film';
+import { LocalBusinessSchema } from '@/components/local-business-schema';
 import { getPublishedProducts, blurProps } from '@/lib/products';
 import { SITE, whatsappLink } from '@/lib/site';
 
@@ -44,6 +45,7 @@ export default async function ContactPage() {
 
   return (
     <main>
+      <LocalBusinessSchema />
       {/* --- A real opening, against a real installation. Pulled up under the
               header, which is transparent over this dark section and settles
               to solid on scroll, the same as the home hero. --- */}
