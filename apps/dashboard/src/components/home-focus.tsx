@@ -88,13 +88,15 @@ export function HomeFocus({ focus, approvals }: { focus: HomeFocusData; approval
                 <li key={row.label}>
                   <Link
                     href={row.href}
-                    className="group flex min-h-14 items-center gap-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-high-vis-white"
+                    className="group flex min-h-14 items-center gap-3 py-3 outline-none focus-visible:ring-2 focus-visible:ring-high-vis-white"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block font-ui text-base font-semibold text-high-vis-white">{row.label}</span>
+                      <span className="block font-ui text-base font-semibold leading-snug text-high-vis-white">{row.label}</span>
                       <span className="block font-ui text-sm text-neutral-300">{row.meta}</span>
                     </span>
-                    <span className="shrink-0 font-display text-2xl tabular-nums lining-nums text-high-vis-white">
+                    {/* A money figure at 2xl left the label three words wide on a
+                        phone; xl keeps the label whole and steps up from sm (D112). */}
+                    <span className="shrink-0 whitespace-nowrap font-display text-xl tabular-nums lining-nums text-high-vis-white sm:text-2xl">
                       {row.count}
                     </span>
                     <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-neutral-300 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

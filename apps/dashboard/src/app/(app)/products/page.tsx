@@ -72,9 +72,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         title="Catalogue"
         lede="Every range and product Beco sells."
         actions={
-          <Link href="/products/import" className={buttonClasses({ variant: 'outline' })}>
-            Drive import
-          </Link>
+          <>
+            <Link href="/products/import" className={buttonClasses({ variant: 'outline' })}>
+              Drive import
+            </Link>
+            <NewProductFab />
+          </>
         }
       />
       <CatalogueRanges
@@ -84,7 +87,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         creating={creatingRange}
         selectedId={selectedCategoryId}
       />
-      <Panel className="mb-24">
+      <Panel>
         <TableToolbar
           filters={<ProductFilters />}
           count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`}
@@ -93,7 +96,6 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           <ProductResults products={products} editing={editing} creating={creating} categories={productCategories} />
         </div>
       </Panel>
-      <NewProductFab />
     </>
   );
 }

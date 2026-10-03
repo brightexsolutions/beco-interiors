@@ -47,7 +47,7 @@ export function StageBar({ title, stages, className }: { title: string; stages: 
               ) : null,
             )}
           </div>
-          <ol className="mt-3 grid grid-cols-3 gap-x-4 gap-y-3 sm:grid-cols-5">
+          <ol className="mt-3 flex flex-wrap gap-x-5 gap-y-3">
             {stages.map((stage, index) => (
               <li key={stage.key} className="min-w-0">
                 <span className="flex items-center gap-1.5">
@@ -56,7 +56,7 @@ export function StageBar({ title, stages, className }: { title: string; stages: 
                     className="inline-block h-2 w-2 shrink-0 rounded-[1px]"
                     style={{ backgroundColor: stage.attention ? theme.attention : shades[Math.min(index, shades.length - 1)] }}
                   />
-                  <span className="truncate font-ui text-sm text-neutral-500">{stage.label}</span>
+                  <span className="whitespace-nowrap font-ui text-sm text-neutral-500">{stage.label}</span>
                 </span>
                 <span className={cn('block font-display text-2xl leading-none tabular-nums lining-nums', stage.attention ? 'text-warm-red-deep' : 'text-charcoal')}>
                   {stage.value}

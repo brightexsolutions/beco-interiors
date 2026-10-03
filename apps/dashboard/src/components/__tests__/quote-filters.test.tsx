@@ -43,13 +43,15 @@ describe('QuoteFilters on a phone: chips', () => {
     expect(push).toHaveBeenLastCalledWith('/quotes?');
   });
 
-  it('switches owner and source from chips', async () => {
+  it('switches owner from a chip and source from the phone select (D112)', async () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
     await user.click(within(screen.getByRole('group', { name: 'Owner' })).getByRole('button', { name: 'Unassigned' }));
     expect(push).toHaveBeenLastCalledWith('/quotes?owner=unassigned');
-    await user.click(within(screen.getByRole('group', { name: 'Source' })).getByRole('button', { name: 'Website' }));
+    await user.selectOptions(screen.getByLabelText('Filter by source, phone'), 'web');
     expect(push).toHaveBeenLastCalledWith('/quotes?source=web');
+    // Source is not a chip row any more: five options is a select's job.
+    expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
   });
 
   it('falls back to the first owner when the URL carries an empty owner', () => {
@@ -65,8 +67,9 @@ describe('QuoteFilters', () => {
   it('offers Website as the source label, still filtering on the stored web value', async () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
-    const source = screen.getByLabelText(/filter by source/i);
-    expect(screen.getByRole('option', { name: 'Website' })).toHaveValue('web');
+    // Two selects, one for desktop and one for the phone; either filters the same way.
+    const source = screen.getByLabelText('Filter by source');
+    for (const option of screen.getAllByRole('option', { name: 'Website' })) expect(option).toHaveValue('web');
     expect(screen.queryByRole('option', { name: 'Web' })).toBeNull();
     await user.selectOptions(source, 'web');
     expect(push).toHaveBeenCalledWith('/quotes?source=web');

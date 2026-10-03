@@ -2496,3 +2496,28 @@ label. Keeping the strip as well: two navigations on one phone screen is one too
 *Reverses if:* staff report missing the sections behind More, in which case the bar grows to five
 with the most-used section promoted per role, before anything structural moves.
 
+## D112, 3 October 2026: the phone is measured, not eyeballed
+
+**Decision.** Every dashboard screen is checked at 390px by a script that lists each element
+whose right edge leaves the viewport, and the pass that fixed what it found changed the shape of
+the phone screens: list cards give the customer a row of their own and put the figure with the
+status beneath; chips wrap instead of scrolling with one cut at the edge, and a group of five or
+more options is a select; the heading places actions after the lede at full width; the four
+"New" controls are heading buttons rather than pills floating over the list; the home plate rows,
+pipeline legend, report cards, ranked bars and settings tabs each stop truncating or crushing
+their text. `docs/DASHBOARD-UI.md` lists the changes screen by screen.
+
+**Why.** Beco looked at the phone and saw items overflowing and wrapping poorly, and they were
+right: two screens were wider than the viewport and most of the rest had a row somewhere that
+truncated a name to fit a number beside it. Each had passed a desktop review and a jsdom test,
+neither of which lays anything out at 390px. The script is the check those two cannot make, and
+it runs in a minute against the dev server.
+
+**Rejected.** Scrolling strips with an edge fade: the fade says "more here" but still shows half
+a chip, which reads as broken. Truncation with an ellipsis for names: a salesperson matching a
+customer by name cannot act on "Demo custo...". Keeping the floating pills on phones: a second
+floating layer over a bottom bar covered the filters and the first rows on every list.
+
+*Reverses if:* the audit script becomes a CI step, at which point this record moves into
+`docs/TEST-COVERAGE.md` as a layer rather than a decision.
+

@@ -77,7 +77,7 @@ describe('SettingsForm', () => {
     const row = title.parentElement;
     const titleSave = within(row!).getByRole('button', { name: 'Save settings' });
     expect(screen.queryByRole('link', { name: 'Anniversary launch' })).not.toBeInTheDocument();
-    expect(row?.className).toContain('justify-between');
+    expect(row?.className).toContain('sm:grid-cols-[minmax(0,1fr)_auto]');
     expect(container.querySelector('#settings-save')).toBeTruthy();
     await user.click(titleSave);
     expect(saveDashboardSettings).toHaveBeenCalled();

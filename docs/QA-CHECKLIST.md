@@ -520,6 +520,7 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 | Phone header | The D85 card over the showroom still, now naming the screen; the docked breadcrumb is phone only | Test: `ShellContext`, `app-shell.test.tsx`. Seen at iPhone 13 size |
 | Bottom bar, New quote (D111) | Navigates to `/quotes/new` | Test: `bottom-nav.test.tsx`. Seen |
 | Bottom bar, More (D111) | Opens the sheet with the remaining sections, Change password and Sign out (a POST); closes on navigation | Test: `bottom-nav.test.tsx`. Seen |
+| Phone overflow audit (D112) | Every screen at 390px, every role: no element's right edge leaves the viewport | Script, `overflow.cjs` against the dev server: 0 offenders on 15 screens, 3 October. Re-run after any list, filter or heading change |
 | Docked save bars and floating pills above the bar (D111) | `--dock` lifts the new quote and settings save bars and every `fabClasses()` pill above the bar | Test: `app-shell.test.tsx` on the variable; `new-quote-form` and `settings-form` bar classes. **Not walked on a device** |
 | Home: Quotes, week by week | Raised against won, last eight weeks, from `activity_series()`. Legend, labels on the won bars, tooltip, hidden table. "Reports" link | Test: `HomeActivity`, `TrendBars`. Seen with eight weeks of local demo rows |
 | Home: Where quotes stand | One bar from new to lost with counts under it; New in Warm Red only when the response target is breached. "Open the list" link | Test: `StageBar`, `toStages`. Seen |

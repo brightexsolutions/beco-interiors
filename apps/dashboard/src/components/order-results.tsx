@@ -135,32 +135,40 @@ function OrderCard({ order }: { order: OrderListItem }) {
       <Link
         href={`/orders/${order.referenceNumber}`}
         aria-label={`View ${order.referenceNumber}`}
-        className="block rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
+        className="group flex items-stretch gap-3 overflow-hidden rounded-panel border border-neutral-200 py-3 pl-4 pr-3 transition-shadow hover:shadow-panel active:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
       >
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="font-ui text-base font-semibold text-charcoal">{order.referenceNumber}</span>
-          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
-            View
-          </span>
-        </div>
-        <div className="mt-1 flex items-baseline justify-between gap-3">
-          <p className="min-w-0 truncate font-ui text-base text-charcoal">
-            {order.customerName}
-            <span className="ml-2 text-neutral-500">{order.customerPhone}</span>
+        {/* The customer owns a row and wraps; the figure sits with the status
+            on the next, so nothing is cut to make room (D112). */}
+        <div className="min-w-0 flex-1">
+          <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{order.customerName}</p>
+          <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
+            <span className="tabular-nums">{order.referenceNumber}</span> · {order.customerPhone}
           </p>
-          <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
-            <ValueCell order={order} />
-          </p>
-        </div>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <BadgeRow order={order} />
-          <p className="font-ui text-sm text-neutral-500">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <p className="font-ui text-base font-semibold text-charcoal">
+              <ValueCell order={order} />
+            </p>
+            <BadgeRow order={order} />
+          </div>
+          <p className="mt-1.5 font-ui text-sm text-neutral-500">
             {order.salespersonName ?? 'Unassigned'}
             <span className="ml-2 whitespace-nowrap tabular-nums">
               {formatDate(order.createdAt)}, {formatTime(order.createdAt)}
             </span>
           </p>
         </div>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="h-5 w-5 shrink-0 self-center text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal motion-reduce:transition-none"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </Link>
     </li>
   );

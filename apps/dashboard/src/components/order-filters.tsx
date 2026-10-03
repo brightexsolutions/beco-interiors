@@ -102,8 +102,9 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
         {select('Source', source, 'source', SOURCE_OPTIONS)}
       </div>
 
-      {/* Phone: one tap chips instead of four wheels. */}
-      <div className="space-y-2 lg:hidden">
+      {/* Phone: owner and payment as one tap chips, which wrap so every option
+          is on screen; status, with five values, as a select (D112). */}
+      <div className="space-y-3 lg:hidden">
         {ownerOptions.length > 1 ? (
           <ChipGroup
             label="Owner"
@@ -119,13 +120,16 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
           onChange={(value) => setParam('payment', value)}
           options={PAYMENT_OPTIONS.map((o) => ({ ...o, label: o.value ? o.label : 'Paid or not' }))}
         />
-        <ChipGroup
-          label="Status"
-          value={status}
-          clearValue=""
-          onChange={(value) => setParam('status', value)}
-          options={STATUS_OPTIONS.map((o) => ({ ...o, label: o.value ? o.label : 'Any status' }))}
-        />
+        <label className="block">
+          <span className="sr-only">Status</span>
+          <Select value={status} onChange={(event) => setParam('status', event.target.value)} aria-label="Filter by status, phone" className="min-w-0">
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </label>
       </div>
     </div>
   );

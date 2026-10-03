@@ -4,12 +4,12 @@ import { axe } from 'vitest-axe';
 import { NewAnnouncementFab } from '../new-announcement';
 
 describe('NewAnnouncementFab', () => {
-  it('goes to /announcements?new=1, floats on desktop and on a phone', () => {
+  it('goes to /announcements?new=1 as a heading button, not a pill floating over the list (D112)', () => {
     render(<NewAnnouncementFab />);
     const link = screen.getByRole('link', { name: 'New announcement' });
     expect(link).toHaveAttribute('href', '/announcements?new=1');
-    expect(link.className).toContain('fixed');
-    expect(link.className).not.toContain('lg:hidden');
+    expect(link.className).not.toContain('fixed');
+    expect(link.className).toContain('inline-flex');
   });
 
   it('has no accessibility violations', async () => {

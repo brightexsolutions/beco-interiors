@@ -117,8 +117,9 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
         </label>
       </div>
 
-      {/* Phone: owner and status as one tap chips rather than two wheels. */}
-      <div className="space-y-2 lg:hidden">
+      {/* Phone: owner and status as one tap chips, which wrap so every option
+          is on screen; source, the rarest filter, as a select (D112). */}
+      <div className="space-y-3 lg:hidden">
         {ownerOptions.length > 1 ? (
           <ChipGroup
             label="Owner"
@@ -134,13 +135,16 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
           onChange={(value) => setParam('status', value)}
           options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.value ? o.label : 'All' }))}
         />
-        <ChipGroup
-          label="Source"
-          value={source}
-          clearValue=""
-          onChange={(value) => setParam('source', value)}
-          options={SOURCE_OPTIONS.map((o) => ({ value: o.value, label: o.value ? o.label : 'Any source' }))}
-        />
+        <label className="block">
+          <span className="sr-only">Source</span>
+          <Select value={source} onChange={(e) => setParam('source', e.target.value)} aria-label="Filter by source, phone">
+            {SOURCE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </label>
       </div>
     </div>
   );
