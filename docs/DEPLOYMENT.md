@@ -236,10 +236,22 @@ without a spam flag.
 ### 3.12 Keep alive
 
 Supabase free projects pause after roughly a week without API activity, which takes the site
-down. A cron-job.org job under becointeriorsdev pings a health endpoint **every 3 days**.
+down. Each project pauses on its own, so each is kept awake on its own, by two independent legs:
 
-**Verify:** the endpoint returns 200, and cron-job.org shows successful runs. Check the history
-monthly rather than assuming, per `docs/RETAINER.md` section 8.
+1. **`.github/workflows/keep-alive.yml`** runs every two days and makes one real REST read
+   against `beco-staging` and `beco-prod` with each project's anon key. It needs the four
+   repository secrets `SUPABASE_STAGING_REF`, `SUPABASE_STAGING_ANON_KEY`, `SUPABASE_PROD_REF`
+   and `SUPABASE_PROD_ANON_KEY`; a leg whose secrets are missing logs a warning and skips rather
+   than failing, so the workflow cannot go red for a project that is not set up yet. A failed
+   read fails the run, and GitHub emails the repository owner. GitHub disables a schedule after
+   60 days with no commits, which is why the second leg exists.
+2. **cron-job.org** under becointeriorsdev, every 3 days, against `GET /api/health` on
+   `www.beco.co.ke` and on the staging storefront. The route makes the same anon read and answers
+   200 or 503, so it doubles as the uptime monitor's probe. `dashboard.beco.co.ke/api/health`
+   does the same outside the session proxy.
+
+**Verify:** the Actions tab shows green runs of Keep alive, and cron-job.org shows successful
+runs. Check both monthly rather than assuming, per `docs/RETAINER.md` section 8.
 
 ### 3.13 Backups
 
