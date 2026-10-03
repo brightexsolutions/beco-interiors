@@ -12,6 +12,7 @@ import {
   type StaffBlogPost,
 } from '@/lib/blog';
 import { processProductPhoto } from '@/lib/product-photo';
+import { photoUploadProblem } from '@/lib/photo-upload';
 import {
   deleteProductDerivatives,
   isProductStorageConfigured,
@@ -192,7 +193,8 @@ export async function uploadBlogCover(
   const postId = formString(form, 'postId');
   const file = form.get('file');
   if (!postId) return { error: 'Save the draft before you add a cover.' };
-  if (!(file instanceof File) || file.size === 0) return { error: 'Choose a photograph first.' };
+  const problem = photoUploadProblem(file);
+  if (problem || !(file instanceof File)) return { error: problem ?? 'Choose a photograph first.' };
   if (!isProductStorageConfigured()) {
     return { error: 'Photograph storage is not configured. Add the R2 keys, then try again.' };
   }

@@ -89,7 +89,7 @@ export async function listCatalogueRanges(): Promise<CatalogueRange[]> {
  */
 export async function searchCatalogue(term: string, rangeId?: string | null): Promise<CatalogueHit[]> {
   await requirePath('/quotes');
-  const q = term.replace(/[%_,()]/g, '').trim();
+  const q = term.replace(/[%_,()"\\]/g, '').trim().slice(0, 80);
   const range = rangeId?.trim() || null;
 
   const supabase = await getSupabase();

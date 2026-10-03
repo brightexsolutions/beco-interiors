@@ -98,6 +98,12 @@ describe('signIn', () => {
     expect(redirect).toHaveBeenCalledWith('/');
   });
 
+  it('ignores a protocol-relative return path, which starts with a slash and still leaves the site', async () => {
+    signInWithPassword.mockResolvedValue(authOk);
+    await signIn({}, form({ ...validCreds, next: '//evil.example/steal' }));
+    expect(redirect).toHaveBeenCalledWith('/');
+  });
+
   it('turns a burst away after the tenth attempt, without asking Supabase again', async () => {
     clientIp = 'burst-ip';
     signInWithPassword.mockResolvedValue(authFail);

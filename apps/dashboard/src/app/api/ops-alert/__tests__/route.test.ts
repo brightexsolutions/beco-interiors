@@ -4,7 +4,6 @@ const reportOpsFailure = vi.fn(async () => {});
 vi.mock('@/lib/ops-alert', () => ({ reportOpsFailure: (...a: unknown[]) => reportOpsFailure(...(a as [])) }));
 
 const { POST } = await import('../route');
-const { bearerMatches } = await import('@/lib/bearer-secret');
 
 const request = (body: unknown, auth: string | null = 'Bearer relay-secret') =>
   new Request('http://localhost:3001/api/ops-alert', {
@@ -14,21 +13,6 @@ const request = (body: unknown, auth: string | null = 'Bearer relay-secret') =>
   });
 
 const valid = { area: 'quote.submit', summary: 'A website quote request did not save', context: { items: 2 } };
-
-describe('bearerMatches', () => {
-  it('matches only the exact bearer header', () => {
-    expect(bearerMatches('Bearer s', 's')).toBe(true);
-    expect(bearerMatches('Bearer t', 's')).toBe(false);
-    expect(bearerMatches('s', 's')).toBe(false);
-    expect(bearerMatches('Bearer s ', 's')).toBe(false);
-  });
-
-  it('never matches when the secret is unset or the header is missing', () => {
-    expect(bearerMatches('Bearer ', undefined)).toBe(false);
-    expect(bearerMatches('Bearer ', '')).toBe(false);
-    expect(bearerMatches(null, 's')).toBe(false);
-  });
-});
 
 describe('POST /api/ops-alert', () => {
   beforeEach(() => {

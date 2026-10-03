@@ -2388,3 +2388,29 @@ box for unknown products: it keeps the visitor but passes nothing to Google.
 
 *Reverses if:* Search Console's 404 report shows a shape the map cannot express statically, in
 which case the table comes back as a migration with RLS and a test, not before.
+
+## D108, 3 October 2026: the security pass, and what it changed
+
+**Decision.** A review of both apps against rule 7, recorded in `docs/SECURITY.md` under the same
+date. Seven findings fixed in one branch: the sign-in return path refused protocol-relative
+redirects through a shared `safeReturnPath`; the storefront's revalidate secret compared in
+constant time through `bearerMatches`, moved into `@beco/validation` on Web Crypto; that route's
+tag and path lists capped; one photo upload guard for product photos and blog covers, before
+sharp; RLS tests for the six tables that had none; anonymous analytics inserts bounded to the
+documented events and 2KB (migration 60); the secret scanner's patterns in a tested module,
+widened to GitHub tokens and the new Supabase key format. Accepted and written down: inline
+scripts in the CSP, the in-memory limiter, no MFA, the open image route.
+
+**Why.** None of the seven would have failed a visual review or a happy-path test, which is the
+class of bug rule 7 exists for. The open redirect is the kind a phishing mail uses against staff:
+a real sign-in page, a real session, then a hop to a copy. The others are bounds that were simply
+never written because nothing had yet pushed on them.
+
+**Rejected.** A nonce-based CSP now: it forces every storefront page dynamic and gives up ISR
+for a hardening the self-hosted, first-party script set does not need yet. Dropping the
+anonymous analytics insert policy outright: the lead counters and a future writer need it, and a
+bounded policy is the same safety without a second migration later.
+
+*Reverses if:* a third-party script ever has to run on the storefront, at which point the nonce
+is built and the ISR cost paid.
+
