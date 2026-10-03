@@ -63,6 +63,10 @@ anything there you would not print on a billboard.
 | `GEMINI_MODEL` | Model id, so it changes without a deploy | Google's current model list. Do not hardcode | studio only |
 | `STOREFRONT_URL` | Storefront origin the dashboard POSTs revalidation to | You set it. `https://www.beco.co.ke` in production, `http://localhost:3000` locally | dashboard |
 | `REVALIDATE_SECRET` | Shared token for `POST /api/revalidate`. Busts ISR, cannot read rows | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
+| `OPS_ALERT_EMAIL` | Where operational failure alerts are emailed. Comma separate several | Defaults to `info.brightexsolutions@gmail.com` when unset | dashboard |
+| `OPS_ALERT_FROM_EMAIL` | Sender for those alerts | Optional. Falls back to `QUOTE_FROM_EMAIL` | dashboard |
+| `OPS_ALERT_SECRET` | Bearer token the storefront sends to the dashboard's `POST /api/ops-alert`. Leaking it lets someone send a rate limited, bounded alert, nothing more | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
+| `DASHBOARD_URL` | Dashboard origin the storefront relays its own failures to | You set it. `https://dashboard.beco.co.ke` in production, `http://localhost:3001` locally | storefront |
 | `VERCEL_TOKEN` | **Required.** GitHub Actions owns deployment, per D45 | vercel.com, Settings, Tokens | CI |
 | `VERCEL_ORG_ID` | Vercel team id | `.vercel/project.json` after `vercel link` | CI |
 | `VERCEL_PROJECT_ID_STOREFRONT` | | Same, per project | CI |

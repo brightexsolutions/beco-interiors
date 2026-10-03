@@ -12,6 +12,7 @@ import {
   StatusPill,
   Textarea,
   useActionToast,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import { deleteCategory, updateCategory, type CategoryActionState } from '@/app/(app)/categories/actions';
 import type { CategoryParentOption, CategoryRow } from '@/lib/categories';
@@ -32,6 +33,7 @@ export function CategoryEditor({
   onDeleted?: () => void;
 }) {
   const [saveState, save, saving] = useActionState(updateCategory, INITIAL);
+  const onSaveSubmit = useKeepValuesSubmit(save);
   const [deleteState, remove, removing] = useActionState(deleteCategory, INITIAL);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [name, setName] = useState(category.name);
@@ -95,7 +97,7 @@ export function CategoryEditor({
             </p>
           </div>
 
-          <form id="category-editor" action={save} className="grid min-w-0 gap-8">
+          <form id="category-editor" onSubmit={onSaveSubmit} className="grid min-w-0 gap-8">
             <input type="hidden" name="categoryId" value={category.id} />
             <input type="hidden" name="updatedAt" value={category.updatedAt} />
 

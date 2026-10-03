@@ -40,7 +40,7 @@ export function TopNav({ items, newQuotes = 0 }: { items: NavItem[]; newQuotes?:
                       'inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1 text-xs font-semibold leading-none',
                       active ? 'bg-high-vis-white text-charcoal' : 'bg-warm-red text-high-vis-white',
                     )}
-                    aria-label={`${newQuotes} awaiting response`}
+                    aria-label={`${newQuotes} new`}
                   >
                     {newQuotes}
                   </span>

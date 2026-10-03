@@ -80,6 +80,15 @@ export default defineConfig({
           // Real network and real Postgres, so slower than the unit default.
           testTimeout: 20_000,
         },
+        // No `@` alias here: it cannot point at both apps at once, so code
+        // an integration test reaches imports relatively. `server-only` is
+        // stubbed as in the other projects, since a server action that
+        // imports it is exactly what these tests call.
+        resolve: {
+          alias: {
+            'server-only': SERVER_ONLY_STUB,
+          },
+        },
       },
     ],
   },

@@ -1,17 +1,18 @@
 'use client';
 
 import { useActionState } from 'react';
-import { Button, Field, Input, Notice, PasswordInput } from '@beco/ui';
+import { Button, Field, Input, Notice, PasswordInput, useKeepValuesSubmit } from '@beco/ui';
 import { signIn, type SignInState } from './actions';
 
 const INITIAL: SignInState = {};
 
 export function SignInForm({ next, denied }: { next: string; denied: boolean }) {
   const [state, action, pending] = useActionState(signIn, INITIAL);
+  const onActionSubmit = useKeepValuesSubmit(action);
   const formError = state.error && !state.field ? state.error : undefined;
 
   return (
-    <form action={action} className="flex flex-col gap-8" aria-busy={pending}>
+    <form onSubmit={onActionSubmit} className="flex flex-col gap-8" aria-busy={pending}>
       <input type="hidden" name="next" value={next} />
 
       {denied ? (

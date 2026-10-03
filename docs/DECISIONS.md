@@ -2149,3 +2149,84 @@ with delivery and installation both set.
 which case both drop to `neutral` rather than being removed outright, since the underlying gap,
 staff not knowing at all, is the one this decision actually closes.
 
+
+## D102, 28 September 2026: the polish and hardening pass, operational alerts, and a stale edit that never returned
+
+Brown asked for the storefront and dashboard to be made more usable, especially for a
+salesperson working from a phone, for the edge cases to be found and fixed, and for key
+operational failures to be logged and emailed to Brightex. The individual screen changes are in
+`docs/QA-CHECKLIST.md` and `docs/TEST-COVERAGE.md`; this records the choices someone would
+otherwise wonder about.
+
+**Operational alerts go to Brightex, logged first, emailed second.** `reportOpsFailure`
+(`apps/dashboard/src/lib/ops-alert.ts`) writes one structured `{"event":"ops_alert"}` line to
+the server log, then emails a summary to `OPS_ALERT_EMAIL`, default
+`info.brightexsolutions@gmail.com`, per Brown's instruction. It never throws, so a failed alert
+cannot turn a handled failure into a crash. Throttled to one email per failure key per fifteen
+minutes and thirty an hour, so an outage produces a handful of emails, not hundreds. Wired to
+the places a failure would otherwise pass silently: PDF render, store and record, quote and
+receipt email sends, storefront revalidation, a public quote submission that did not save, and
+`onRequestError` in both apps. The storefront holds no Resend key (ownership split), so it
+relays to the dashboard's `POST /api/ops-alert` with a shared bearer secret, rate limited and
+schema validated. A lost website lead carries the customer's name and phone in the alert on
+purpose: it is the only way that lead gets called back. That is personal data in an email to
+Brightex, so step 4 of the `docs/HANDOVER.md` procedure now sets `OPS_ALERT_EMAIL` to the new
+owner's address.
+
+**Stale edit conflicts raise `PT409`, not `40001`.** Found by the HTTP integration suite, not
+by a person: the stale line edit test hung. `40001` is serialization failure, PostgREST retries
+it, and a stale timestamp is stale on every retry, so the request spun a backend at full CPU and
+never returned. In production the salesperson would have seen a spinner that never ended at
+exactly the moment two people edited one quote. Migration 56 rewrites all fourteen functions in
+place from their current definitions rather than copying fourteen bodies by hand; pgTAP file 32
+fails if any public function raises `40001` again. The dashboard's mappers match `PT409` and
+the message text.
+
+**Staff names through a function, not a wider policy.** Sales could not read a colleague's
+`users` row, so every quote owned by someone else read "Unassigned". Widening
+`users_read` would have exposed email, role and activity; `staff_names()` returns only display
+names for the ids asked, to sales and admins. Migration 55.
+
+**Business identity lives in `settings`, not a new table.** KRA PIN, VAT number, legal name,
+address and email are five scalar values with one writer, which is what `settings` is for.
+Migration 54.
+
+**The dashboard shows the red square mark.** D85 kept the dashboard wordmark text only, to hold
+Warm Red back. Brown asked directly for the logo on the red square, on the dashboard header, the
+sign in screen and the emails. It is one small, fixed element per screen, which the three or
+four uses of Warm Red per page can carry. Reverses that part of D85.
+
+**Emails are one shell, not three templates.** `packages/documents/src/email/shell.ts` owns the
+charcoal header band, the Warm Red rule, the reference box, buttons, contact row and showroom
+footer; each email only supplies its words. Nothing below 14px, bulletproof table buttons,
+buttons stack on a phone.
+
+**Phone filters are pills, desktop filters stay selects.** `ChipGroup` in `@beco/ui` puts every
+option one tap away with its count, which a native select hides behind a sheet; on desktop the
+selects stay because the row has room and a keyboard user can type into them. The dashboard's
+pill convention for status already existed, so this does not break the sharp corner rule, which
+governs cards, frames, buttons and form controls.
+
+**The keyboard never covers the field being typed into.** `KeyboardAwareFocus` watches the
+visual viewport and scrolls a focused field into the part of the screen the on screen keyboard
+leaves; `Dialog` pins itself to that same area. Mounted once in each root layout rather than per
+form, so no form can forget it.
+
+**A refused save keeps what was typed.** React 19 resets every uncontrolled field of a
+`<form action={fn}>` once the action settles, success or not. On `/settings` that meant a
+refused save, one mistyped KRA PIN, blanked every field on every tab, and the product,
+category, announcement, blog, user, launch, sign in and custom line forms had the same
+behaviour. Found while testing the Settings save bar, not reported. `useKeepValuesSubmit` in
+`@beco/ui` hands the same FormData to the dispatcher from `onSubmit`, so nothing resets; the
+custom quote line form resets itself after a successful add, the one place the old clearing was
+wanted. Status buttons (claim, approve, status changes) keep `action`, since they carry no typed
+text to lose.
+
+**Settings shows what it prints.** The Payments and Business tabs carry a live preview of the
+quote's From block and How to pay box, drawn by the same functions as the PDF, so an admin sees
+the KRA PIN and the till number where a customer will. A `./layout` export on
+`@beco/documents` lets a client component import those functions without pulling react-pdf or
+Resend into the browser bundle.
+
+*Reverses if:* the alert volume proves noisy in practice, in which case the throttle window
+widens before any alert is removed; a silent failure is the problem this closes.

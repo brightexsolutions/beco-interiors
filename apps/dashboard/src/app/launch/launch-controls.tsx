@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useState, useTransition } from 'react';
-import { Button, ConfirmDialog, Field, Input } from '@beco/ui';
+import { Button, ConfirmDialog, Field, Input, useKeepValuesSubmit } from '@beco/ui';
 import { goLive, saveLaunchDate, standDown, type LaunchActionState } from './actions';
 
 const INITIAL: LaunchActionState = {};
@@ -23,6 +23,7 @@ export function LaunchControls({
   isLive: boolean;
 }) {
   const [dateState, saveDate, savingDate] = useActionState(saveLaunchDate, INITIAL);
+  const onSaveDateSubmit = useKeepValuesSubmit(saveDate);
   const [switchState, setSwitchState] = useState<LaunchActionState>({});
   const [confirming, setConfirming] = useState<null | 'live' | 'down'>(null);
   const [pending, startTransition] = useTransition();
@@ -49,7 +50,7 @@ export function LaunchControls({
         </p>
       </section>
 
-      <form action={saveDate} className="space-y-4">
+      <form onSubmit={onSaveDateSubmit} className="space-y-4">
         <Field
           label="Countdown target"
           htmlFor="launchAt"

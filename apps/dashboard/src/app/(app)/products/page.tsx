@@ -66,7 +66,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       <PageHeading
         eyebrow="Catalogue"
         title="Catalogue"
-        lede="Sintered Stone, Lighting, the rest of what Beco sells, the varieties filed under each, and every product in them. One screen for all of it."
+        lede="Every range and product Beco sells."
       />
       <CatalogueRanges
         tree={tree}

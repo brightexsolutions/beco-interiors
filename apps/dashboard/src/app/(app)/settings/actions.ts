@@ -20,6 +20,11 @@ export async function saveDashboardSettings(
 ): Promise<SettingsActionState> {
   const session = await requirePath('/settings');
   const parsed = dashboardSettingsSchema.safeParse({
+    businessLegalName: formString(form, 'businessLegalName'),
+    kraPin: formString(form, 'kraPin'),
+    vatNumber: formString(form, 'vatNumber'),
+    businessAddress: formString(form, 'businessAddress'),
+    businessEmail: formString(form, 'businessEmail'),
     vatPercent: formString(form, 'vatPercent'),
     quoteValidityDays: formString(form, 'quoteValidityDays'),
     quoteResponseSlaHours: formString(form, 'quoteResponseSlaHours'),
@@ -40,6 +45,11 @@ export async function saveDashboardSettings(
   }
 
   const rows: Record<SettingKey, unknown> = {
+    business_legal_name: parsed.data.businessLegalName,
+    kra_pin: parsed.data.kraPin ?? '',
+    vat_number: parsed.data.vatNumber ?? '',
+    business_address: parsed.data.businessAddress,
+    business_email: parsed.data.businessEmail ?? '',
     vat_rate: parsed.data.vatPercent / 100,
     quote_validity_days: parsed.data.quoteValidityDays,
     quote_response_sla_hours: parsed.data.quoteResponseSlaHours,

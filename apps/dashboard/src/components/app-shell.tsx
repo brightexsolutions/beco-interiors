@@ -16,7 +16,8 @@ import { TopNav } from './top-nav';
  * only after that header has scrolled away, on a phone and on desktop, so the
  * page stays named without a second bar sitting under the pills at rest.
  *
- * `newQuotes` is 0 until the realtime nav count lands (M5 section L / M).
+ * `newQuotes` is read on each server render of the layout. Live push is
+ * still M5 section L.
  */
 export function AppShell({
   user,
@@ -61,9 +62,10 @@ export function AppShell({
           <Link
             href="/"
             aria-label="Beco Operations, home"
-            className="ml-1 shrink-0 font-ui text-sm font-bold uppercase tracking-[0.3em] text-charcoal"
+            className="ml-1 inline-flex shrink-0 items-center gap-2.5 font-ui text-sm font-bold uppercase tracking-[0.3em] text-charcoal"
           >
-            Beco
+            <img src="/logo-mark.png" alt="" width={32} height={31} className="h-8 w-8 shrink-0" />
+            <span className="hidden sm:inline">Beco</span>
           </Link>
 
           <span aria-hidden className="h-6 w-px shrink-0 bg-neutral-200" />

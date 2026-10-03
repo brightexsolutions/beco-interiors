@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import '@beco/ui/src/tokens/tokens.css';
-import { ScrollMotion } from '@beco/ui';
+import { KeyboardAwareFocus, ScrollMotion } from '@beco/ui';
 import { AnnouncementBar } from '@/components/announcement-bar';
 import { LaunchBanner } from '@/components/launch-banner';
 import { SiteSplash } from '@/components/site-splash';
@@ -90,6 +90,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <WhatsAppFab />
         {/* Drives the entrance animations. Renders nothing. */}
         <ScrollMotion />
+        {/* Keeps a focused quote form field above the phone keyboard. */}
+        <KeyboardAwareFocus />
       </body>
     </html>
   );

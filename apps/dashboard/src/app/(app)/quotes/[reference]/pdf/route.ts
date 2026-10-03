@@ -41,8 +41,10 @@ export async function GET(
     if (!stored.ok) {
       return new Response(stored.error, { status: 500, headers: { 'X-Robots-Tag': 'noindex, nofollow' } });
     }
+    // The stored copy's path, so a WhatsApp share can mark this exact
+    // documents row as sent rather than guessing which one it was.
     return new Response(new Uint8Array(stored.bytes), {
-      headers: pdfHeaders(quotePdfFilename(quote.reference, quote.customerName), true),
+      headers: { ...pdfHeaders(quotePdfFilename(quote.reference, quote.customerName), true), 'X-Document-Path': stored.path },
     });
   }
 

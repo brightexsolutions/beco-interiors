@@ -22,6 +22,8 @@ import { getSupabase } from '@/lib/supabase';
 import { mutationMessage } from '@/lib/quote-errors';
 import { fetchQuote, fetchQuoteSettings } from '@/lib/quote-detail';
 import { persistQuotePdf, quotePdfFilename } from '@/lib/quote-pdf';
+import { reportSendFailure } from '@/lib/ops-alert';
+import { isDocumentPathFor } from '@/lib/document-path';
 
 export interface QuoteActionState {
   error?: string;
@@ -406,6 +408,11 @@ export async function sendQuoteEmail(
     filename: quotePdfFilename(row.reference_number, row.customer_name),
   });
   if (!sent.sent) {
+    await reportSendFailure(sent, {
+      area: 'quote.email',
+      summary: `Quote email for ${row.reference_number} did not send`,
+      context: { quote: row.reference_number },
+    });
     return {
       error:
         sent.reason === 'no-api-key'
@@ -428,10 +435,13 @@ export async function sendQuoteEmail(
   return { ok: `Sent to ${parsed.data.to}.` };
 }
 
-export async function markQuoteSharedWhatsApp(reference: string, path: string): Promise<void> {
+export async function markQuoteSharedWhatsApp(reference: string, path: string): Promise<QuoteActionState> {
   const user = await requirePath('/quotes');
+  // Only a path this quote's own download produced, so a crafted call
+  // cannot stamp another quote's document as sent.
+  if (!isDocumentPathFor('quotes', reference, path)) return { error: 'That document does not belong to this quote.' };
   const supabase = await getSupabase();
-  await supabase
+  const { error } = await supabase
     .from('documents')
     .update({
       sent_channel: 'whatsapp',
@@ -439,5 +449,7 @@ export async function markQuoteSharedWhatsApp(reference: string, path: string): 
     })
     .eq('storage_path', path)
     .eq('generated_by', user.userId);
+  if (error) return { error: 'Shared, but the send was not recorded.' };
   revalidateQuote(reference);
+  return { ok: 'Recorded as sent on WhatsApp.' };
 }

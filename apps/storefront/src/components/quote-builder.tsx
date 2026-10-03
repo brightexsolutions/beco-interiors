@@ -36,6 +36,18 @@ export function QuoteBuilder() {
   const [pending, startTransition] = useTransition();
 
   const doneRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // A rejected send leaves focus on the button at the foot of a long form,
+  // so on a phone the field that needs fixing is off screen and the reader
+  // sees nothing change. Focus moves to the first field the server named,
+  // and the page's keyboard-aware scroll brings it into view.
+  useEffect(() => {
+    if (!result || result.ok || !result.fieldErrors) return;
+    const first = Object.keys(result.fieldErrors).find((name) => result.fieldErrors?.[name]?.length);
+    if (!first) return;
+    formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
+  }, [result]);
 
   useEffect(() => {
     const update = () => setLines(readList());
@@ -188,156 +200,157 @@ export function QuoteBuilder() {
     // form's height, leaving a dead void of plain charcoal below the last row.
     // Confirmed directly by screenshot, not assumed. Each column now ends
     // where its own content ends.
-    <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+    <div>
+    {/* Where the reader is in three short steps. Orientation, not a control:
+        the page is one form, so nothing here is clickable. */}
+    <ol className="mb-10 grid grid-cols-3 border-y border-neutral-200 font-ui text-sm" aria-label="How a quote works">
+      {[
+        { n: '1', label: 'Your list', done: true },
+        { n: '2', label: 'Your details', done: false },
+        { n: '3', label: 'We price it', done: false },
+      ].map((step, index) => (
+        <li
+          key={step.n}
+          aria-current={index === 1 ? 'step' : undefined}
+          className={`flex items-center gap-2 py-3 sm:gap-3 ${index > 0 ? 'border-l border-neutral-200 pl-3 sm:pl-5' : ''}`}
+        >
+          <span
+            aria-hidden
+            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center font-semibold tabular-nums ${
+              step.done
+                ? 'bg-charcoal text-high-vis-white'
+                : index === 1
+                  ? 'border border-charcoal text-charcoal'
+                  : 'border border-neutral-300 text-neutral-500'
+            }`}
+          >
+            {step.done ? (
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12.5l4.5 4.5L19 7.5" />
+              </svg>
+            ) : (
+              step.n
+            )}
+          </span>
+          <span className={`font-semibold ${index === 2 ? 'text-neutral-500' : 'text-charcoal'}`}>{step.label}</span>
+        </li>
+      ))}
+    </ol>
+    <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,26rem)] lg:gap-16">
       {/* --- The list ---
-          A charcoal panel, not a third white block beside the form: the same
-          surface the confirmation screen already uses below. Two columns of
-          white on white read as one undifferentiated form, reported directly
-          as the cart having no designed layout of its own. No entrance motion
-          on the rows: this is a task the reader is already mid way through,
-          not a marketing section arriving on scroll, and a fade stepped
-          across every row is the generic stagger every list like this
-          reaches for. */}
+          An order summary, the way a checkout places one: on the right and
+          sticky from lg up, so the form leads and what is being asked for
+          stays in view beside it the whole way down; first on a phone,
+          where the list is step one. Charcoal, the same surface as the
+          confirmation below, so it reads as its own object rather than a
+          third white block. Rows are compact: photograph, name, unit, the
+          stepper and a plain Remove, nothing a reader has to decode. */}
       <section
         aria-labelledby="list-heading"
-        // Sticky from lg up, where the two columns actually sit side by
-        // side: the form below is nine fields long and this panel is often
-        // three, so without this the reader scrolls the list out of view
-        // long before "Send my request" and cannot check what they are
-        // actually asking for. top-24 clears the site header (80px plus its
-        // hairline) with room to breathe. Unset below lg, where the columns
-        // stack and "sticky" would just pin the list over the top of the
-        // form as the reader scrolls past it.
-        className="bg-charcoal p-8 text-high-vis-white lg:sticky lg:top-24 lg:p-10"
+        className="bg-charcoal text-high-vis-white lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1"
       >
-        {/* No "Your list" eyebrow here: the page's own PageHeader already
-            claims that exact phrase above the title. A second eyebrow one
-            beat later was the page repeating itself, so the count carries
-            the panel's identity instead, the way a number in the confirmation
-            panel below already does with the reference. */}
-        <div className="flex items-start justify-between gap-4">
-          <h2 id="list-heading" className="flex items-baseline gap-3">
-            <span className="font-display text-6xl leading-none tabular-nums">
+        <div className="flex items-center justify-between gap-4 border-b border-white/15 px-6 py-5 sm:px-7">
+          <h2 id="list-heading" className="flex items-center gap-3">
+            <span className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-300">Your list</span>
+            <span className="inline-flex h-7 min-w-7 items-center justify-center bg-high-vis-white px-2 font-ui text-sm font-semibold tabular-nums text-charcoal">
               {lineCount(lines)}
             </span>
-            <span className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-300">
-              item{lineCount(lines) === 1 ? '' : 's'} listed
-            </span>
+            <span className="sr-only">item{lineCount(lines) === 1 ? '' : 's'}</span>
           </h2>
           <button
             type="button"
             onClick={() => setConfirmClear(true)}
             className="flex min-h-11 shrink-0 items-center font-ui text-sm font-semibold text-neutral-300 underline-offset-4 hover:text-high-vis-white hover:underline"
           >
-            Clear the list
+            Clear
           </button>
         </div>
 
         {/* Capped and internally scrollable from lg up only: a sticky panel
-            with an uncapped list can grow taller than the viewport itself,
-            which pins it in place while leaving its own bottom rows
-            unreachable. A list this size, 60 lines at the schema's own
-            ceiling, is the case this guards, not the ordinary one. */}
-        <ul className="mt-8 border-t border-white/15 lg:max-h-[46vh] lg:overflow-y-auto">
-          {lines.map((line) => (
-            <li key={line.slug} className="flex gap-6 border-b border-white/15 py-8">
-              <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-neutral-100 sm:h-32 sm:w-28 after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
-                {line.image ? (
-                  <Image src={line.image} alt="" fill sizes="112px" className="object-cover" />
-                ) : (
-                  // No photograph yet. A single hairline read as an empty,
-                  // broken chip once actually rendered, confirmed by
-                  // screenshot: it needs enough presence to read as a mark
-                  // rather than nothing. A square outline keeps the site's
-                  // sharp, unrounded language and reads as a swatch still to
-                  // be photographed, not as a person's avatar or a missing
-                  // file icon. aria-hidden since the link below already
-                  // carries the name as the accessible text.
-                  <span aria-hidden className="flex h-full w-full items-center justify-center">
-                    <span className="h-8 w-8 border border-charcoal/30" />
-                  </span>
-                )}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 py-1">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-display text-xl leading-tight sm:text-2xl">
-                    <Link
-                      href={`/product/${line.slug}`}
-                      className="group relative inline-block focus:outline-none focus-visible:underline focus-visible:decoration-warm-red focus-visible:underline-offset-4"
-                    >
-                      {line.name}
-                      {/* The same hairline-draws-in hover ProductCard uses,
-                          rather than a text colour change: white is already
-                          the brightest this text goes, so a colour swap has
-                          nowhere to move to on this panel. */}
-                      <span
-                        aria-hidden
-                        className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-warm-red transition-transform duration-300 ease-brand group-hover:scale-x-100 motion-reduce:transition-none"
-                      />
-                    </Link>
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => removeLine(line.slug)}
-                    aria-label={`Remove ${line.name} from your quote list`}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center text-neutral-300 transition-colors duration-200 ease-brand hover:bg-white/10 hover:text-high-vis-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-warm-red"
-                  >
-                    <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-                      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </button>
+            with an uncapped list can grow taller than the viewport and pin
+            its own bottom rows out of reach. */}
+        <ul className="divide-y divide-white/10 px-6 sm:px-7 lg:max-h-[52vh] lg:overflow-y-auto">
+          {lines.map((line) => {
+            const step = line.unit === 'per slab' ? 0.5 : 1;
+            return (
+              <li key={line.slug} className="flex gap-4 py-5">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden bg-white/10">
+                  {line.image ? (
+                    <Image src={line.image} alt="" fill sizes="64px" className="object-cover" />
+                  ) : (
+                    // No photograph yet: the product's initial on a quiet
+                    // tile reads as deliberate, not as a broken image.
+                    <span aria-hidden className="flex h-full w-full items-center justify-center font-display text-2xl text-neutral-300">
+                      {line.name.trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
-                {/* Half slab steps for anything sold "per slab", since a
-                    slab is cut to order. Whole steps otherwise: "2.5
-                    handles" is not a thing Beco can price. A solid white
-                    control on the dark panel by design: QuantityStepper
-                    never adapts to its surroundings, so it reads the same
-                    way everywhere it is used. */}
-                <QuantityStepper
-                  value={line.quantity}
-                  onChange={(next) => setQuantity(line.slug, next)}
-                  label={line.name}
-                  step={line.unit === 'per slab' ? 0.5 : 1}
-                  unit={line.unit}
-                />
-              </div>
-            </li>
-          ))}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="min-w-0 font-ui text-base font-semibold leading-snug">
+                      <Link
+                        href={`/product/${line.slug}`}
+                        className="underline-offset-4 hover:underline focus:outline-none focus-visible:underline focus-visible:decoration-warm-red"
+                      >
+                        {line.name}
+                      </Link>
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => removeLine(line.slug)}
+                      aria-label={`Remove ${line.name} from your quote list`}
+                      className="-mr-2 -mt-2 flex h-11 shrink-0 items-center px-2 font-ui text-sm text-neutral-300 underline-offset-4 hover:text-high-vis-white hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-warm-red"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {/* Half slab steps for anything sold per slab, since a slab
+                      is cut to order; whole steps otherwise. The floor is one
+                      step, so minus can never silently delete the line: that
+                      is what Remove is for. */}
+                  <QuantityStepper
+                    className="mt-2"
+                    compact
+                    value={line.quantity}
+                    onChange={(next) => setQuantity(line.slug, next)}
+                    label={line.name}
+                    step={step}
+                    min={step}
+                    unit={line.unit}
+                  />
+                </div>
+              </li>
+            );
+          })}
         </ul>
 
-        {/* Forgetting something is the ordinary case, not the edge case, and
-            until now the only way back to the shop was the header nav,
-            which this panel sits well below by the time the list has any
-            length. A real link, not a button with no destination: it must
-            navigate, per rule 3, which is why it is an <a> via next/link
-            rather than an onClick. */}
-        <Link
-          href="/shop"
-          className="mt-6 flex min-h-11 items-center justify-center gap-2 border border-white/25 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white transition-colors duration-200 ease-brand hover:border-white/50 hover:bg-white/5"
-        >
-          <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 stroke-current" fill="none" strokeWidth="1.8">
-            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-          </svg>
-          Add more materials
-        </Link>
-
-        <Notice className="mt-6 max-w-[52ch] text-neutral-300">
-          Everything here is priced on request, so there is no total to show yet. We will send an
-          itemised quote with delivery or collection set out.
-        </Notice>
+        <div className="space-y-4 border-t border-white/15 px-6 py-5 sm:px-7">
+          {/* Forgetting something is the ordinary case. A real link, per
+              rule 3: it must navigate. */}
+          <Link
+            href="/shop"
+            className="flex min-h-11 items-center justify-center gap-2 border border-white/25 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white transition-colors duration-200 ease-brand hover:border-white/50 hover:bg-white/5"
+          >
+            <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 stroke-current" fill="none" strokeWidth="1.8">
+              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+            </svg>
+            Add more materials
+          </Link>
+          <div className="flex items-start gap-3 font-ui text-sm text-neutral-300">
+            <span aria-hidden className="mt-2 h-px w-4 shrink-0 bg-warm-red" />
+            <p className="max-w-[46ch]">
+              Priced on request. We send an itemised quote with delivery or collection set out.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* --- The form --- */}
-      <section aria-labelledby="details-heading">
+      <section aria-labelledby="details-heading" className="lg:col-start-1 lg:row-start-1">
         <h2 id="details-heading" className="font-display text-3xl text-charcoal">
           Where should we send it?
         </h2>
-        <p className="mt-3 max-w-[52ch] font-ui text-sm text-neutral-500">
-          Your name and phone number are all we genuinely need. Everything else just helps us
-          price it faster.
-        </p>
-
-        <form onSubmit={onSubmit} noValidate className="mt-8 space-y-10">
+        <form ref={formRef} onSubmit={onSubmit} noValidate className="mt-8 space-y-10">
           <FormSection title="Your details" columns={2}>
             <Field
               label="Your name" name="customerName" required
@@ -488,16 +501,32 @@ export function QuoteBuilder() {
             {pending ? 'Sending…' : 'Send my request'}
           </Button>
 
-          <p className="font-ui text-sm text-neutral-500">
-            Would rather talk? Call{' '}
-            <a href={SITE.phoneHref} data-analytics="call_click" className="font-semibold text-charcoal underline-offset-4 hover:underline">
-              {SITE.phone}
-            </a>
-            .
-          </p>
+          <div className="border-t border-neutral-200 pt-5 font-ui text-sm text-neutral-500">
+            <p>
+              We reply in working hours, {SITE.hours.replace('. ', ', ')}.
+            </p>
+            <p className="mt-1">
+              Would rather talk? Call{' '}
+              <a href={SITE.phoneHref} data-analytics="call_click" className="font-semibold text-charcoal underline-offset-4 hover:underline">
+                {SITE.phone}
+              </a>{' '}
+              or{' '}
+              <a
+                href={whatsappLink('I would like a quote for the items on my list')}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-analytics="whatsapp_click"
+                className="font-semibold text-charcoal underline-offset-4 hover:underline"
+              >
+                message us on WhatsApp
+              </a>
+              .
+            </p>
+          </div>
         </form>
       </section>
 
+      </div>
       <ConfirmDialog
         open={confirmClear}
         onOpenChange={setConfirmClear}

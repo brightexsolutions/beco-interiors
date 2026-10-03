@@ -11,6 +11,7 @@ import {
   Input,
   Textarea,
   useActionToast,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import {
   generateBlogDraft,
@@ -34,7 +35,9 @@ export function BlogEditor({
 }) {
   const router = useRouter();
   const [saveState, save, savePending] = useActionState(saveBlogPost, INITIAL);
+  const onSaveSubmit = useKeepValuesSubmit(save);
   const [genState, generate, genPending] = useActionState(generateBlogDraft, INITIAL);
+  const onGenerateSubmit = useKeepValuesSubmit(generate);
   const [coverState, uploadCover, coverPending] = useActionState(uploadBlogCover, INITIAL);
   const [removeState, removeCover] = useActionState(removeBlogCover, INITIAL);
   useActionToast(saveState);
@@ -138,7 +141,7 @@ export function BlogEditor({
         />
       ) : (
         <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <form id="blog-save" action={save} className="min-w-0 space-y-6">
+          <form id="blog-save" onSubmit={onSaveSubmit} className="min-w-0 space-y-6">
             {hidden}
             <input type="hidden" name="status" value={post?.status === 'published' ? 'published' : 'draft'} />
             <input type="hidden" name="targetTerm" value={targetTerm} />
@@ -183,7 +186,7 @@ export function BlogEditor({
           </form>
 
           <aside className="space-y-6 lg:sticky lg:top-4">
-            <form action={generate} className="space-y-4 rounded-panel border border-neutral-200 p-5">
+            <form onSubmit={onGenerateSubmit} className="space-y-4 rounded-panel border border-neutral-200 p-5">
               <FormSection title="Generate">
                 <Field label="Brief" htmlFor="blog-brief">
                   <Textarea

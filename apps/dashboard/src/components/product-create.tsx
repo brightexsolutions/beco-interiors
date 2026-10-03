@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Field, FormSection, Input, Select, useActionToast } from '@beco/ui';
+import { Button, Field, FormSection, Input, Select, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { PRODUCT_UNITS, slugifyProductName } from '@beco/validation';
 import { createProduct, type ProductActionState } from '@/app/(app)/products/actions';
 import { groupCategoryOptions, type ProductCategoryOption } from '@/lib/products';
@@ -21,6 +21,7 @@ export function ProductCreate({
 }) {
   const router = useRouter();
   const [state, create, pending] = useActionState(createProduct, INITIAL);
+  const onCreateSubmit = useKeepValuesSubmit(create);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugTouched, setSlugTouched] = useState(false);
@@ -31,7 +32,7 @@ export function ProductCreate({
   }, [state.slug, router]);
 
   return (
-    <form action={create} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <form onSubmit={onCreateSubmit} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
         <FormSection title="Name" hint="This is the name on the website. Photographs and availability come after this draft.">
           <Field label="Product name" htmlFor="new-name">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { Button, Field, Input, QuantityStepper, StatusPill, useActionToast } from '@beco/ui';
+import { Button, Field, Input, QuantityStepper, StatusPill, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { addCatalogueLines, addCustomLine, updateQuoteLines, type QuoteActionState } from '@/app/(app)/quotes/actions';
 import { CataloguePicker, catalogueLineDraft } from '@/components/catalogue-picker';
 import { useQuoteDraftFlush } from '@/components/quote-draft-flush';
@@ -67,7 +67,7 @@ function LineEditor({
             {discounted ? <span className="ml-2 line-through">{money(line.listPrice!)}</span> : null}
           </span>
           <span className="font-ui text-base font-semibold tabular-nums text-charcoal">
-            {line.unitPrice > 0 ? money(line.lineTotal) : '—'}
+            {line.unitPrice > 0 ? money(line.lineTotal) : 'POA'}
           </span>
         </div>
       </div>
@@ -195,9 +195,16 @@ export function QuoteLines({
   canMutate: boolean;
 }) {
   const [customState, addCustom, adding] = useActionState(addCustomLine, INITIAL);
+  const onAddCustomSubmit = useKeepValuesSubmit(addCustom);
   const [saveState, saveLines, saving] = useActionState(updateQuoteLines, INITIAL);
   const { register } = useQuoteDraftFlush();
   useActionToast(customState);
+  // An added custom line empties the form for the next one; a refused add
+  // keeps what was typed, see useKeepValuesSubmit.
+  const customFormRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (customState.ok) customFormRef.current?.reset();
+  }, [customState]);
   useActionToast(saveState);
   const defaults = useMemo(() => ({ description: '', quantity: 1, unitPrice: '0' }), []);
   const [drafts, setDrafts] = useState<Record<string, { quantity: number; unitPrice: string }>>(() =>
@@ -312,7 +319,7 @@ export function QuoteLines({
       {canMutate ? (
         <>
           <CatalogueAdd quoteId={quoteId} updatedAt={updatedAt} disabled={dirty} />
-          <form action={addCustom} className="mt-6 space-y-3 border-t border-neutral-200 pt-6">
+          <form ref={customFormRef} onSubmit={onAddCustomSubmit} className="mt-6 space-y-3 border-t border-neutral-200 pt-6">
             <div>
               <h3 className="font-ui text-sm font-semibold text-charcoal">Not in the catalogue</h3>
               <p className="mt-1 max-w-[68ch] font-ui text-sm text-neutral-500">

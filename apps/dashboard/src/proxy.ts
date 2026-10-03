@@ -93,6 +93,7 @@ export const config = {
   // Everything except the login screen, Next's internals, and any path with a
   // file extension (the `public/` assets: the logo, the icon). Dashboard
   // routes never contain a dot. `/change-password` deliberately goes THROUGH
-  // the proxy.
-  matcher: ['/((?!login|_next/static|_next/image|favicon.ico|robots.txt|.*\\.).*)'],
+  // the proxy. `/api/ops-alert` is the storefront's server to server relay:
+  // it carries no session and is gated by its own shared secret instead.
+  matcher: ['/((?!login|api/ops-alert|_next/static|_next/image|favicon.ico|robots.txt|.*\\.).*)'],
 };

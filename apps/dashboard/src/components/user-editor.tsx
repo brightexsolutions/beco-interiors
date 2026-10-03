@@ -12,6 +12,7 @@ import {
   Select,
   StatusPill,
   useActionToast,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import {
   removeStaffPhoto,
@@ -41,6 +42,7 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
   const [activeState, changeActive, activePending] = useActionState(setStaffActive, INITIAL);
   const [resetState, resetPassword, resetPending] = useActionState(resetStaffPassword, INITIAL);
   const [publicState, savePublic, publicPending] = useActionState(saveStaffPublicProfile, INITIAL);
+  const onSavePublicSubmit = useKeepValuesSubmit(savePublic);
   const [photoState, uploadPhoto, photoPending] = useActionState(uploadStaffPhoto, INITIAL);
   const [removeState, removePhoto, removePending] = useActionState(removeStaffPhoto, INITIAL);
   const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
@@ -125,7 +127,7 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
               : 'Only sales accounts can appear on /team. The photograph can still be stored.'
           }
         >
-          <form action={savePublic} className="space-y-4">
+          <form onSubmit={onSavePublicSubmit} className="space-y-4">
             <input type="hidden" name="userId" value={user.id} />
             <input type="hidden" name="updatedAt" value={user.updatedAt} />
             {user.role === 'beco_sales' ? (

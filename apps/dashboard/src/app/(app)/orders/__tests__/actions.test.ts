@@ -56,7 +56,7 @@ describe('order actions', () => {
   });
 
   it('refuses a stale lock with the salesperson-facing sentence', async () => {
-    rpc.mockResolvedValue({ error: { code: '40001', message: 'This order changed while you were editing' } });
+    rpc.mockResolvedValue({ error: { code: 'PT409', message: 'This order changed while you were editing' } });
     const result = await setOrderStatus({}, form({ status: 'confirmed' }));
     expect(result.error).toMatch(/changed while you were editing/i);
   });
@@ -105,5 +105,14 @@ describe('order actions', () => {
       expect.objectContaining({ to: 'ada@example.com', reference: 'BEC-O-00001' }),
     );
     expect(result.ok).toMatch(/sent to ada@example.com/i);
+  });
+});
+
+describe('markReceiptSharedWhatsApp', () => {
+  it('refuses a quote path or another order\'s receipt', async () => {
+    const { markReceiptSharedWhatsApp } = await import('../actions');
+    const uuid = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+    expect((await markReceiptSharedWhatsApp('BEC-O-00001', `quotes/BEC-O-00001/${uuid}.pdf`)).error).toBeDefined();
+    expect((await markReceiptSharedWhatsApp('BEC-O-00001', `receipts/BEC-O-00002/${uuid}.pdf`)).error).toBeDefined();
   });
 });

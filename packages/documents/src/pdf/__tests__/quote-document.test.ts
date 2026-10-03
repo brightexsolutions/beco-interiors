@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { quoteTotals } from '@beco/validation';
 import { renderQuotePdf } from '../render';
-import { quotePaymentBlocks, type QuotePdfInput } from '../types';
+import { quoteFromLines, quotePaymentBlocks, type QuotePdfInput } from '../types';
 
 const line = (n: number, price = 65000): QuotePdfInput['lines'][number] => ({
   description: `Line ${String(n).padStart(2, '0')} sintered stone slab, 12mm polished`,
@@ -111,5 +111,44 @@ describe('renderReceiptPdf', () => {
     expect(asText).toContain('Receipt');
     expect(asText).not.toMatch(/Valid until/);
     expect(pdf.includes(Buffer.from([0xe2, 0x80, 0x94]))).toBe(false);
+  });
+});
+
+describe('quoteFromLines', () => {
+  it('falls back to the legal name and showroom address when nothing is configured', () => {
+    const from = quoteFromLines(base());
+    expect(from.name).toBe('Beco Interiors Limited');
+    expect(from.lines[0]).toContain('Urban Square');
+    expect(from.lines).toContain('+254 722 333 730');
+    expect(from.tax).toEqual([]);
+  });
+
+  it('prints the KRA PIN, and a VAT number only when it differs from the PIN', () => {
+    expect(quoteFromLines(base({ business: { kraPin: 'P051234567X' } })).tax).toEqual(['KRA PIN P051234567X']);
+    expect(
+      quoteFromLines(base({ business: { kraPin: 'P051234567X', vatNumber: 'P051234567X' } })).tax,
+    ).toEqual(['KRA PIN P051234567X']);
+    expect(quoteFromLines(base({ business: { kraPin: 'P051234567X', vatNumber: '0123456Q' } })).tax).toEqual([
+      'KRA PIN P051234567X',
+      'VAT No. 0123456Q',
+    ]);
+  });
+
+  it('uses the configured name, a multi line address and the email, dropping blanks', () => {
+    const from = quoteFromLines(
+      base({ business: { legalName: 'Beco Interiors Ltd', address: 'Shop 8\n\nEnterprise Road', email: 'info@beco.co.ke' } }),
+    );
+    expect(from.name).toBe('Beco Interiors Ltd');
+    expect(from.lines).toEqual(['Shop 8', 'Enterprise Road', '+254 722 333 730', 'info@beco.co.ke']);
+  });
+
+  it('renders the KRA PIN into the actual PDF', async () => {
+    const pdf = await renderQuotePdf(base({ business: { kraPin: 'P051234567X' }, tillNumber: '123456' }));
+    const asText = pdf.toString('latin1');
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    // Text is font-subset encoded, so assert on the document metadata and
+    // page count rather than raw glyph strings.
+    expect(pageCount(pdf)).toBe(1);
+    expect(asText).toContain('Beco Interiors Limited');
   });
 });

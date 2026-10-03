@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Toaster } from '@beco/ui';
+import { KeyboardAwareFocus, Toaster } from '@beco/ui';
 import '@beco/ui/src/tokens/tokens.css';
 
 export const metadata: Metadata = {
@@ -27,6 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           trees below this agree. */}
       <body suppressHydrationWarning>
         {children}
+        {/* Keeps a focused field above the phone keyboard. Renders nothing. */}
+        <KeyboardAwareFocus />
         <Toaster
           position="top-center"
           offset={{ top: '8.5rem' }}

@@ -348,6 +348,12 @@ anniversary countdown and reveal, set from `apps/dashboard`'s `/launch` control.
 the `settings_read_public` allowlist because the storefront renders them server side for
 anonymous visitors. See migration 25 and D80.
 
+`business_legal_name`, `kra_pin`, `vat_number`, `business_address` and `business_email` are
+the business identity printed in the From block of every quote PDF, beside the payment
+channels under "How to pay". Authored on the Business tab of `/settings`. The KRA PIN is
+validated as one letter, nine digits, one letter. Readable by the roles that raise quotes,
+writable by admins only. Migration 54, D102.
+
 ### analytics_events
 
 `event_type`: `page_view`, `product_view`, `add_to_cart`, `quote_started`, `quote_submitted`,
@@ -417,7 +423,14 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `refresh_order_money(p_order_id)` | Same for an order. Triggered from `order_items`. Leaves a header-only order alone when it has no lines. Migration 44 |
 | `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
 | `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
+| `staff_names(p_ids uuid[])` | `security definer`. Display names for the given staff ids, so a salesperson sees who owns or prepared a quote without reading the colleague's `users` row. Sales and admins only; nothing for a product manager or anon. A deactivated colleague keeps their name on history. Migration 55, D102 |
 | `end_user_sessions(p_user_id)` | `security definer`. Deletes that user's GoTrue sessions and refresh tokens. `is_brightex_user()` gated. Called after deactivation and password reset. `execute` to `authenticated` only. Migration 45 |
+
+**Stale edit conflicts raise SQLSTATE `PT409`, never `40001`.** Every function above that
+takes `p_expected_updated_at` refuses a stale timestamp with "This quote changed while you were
+editing". `40001` is `serialization_failure`, which PostgREST retries; a stale timestamp is
+stale on every retry, so the request hung. `PT409` returns 409 Conflict once. Migration 56,
+guarded by pgTAP file 32, D102.
 
 Migration 45 adds `guard_users_staff`: even an allowlisted `brightex_admin` cannot change their own `role`, `is_active` or `email`, and cannot deactivate or demote the last active `beco_admin` or `brightex_admin`.
 

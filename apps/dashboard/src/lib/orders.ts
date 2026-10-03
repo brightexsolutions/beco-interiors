@@ -3,6 +3,8 @@ import type { StatusTone } from '@beco/ui';
 import { createServerClient } from '@beco/supabase-client';
 import { QUOTE_SOURCE_LABEL } from './quotes';
 
+import { fetchStaffNames, staffName } from './staff-names';
+
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
 export type OrderOwnerFilter = 'mine' | 'all';
@@ -152,5 +154,10 @@ export async function fetchOrders(
 
   const { data, error } = await query.overrideTypes<OrderRow[]>();
   if (error) throw new Error(`Could not load orders: ${error.message}`);
-  return (data ?? []).map(toListItem);
+  const items = (data ?? []).map(toListItem);
+  const names = await fetchStaffNames(
+    supabase,
+    items.map((o) => (o.salespersonId && !o.salespersonName ? o.salespersonId : null)),
+  );
+  return items.map((o) => ({ ...o, salespersonName: staffName(o.salespersonId, o.salespersonName, names) }));
 }

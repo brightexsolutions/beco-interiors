@@ -5,6 +5,7 @@ import { BackLink, StatusPill } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { OrderActions } from '@/components/order-actions';
 import { OrderDates } from '@/components/order-dates';
+import { CustomerContact } from '@/components/customer-contact';
 import { OrderDocumentPanel } from '@/components/order-document-panel';
 import { OrderLines } from '@/components/order-lines';
 import { fetchOrder } from '@/lib/order-detail';
@@ -52,6 +53,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
               updatedAt={order.updatedAt}
               reference={order.reference}
               customerEmail={order.customerEmail}
+              customerPhone={order.customerPhone}
               canMutate={canMutate}
               paid
               layout="compact"
@@ -88,6 +90,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
                   updatedAt={order.updatedAt}
                   reference={order.reference}
                   customerEmail={order.customerEmail}
+              customerPhone={order.customerPhone}
                   canMutate={canMutate}
                   paid
                   layout="block"
@@ -106,17 +109,18 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
 
           <div>
             <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Customer</h2>
-            <dl className="mt-2 space-y-1 break-words font-ui text-base text-charcoal">
-              <div>{order.customerName}</div>
-              <div>
-                <a className="text-neutral-500 underline-offset-2 hover:underline" href={`tel:${order.customerPhone}`}>
-                  {order.customerPhone}
-                </a>
-              </div>
+            <dl className="mt-2 space-y-1 break-words font-ui text-sm text-charcoal">
+              <div className="text-base font-semibold">{order.customerName}</div>
+              <div className="tabular-nums text-neutral-500">{order.customerPhone}</div>
               {order.customerEmail ? <div className="text-neutral-500">{order.customerEmail}</div> : null}
-              {order.fulfilment ? <div className="text-neutral-500">{order.fulfilment}</div> : null}
+              {order.fulfilment ? (
+                <div className="text-neutral-500">{order.fulfilment === 'delivery' ? 'Delivery' : 'Collection'}</div>
+              ) : null}
               {order.deliveryAddress ? <div className="text-neutral-500">{order.deliveryAddress}</div> : null}
             </dl>
+            <div className="mt-3">
+              <CustomerContact phone={order.customerPhone} email={order.customerEmail} reference={order.reference} kind="order" />
+            </div>
           </div>
 
           <div>

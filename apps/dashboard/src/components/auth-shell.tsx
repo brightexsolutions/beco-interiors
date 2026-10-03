@@ -51,7 +51,7 @@ export function AuthShell({
         />
 
         <div className="flex items-center gap-3">
-          <img src="/logo-mark-white.png" alt="" width={32} height={32} className="h-8 w-8" />
+          <img src="/logo-mark.png" alt="" width={32} height={32} className="h-8 w-8" />
           <span className="font-ui text-lg font-semibold uppercase tracking-[0.24em]">Beco</span>
         </div>
 

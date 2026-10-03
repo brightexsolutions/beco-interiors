@@ -26,12 +26,39 @@ export interface QuotePdfInput {
   footer: string;
   phone: string;
   issuedAt: string;
+  /** The From block. Optional so an older caller still renders the
+   *  defaults; KRA lines print only once they are filled in. */
+  business?: {
+    legalName?: string;
+    kraPin?: string;
+    vatNumber?: string;
+    address?: string;
+    email?: string;
+  };
   /** Quote is the default. A receipt is the same layout after payment. */
   kind?: 'quote' | 'receipt';
   paidAt?: string | null;
 }
 
 export interface QuotePdfTotals extends QuoteMoney {}
+
+const DEFAULT_ADDRESS = 'Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi';
+
+/** The lines of the From block, in print order, blanks dropped. */
+export function quoteFromLines(quote: QuotePdfInput): { name: string; lines: string[]; tax: string[] } {
+  const b = quote.business ?? {};
+  const address = (b.address?.trim() || DEFAULT_ADDRESS)
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const lines = [...address, quote.phone, b.email?.trim() ?? ''].filter(Boolean);
+  const tax: string[] = [];
+  const pin = b.kraPin?.trim() ?? '';
+  const vat = b.vatNumber?.trim() ?? '';
+  if (pin) tax.push(`KRA PIN ${pin}`);
+  if (vat && vat !== pin) tax.push(`VAT No. ${vat}`);
+  return { name: b.legalName?.trim() || 'Beco Interiors Limited', lines, tax };
+}
 
 export function quotePaymentBlocks(quote: QuotePdfInput): { label: string; lines: string[] }[] {
   const blocks: { label: string; lines: string[] }[] = [];

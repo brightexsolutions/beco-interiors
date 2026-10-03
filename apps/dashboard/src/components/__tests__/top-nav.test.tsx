@@ -36,14 +36,14 @@ describe('TopNav', () => {
   it('shows the new-quote count on Quotes when it is positive', () => {
     mockPathname.mockReturnValue('/orders');
     render(<TopNav items={items} newQuotes={3} />);
-    const badge = screen.getByLabelText('3 awaiting response');
+    const badge = screen.getByLabelText('3 new');
     expect(badge).toHaveTextContent('3');
   });
 
   it('renders no count at zero', () => {
     mockPathname.mockReturnValue('/orders');
     render(<TopNav items={items} newQuotes={0} />);
-    expect(screen.queryByLabelText(/awaiting response/i)).toBeNull();
+    expect(screen.queryByLabelText(/\bnew$/i)).toBeNull();
   });
 
   it('has no accessibility violations', async () => {

@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { createRateLimiter, webQuoteSubmissionSchema } from '@beco/validation';
+import { reportOpsFailure } from '../../lib/ops-alert';
 
 /**
  * The public quote submission.
@@ -85,6 +86,21 @@ export async function submitQuote(input: unknown): Promise<SubmitResult> {
     // safe to show. Anything else is ours, and the customer gets a way to
     // reach a human rather than a database message.
     const invalid = error?.code === '22023';
+    if (!invalid) {
+      // A real customer asked for a quote and it was not saved. The alert
+      // carries enough to call them back, since the lead is otherwise lost.
+      await reportOpsFailure({
+        area: 'quote.submit',
+        summary: 'A website quote request did not save, call the customer back',
+        detail: error?.message ?? 'submit_quote returned no reference',
+        context: {
+          customer: data.customerName,
+          phone: data.customerPhone,
+          items: data.items.length,
+          code: error?.code ?? null,
+        },
+      });
+    }
     return {
       ok: false,
       error: invalid

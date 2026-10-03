@@ -1,4 +1,16 @@
-import { escapeHtml, eyebrow, heading, paragraph, referenceBox, renderEmailShell } from './shell';
+import {
+  PHONE_DISPLAY,
+  attachmentNote,
+  contactButtons,
+  divider,
+  escapeHtml,
+  eyebrow,
+  heading,
+  paragraph,
+  referenceBox,
+  renderEmailShell,
+  signOff,
+} from './shell';
 
 /**
  * The email a customer gets once an order is marked paid. The receipt PDF
@@ -8,6 +20,8 @@ import { escapeHtml, eyebrow, heading, paragraph, referenceBox, renderEmailShell
 export interface ReceiptEmailInput {
   reference: string;
   customerName: string;
+  /** The attachment's file name, shown so the reader knows what to open. */
+  filename?: string | undefined;
 }
 
 export interface ReceiptEmail {
@@ -15,8 +29,6 @@ export interface ReceiptEmail {
   text: string;
   html: string;
 }
-
-const PHONE = '+254 722 333 730';
 
 export function buildReceiptEmail(input: ReceiptEmailInput): ReceiptEmail {
   const firstName = input.customerName.trim().split(/\s+/)[0] || 'there';
@@ -27,21 +39,22 @@ export function buildReceiptEmail(input: ReceiptEmailInput): ReceiptEmail {
     '',
     `Payment for ${input.reference} is recorded. Your receipt is attached.`,
     '',
-    `If anything looks off, reply to this email or call us on ${PHONE}.`,
+    `If anything looks off, reply to this email or call us on ${PHONE_DISPLAY}.`,
     '',
-    'Beco Interiors',
+    'The Beco Interiors team',
     'Urban Square, Enterprise Road, Industrial Area, Nairobi',
   ].join('\n');
 
   const bodyHtml =
     eyebrow('Payment received') +
-    heading(`Hi ${escapeHtml(firstName)},`) +
-    paragraph('Payment is recorded. Your receipt is attached.') +
-    referenceBox('Your reference', input.reference) +
-    paragraph(
-      `If anything looks off, reply to this email or call us on ` +
-        `<a href="tel:+254722333730" style="color:#c81419;text-decoration:none">${escapeHtml(PHONE)}</a>.`,
-    );
+    heading(`Thank you, ${escapeHtml(firstName)}.`) +
+    paragraph('Your payment is recorded. Your receipt is attached, keep it for your records.') +
+    referenceBox('Order reference', input.reference, [['Status', 'Paid']]) +
+    attachmentNote(input.filename ?? `${input.reference}.pdf`, 'Attached. Your official receipt, VAT shown.') +
+    paragraph('Questions about collection, delivery or anything on the receipt? We are one tap away.') +
+    contactButtons(`Hi Beco, about order ${input.reference}`) +
+    divider() +
+    signOff();
 
   const html = renderEmailShell({ preview: `Payment for ${input.reference} is recorded.`, bodyHtml });
 

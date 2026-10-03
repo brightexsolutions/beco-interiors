@@ -18,7 +18,7 @@ describe('orderMilestones', () => {
 
 describe('orderMutationMessage', () => {
   it('names a stale lock so the salesperson reloads', () => {
-    expect(orderMutationMessage({ code: '40001', message: 'This order changed while you were editing' })).toMatch(
+    expect(orderMutationMessage({ code: 'PT409', message: 'This order changed while you were editing' })).toMatch(
       /changed while you were editing/i,
     );
   });

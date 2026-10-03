@@ -2,6 +2,8 @@ import { quoteTotals, type QuoteMoney } from '@beco/validation';
 import type { QuoteSource, QuoteStatus } from '@beco/types';
 import type { createServerClient } from '@beco/supabase-client';
 
+import { fetchStaffNames, staffName } from './staff-names';
+
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
 export interface QuoteLine {
@@ -87,6 +89,13 @@ export interface QuoteSettings {
   footer: string;
   phone: string;
   whatsapp: string;
+  business: {
+    legalName: string;
+    kraPin: string;
+    vatNumber: string;
+    address: string;
+    email: string;
+  };
 }
 
 const settingText = (value: unknown): string => {
@@ -125,6 +134,11 @@ export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<Quot
       'quote_footer',
       'business_phone',
       'whatsapp_number',
+      'business_legal_name',
+      'kra_pin',
+      'vat_number',
+      'business_address',
+      'business_email',
     ]);
 
   const map = new Map((data ?? []).map((row) => [row.key, row.value]));
@@ -140,6 +154,15 @@ export async function fetchQuoteSettings(supabase: SupabaseClient): Promise<Quot
     footer: settingText(map.get('quote_footer')),
     phone: settingText(map.get('business_phone')) || '+254 722 333 730',
     whatsapp: settingText(map.get('whatsapp_number')) || '254722333730',
+    business: {
+      legalName: settingText(map.get('business_legal_name')) || 'Beco Interiors Limited',
+      kraPin: settingText(map.get('kra_pin')),
+      vatNumber: settingText(map.get('vat_number')),
+      address:
+        settingText(map.get('business_address')) ||
+        'Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi',
+      email: settingText(map.get('business_email')),
+    },
   };
 }
 
@@ -164,7 +187,7 @@ export async function fetchQuote(
        timeline, budget_note, project_details,
        source, status, created_at, updated_at, valid_until, finalized_at, lost_reason,
        reviewing_at, quoted_at, won_at, lost_at, reopened_at,
-       requires_approval, approved_at, assigned_to, converted_order_id,
+       requires_approval, approved_at, assigned_to, created_by, approved_by, converted_order_id,
        assigned_user:users!quotes_assigned_to_fkey(full_name),
        created_user:users!quotes_created_by_fkey(full_name),
        approved_user:users!quotes_approved_by_fkey(full_name),
@@ -175,7 +198,10 @@ export async function fetchQuote(
 
   if (!quote) return null;
 
-  const [{ data: items }, { data: documents }, settings] = await Promise.all([
+  const joinedAssigned = oneName(quote.assigned_user);
+  const joinedCreated = oneName(quote.created_user);
+  const joinedApproved = oneName(quote.approved_user);
+  const [{ data: items }, { data: documents }, settings, names] = await Promise.all([
     supabase
       .from('quote_items')
       .select('id, description, quantity, unit_price, list_price, line_total, product_id, products(unit)')
@@ -188,6 +214,11 @@ export async function fetchQuote(
       .eq('type', 'quote')
       .order('created_at', { ascending: false }),
     fetchQuoteSettings(supabase),
+    fetchStaffNames(supabase, [
+      joinedAssigned ? null : quote.assigned_to,
+      joinedCreated ? null : quote.created_by,
+      joinedApproved ? null : quote.approved_by,
+    ]),
   ]);
 
   const lines: QuoteLine[] = (items ?? []).map((row) => {
@@ -236,9 +267,9 @@ export async function fetchQuote(
     requiresApproval: quote.requires_approval,
     approvedAt: quote.approved_at,
     assignedTo: quote.assigned_to,
-    assignedToName: oneName(quote.assigned_user),
-    createdByName: oneName(quote.created_user),
-    approvedByName: oneName(quote.approved_user),
+    assignedToName: staffName(quote.assigned_to, joinedAssigned, names),
+    createdByName: staffName(quote.created_by, joinedCreated, names),
+    approvedByName: staffName(quote.approved_by, joinedApproved, names),
     convertedOrderId: quote.converted_order_id,
     convertedOrderReference: oneRef(quote.converted_order),
     lines,

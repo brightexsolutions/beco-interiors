@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Field, FormSection, Input, Select, useActionToast } from '@beco/ui';
+import { Button, Field, FormSection, Input, Select, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { slugifyCategoryName } from '@beco/validation';
 import { createCategory, type CategoryActionState } from '@/app/(app)/categories/actions';
 import type { CategoryParentOption } from '@/lib/categories';
@@ -18,6 +18,7 @@ export function CategoryCreate({
 }) {
   const router = useRouter();
   const [state, create, pending] = useActionState(createCategory, INITIAL);
+  const onCreateSubmit = useKeepValuesSubmit(create);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugTouched, setSlugTouched] = useState(false);
@@ -28,7 +29,7 @@ export function CategoryCreate({
   }, [state.slug, router]);
 
   return (
-    <form action={create} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <form onSubmit={onCreateSubmit} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
         <FormSection
           title="Name"

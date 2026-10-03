@@ -14,12 +14,13 @@ export const toWhatsAppNumber = (raw: string): string | null => {
  * phone so a salesperson at the counter can send it in one tap. Falls back
  * to Beco's own number as a draft if the stored phone is not a mobile.
  */
+export const whatsAppChatLink = (customerPhone: string, text: string, becoWhatsApp = DEFAULT_WHATSAPP): string => {
+  const target = toWhatsAppNumber(customerPhone) ?? toWhatsAppNumber(becoWhatsApp) ?? DEFAULT_WHATSAPP;
+  return `https://wa.me/${target}?text=${encodeURIComponent(text)}`;
+};
+
 export const quoteWhatsAppLink = (
   reference: string,
   customerPhone: string,
   becoWhatsApp = DEFAULT_WHATSAPP,
-): string => {
-  const target = toWhatsAppNumber(customerPhone) ?? toWhatsAppNumber(becoWhatsApp) ?? DEFAULT_WHATSAPP;
-  const text = `Beco quote ${reference}`;
-  return `https://wa.me/${target}?text=${encodeURIComponent(text)}`;
-};
+): string => whatsAppChatLink(customerPhone, `Beco quote ${reference}`, becoWhatsApp);

@@ -3,6 +3,11 @@ import type { createServerClient } from '@beco/supabase-client';
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
 export const SETTINGS_KEYS = [
+  'business_legal_name',
+  'kra_pin',
+  'vat_number',
+  'business_address',
+  'business_email',
   'vat_rate',
   'quote_validity_days',
   'quote_response_sla_hours',
@@ -22,6 +27,11 @@ export const SETTINGS_KEYS = [
 export type SettingKey = (typeof SETTINGS_KEYS)[number];
 
 export interface DashboardSettings {
+  businessLegalName: string;
+  kraPin: string;
+  vatNumber: string;
+  businessAddress: string;
+  businessEmail: string;
   vatPercent: number;
   quoteValidityDays: number;
   quoteResponseSlaHours: number;
@@ -63,6 +73,9 @@ export const settingEmails = (value: unknown): string[] => {
   return value.filter((item): item is string => typeof item === 'string' && item.includes('@'));
 };
 
+export const DEFAULT_LEGAL_NAME = 'Beco Interiors Limited';
+export const DEFAULT_ADDRESS = 'Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi';
+
 const vatToPercent = (rate: number): number => {
   if (rate <= 1) return Math.round(rate * 10000) / 100;
   return rate;
@@ -72,6 +85,11 @@ export async function fetchDashboardSettings(supabase: SupabaseClient): Promise<
   const { data } = await supabase.from('settings').select('key, value').in('key', [...SETTINGS_KEYS]);
   const map = new Map((data ?? []).map((row) => [row.key, row.value]));
   return {
+    businessLegalName: settingText(map.get('business_legal_name')) || DEFAULT_LEGAL_NAME,
+    kraPin: settingText(map.get('kra_pin')),
+    vatNumber: settingText(map.get('vat_number')),
+    businessAddress: settingText(map.get('business_address')) || DEFAULT_ADDRESS,
+    businessEmail: settingText(map.get('business_email')),
     vatPercent: vatToPercent(settingNumber(map.get('vat_rate'), 0.16)),
     quoteValidityDays: settingNumber(map.get('quote_validity_days'), 30),
     quoteResponseSlaHours: settingNumber(map.get('quote_response_sla_hours'), 2),
@@ -106,6 +124,7 @@ export async function fetchGrantStaff(supabase: SupabaseClient): Promise<GrantSt
 }
 
 export const SETTINGS_TABS = [
+  'business',
   'quotes',
   'payments',
   'contact',
@@ -119,7 +138,7 @@ export type SettingsTab = (typeof SETTINGS_TABS)[number];
 export const parseSettingsTab = (raw: string | undefined, canGrant: boolean): SettingsTab => {
   if (raw === 'permissions' || raw === 'studio') return canGrant ? raw : 'quotes';
   if (raw === 'bank' || raw === 'payments') return 'payments';
-  if (raw === 'contact' || raw === 'notifications' || raw === 'quotes') {
+  if (raw === 'business' || raw === 'contact' || raw === 'notifications' || raw === 'quotes') {
     return raw;
   }
   return 'quotes';
