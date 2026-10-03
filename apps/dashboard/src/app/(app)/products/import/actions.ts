@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createRateLimiter, startImportSchema, IMPORT_MODE_LABEL } from '@beco/validation';
 import { dispatchImport } from '@/lib/github-actions';
 import { reportOpsFailure } from '@/lib/ops-alert';
+import { isAdminRole } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 
 export interface ImportActionState {
@@ -33,6 +34,11 @@ export async function startImport(_prev: ImportActionState, form: FormData): Pro
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Check the choices and try again.' };
+  }
+  // The page hides the production target from a product manager; the POST
+  // is gated here as well, per rule 7 (D110).
+  if (parsed.data.target === 'production' && !isAdminRole(user.role)) {
+    return { error: 'Only an admin can import to production. Run it on staging, then ask an admin.' };
   }
 
   if (!limiter.check(`import:${user.userId}`).ok) {

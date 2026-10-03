@@ -8,6 +8,7 @@ import {
   sendReceiptEmailSchema,
   setOrderStatusSchema,
 } from '@beco/validation';
+import { isAdminRole } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { orderMutationMessage } from '@/lib/order-errors';
@@ -96,12 +97,17 @@ export async function convertQuoteToOrder(
 }
 
 export async function setOrderStatus(_prev: OrderActionState, form: FormData): Promise<OrderActionState> {
-  await requirePath('/orders');
+  const user = await requirePath('/orders');
   const parsed = setOrderStatusSchema.safeParse({
     ...lockFrom(form),
     status: String(form.get('status') ?? ''),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Check the status' };
+  // Cancelling reverses a sale the customer agreed to. An admin's call, in
+  // both layers: here and in set_order_status() (D110).
+  if (parsed.data.status === 'cancelled' && !isAdminRole(user.role)) {
+    return { error: 'Only an admin can cancel an order. Ask Irene or Brightex.' };
+  }
 
   const supabase = await getSupabase();
   const { error } = await supabase.rpc('set_order_status', {

@@ -26,6 +26,7 @@ export function OrderActions({
   status,
   paymentStatus,
   canMutate,
+  canCancel = false,
 }: {
   orderId: string;
   updatedAt: string;
@@ -33,6 +34,8 @@ export function OrderActions({
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   canMutate: boolean;
+  /** Admins only (D110). A salesperson confirms, fulfils and records payment, never cancels. */
+  canCancel?: boolean;
 }) {
   const [statusState, setStatus, setting] = useActionState(setOrderStatus, INITIAL);
   const [paidState, markPaid, paying] = useActionState(markOrderPaid, INITIAL);
@@ -74,7 +77,7 @@ export function OrderActions({
         </Button>
       ) : null}
 
-      {status === 'pending' || status === 'confirmed' ? (
+      {canCancel && (status === 'pending' || status === 'confirmed') ? (
         <Button type="button" variant="ghost" className="h-11 w-full py-0" onClick={() => setCancelOpen(true)}>
           Cancel order
         </Button>

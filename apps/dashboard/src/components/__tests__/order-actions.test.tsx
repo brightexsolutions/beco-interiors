@@ -23,6 +23,7 @@ const base = {
   status: 'pending' as const,
   paymentStatus: 'unpaid' as const,
   canMutate: true,
+  canCancel: true,
 };
 
 describe('OrderActions', () => {
@@ -37,6 +38,13 @@ describe('OrderActions', () => {
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mark paid' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel order' })).toBeInTheDocument();
+  });
+
+  it('hides Cancel order from a salesperson, who confirms, fulfils and records payment only (D110)', () => {
+    render(<OrderActions {...base} canCancel={false} />);
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mark paid' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel order' })).toBeNull();
   });
 
   it('opens a ConfirmDialog named for the order when cancelling', async () => {

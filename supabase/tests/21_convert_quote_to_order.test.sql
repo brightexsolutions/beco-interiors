@@ -2,7 +2,7 @@
 -- Prove the line prices copy, a quote cannot convert twice, sales converts
 -- own only, paid stamps paid_at, and stock is not touched.
 begin;
-select plan(23);
+select plan(24);
 
 \set admin_id    '''b4000000-0000-4000-8000-000000000001'''
 \set sales_a_id  '''b4000000-0000-4000-8000-000000000002'''
@@ -166,6 +166,18 @@ select throws_ok(
   '22023',
   'An order cannot move back to pending',
   'status cannot go backwards to pending'
+);
+
+select throws_ok(
+  $$select set_order_status(
+      (select converted_order_id from quotes where id = 'b4000000-0000-4000-8000-000000000010'),
+      'cancelled',
+      (select o.updated_at from orders o
+         join quotes q on q.converted_order_id = o.id
+        where q.id = 'b4000000-0000-4000-8000-000000000010'))$$,
+  '42501',
+  'Only an admin can cancel an order',
+  'beco_sales CANNOT cancel even their own order: an admin''s call, D110'
 );
 
 select lives_ok(

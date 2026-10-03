@@ -123,3 +123,35 @@ table has RLS on (`03_role_separation`). Audit triggers stand on users, categori
 quotes, orders, documents, blog posts, announcements, clients and settings. Soft delete on
 everything with commercial meaning. No `window.confirm`, `alert` or `prompt` anywhere (lint).
 
+## Who may do what, by function (D110, 3 October 2026)
+
+Routes are the coarse gate (`lib/access.ts`). Inside a route, these are the functions that
+differ by role. Every row is enforced in the action and in Postgres, and the control is not drawn
+for a role that cannot use it.
+
+| Function | sales | product manager | beco_admin | brightex_admin |
+|---|---|---|---|---|
+| Raise, price and issue a quote; claim an unassigned one | own | no | yes | yes |
+| Mark a quote quoted, won or lost; reopen | own | no | yes | yes |
+| Reassign a quote to someone else | no | no | yes | yes |
+| Approve a price away from the catalogue | no | no | yes | yes |
+| Convert a won quote; confirm, fulfil, record payment | own | no | yes | yes |
+| **Cancel an order** | **no** | no | yes | yes |
+| Edit products, ranges, photographs | no | yes | yes | yes |
+| Start a catalogue import on staging | no | yes | yes | yes |
+| **Start a catalogue import on production** | no | **no** | yes | yes |
+| Announcements, reports, the leaderboard | no | no | yes | yes |
+| Business identity, KRA, payment details, notifications | no | no | yes | yes |
+| **The Brightex allowlist** (D42) | no | no | **no** | yes |
+| Staff accounts: create, role, deactivate, reset | no | no | no | yes |
+| Grant blog or audit access to a Beco user | no | no | no | yes |
+| Audit log | no | no | if granted | yes |
+| Studio blog | no | no | if granted | yes |
+| Anniversary launch switch | no | no | no | yes |
+
+"own" means the quotes and orders assigned to that salesperson; the database functions check
+`assigned_to` or `salesperson_id` against `auth.uid()` and the admin bypass is `is_admin()`.
+Tested in `21_convert_quote_to_order.test.sql` (cancel), `10_quote_pricing_approval.test.sql`
+(approve), `12_quote_claim_assign.test.sql` (assign) and the action tests named in
+`docs/TEST-COVERAGE.md`.
+

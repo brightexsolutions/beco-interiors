@@ -74,6 +74,35 @@ const formFrom = () => {
 };
 
 describe('saveDashboardSettings', () => {
+  it('never writes the Brightex allowlist from a Beco admin, whatever the form carried (D110)', async () => {
+    maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
+    const result = await saveDashboardSettings({}, formFrom());
+    expect(result.ok).toBeDefined();
+    const wroteAllowlist = update.mock.calls.some(
+      ([payload]) => Array.isArray((payload as { value: unknown }).value) && ((payload as { value: string[] }).value).includes('beco.brightex.dev@gmail.com'),
+    );
+    expect(wroteAllowlist).toBe(false);
+  });
+
+  it('writes the Brightex allowlist for a Brightex admin', async () => {
+    requirePath.mockResolvedValueOnce({
+      userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      email: 'beco.brightex.dev@gmail.com',
+      fullName: 'Brightex',
+      role: 'brightex_admin',
+      isActive: true,
+      mustChangePassword: false,
+      canWriteBlog: true,
+      canReadAudit: true,
+    });
+    maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
+    await saveDashboardSettings({}, formFrom());
+    const wroteAllowlist = update.mock.calls.some(
+      ([payload]) => Array.isArray((payload as { value: unknown }).value) && ((payload as { value: string[] }).value).includes('beco.brightex.dev@gmail.com'),
+    );
+    expect(wroteAllowlist).toBe(true);
+  });
+
   it('stores the KRA PIN uppercased and the business identity alongside the rest', async () => {
     maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
     const result = await saveDashboardSettings({}, formFrom());

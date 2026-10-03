@@ -38,13 +38,15 @@ export async function saveDashboardSettings(
     whatsappNumber: formString(form, 'whatsappNumber'),
     businessPhone: formString(form, 'businessPhone'),
     notificationRecipients: formString(form, 'notificationRecipients'),
-    brightexAllowedEmails: formString(form, 'brightexAllowedEmails'),
+    // The Studio allowlist is Brightex's own gate (D42): a Beco admin's
+    // save never carries it, whatever the form posted (D110).
+    brightexAllowedEmails: session.role === 'brightex_admin' ? formString(form, 'brightexAllowedEmails') : undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Check the form, then try again.' };
   }
 
-  const rows: Record<SettingKey, unknown> = {
+  const rows: Partial<Record<SettingKey, unknown>> = {
     business_legal_name: parsed.data.businessLegalName,
     kra_pin: parsed.data.kraPin ?? '',
     vat_number: parsed.data.vatNumber ?? '',
@@ -63,12 +65,13 @@ export async function saveDashboardSettings(
     whatsapp_number: parsed.data.whatsappNumber,
     business_phone: parsed.data.businessPhone,
     notification_recipients: parsed.data.notificationRecipients,
-    brightex_allowed_emails: parsed.data.brightexAllowedEmails,
+    ...(parsed.data.brightexAllowedEmails ? { brightex_allowed_emails: parsed.data.brightexAllowedEmails } : {}),
   };
 
   const supabase = await getSupabase();
   const now = new Date().toISOString();
   for (const key of SETTINGS_KEYS) {
+    if (!(key in rows)) continue;
     const { data, error } = await supabase
       .from('settings')
       .update({ value: rows[key] as never, updated_at: now, updated_by: session.userId })

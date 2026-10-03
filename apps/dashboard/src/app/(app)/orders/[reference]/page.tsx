@@ -103,6 +103,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
                 status={order.status}
                 paymentStatus={order.paymentStatus}
                 canMutate={canMutate}
+                canCancel={isAdmin}
               />
             </div>
           </div>
