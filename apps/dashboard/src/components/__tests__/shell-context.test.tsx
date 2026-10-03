@@ -47,7 +47,7 @@ describe('ShellContext', () => {
     expect(screen.queryByRole('navigation', { name: 'You are here' })).toBeNull();
   });
 
-  it('docks after the header scrolls away, on desktop as well as a phone', () => {
+  it('docks after the header scrolls away, on a phone only: desktop has the sidebar and top bar', () => {
     stubObserver(false);
     mockPathname.mockReturnValue('/orders');
     const { container } = render(
@@ -58,7 +58,7 @@ describe('ShellContext', () => {
     );
     const nav = screen.getByRole('navigation', { name: 'You are here' });
     expect(nav.className).toContain('fixed');
-    expect(nav.className).not.toContain('lg:hidden');
+    expect(nav.className).toContain('lg:hidden');
     expect(container.querySelector('ol')?.className).toContain('lg:px-8');
   });
 

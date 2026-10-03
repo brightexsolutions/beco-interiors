@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Panel, TableToolbar } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { NewQuoteFab } from '@/components/new-quote-fab';
 import { QuoteFilters, type OwnerOption } from '@/components/quote-filters';
@@ -68,10 +69,13 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
         }
       />
 
-      <div className="mb-6">
-        <QuoteFilters ownerOptions={ownerOptions} />
+      <Panel>
+        <TableToolbar
+          filters={<QuoteFilters ownerOptions={ownerOptions} />}
+          count={`${quotes.length} ${quotes.length === 1 ? 'quote' : 'quotes'}`}
+        />
         {approval ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 px-4 pt-3 sm:px-5">
             <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-charcoal bg-charcoal px-3 font-ui text-sm font-semibold text-high-vis-white">
               Needs approval
               <Link
@@ -86,12 +90,10 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
             </span>
           </div>
         ) : null}
-      </div>
-
-      {/* Bottom padding keeps the last card out from under the FAB. */}
-      <div className="pb-24">
-        <QuoteResults quotes={quotes} />
-      </div>
+        <div className="px-4 pb-4 sm:px-5 lg:px-0 lg:pb-0">
+          <QuoteResults quotes={quotes} />
+        </div>
+      </Panel>
 
       <NewQuoteFab />
     </>

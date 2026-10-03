@@ -1235,6 +1235,18 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      activity_series: {
+        Args: { p_weeks?: number }
+        Returns: {
+          week_start: string
+          raised: number
+          won: number
+          lost: number
+          won_value: number
+          invoiced: number
+          collected: number
+        }[]
+      }
       dashboard_summary: { Args: never; Returns: Json }
       end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
       has_audit_read: { Args: never; Returns: boolean }
@@ -1292,6 +1304,7 @@ export type Database = {
         Returns: undefined
       }
       slugify: { Args: { input: string }; Returns: string }
+      quote_pipeline: { Args: never; Returns: Json }
       staff_names: {
         Args: { p_ids: string[] }
         Returns: {

@@ -262,7 +262,7 @@ describe('ReportResults', () => {
     await user.click(screen.getByRole('tab', { name: 'Products' }));
     expect(push).toHaveBeenCalledWith('/reports?view=products');
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Calacatta Gold');
-    expect(screen.getByText('Funnel')).toBeInTheDocument();
+    expect(screen.getAllByText('Funnel').length).toBeGreaterThan(0);
   });
 
   it('empty states belong to the active view, not the whole page', async () => {

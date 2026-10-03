@@ -2322,3 +2322,40 @@ needs that is the one looking at a skipped folder in the report and deciding wha
 *Reverses if:* GitHub's dispatch latency or the token's annual expiry proves to be a recurring
 support cost, in which case the same screen fronts a small worker on Beco's own account instead
 and nothing above the `dispatchImport` boundary changes.
+
+## D106, 3 October 2026: the dashboard's design constraints are lifted, and what was built with the room
+
+Brown's words: "I am giving you the permission to go off the design standards we had established
+at the start so you can achieve polishing the designs." The admin had been described twice as
+basic, skeleton-like, and in need of shadcn, charts, filters and search. The constraints that had
+produced the plain look were deliberate at the time (D85's text-only top nav, the ban on charts
+unless a figure demanded one, Warm Red rationed to three marks, sharp corners everywhere), and
+they stay in force on the storefront. On the dashboard they are relaxed as follows.
+
+**A sidebar.** Desktop gets a white sidebar with the sections grouped by job and a Warm Red tick on
+the current one, a top bar that names the page, and the screen on a floating panel. The ban on a
+dark sidebar dashboard holds: this one is white, and the charcoal is the active state, not the
+wall. The phone keeps the D85 card and pill strip, since nothing else fits a 390px screen. The
+docked breadcrumb becomes phone only.
+
+**Charts, under a method.** Recharts, inside `@beco/ui`, built against the dataviz skill. The brand
+is near monochrome, so the validator's hue checks cannot pass and were not forced: every chart is
+the emphasis form, one hue in two shades, with identity carried by a legend, direct labels and a
+hidden table rather than by colour alone, and Warm Red kept for a single attention stage. Each
+chart answers a question the tiles could not: is the week by week flow healthy, where does
+everything open stand, is money arriving as fast as it is billed. `activity_series()` and
+`quote_pipeline()` are security invoker, so the chart a salesperson would see is the chart RLS
+allows. Plots render after mount, since Recharts measures the client and a server guess at the
+width logged a hydration mismatch.
+
+**Tables and toolbars.** A `TableToolbar` above Quotes, Orders and the Catalogue puts search, the
+filters and the live count in one row; `DataTable` gets small-caps sortable headers, a sticky
+header, hover rows and right-aligned figures. `StatCard` lets its trend chip drop under a narrow
+label instead of breaking the label letter by letter, which the two column phone grid exposed.
+
+**Still in force.** The 16px floor, 44px targets, no browser dialogs, no icons in the nav, no
+charts for decoration, and every interactive element proven to do what it says. Shadcn remains a
+starting point to overwrite, per D88: nothing here ships in its default look.
+
+*Reverses if:* staff on phones report the admin as heavier to use than before, in which case the
+charts fold behind a disclosure on small screens before anything structural moves.

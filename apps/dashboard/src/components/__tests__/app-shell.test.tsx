@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import type { ActiveSession } from '@/lib/session';
 
@@ -40,8 +40,9 @@ describe('AppShell', () => {
       </AppShell>,
     );
     expect(screen.getByRole('navigation', { name: 'Sections' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Quotes' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Use dark appearance' })).toBeInTheDocument();
+    // Once in the phone strip, once in the desktop sidebar; CSS shows one at a time.
+    expect(screen.getAllByRole('link', { name: 'Quotes' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Use dark appearance' })).toHaveLength(2);
   });
 
   it('keeps the white header in flow. The breadcrumb is not part of that header', () => {
@@ -67,8 +68,9 @@ describe('AppShell', () => {
         <p>Overview</p>
       </AppShell>,
     );
-    const home = screen.getByRole('link', { name: 'Beco Operations, home' });
-    expect(home).toHaveAttribute('href', '/');
+    for (const home of screen.getAllByRole('link', { name: 'Beco Operations, home' })) {
+      expect(home).toHaveAttribute('href', '/');
+    }
     expect(container.querySelector('a[href="/"] img[src="/logo-mark.png"]')).not.toBeNull();
   });
 
@@ -78,7 +80,30 @@ describe('AppShell', () => {
         <p>Overview</p>
       </AppShell>,
     );
-    expect(screen.getByLabelText('5 new')).toHaveTextContent('5');
+    for (const badge of screen.getAllByLabelText('5 new')) expect(badge).toHaveTextContent('5');
+  });
+
+  it('groups the desktop sidebar by job, with Overview first for an admin', () => {
+    render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const main = screen.getByRole('navigation', { name: 'Main' });
+    expect(within(main).getByText('Home')).toBeInTheDocument();
+    expect(within(main).getByText('Sales')).toBeInTheDocument();
+    expect(within(main).getByText('Admin')).toBeInTheDocument();
+    expect(within(main).getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page');
+    expect(within(main).queryByRole('link', { name: 'Users' })).toBeNull();
+  });
+
+  it('names where the reader is in the desktop top bar', () => {
+    render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    expect(screen.getByRole('list', { name: 'You are here' })).toHaveTextContent('Overview');
   });
 
   it('has no accessibility violations', async () => {

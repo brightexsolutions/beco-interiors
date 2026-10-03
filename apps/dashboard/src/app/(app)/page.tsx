@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { EmptyState, StatCard } from '@beco/ui';
+import { HomeActivity } from '@/components/home-activity';
 import { HomeFocus } from '@/components/home-focus';
 import { PageHeading } from '@/components/page-heading';
 import { RecentQuotes } from '@/components/recent-quotes';
 import { ROLE_LANDING } from '@/lib/access';
+import { fetchActivitySeries, fetchPipeline, hasActivity, toQuotePoints, toStages } from '@/lib/activity';
 import { fetchDashboardSummary, toFocus, toStatCards } from '@/lib/dashboard-summary';
 import { fetchApprovalCount, fetchQuotes } from '@/lib/quotes';
 import { requireUser } from '@/lib/session';
@@ -54,10 +56,12 @@ export default async function DashboardHome() {
   }
 
   const supabase = await getSupabase();
-  const [summary, approvals, recent] = await Promise.all([
+  const [summary, approvals, recent, weeks, pipeline] = await Promise.all([
     fetchDashboardSummary(supabase),
     fetchApprovalCount(supabase),
     fetchQuotes(supabase, user.userId, { owner: 'all', limit: 6 }),
+    fetchActivitySeries(supabase, 8),
+    fetchPipeline(supabase),
   ]);
   const focus = toFocus(summary);
   const cards = toStatCards(summary);
@@ -80,6 +84,10 @@ export default async function DashboardHome() {
             action={<Link href={href}>{actionLabel}</Link>}
           />
         ))}
+      </div>
+
+      <div className="mt-8">
+        <HomeActivity points={toQuotePoints(weeks)} stages={toStages(pipeline, focus.breached)} quiet={!hasActivity(weeks)} />
       </div>
 
       <div className="mt-8">

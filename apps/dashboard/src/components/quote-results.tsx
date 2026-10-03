@@ -234,7 +234,7 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
       </ul>
 
       <Pagination
-        className="mt-4"
+        className="mt-4 lg:px-5 lg:pb-4"
         page={paged.page}
         pageCount={paged.pageCount}
         from={paged.from}

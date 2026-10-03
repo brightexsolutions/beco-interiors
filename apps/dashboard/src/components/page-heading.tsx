@@ -1,7 +1,8 @@
 /**
- * The opening of every dashboard screen: an eyebrow, a Cormorant display
- * title, an optional lede, and a slot for the screen's primary actions. It
- * sits at the top of the content panel, so it needs no rule of its own.
+ * The opening of every dashboard screen: an eyebrow carrying the one Warm
+ * Red mark the page spends on itself, a Cormorant display title, an
+ * optional lede, and a slot for the screen's primary actions, closed by a
+ * hairline so the screen below it starts on a line rather than in space.
  */
 export function PageHeading({
   eyebrow,
@@ -15,9 +16,10 @@ export function PageHeading({
   actions?: React.ReactNode | undefined;
 }) {
   return (
-    <header className="mb-8">
+    <header className="mb-8 border-b border-neutral-200 pb-6">
       {eyebrow ? (
-        <p className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
+        <p className="flex items-center gap-3 font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
+          <span aria-hidden className="inline-block h-px w-6 bg-warm-red" />
           {eyebrow}
         </p>
       ) : null}
