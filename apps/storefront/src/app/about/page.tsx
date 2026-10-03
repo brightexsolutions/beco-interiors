@@ -5,6 +5,7 @@ import { buttonClasses, Reveal } from '@beco/ui';
 import { RoomStack } from '@/components/room-stack';
 import { RotatingStatement } from '@/components/rotating-statement';
 import { ShowroomFilm } from '@/components/showroom-film';
+import { LocalBusinessSchema } from '@/components/local-business-schema';
 import { CompletedInteriors } from '@/components/completed-interiors';
 import { ServiceCardGrid } from '@/components/service-card-grid';
 import {
@@ -173,6 +174,7 @@ export default async function AboutPage() {
 
   return (
     <main>
+      <LocalBusinessSchema />
       {/* --- The opening. A finished Beco room fills the frame and the type
               sits over it at the foot, the same charcoal-photograph
               construction the home hero and the /shop and /contact openings

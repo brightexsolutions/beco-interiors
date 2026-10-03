@@ -248,6 +248,7 @@ at the end, which is why it is worth reading rather than skimming.
 | `docs/SCHEMA.md` | Tables, relationships, RLS intent per table |
 | `docs/RUNBOOK.md` | Deploy, roll back, restore, DNS and certificate ordering, incidents |
 | `docs/ENVIRONMENT.md` | Every variable by name and where its value lives |
+| `docs/SEO-MIGRATION.md` | Beco. Verify the domain in Search Console, submit the sitemap, feed the old WordPress addresses into the redirect map |
 | `docs/OWNERSHIP.md` | The account matrix and monthly costs |
 | `docs/SECURITY.md` | The RLS role matrix and the pre launch test list |
 | `docs/DECISIONS.md` | Why things are the way they are, and what would reverse each |

@@ -516,6 +516,13 @@ export const getRelatedProducts = async (
 };
 
 /** Published product slugs, for generateStaticParams. */
+/** Slug and last change, for the sitemap's `lastModified`. */
+export const getProductSitemapEntries = async (): Promise<{ slug: string; updated_at: string }[]> => {
+  const { data, error } = await anon().from('products').select('slug,updated_at');
+  if (error) throw new Error(`could not load sitemap entries: ${error.message}`);
+  return (data ?? []).map((r) => ({ slug: r.slug as string, updated_at: r.updated_at as string }));
+};
+
 export const getProductSlugs = async (): Promise<string[]> => {
   const { data, error } = await anon().from('products').select('slug');
   if (error) throw new Error(`could not load slugs: ${error.message}`);

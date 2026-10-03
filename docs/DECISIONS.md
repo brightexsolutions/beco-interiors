@@ -2359,3 +2359,32 @@ starting point to overwrite, per D88: nothing here ships in its default look.
 
 *Reverses if:* staff on phones report the admin as heavier to use than before, in which case the
 charts fold behind a disclosure on small screens before anything structural moves.
+
+## D107, 3 October 2026: the old WordPress addresses are taken over, not left to 404
+
+**Decision.** Every address the WordPress and WooCommerce site at www.beco.co.ke is likely to have
+had answers with a 301 to the page that does its job here, from a static map in
+`apps/storefront/src/lib/legacy-redirects.ts` served by `next.config.ts`. Paths that only existed
+because the site was WordPress answer 410 Gone from `proxy.ts`. An unknown `/product/<slug>`
+301s to the shop searched for the words in the slug, since WooCommerce used that path too. The
+sitemap carries `lastModified` from product and post rows. `LocalBusiness` is one component on
+the home, about and contact pages. The Search Console verification tag is read from
+`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, so it belongs to whoever sets the deployment variable,
+which is Beco's account per `docs/OWNERSHIP.md`. `docs/SEO-MIGRATION.md` is the procedure Beco
+follow to verify the domain, submit the sitemap and feed the exact old URLs back into the map.
+
+**Why.** The developer who submitted the old site left no record of the account or the URLs, and
+Google still lists them. Nothing in Google's process needs that account: a 301 moves a page's
+standing wherever the new owner points it, and a fresh Domain property under Beco's own account
+reads the new sitemap. Without the map, every old result is a 404 that Google retries for months
+while the new pages start from nothing. The map covers the shapes WordPress gives every site;
+the exact tail comes from Search Console's own 404 report once Beco can see it, which is why the
+procedure document exists and why the map is plain data with a test rather than code.
+
+**Rejected.** A redirects table in the database with a dashboard screen: a list that changes
+twice and then never does not earn a screen, a cache and a test for the cache. Recovering the old
+sitemap: the old site is gone and the host is not reachable from here. A 404 page with a search
+box for unknown products: it keeps the visitor but passes nothing to Google.
+
+*Reverses if:* Search Console's 404 report shows a shape the map cannot express statically, in
+which case the table comes back as a migration with RLS and a test, not before.

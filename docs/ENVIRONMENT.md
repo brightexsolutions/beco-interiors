@@ -42,6 +42,7 @@ anything there you would not print on a billboard.
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin, for metadata and OG | You set it. `https://www.beco.co.ke` | storefront |
 | `NEXT_PUBLIC_IMAGE_HOST` | R2 image origin | You set it. `https://img.beco.co.ke` | storefront, dashboard |
 | `NEXT_PUBLIC_GA4_ID` | Measurement ID, `G-XXXXXXXXXX` | GA4, Admin, Data Streams, your web stream | storefront |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Search Console HTML tag content, a fallback for the DNS record. Blank is fine | Search Console, under **Beco's** account, Settings, Ownership verification, HTML tag. See `docs/SEO-MIGRATION.md` | storefront |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Click to chat number, digits only | Beco. `254722333730` | storefront, dashboard |
 | `NEXT_PUBLIC_BUSINESS_PHONE` | `tel:` link number | Beco. `+254722333730` | storefront |
 

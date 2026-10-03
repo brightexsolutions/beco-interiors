@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import {
   ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn, displayAvailability,
   type GalleryImage, type GalleryRole,
@@ -12,6 +12,7 @@ import {
   getProductBySlug, getCanonicalProductSlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
 } from '@/lib/products';
 import { SITE, whatsappLink } from '@/lib/site';
+import { shopSearchFor } from '@/lib/legacy-redirects';
 
 export const revalidate = 3600;
 
@@ -26,7 +27,10 @@ async function loadProduct(slug: string) {
   if (product) return product;
   const canonical = await getCanonicalProductSlug(slug);
   if (canonical) permanentRedirect(`/product/${canonical}`);
-  notFound();
+  // WooCommerce also lived at /product/<slug>, so an unknown slug is most
+  // likely an old listing Google still holds. The shop searched for its words
+  // keeps that visitor, and the 301 passes the page's standing on (D107).
+  permanentRedirect(shopSearchFor(slug));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {

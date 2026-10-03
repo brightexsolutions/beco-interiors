@@ -84,6 +84,13 @@ export const blogCategoryFacets = (posts: { category: string | null }[]): BlogCa
     .sort((a, b) => a.name.localeCompare(b.name));
 };
 
+/** Slug and publish date, for the sitemap's `lastModified`. */
+export const getBlogSitemapEntries = async (): Promise<{ slug: string; published_at: string | null }[]> => {
+  const { data, error } = await anon().from('blog_posts').select('slug,published_at');
+  if (error) throw new Error(`could not load blog sitemap entries: ${error.message}`);
+  return (data ?? []).map((r) => ({ slug: r.slug as string, published_at: (r.published_at as string | null) ?? null }));
+};
+
 export const getBlogPostSlugs = async (): Promise<string[]> => {
   const { data, error } = await anon().from('blog_posts').select('slug');
   if (error) throw new Error(`could not load blog post slugs: ${error.message}`);

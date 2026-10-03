@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -13,6 +14,7 @@ import { CompletedInteriors } from '@/components/completed-interiors';
 import { ShowroomFilm } from '@/components/showroom-film';
 import { ClientShowcase } from '@/components/client-showcase';
 import { ServiceCardGrid } from '@/components/service-card-grid';
+import { LocalBusinessSchema } from '@/components/local-business-schema';
 import {
   getPublishedProducts, getCategoriesWithProducts, getCategoryTree, primaryImage, imagesForGroup,
   type CatalogueProduct, blurProps,
@@ -37,6 +39,13 @@ import { SERVICES } from '@/lib/services';
  * docs/CONTENT-AUDIT.md.
  */
 export const revalidate = 3600;
+
+/**
+ * The root layout carries the title, description and share image. The home
+ * page adds only its canonical, so `/?utm_source=` and the old WordPress
+ * `/?p=` shapes resolve to one indexed address (D107).
+ */
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 const imageFor = (p: CatalogueProduct, role?: string) => {
   const img = role ? p.images?.find((i) => i.role === role) : primaryImage(p);
@@ -803,48 +812,5 @@ function Stat({ value, label, suffix }: { value: number; label: string; suffix: 
         {label}
       </dt>
     </div>
-  );
-}
-
-/**
- * LocalBusiness, not Organization, because Beco sells to people who can drive
- * to Urban Square. The NAP here must match the footer and the Google Business
- * Profile character for character, or the mismatch is a ranking drag.
- */
-function LocalBusinessSchema() {
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'HomeGoodsStore',
-    name: SITE.name,
-    url: 'https://www.beco.co.ke',
-    telephone: SITE.phone,
-    email: SITE.email,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: `${SITE.address.line1}, ${SITE.address.line2}`,
-      addressLocality: SITE.address.city,
-      addressCountry: 'KE',
-    },
-    openingHoursSpecification: [
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        opens: '08:00',
-        closes: '16:00',
-      },
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: 'Saturday',
-        opens: '08:00',
-        closes: '14:00',
-      },
-    ],
-    areaServed: { '@type': 'City', name: 'Nairobi' },
-  };
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
   );
 }
