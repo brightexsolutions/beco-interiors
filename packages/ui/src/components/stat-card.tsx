@@ -119,7 +119,8 @@ export function StatCard({
   // A figure never breaks inside itself: `break-words` let "Ksh 96,000" split
   // after the comma and read as two numbers on the phone grid. Normal wrapping
   // may still break at the space, "Ksh" over "96,000", which reads correctly,
-  // and a long figure steps down a size so that is rarely needed.
+  // and a long figure holds at 24px, which is what a five column row at
+  // 1440px and the two column phone grid both fit without touching an edge.
   const longFigure = String(value).length > 8;
 
   return (
@@ -154,7 +155,7 @@ export function StatCard({
         className={cn(
           // Lining figures: Cormorant's default old-style "1" reads as "I".
           'mt-2 [overflow-wrap:normal] font-display leading-none tabular-nums lining-nums',
-          compact ? 'text-lg sm:text-xl' : longFigure ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl',
+          compact ? 'text-lg sm:text-xl' : longFigure ? 'text-2xl' : 'text-3xl sm:text-4xl',
           t.value,
         )}
       >
