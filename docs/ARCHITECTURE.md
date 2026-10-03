@@ -4,7 +4,8 @@ Reference BEC-2026-004-PLAN. Sketches of how each flow actually runs. Diagrams a
 purpose: they read in a terminal, in an editor, and in an agent's context without a render
 step, and they diff line by line.
 
-Full reasoning behind every choice is in `files/BUILD-PLAN.md`.
+Full reasoning behind every choice is in `files/BUILD-PLAN.md`. `docs/SKETCHES.md` holds the same
+shapes in Mermaid for a browser, and `docs/SYSTEM.md` the prose record of how it was built.
 
 ## Contents
 
