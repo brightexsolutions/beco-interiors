@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRateLimiter, opsAlertRelaySchema } from '@beco/validation';
-import { bearerMatches } from '@/lib/bearer-secret';
+import { bearerMatches, createRateLimiter, opsAlertRelaySchema } from '@beco/validation';
 import { reportOpsFailure } from '@/lib/ops-alert';
 
 /**
@@ -16,7 +15,7 @@ import { reportOpsFailure } from '@/lib/ops-alert';
 const limiter = createRateLimiter({ limit: 60, windowMs: 60_000 });
 
 export async function POST(request: Request) {
-  if (!bearerMatches(request.headers.get('authorization'), process.env.OPS_ALERT_SECRET)) {
+  if (!(await bearerMatches(request.headers.get('authorization'), process.env.OPS_ALERT_SECRET))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!limiter.check('storefront').ok) {

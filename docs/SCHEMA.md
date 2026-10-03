@@ -367,6 +367,11 @@ writable by admins only. Migration 54, D102.
 because those two leads leave the site into channels analytics cannot follow and that is the
 only signal we get.
 
+Anonymous inserts are bounded (migration 60, D108): `event_type` must be one of the values above
+and `metadata` at most 2KB, or the row is refused. Nothing writes here yet; GA4 carries the
+storefront's events, and the lead counters in `dashboard_summary()` read an empty table until a
+server-side writer lands.
+
 **Needs a retention policy.** A row per page view will outgrow a 500MB free tier eventually.
 
 ---

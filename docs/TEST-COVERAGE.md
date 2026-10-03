@@ -119,6 +119,8 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | `32_stale_edit_errcode.test.sql` | No public function raises SQLSTATE `40001` (PostgREST retries it, so a stale edit hung forever); every stale edit check raises `PT409`; the in-place rewrite kept `security definer`. Files 12, 15, 16 and 19 now expect `PT409`. 3 tests. Migration 56 |
 | `33_retire_lighting.test.sql` | Lighting is unpublished but its row and `source_path` are kept, a product filed under it is soft deleted and unpublished, and anon sees neither. 5 tests. Migration 57 |
 | `34_three_level_taxonomy.test.sql` | The three level cap attacked from every direction: a sub range accepted, a fourth level refused by update and by insert, a category with two levels under it refused a parent, a cycle refused, self reference refused; `category_subtree_ids` and `category_depth` answer correctly; Handles is a major category; anon can walk a subtree. 11 tests. Migration 58 |
+| `36_documents_import_rls.test.sql` | The six tables that had policies but no test: anon reads no documents, only the published testimonial, no import runs, and cannot write a testimonial; sales reads and records documents, reads no import runs, cannot write a testimonial; the product manager reads import runs and state but cannot write an issue; the admin writes a testimonial but not an import run; an allowlisted Brightex user writes a run and the state; the same role off the allowlist cannot. 16 tests. D108 |
+| `37_analytics_insert_bounds.test.sql` | Anon may record a known event with small or default metadata, cannot record an unknown event type or a payload over 2KB, reads nothing back, and exactly one insert policy stands. 6 tests. Migration 60 |
 | `35_activity_series.test.sql` | Eight weeks come back, an admin counts every win and its value, the window caps at a year, the pipeline counts open and decided quotes, a role that cannot read quotes counts nothing (RLS decides), anon cannot execute. 8 tests. Migration 59 |
 
 ## Storefront
@@ -144,7 +146,7 @@ LOCAL stack only and never to a hosted project, per rule 6.
 | Launch banner | `components/__tests__/launch-banner.test.tsx` | Countdown to the date, reveal on the switch, confetti once per browser and skipped under reduced motion. 9 tests |
 | Showroom film | `components/__tests__/showroom-film.test.tsx` | Poster and source, muted inline loop, watermark, reduced-motion controls. Plays at half visibility and pauses on leaving. Retries when the file is not ready. Play control when autoplay is refused, including the next tap. Axe on the poster and on that control |
 | Blog JSON-LD | `app/blog/[slug]/__tests__/blog-posting-schema.test.tsx` | Both ld+json blocks parse; headline, description, absolute image URL, author, publisher, omit-not-null, breadcrumb. 5 tests |
-| Revalidate API | `app/api/revalidate/__tests__/route.test.ts` | Wrong secret is 401. Named product and category tags plus matching paths are revalidated. A path that is not site-relative is ignored. `/` revalidates as a layout so the announcement bar refreshes |
+| Revalidate API | `app/api/revalidate/__tests__/route.test.ts` | Wrong secret is 401, compared in constant time through `bearerMatches`. Named product and category tags plus matching paths are revalidated, capped at 100 each. A path that is not site-relative is ignored. `/` revalidates as a layout so the announcement bar refreshes |
 
 ## Dashboard, `apps/dashboard`
 
@@ -152,6 +154,7 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 
 | Area | File | Proves |
 |---|---|---|
+| Photo upload guard | `lib/__tests__/photo-upload.test.ts` | `photoUploadProblem` (D108), run by the product photo and blog cover actions before sharp reads a byte: JPEG, PNG, WebP and HEIC pass, an empty type passes, nothing, an empty file, a plain string, a file over 12MB and a declared non-image are each turned away with the message the form shows. 5 tests |
 | Access map | `lib/__tests__/access.test.ts` | The route/role matrix, every path against every role, both directions. A prefix rule reaches everything under it (`/quotes/new`) but not a sibling that merely shares a stem (`/quotes-archive`). Every role's landing is somewhere that role is actually allowed |
 | Proxy | `__tests__/proxy.test.ts` | Signed-out to `/login` with a return path (and none for `/`). A deactivated or unknown user is bounced and the `sb-*-auth-token` cookie is cleared. A flagged user is forced to `/change-password` from every route including `/launch`, and can reach `/change-password` itself. Then the full role x route grid, admit or redirect-to-landing, including a nested path |
 | Session helpers | `lib/__tests__/session.test.ts` | `resolveSessionUser` returns the full shape and nulls the role for an inactive account, matching `current_user_role()`. `resolveAdminRole` unchanged |
@@ -280,6 +283,9 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Package | File | Proves |
 |---|---|---|
 | `@beco/validation` | `__tests__/rate-limit.test.ts` | The sliding-window limiter: allows up to the limit then denies, per key, frees a slot as the oldest hit ages out, reports the exact wait, shares a store when given one. 7 tests. See D81 |
+| `@beco/validation` | `__tests__/return-path.test.ts` | `safeReturnPath` (D108): keeps a same-origin path with its query; turns away an absolute URL, `javascript:`, the protocol-relative `//host` and `/\host` shapes that begin with a slash, control characters, non-strings, the empty string and anything over 512 characters. 5 tests |
+| `@beco/validation` | `__tests__/bearer.test.ts` | `bearerMatches` (D108): the exact header matches; a prefix, a longer value, another scheme and a missing header do not; an unset or empty secret never matches. Web Crypto, so the shared package pulls no Node builtin into a client bundle. 3 tests |
+| `tools/backup` | `__tests__/secret-patterns.test.ts` | The scanner's patterns, out of the script so they can be asserted: GitHub fine-grained and classic tokens, Supabase JWT and `sb_secret_` keys, a secret in a `NEXT_PUBLIC_` name including `TOKEN`; the public keys, the verification code and a regex about Resend stay clean. 4 tests |
 | `@beco/validation` | `__tests__/money.test.ts` | D50 split: 65,000 contains 8,965.52 VAT inside, not 10,400 on top. Rounds after every operation |
 | `@beco/validation` | `__tests__/dashboard-quote.test.ts` | Counter create, line batch, catalogue add, lost-reason schemas |
 | `@beco/validation` | `__tests__/dashboard-product.test.ts` | Half-unit stock for slabs, whole otherwise, never negative. Blank stock is uncounted, not zero. POA cannot carry a price. SKU keeps a handle code and blank is none. Specs drop blank rows |

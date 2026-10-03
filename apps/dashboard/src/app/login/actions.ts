@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createRateLimiter, signInSchema } from '@beco/validation';
+import { createRateLimiter, signInSchema, safeReturnPath } from '@beco/validation';
 import { DEV_QUICK_ACCOUNTS, DEV_SEED_PASSWORD, isDevQuickLoginEnabled } from '@/lib/dev-quick-login';
 import { resolveSessionUser } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
@@ -80,8 +80,7 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
   // Best effort: a stamp failure must not block a valid sign in.
   await supabase.rpc('record_sign_in');
 
-  const next = formData.get('next');
-  redirect(typeof next === 'string' && next.startsWith('/') ? next : '/');
+  redirect(safeReturnPath(formData.get('next')));
 }
 
 const DEV_EMAILS = new Set<string>(DEV_QUICK_ACCOUNTS.map((account) => account.email));
@@ -129,6 +128,5 @@ export async function devSignIn(_prev: SignInState, formData: FormData): Promise
 
   await supabase.rpc('record_sign_in');
 
-  const next = formData.get('next');
-  redirect(typeof next === 'string' && next.startsWith('/') ? next : '/');
+  redirect(safeReturnPath(formData.get('next')));
 }
