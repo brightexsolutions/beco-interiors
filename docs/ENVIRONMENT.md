@@ -75,8 +75,6 @@ anything there you would not print on a billboard.
 | `SUPABASE_STAGING_REF` | The `beco-staging` project | Supabase project URL | CI |
 | `SUPABASE_PROD_REF` | The `beco-prod` project | Supabase project URL | CI |
 | `SUPABASE_STAGING_DB_PASSWORD` | | Project database settings | CI |
-| `SUPABASE_STAGING_ANON_KEY` | Keep alive read against staging | Supabase, Project Settings, API, anon public key. Public by nature, a secret only so it is not in the workflow file | CI, Keep alive |
-| `SUPABASE_PROD_ANON_KEY` | Keep alive read against production | Same, on `beco-prod` | CI, Keep alive |
 
 ### Local only
 

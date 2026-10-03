@@ -236,22 +236,30 @@ without a spam flag.
 ### 3.12 Keep alive
 
 Supabase free projects pause after roughly a week without API activity, which takes the site
-down. Each project pauses on its own, so each is kept awake on its own, by two independent legs:
+down. Each project pauses on its own, so each needs its own job. The scheduler is
+**cron-job.org under becointeriorsdev**, Beco's own account, so the thing that keeps Beco's
+database awake is Beco's and survives any handover. Three jobs, each **every 2 days** (GitHub
+or Supabase being late by a few hours must never reach the seven day line), each expecting
+HTTP 200, with failure notifications to Beco's address and `info.brightexsolutions@gmail.com`:
 
-1. **`.github/workflows/keep-alive.yml`** runs every two days and makes one real REST read
-   against `beco-staging` and `beco-prod` with each project's anon key. It needs the four
-   repository secrets `SUPABASE_STAGING_REF`, `SUPABASE_STAGING_ANON_KEY`, `SUPABASE_PROD_REF`
-   and `SUPABASE_PROD_ANON_KEY`; a leg whose secrets are missing logs a warning and skips rather
-   than failing, so the workflow cannot go red for a project that is not set up yet. A failed
-   read fails the run, and GitHub emails the repository owner. GitHub disables a schedule after
-   60 days with no commits, which is why the second leg exists.
-2. **cron-job.org** under becointeriorsdev, every 3 days, against `GET /api/health` on
-   `www.beco.co.ke` and on the staging storefront. The route makes the same anon read and answers
-   200 or 503, so it doubles as the uptime monitor's probe. `dashboard.beco.co.ke/api/health`
-   does the same outside the session proxy.
+| Job | URL | Headers | Keeps awake |
+|---|---|---|---|
+| Production site | `https://www.beco.co.ke/api/health` | none | `beco-prod`, and proves the storefront serves |
+| Dashboard | `https://dashboard.beco.co.ke/api/health` | none | `beco-prod` by a second path, and proves the dashboard serves |
+| Staging database | `https://<staging-ref>.supabase.co/rest/v1/settings?select=key&limit=1` | `apikey: <staging anon key>` and `Authorization: Bearer <staging anon key>` | `beco-staging`, which has no permanent public site to call |
 
-**Verify:** the Actions tab shows green runs of Keep alive, and cron-job.org shows successful
-runs. Check both monthly rather than assuming, per `docs/RETAINER.md` section 8.
+`GET /api/health` makes one anon read of the public settings allowlist, the same path a
+visitor's page load takes, and answers `200 {ok:true}` or `503`. It carries no host, version
+or key, and the dashboard's copy sits outside the session proxy. UptimeRobot points at the same
+two URLs, so the health probe and the keep alive are one mechanism checked two ways.
+
+A GitHub Actions schedule was considered and rejected: it belongs to Brightex's repository, not
+to Beco, and GitHub silently disables a schedule after 60 days without a commit, which is
+exactly the quiet period in which a database would pause.
+
+**Verify:** cron-job.org shows a green run for all three jobs within the last 2 days, and
+`curl -i https://www.beco.co.ke/api/health` returns 200. Check monthly rather than assuming, per
+`docs/RETAINER.md` section 8.
 
 ### 3.13 Backups
 
