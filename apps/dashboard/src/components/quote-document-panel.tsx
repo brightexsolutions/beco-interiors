@@ -93,7 +93,7 @@ export function QuoteDocumentPanel({
         </div>
 
         <div className="shrink-0 border-t border-neutral-200 bg-high-vis-white px-5 py-4 sm:px-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
             {canMutate ? (
               <form
                 action={async (formData) => {
@@ -132,7 +132,7 @@ export function QuoteDocumentPanel({
                 </Button>
               </form>
             ) : null}
-            <div className="grid grid-cols-2 gap-2 lg:flex">
+            <div className="grid grid-cols-2 gap-2 xl:flex">
             <WhatsAppShare
               downloadHref={downloadHref}
               fallbackFilename={`${reference}.pdf`}

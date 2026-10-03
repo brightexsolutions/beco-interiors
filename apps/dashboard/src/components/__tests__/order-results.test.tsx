@@ -84,8 +84,8 @@ describe('OrderResults', () => {
 
   it('keeps a desktop table and phone cards, never the other way round', () => {
     const { container } = render(<OrderResults orders={[order()]} />);
-    expect(container.querySelector('.hidden.lg\\:block')).not.toBeNull();
-    expect(container.querySelector('ul.lg\\:hidden')).not.toBeNull();
+    expect(container.querySelector('.hidden.xl\\:block')).not.toBeNull();
+    expect(container.querySelector('ul.xl\\:hidden')).not.toBeNull();
     expect(screen.getAllByText('Unpaid').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
   });

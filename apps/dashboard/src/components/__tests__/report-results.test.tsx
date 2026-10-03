@@ -245,7 +245,7 @@ describe('ReportResults', () => {
     expect(screen.getByText(/40,000/)).toBeInTheDocument();
     const grid = container.querySelector('.grid-cols-2');
     expect(grid).not.toBeNull();
-    expect(grid?.className).toContain('lg:grid-cols-4');
+    expect(grid?.className).toContain('xl:grid-cols-4');
   });
 
   it('opens on Sales, with the leaderboard and a won-value chart', () => {

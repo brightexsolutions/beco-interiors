@@ -202,7 +202,6 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | Dashboard summary | `lib/__tests__/dashboard-summary.test.ts` | Card wording and tone. Warm Red only on a breached SLA, never on a merely non-zero number. Low-stock count is named on the catalogue card and stays plain |
 | WhatsApp link | `lib/__tests__/whatsapp.test.ts` | Kenyan mobiles to `wa.me`. Helper exists; the document panel does not yet use it |
 | `NewQuoteForm` | `components/__tests__/new-quote-form.test.tsx` | Catalogue dialog, custom item, Save disabled until a line, axe |
-| `NewQuoteFab` | `components/__tests__/new-quote-fab.test.tsx` | Link to `/quotes/new`, stays labelled |
 | Quote mutations (db) | `lib/quote-mutations.integration.test.ts` | Counter quote against local Supabase: row, items, lock |
 | Nav items | `lib/__tests__/nav-items.test.ts` | The role -> section list, and that it never lists a path the access map would then deny. Product manager sees Catalogue at `/products`, not a separate Stock item. `navContext` names section roots and nested screens |
 | `AppShell` | `components/__tests__/app-shell.test.tsx` | Licensed still behind the chrome. Section nav exposed. Appearance toggle present. White header stays in flow. Only the breadcrumb docks on a phone. Axe |

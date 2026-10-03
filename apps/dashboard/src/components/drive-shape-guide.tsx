@@ -43,7 +43,7 @@ export function DriveShapeGuide() {
     >
       <ul className="divide-y divide-neutral-200">
         {SHAPES.map((row) => (
-          <li key={row.shape} className="grid gap-1 px-4 py-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6 sm:px-5">
+          <li key={row.shape} className="grid gap-1.5 px-4 py-3 sm:px-5">
             <div>
               <p className="font-mono text-sm text-charcoal">{row.shape}</p>
               <p className="mt-1 font-mono text-sm text-neutral-500">{row.example}</p>

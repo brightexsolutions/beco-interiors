@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Panel, TableToolbar } from '@beco/ui';
+import { Panel, TableToolbar, buttonClasses, cn } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
-import { NewQuoteFab } from '@/components/new-quote-fab';
 import { QuoteFilters, type OwnerOption } from '@/components/quote-filters';
 import { QuoteResults } from '@/components/quote-results';
 import { fetchQuotes, type QuoteListItem, type QuoteOwnerFilter } from '@/lib/quotes';
@@ -60,6 +59,12 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
       <PageHeading
         eyebrow="Sales"
         title="Quotes"
+        actions={
+          // On a phone the bottom bar carries New quote, so this shows from lg.
+          <Link href="/quotes/new" className={cn(buttonClasses({ variant: 'secondary' }), 'hidden xl:inline-flex')}>
+            New quote
+          </Link>
+        }
         lede={
           owner === 'unassigned'
             ? 'Website submissions nobody has claimed yet.'
@@ -90,12 +95,11 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
             </span>
           </div>
         ) : null}
-        <div className="px-4 pb-4 sm:px-5 lg:px-0 lg:pb-0">
+        <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
           <QuoteResults quotes={quotes} />
         </div>
       </Panel>
 
-      <NewQuoteFab />
     </>
   );
 }

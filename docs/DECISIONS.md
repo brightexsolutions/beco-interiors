@@ -2521,3 +2521,25 @@ floating layer over a bottom bar covered the filters and the first rows on every
 *Reverses if:* the audit script becomes a CI step, at which point this record moves into
 `docs/TEST-COVERAGE.md` as a layer rather than a decision.
 
+## D113, 3 October 2026: the sidebar breakpoint is tablet width
+
+**Decision.** Dashboard screens go to their wide layout, two columns or the full table, at
+1280px, not at 1024px where the sidebar appears. Between those widths the content pane beside the
+sidebar is about 776px, and every screen now lays itself out there the way it does on a tablet.
+Tables hide their lowest value column below 1536px through `DataTable`'s `showFrom`, keep
+references, owners and figures on one line, and carry the row action as an arrow. The phone
+header names the page alone. New quote lives in the heading on desktop and in the bar on a phone.
+
+**Why.** Beco asked for every page to be laid out well at every size and named poor wrapping and
+overflow. A side by side capture at three widths showed the worst screens were not phones but
+small laptops: the one breakpoint was doing two jobs, showing the sidebar and widening the
+screen, and the second job had 248px less room than it assumed. Separating them is one rule
+applied everywhere rather than a fix per screen.
+
+**Rejected.** A collapsible sidebar at 1024px: it hides the navigation to make room for a
+layout the content does not need at that width. Horizontal scroll on the tables: a table that
+scrolls sideways hides its action column, which is the one column a reader needs.
+
+*Reverses if:* staff work on 1024px laptops and report the single column detail pages as too
+long, in which case the detail pages alone move back to two columns with a narrower side pane.
+

@@ -50,7 +50,7 @@ export function ImportReport({ run, issues }: { run: ImportRunRow | null; issues
         )
       }
     >
-      <dl className="grid grid-cols-2 gap-px border-b border-neutral-200 bg-neutral-200 sm:grid-cols-4 lg:grid-cols-7">
+      <dl className="grid grid-cols-2 gap-px border-b border-neutral-200 bg-neutral-200 sm:grid-cols-4 xl:grid-cols-7">
         {figures.map(([label, value]) => (
           <div key={label} className="bg-high-vis-white px-4 py-3">
             <dt className="font-ui text-sm text-neutral-500">{label}</dt>

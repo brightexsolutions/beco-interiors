@@ -76,11 +76,11 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
         {expired ? <StatusPill label="Expired" tone="muted" /> : null}
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr] lg:gap-y-0">
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_20rem] xl:grid-rows-[auto_1fr] xl:gap-y-0">
         {/* What someone acts on, first on a phone: status actions and the
             one-tap ways to reach the customer come before the line editor.
             On desktop it is the top of the right hand rail. */}
-        <aside className="min-w-0 space-y-4 border-b border-neutral-200 pb-6 lg:col-start-2 lg:row-start-1 lg:border-b-0 lg:border-l lg:pb-0 lg:pl-8">
+        <aside className="min-w-0 space-y-4 border-b border-neutral-200 pb-6 xl:col-start-2 xl:row-start-1 xl:border-b-0 xl:border-l xl:pb-0 xl:pl-8">
           <div>
             <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Actions
@@ -146,7 +146,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
           ) : null}
 
         </aside>
-        <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+        <div className="min-w-0 xl:col-start-1 xl:row-span-2 xl:row-start-1">
           <QuoteLines
             lines={quote.lines}
             quoteId={quote.id}
@@ -199,7 +199,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
           ) : null}
         </div>
 
-        <aside className="min-w-0 space-y-4 border-t border-neutral-200 pt-6 lg:col-start-2 lg:row-start-2 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-6">          <div>
+        <aside className="min-w-0 space-y-4 border-t border-neutral-200 pt-6 xl:col-start-2 xl:row-start-2 xl:border-l xl:border-t-0 xl:pl-8 xl:pt-6">          <div>
             <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Ownership
             </h2>

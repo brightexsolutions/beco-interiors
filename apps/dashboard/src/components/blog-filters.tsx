@@ -30,7 +30,7 @@ export function BlogFilters() {
 
   return (
     <form
-      className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem]"
+      className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_12rem]"
       onSubmit={(event) => event.preventDefault()}
     >
       <Input

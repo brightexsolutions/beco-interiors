@@ -39,8 +39,8 @@ export function AnnouncementFilters() {
   }, [search]);
 
   return (
-    <div className="grid min-w-0 grid-cols-2 gap-2 overflow-x-hidden lg:flex lg:items-end">
-      <label className="col-span-full min-w-0 lg:min-w-0 lg:flex-1">
+    <div className="grid min-w-0 grid-cols-2 gap-2 overflow-x-hidden xl:flex xl:items-end">
+      <label className="col-span-full min-w-0 xl:min-w-0 xl:flex-1">
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -49,7 +49,7 @@ export function AnnouncementFilters() {
           className="min-w-0"
         />
       </label>
-      <label className="min-w-0 lg:w-44 lg:shrink-0">
+      <label className="min-w-0 xl:w-44 xl:shrink-0">
         <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Type</span>
         <Select
           value={type}
@@ -65,7 +65,7 @@ export function AnnouncementFilters() {
           ))}
         </Select>
       </label>
-      <label className="min-w-0 lg:w-44 lg:shrink-0">
+      <label className="min-w-0 xl:w-44 xl:shrink-0">
         <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Window</span>
         <Select
           value={window}

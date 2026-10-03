@@ -44,12 +44,14 @@ export function TopBarCrumb() {
     <ol aria-label="You are here" className="flex min-w-0 items-center gap-2 font-ui text-base">
       {pageLabel ? (
         <>
-          <li className="shrink-0">
+          {/* On a phone the header has room for one name, and the screen's own
+              back link already names the section (D113). */}
+          <li className="hidden shrink-0 sm:block">
             <Link href={ctx.sectionHref} className="text-neutral-500 hover:text-charcoal">
               {ctx.sectionLabel}
             </Link>
           </li>
-          <li aria-hidden className="text-neutral-300">/</li>
+          <li aria-hidden className="hidden text-neutral-300 sm:block">/</li>
           <li aria-current="page" className="min-w-0 truncate font-semibold text-charcoal">{pageLabel}</li>
         </>
       ) : (

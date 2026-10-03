@@ -39,10 +39,10 @@ describe('OrderFilters', () => {
     expect(push).toHaveBeenCalledWith('/orders?source=web');
   });
 
-  it('puts search and the selects on one row from lg, and chips below lg', () => {
+  it('puts search and the selects on one row from xl, and chips below xl', () => {
     render(<OrderFilters ownerOptions={ownerOptions} />);
-    expect(screen.getByLabelText('Search orders').closest('div.lg\\:flex-row')).not.toBeNull();
-    expect(screen.getByRole('group', { name: 'Payment' }).parentElement).toHaveClass('lg:hidden');
+    expect(screen.getByLabelText('Search orders').closest('div.xl\\:flex-row')).not.toBeNull();
+    expect(screen.getByRole('group', { name: 'Payment' }).parentElement).toHaveClass('xl:hidden');
   });
 
   it('filters payment in one tap from the phone chips', async () => {

@@ -68,7 +68,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
         {!paid ? <p className="font-ui text-base text-neutral-500">Receipt after payment</p> : null}
       </div>
 
-      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <OrderLines lines={order.lines} totals={order.totals} />
 
@@ -80,7 +80,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
           ) : null}
         </div>
 
-        <aside className="min-w-0 space-y-8 border-t border-neutral-200 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+        <aside className="min-w-0 space-y-8 border-t border-neutral-200 pt-6 xl:border-l xl:border-t-0 xl:pl-8 xl:pt-0">
           <div>
             <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Actions</h2>
             <div className="mt-3 flex flex-col gap-2">

@@ -1,5 +1,4 @@
 import { Skeleton, SkeletonScreen } from '@beco/ui';
-import { NewQuoteFab } from '@/components/new-quote-fab';
 
 /**
  * The quotes queue while it loads: heading, the filter row, then rows. Eight
@@ -19,12 +18,11 @@ export default function Loading() {
         <Skeleton className="h-11 sm:w-36" />
       </div>
 
-      <div className="mt-6 space-y-px pb-24">
+      <div className="mt-6 space-y-px">
         {Array.from({ length: 8 }, (_, i) => (
           <Skeleton key={i} className="h-14" />
         ))}
       </div>
-      <NewQuoteFab />
     </SkeletonScreen>
   );
 }

@@ -38,7 +38,7 @@ describe('ProductFilters', () => {
 
   it('puts search and the three filters on one row from lg', () => {
     const { container } = render(<ProductFilters />);
-    expect(container.firstChild).toHaveClass('lg:flex', 'lg:items-end');
+    expect(container.firstChild).toHaveClass('xl:flex', 'xl:items-end');
   });
 
   it('has no accessibility violations', async () => {

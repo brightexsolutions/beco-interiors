@@ -32,7 +32,7 @@ export function AuditFilters() {
 
   return (
     <form
-      className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_12rem]"
+      className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_12rem_12rem]"
       onSubmit={(event) => event.preventDefault()}
     >
       <Input

@@ -140,7 +140,7 @@ export function BlogEditor({
           readingTime={body ? readingTimeMinutes(body) : null}
         />
       ) : (
-        <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid min-w-0 items-start gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
           <form id="blog-save" onSubmit={onSaveSubmit} className="min-w-0 space-y-6">
             {hidden}
             <input type="hidden" name="status" value={post?.status === 'published' ? 'published' : 'draft'} />
@@ -185,7 +185,7 @@ export function BlogEditor({
             </FormSection>
           </form>
 
-          <aside className="space-y-6 lg:sticky lg:top-4">
+          <aside className="space-y-6 xl:sticky xl:top-4">
             <form onSubmit={onGenerateSubmit} className="space-y-4 rounded-panel border border-neutral-200 p-5">
               <FormSection title="Generate">
                 <Field label="Brief" htmlFor="blog-brief">

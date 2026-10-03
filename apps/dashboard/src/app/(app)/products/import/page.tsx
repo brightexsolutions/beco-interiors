@@ -46,7 +46,7 @@ export default async function ImportPage() {
         title="Drive import"
         lede="Bring new photographs and ranges in from BECO PRODUCTS, and see what the last run skipped and why."
       />
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-6">
           <ImportRunner
             configured={connection.configured}

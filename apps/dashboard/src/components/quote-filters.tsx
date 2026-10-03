@@ -82,7 +82,7 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
         </label>
 
         {ownerOptions.length > 1 ? (
-          <label className="hidden lg:block">
+          <label className="hidden xl:block">
             <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Owner</span>
             <Select value={owner} onChange={(e) => setParam('owner', e.target.value)} aria-label="Filter by owner">
               {ownerOptions.map((o) => (
@@ -94,7 +94,7 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
           </label>
         ) : null}
 
-        <label className="hidden lg:block">
+        <label className="hidden xl:block">
           <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Status</span>
           <Select value={status} onChange={(e) => setParam('status', e.target.value)} aria-label="Filter by status">
             {STATUS_OPTIONS.map((o) => (
@@ -105,7 +105,7 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
           </Select>
         </label>
 
-        <label className="hidden lg:block">
+        <label className="hidden xl:block">
           <span className="mb-1 block font-ui text-sm font-semibold text-charcoal">Source</span>
           <Select value={source} onChange={(e) => setParam('source', e.target.value)} aria-label="Filter by source">
             {SOURCE_OPTIONS.map((o) => (
@@ -119,7 +119,7 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
 
       {/* Phone: owner and status as one tap chips, which wrap so every option
           is on screen; source, the rarest filter, as a select (D112). */}
-      <div className="space-y-3 lg:hidden">
+      <div className="space-y-3 xl:hidden">
         {ownerOptions.length > 1 ? (
           <ChipGroup
             label="Owner"

@@ -59,7 +59,7 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
   }, [search]);
 
   const select = (label: string, value: string, key: string, options: { value: string; label: string }[]) => (
-    <label className="hidden min-w-0 lg:block lg:w-40 lg:shrink-0">
+    <label className="hidden min-w-0 xl:block xl:w-40 xl:shrink-0">
       <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">{label}</span>
       <Select value={value} onChange={(event) => setParam(key, event.target.value)} aria-label={`Filter by ${label.toLowerCase()}`} className="min-w-0">
         {options.map((option) => (
@@ -73,8 +73,8 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
 
   return (
     <div className="space-y-3">
-      <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-end">
-        <label className="min-w-0 lg:flex-1">
+      <div className="flex min-w-0 flex-col gap-2 xl:flex-row xl:items-end">
+        <label className="min-w-0 xl:flex-1">
           <Input
             type="search"
             enterKeyHint="search"
@@ -86,7 +86,7 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
           />
         </label>
         {ownerOptions.length > 1 ? (
-          <label className="hidden min-w-0 lg:block lg:w-44 lg:shrink-0">
+          <label className="hidden min-w-0 xl:block xl:w-44 xl:shrink-0">
             <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Owner</span>
             <Select value={owner} onChange={(event) => setParam('owner', event.target.value)} aria-label="Filter by owner" className="min-w-0">
               {ownerOptions.map((option) => (
@@ -104,7 +104,7 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
 
       {/* Phone: owner and payment as one tap chips, which wrap so every option
           is on screen; status, with five values, as a select (D112). */}
-      <div className="space-y-3 lg:hidden">
+      <div className="space-y-3 xl:hidden">
         {ownerOptions.length > 1 ? (
           <ChipGroup
             label="Owner"

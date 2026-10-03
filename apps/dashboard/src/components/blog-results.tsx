@@ -90,10 +90,10 @@ export function BlogResults({ posts }: { posts: StaffBlogPost[] }) {
 
   return (
     <>
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 xl:block">
         <DataTable caption={`${paged.total} articles`} columns={columns()} rows={paged.items} getRowKey={(row) => row.id} />
       </div>
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden lg:hidden">
+      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
         {paged.items.map((row) => (
           <li key={row.id}>
             <Link
