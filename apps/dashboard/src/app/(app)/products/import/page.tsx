@@ -7,6 +7,7 @@ import { ImportWorkflowRuns } from '@/components/import-workflow-runs';
 import { PageHeading } from '@/components/page-heading';
 import { importConnection, listImportRuns } from '@/lib/github-actions';
 import { fetchImportIssues, fetchImportRuns } from '@/lib/import-runs';
+import { isAdminRole } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -50,9 +51,9 @@ export default async function ImportPage() {
           <ImportRunner
             configured={connection.configured}
             missing={connection.configured ? [] : connection.missing}
-            // The product manager owns the catalogue, so production is theirs
-            // to import to as much as an admin's. The ConfirmDialog is the gate.
-            canTargetProduction={['beco_product_manager', 'beco_admin', 'brightex_admin'].includes(user.role)}
+            // Production is an admin's target (D110). The product manager
+            // proves a folder on staging first; an admin runs it live.
+            canTargetProduction={isAdminRole(user.role)}
           />
           <ImportReport run={last} issues={issues} />
         </div>

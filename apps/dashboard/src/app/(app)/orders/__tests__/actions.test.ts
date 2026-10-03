@@ -61,6 +61,21 @@ describe('order actions', () => {
     expect(result.error).toMatch(/changed while you were editing/i);
   });
 
+  it('refuses a cancel from a salesperson before the database is asked (D110)', async () => {
+    const result = await setOrderStatus({}, form({ status: 'cancelled' }));
+    expect(result.error).toMatch(/Only an admin can cancel/);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('lets an admin cancel through the RPC', async () => {
+    requirePath.mockResolvedValueOnce({ userId: 'admin-1', email: 'irene@beco.co.ke', fullName: 'Irene', role: 'beco_admin' as const, isActive: true, mustChangePassword: false } as never);
+    rpc.mockResolvedValue({ error: null });
+    maybeSingle.mockResolvedValue({ data: { reference_number: 'BEC-O-00001', quote: null } });
+    const result = await setOrderStatus({}, form({ status: 'cancelled' }));
+    expect(rpc).toHaveBeenCalledWith('set_order_status', expect.objectContaining({ p_status: 'cancelled' }));
+    expect(result.ok).toMatch(/cancelled/);
+  });
+
   it('marks paid through the RPC', async () => {
     rpc.mockResolvedValue({ error: null });
     maybeSingle.mockResolvedValue({

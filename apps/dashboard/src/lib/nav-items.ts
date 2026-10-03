@@ -120,3 +120,43 @@ function nestedPageLabel(sectionHref: string, page: string): string {
   }
   return page;
 }
+
+export interface BottomNav {
+  /** The items on the bar itself, at most four. */
+  items: NavItem[];
+  /** Everything else the role may reach, behind More. Empty hides More. */
+  more: NavItem[];
+  /** Whether the bar carries the raised New quote action in its middle. */
+  newQuote: boolean;
+}
+
+/**
+ * The phone's bottom bar (D111): the three or four screens a role lives in,
+ * under the thumb, with New quote raised in the middle for anyone who
+ * raises quotes and the rest of the sections behind More. Built from the
+ * same access map as everything else, so the bar can never offer a screen
+ * the proxy would refuse.
+ *
+ *   sales            Quotes, New quote, Orders
+ *   product manager  Catalogue, Import
+ *   admins           Overview, Quotes, New quote, Orders, More
+ */
+export const bottomNavFor = (role: UserRole, grants: AccessGrants = {}): BottomNav => {
+  const allowed = navItemsFor(role, grants);
+  // A role with no sections (the editor) gets no bar: Overview alone is not
+  // navigation, it is the screen they are already on.
+  if (allowed.length === 0) return { items: [], more: [], newQuote: false };
+  const base: NavItem[] = [];
+  if (ROLE_LANDING[role] === '/') base.push({ href: '/', label: 'Overview' });
+  base.push(...allowed);
+  const newQuote = canAccess(role, '/quotes', grants);
+  // A role with one screen gets its one nested screen beside it rather than
+  // a bar with a single button on it.
+  if (!newQuote && base.length === 1 && base[0]?.href === '/products') {
+    base.push({ href: '/products/import', label: 'Import' });
+  }
+  const slots = newQuote ? 3 : 4;
+  const items = base.slice(0, slots);
+  const more = base.slice(slots);
+  return { items, more, newQuote };
+};

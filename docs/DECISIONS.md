@@ -2443,3 +2443,56 @@ then the PDF, since the email is a summary and the document is the record.
 *Reverses if:* Resend's deliverability reports show image heavy messages landing in promotions
 tabs for Gmail recipients, in which case the hero goes and the total block stays.
 
+## D110, 3 October 2026: what a salesperson cannot do, and what only Brightex can
+
+**Decision.** Three functions move up a level, each in both layers and with the control gone from
+the screen for the role that cannot use it. Cancelling an order is an admin's call:
+`set_order_status()` refuses `cancelled` from `beco_sales` before it looks at the order, the action
+refuses it before the database is asked, and the button is not drawn. A catalogue import to
+production is an admin's call: the product manager runs dry runs and imports on staging, the page
+offers no production target, and the action refuses one. The Brightex allowlist in settings is
+Brightex's alone: the field is not in a Beco admin's form and the save drops the key whatever the
+form posted, so the second condition of the Studio gate (D42) cannot be edited by the role it
+gates. `docs/SECURITY.md` carries the full function matrix; the rest of it was already so.
+
+**Why.** Beco asked for it plainly: some functions are Brightex's, and a sales account must not
+reach everything an admin reaches. The audit found the routes right and three functions inside
+them looser than the business wanted. A cancellation reverses a sale the customer agreed to; a
+production import rewrites the live catalogue from a folder; the allowlist is the one setting
+that decides who Brightex is. None of the three belongs under the thumb of the account that does
+them most often.
+
+**Rejected.** Hiding the controls alone: rule 7 says hiding UI is not access control, so each
+change lands in the action and, where the database decides, in the function. A separate
+`beco_manager` role between sales and admin: nothing yet needs a fourth Beco role, and a role is
+cheap to add later and expensive to retire.
+
+*Reverses if:* Beco put a counter manager in charge of refunds, at which point cancellation
+becomes a grant like audit read rather than a role.
+
+## D111, 3 October 2026: the phone dashboard navigates from the bottom
+
+**Decision.** On phones and tablets the dashboard's sections live in a fixed bar along the bottom
+of the screen, replacing the D85 pill strip in the header card. The bar holds the three or four
+screens a role lives in, from the same access map as the sidebar, with New quote raised in the
+middle for anyone who raises quotes and the remaining sections, Change password and Sign out behind
+More, a sheet on the shared `Dialog`. The header card keeps its place and now names the screen. The
+shell publishes the bar's height as `--dock`, which the docked save bars and the floating action
+pills add to their offsets, so nothing the thumb needs is ever under the bar. The desktop sidebar
+is unchanged.
+
+**Why.** Beco asked for an intuitive phone experience with a bottom nav, and the strip had the
+weakness every scroll strip has: the sections past the fold did not exist until you swiped, and the
+strip sat at the top of a tall phone, where a thumb does not reach. A bottom bar is where every app
+staff already use puts its sections, it is reachable one handed, and it makes the role's shape
+legible at a glance: a salesperson's phone shows Quotes, New quote, Orders and nothing else.
+
+**Rejected.** A hamburger: it hides the sections a salesperson needs ten times an hour behind a
+tap. Five text-only items: at 390px a word alone is not findable by thumb, so the bar carries one
+icon per section, the one place in the dashboard that does. A round plus FAB for New quote: that is
+the Material default the dashboard is not allowed to resemble, so it is a charcoal tile with a
+label. Keeping the strip as well: two navigations on one phone screen is one too many.
+
+*Reverses if:* staff report missing the sections behind More, in which case the bar grows to five
+with the most-used section promoted per role, before anything structural moves.
+

@@ -56,9 +56,11 @@ export const dashboardSettingsSchema = z.object({
     .pipe(z.string().min(10, 'Need a WhatsApp number').max(15, 'That WhatsApp number is too long')),
   businessPhone: z.string().trim().min(8, 'Need the business line').max(24),
   notificationRecipients: textList(20, 'Twenty recipients is the cap'),
-  brightexAllowedEmails: textList(20, 'Twenty addresses is the cap').pipe(
-    z.array(z.string()).min(1, 'Keep at least one Brightex address'),
-  ),
+  // Brightex's own gate (D42). Only a brightex_admin submits it; a Beco
+  // admin's save leaves it out, and the stored list stands (D110).
+  brightexAllowedEmails: textList(20, 'Twenty addresses is the cap')
+    .pipe(z.array(z.string()).min(1, 'Keep at least one Brightex address'))
+    .optional(),
 });
 
 export type DashboardSettingsFields = z.infer<typeof dashboardSettingsSchema>;

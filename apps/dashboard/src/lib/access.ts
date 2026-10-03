@@ -16,6 +16,9 @@ import type { UserRole } from '@beco/types';
 
 const ADMINS = ['beco_admin', 'brightex_admin'] as const;
 
+/** beco_admin or brightex_admin: the two roles that act above the counter (D110). */
+export const isAdminRole = (role: UserRole): boolean => (ADMINS as readonly UserRole[]).includes(role);
+
 export type StaffGrant = 'audit';
 
 export interface AccessGrants {

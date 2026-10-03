@@ -313,6 +313,9 @@ export function SettingsForm({
           </FormSection>
         </TabsContent>
 
+        {/* Brightex only: the field is not in the DOM for a Beco admin, and the
+            action drops it from their save regardless (D110). */}
+        {canGrant ? (
         <TabsContent value="studio" forceMount>
           <FormSection columns={2} hint="Explicit addresses, not a domain. Brightex's real mail is Gmail.">
             <Field label="Brightex allowed emails" htmlFor="settings-allowlist">
@@ -326,6 +329,7 @@ export function SettingsForm({
             </Field>
           </FormSection>
         </TabsContent>
+        ) : null}
       </form>
 
       {/* Phone save bar: Save stays under the thumb on a long tab, and says
@@ -334,7 +338,7 @@ export function SettingsForm({
         <div
           data-testid="settings-save-bar"
           className={cn(
-            'sticky bottom-0 z-20 -mx-6 mt-6 flex items-center gap-4 border-t border-neutral-200 bg-high-vis-white px-6 py-3 shadow-dock sm:hidden',
+            'sticky bottom-[var(--dock,0px)] z-20 -mx-6 mt-6 flex items-center gap-4 border-t border-neutral-200 bg-high-vis-white px-6 py-3 shadow-dock sm:hidden',
             keyboardOpen ? 'hidden' : null,
           )}
         >

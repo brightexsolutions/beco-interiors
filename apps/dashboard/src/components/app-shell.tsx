@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import type { ActiveSession } from '@/lib/session';
-import { navGroupsFor, navItemsFor } from '@/lib/nav-items';
+import { bottomNavFor, navGroupsFor, navItemsFor } from '@/lib/nav-items';
 import { AccountMenu } from './account-menu';
+import { BottomNav } from './bottom-nav';
 import { ShellContext, ShellPageLabelProvider, TopBarCrumb } from './shell-context';
 import { SideNav } from './side-nav';
 import { ThemeToggle } from './theme-toggle';
-import { TopNav } from './top-nav';
 
 /**
  * The signed-in dashboard frame, D106.
@@ -13,8 +13,10 @@ import { TopNav } from './top-nav';
  * Desktop: a white sidebar holding the mark and the sections grouped by
  * job, a slim top bar naming where the reader is, and the screen on a
  * floating white panel over an off-white ground. Phone: the floating header
- * card with the pill strip, D85's shape, since a sidebar has no room on a
- * 390px screen and the strip keeps every section one swipe away.
+ * card names where the reader is, and the sections live in a bottom bar
+ * under the thumb (D111), with New quote raised in its middle and the rest
+ * behind More. `--dock` is the bar's height, so the docked save bars and
+ * the floating actions sit above it rather than under it.
  *
  * Charcoal carries the brand; Warm Red appears as the tick on the current
  * section and the count on Quotes. The licensed showroom still sits behind
@@ -35,13 +37,19 @@ export function AppShell({
   const grants = { canWriteBlog: user.canWriteBlog, canReadAudit: user.canReadAudit };
   const items = navItemsFor(user.role, grants);
   const groups = navGroupsFor(user.role, grants);
-  const sections = items.filter((i) => i.href !== '/settings');
+  const bottom = bottomNavFor(user.role, grants);
   const hasSettings = items.some((i) => i.href === '/settings');
   const name = user.fullName || user.email;
 
   return (
     <ShellPageLabelProvider>
-      <div className="min-h-screen bg-neutral-50 lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+      <div
+        className={
+          bottom.items.length > 0
+            ? 'min-h-screen bg-neutral-50 [--dock:calc(4.25rem+env(safe-area-inset-bottom,0px))] lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:[--dock:0px]'
+            : 'min-h-screen bg-neutral-50 [--dock:0px] lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]'
+        }
+      >
         {/* Desktop sidebar */}
         <aside className="hidden border-r border-neutral-200 bg-high-vis-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
           <Link
@@ -87,8 +95,8 @@ export function AppShell({
                   <span className="hidden sm:inline">Beco</span>
                 </Link>
                 <span aria-hidden className="h-6 w-px shrink-0 bg-neutral-200" />
-                <div className="min-w-0 flex-1">
-                  <TopNav items={sections} newQuotes={newQuotes} />
+                <div className="min-w-0 flex-1 px-1">
+                  <TopBarCrumb />
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <ThemeToggle />
@@ -121,10 +129,11 @@ export function AppShell({
 
           <ShellContext />
 
-          <main className="relative mx-auto max-w-[1440px] px-4 py-4 lg:px-8 lg:py-8">
+          <main className="relative mx-auto max-w-[1440px] px-4 py-4 pb-[calc(var(--dock)+1rem)] lg:px-8 lg:py-8">
             <div className="rounded-panel bg-high-vis-white p-6 shadow-panel lg:p-9">{children}</div>
           </main>
         </div>
+        <BottomNav nav={bottom} newQuotes={newQuotes} name={name} />
       </div>
     </ShellPageLabelProvider>
   );

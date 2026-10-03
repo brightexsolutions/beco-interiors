@@ -165,7 +165,7 @@ polished properly. What changed, and what did not:
 - **Desktop gets a sidebar.** White, 248px, the mark at the top, sections grouped by job, the
   current one filled charcoal with a Warm Red tick. A slim top bar names where the reader is and
   holds appearance, settings and the account. The screen sits on a floating white panel over the
-  off-white ground. The phone keeps the D85 header card and pill strip: a sidebar has no room on
+  off-white ground. The phone kept the D85 header card and pill strip until D111 below: a sidebar has no room on
   a 390px screen.
 - **Charts, where they carry a figure the tiles cannot.** Home: quotes raised against won by
   week, and the pipeline from new to lost. Reports: invoiced against collected by week, and the
@@ -177,3 +177,22 @@ polished properly. What changed, and what did not:
   small caps with the sort state visible, a sticky header, row hover, numbers flush right.
 - **Unchanged.** Type floor, touch targets, the no browser dialog rule, the ban on a dark sidebar
   (this one is white), text over icons, and the storefront, whose own rules were not lifted.
+
+## 3 October 2026, later: the phone gets a bottom bar (D111)
+
+The pill strip in the header card is gone. On a phone the sections sit in a fixed bar along the
+bottom, under the thumb: Quotes, New quote, Orders for a salesperson; Overview, Quotes, New quote,
+Orders and More for an admin; Catalogue and Import for the product manager. Each is an icon over a
+word at 14px, the current one charcoal with a short tick above it. New quote is a raised charcoal
+tile in the middle, since raising a quote is what the phone is for. More opens the shared `Dialog`
+as a sheet with the remaining sections, Change password and Sign out. The header card now names the
+screen where the strip used to be.
+
+The shell sets `--dock` to the bar's height on phones and tablets and to zero from `lg` up. The
+docked save bars on the new quote and settings screens sit at `bottom-[var(--dock)]`, and the
+floating action pills add it to their offset, so nothing is ever under the bar. The New quote pill
+on `/quotes` shows from `lg` up only; the bar carries it below that.
+
+The bar reads the same access map as everything else (`bottomNavFor` over `navItemsFor`), so it
+cannot offer a screen the proxy would refuse, and a role with no sections gets no bar.
+

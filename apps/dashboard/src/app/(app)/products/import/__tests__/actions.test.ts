@@ -46,6 +46,15 @@ describe('startImport', () => {
     expect(result.ok).toMatch(/Import started on production/);
   });
 
+  it('refuses a production import from the product manager, without dispatching (D110)', async () => {
+    requirePath.mockResolvedValue({ userId: `pm-${Math.random()}`, email: 'aisha.farah@beco.co.ke', role: 'beco_product_manager' });
+    const result = await startImport({}, form('import', 'production'));
+    expect(result.error).toMatch(/Only an admin can import to production/);
+    expect(dispatchImport).not.toHaveBeenCalled();
+    const staging = await startImport({}, form('import', 'staging'));
+    expect(staging.ok).toMatch(/started on staging/);
+  });
+
   it('holds a second start within a minute from the same person', async () => {
     requirePath.mockResolvedValue({ userId: 'same-person', email: 'x@beco.co.ke', role: 'beco_admin' });
     await startImport({}, form('dry-run', 'staging'));
