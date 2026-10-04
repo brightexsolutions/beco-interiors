@@ -3,13 +3,14 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { EmptyState, Reveal, CutoutReveal, buttonClasses } from '@beco/ui';
+import { EmptyState, CutoutReveal, buttonClasses } from '@beco/ui';
 import { ProductGridPaginated } from '@/components/product-grid-paginated';
+import { RangeToolbar } from '@/components/range-toolbar';
 import {
-  getCategoryWithTree, getCategorySlugs, getProductsByCategory, getProductsInCategories,
-  categoryIsIndexable, primaryImage, blurProps, flattenTree, subtreeSlugs,
-  type Category, type CategoryGroup, type CatalogueProduct,
+  getCategoryWithTree, getCategorySlugs, getCategoryTree, getProductsByCategory, getProductsInCategories,
+  categoryIsIndexable, primaryImage, blurProps, flattenTree,
 } from '@/lib/products';
+import { applyCatalogueFilters, finishFacetsOf, isFilteredView, rangeChips } from '@/lib/shop';
 import { SITE } from '@/lib/site';
 
 export const revalidate = 3600;
@@ -18,13 +19,21 @@ export async function generateStaticParams() {
   return (await getCategorySlugs()).map((category) => ({ category }));
 }
 
-type Params = { params: Promise<{ category: string }> };
+type Search = Record<string, string | string[] | undefined>;
+type Params = { params: Promise<{ category: string }>; searchParams: Promise<Search> };
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? '';
+const readFilter = (params: Search) => ({
+  q: one(params.q).trim().slice(0, 80),
+  finish: one(params.finish).trim().slice(0, 40),
+  sort: one(params.sort).trim(),
+});
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
   const { category: slug } = await params;
   const tree = await getCategoryWithTree(slug);
   if (!tree) return {};
   const { category } = tree;
+  const filtered = isFilteredView(readFilter(await searchParams));
 
   // Asked of the SUBTREE, so a group counts what is beneath it. The same
   // helper backs the sitemap, so the robots tag and the sitemap cannot
@@ -40,14 +49,20 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     // D27: a category with nothing in it is thin content, so it stays out of
     // the index until the import gives it something to say. The flip is
     // automatic on published product count, because Drive folders are still
-    // being filled and nobody should have to remember to come back.
-    robots: indexable ? undefined : { index: false, follow: true },
+    // being filled and nobody should have to remember to come back. D29: a
+    // searched, finish filtered or sorted view is noindex too, canonical to
+    // the bare range page above.
+    robots: indexable && !filtered ? undefined : { index: false, follow: true },
   };
 }
 
-export default async function CategoryPage({ params }: Params) {
+export default async function CategoryPage({ params, searchParams }: Params) {
   const { category: slug } = await params;
-  const tree = await getCategoryWithTree(slug);
+  const [tree, filter, fullTree] = await Promise.all([
+    getCategoryWithTree(slug),
+    searchParams.then(readFilter),
+    getCategoryTree(),
+  ]);
   if (!tree) notFound();
   const { category, parent, ancestors, children } = tree;
 
@@ -58,17 +73,35 @@ export default async function CategoryPage({ params }: Params) {
   // several routes keeps /shop/<anything> a single URL shape, which is what
   // the breadcrumbs, the sitemap and every existing link already assume.
   const isGroup = children.length > 0;
-  const products = isGroup
+  const inRange = isGroup
     ? await getProductsInCategories(flattenTree([category]).map((c) => c.id))
     : await getProductsByCategory(slug);
+  // The grid shows the filtered view; counts, facets, the cover and the
+  // structured data describe the whole range, which is what the page is.
+  const products = applyCatalogueFilters(inRange, filter);
+  const finishes = finishFacetsOf(inRange);
+
+  // The chips, D119: on a range with ranges beneath it, "All" is this page
+  // and each child is a link. On a child, the chips are its siblings under
+  // the parent, "All" is the parent, and this page is the one marked current.
+  const chips = isGroup
+    ? rangeChips({ allHref: `/shop/${category.slug}`, allCount: category.total_count, items: children, activeSlug: null })
+    : parent
+      ? (() => {
+          const parentNode = flattenTree(fullTree).find((c) => c.slug === parent.slug);
+          return parentNode
+            ? rangeChips({ allHref: `/shop/${parent.slug}`, allCount: parentNode.total_count, items: parentNode.children, activeSlug: category.slug })
+            : [];
+        })()
+      : [];
 
   // The right-hand column leads with a bookmatched pair where the range has
   // one: mirror-matched veining is the most striking single image a stone
   // can give, and it sits naturally in the portrait frame. Falls back to a
   // slab, then to whatever the first product has.
   const cover =
-    products.flatMap((p) => p.images ?? []).find((i) => i.role === 'bookmatch') ??
-    products.map(primaryImage).find((img) => img !== undefined);
+    inRange.flatMap((p) => p.images ?? []).find((i) => i.role === 'bookmatch') ??
+    inRange.map(primaryImage).find((img) => img !== undefined);
 
   return (
     <main>
@@ -165,8 +198,8 @@ export default async function CategoryPage({ params }: Params) {
               value={
                 isGroup
                   ? `${children.length}`
-                  : products.length > 0
-                    ? `${products.length} ${products.length === 1 ? 'colour' : 'colours'}`
+                  : inRange.length > 0
+                    ? `${inRange.length} ${inRange.length === 1 ? 'colour' : 'colours'}`
                     : 'Being photographed'
               }
             />
@@ -176,7 +209,6 @@ export default async function CategoryPage({ params }: Params) {
         </aside>
       </header>
 
-      {isGroup ? <ChildRanges parent={category} children={children} products={products} /> : null}
       </div>
 
       {/* The same cutout treatment as the home page's teaser for this range,
@@ -215,7 +247,7 @@ export default async function CategoryPage({ params }: Params) {
       <section className="bg-neutral-50">
       <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-16 pt-16 sm:pb-20 sm:pt-20 lg:pb-24 lg:pt-24">
       <div>
-        {products.length === 0 ? (
+        {inRange.length === 0 ? (
           <EmptyState
             title="This range is coming soon"
             description="We are photographing it now. In the meantime our team can advise on
@@ -228,12 +260,27 @@ export default async function CategoryPage({ params }: Params) {
           />
         ) : (
           <>
-            {isGroup ? (
-              <h2 className="mb-8 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                Everything in {category.name.toLowerCase()}
-              </h2>
-            ) : null}
-            <ProductGridPaginated products={products} />
+            <h2 className="mb-6 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              {isGroup ? `Everything in ${category.name.toLowerCase()}` : category.name}
+            </h2>
+            {/* The strip, D119: chips to the ranges beneath or beside this
+                one, finish, search and sort for this range alone. */}
+            <div className="mb-10">
+              <RangeToolbar chips={chips} finishes={finishes} total={inRange.length} showing={products.length} />
+            </div>
+            {products.length === 0 ? (
+              <EmptyState
+                title="Nothing matches that here"
+                description="Try a shorter search, clear the finish, or open the whole range."
+                action={
+                  <Link href={`/shop/${category.slug}`} className={buttonClasses({ variant: 'primary' })}>
+                    Show the whole range
+                  </Link>
+                }
+              />
+            ) : (
+              <ProductGridPaginated products={products} />
+            )}
           </>
         )}
       </div>
@@ -267,7 +314,7 @@ export default async function CategoryPage({ params }: Params) {
 
       {/* ItemList over the grid, so the products on this page are stated as an
           ordered set rather than left to be inferred from the markup. */}
-      {products.length > 0 ? (
+      {inRange.length > 0 ? (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -275,8 +322,8 @@ export default async function CategoryPage({ params }: Params) {
               '@context': 'https://schema.org',
               '@type': 'ItemList',
               name: category.name,
-              numberOfItems: products.length,
-              itemListElement: products.map((p, i) => ({
+              numberOfItems: inRange.length,
+              itemListElement: inRange.map((p, i) => ({
                 '@type': 'ListItem',
                 position: i + 1,
                 name: p.name,
@@ -306,70 +353,5 @@ function Fact({ term, value, href }: { term: string; value: string; href?: strin
         )}
       </dd>
     </div>
-  );
-}
-
-/** The ranges under a group, each linking to its own page. */
-function ChildRanges({
-  parent, children, products,
-}: {
-  parent: Category;
-  children: CategoryGroup[];
-  products: CatalogueProduct[];
-}) {
-  const coverFor = (child: CategoryGroup) => {
-    const slugs = new Set(subtreeSlugs(child));
-    return products
-      .filter((p) => (p.category ? slugs.has(p.category.slug) : false))
-      .map(primaryImage)
-      .find((img) => img !== undefined);
-  };
-
-  return (
-    <section className="mt-20 border-t border-neutral-200 pt-12">
-      <h2 className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-        Ranges in {parent.name.toLowerCase()}
-      </h2>
-
-      <div className="mt-8 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-        {children.map((child, i) => {
-          const cover = coverFor(child);
-          return (
-            <Reveal key={child.id} delay={(i % 4) * 60}>
-              <Link href={`/shop/${child.slug}`} className="group block">
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal">
-                  {cover ? (
-                    <Image
-                      src={cover.path}
-                      alt=""
-                      fill
-                      sizes="(max-width: 640px) 100vw, 25vw"
-                      {...blurProps(cover)}
-                      className="object-cover transition-transform duration-[900ms] ease-brand group-hover:scale-[1.04]"
-                    />
-                  ) : null}
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
-                  />
-                </div>
-                <p className="mt-4 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-charcoal">
-                  {child.name}
-                  <span
-                    aria-hidden
-                    className="ml-3 inline-block h-px w-0 bg-warm-red align-middle transition-all duration-500 ease-brand group-hover:w-8"
-                  />
-                </p>
-                <p className="mt-1 font-ui text-sm text-neutral-500">
-                  {child.total_count > 0
-                    ? `${child.total_count} in stock`
-                    : 'Being photographed'}
-                </p>
-              </Link>
-            </Reveal>
-          );
-        })}
-      </div>
-    </section>
   );
 }

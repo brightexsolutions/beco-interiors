@@ -28,7 +28,7 @@ describe('storefront proxy: the old WordPress site (D107)', () => {
   it('keeps the search term when it sends ?s= to the shop', () => {
     const res = proxy(request('/?s=handles'));
     expect(res.status).toBe(301);
-    expect(res.headers.get('location')).toBe('https://www.beco.co.ke/shop?q=handles');
+    expect(res.headers.get('location')).toBe('https://www.beco.co.ke/shop/all?q=handles');
   });
 
   it('passes the home page through untouched, campaign parameters included', () => {

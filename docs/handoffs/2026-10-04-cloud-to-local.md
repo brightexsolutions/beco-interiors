@@ -42,6 +42,7 @@ D118. Read `docs/STATUS.md` first; it is the plan of record at the end of the se
 | `catalogue/direct-photo-upload` | Photographs PUT straight to R2 under a presigned URL | D116 |
 | `dashboard/action-feedback` | Pending, result and reloading states on every action; editor key fix | D117 |
 | `ci/stop-the-red-runs` | CI fixed and quiet on dev pushes; workflow files valid again | D118 |
+| `storefront/shop-range-index` | The shop browses by range first; `/shop/all`; the strip inside a range | D119 |
 
 ## 2. What the cloud could not do, and you can
 
@@ -109,8 +110,9 @@ red, the failure is yours to read before anything deploys.
 
 - The earlier 56 commits on `dev` carry the cloud container's default author. A rewrite was
   offered and not done; it is Brown's call, and it rewrites shared history.
-- The storefront shop filter is being rethought; three directions were put to Brown on 4
-  October and none is built. Do not restyle `ShopControls` until one is chosen.
+- The storefront shop was rebuilt as a range index on 4 October, D119, branch
+  `storefront/shop-range-index`: `/shop` tiles, `/shop/all` flat list, the strip inside a range.
+  Walk it on a real phone; the chip row scrolls sideways and must not trap the page scroll.
 - `files/BUILD-PLAN.md` is gitignored and was not present in the cloud; if a decision looks
   like it contradicts the plan, the plan wins and the decision is reopened.
 

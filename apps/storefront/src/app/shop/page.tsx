@@ -1,133 +1,53 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { EmptyState, buttonClasses } from '@beco/ui';
-import { ProductGridPaginated } from '@/components/product-grid-paginated';
+import { redirect } from 'next/navigation';
+import { buttonClasses } from '@beco/ui';
 import { SlabRail } from '@/components/slab-rail';
 import { CinematicBackground } from '@/components/cinematic-background';
-import { ShopControls, type Facet, type FacetGroup } from '@/components/shop-controls';
+import { RangeTiles } from '@/components/range-tiles';
 import {
-  getPublishedProducts, getCategoryTree, flattenTree, subtreeSlugs,
-  type CatalogueProduct, type CategoryGroup,
+  getPublishedProducts, getCategoryTree, subtreeSlugs,
+  type CategoryGroup,
 } from '@/lib/products';
 import { RANGE_GROUPS } from '@/lib/ranges';
+import { legacyShopRedirect, rangeSummary } from '@/lib/shop';
 
 export const revalidate = 3600;
 
 type Search = Record<string, string | string[] | undefined>;
-const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? '';
 
-export async function generateMetadata(
-  { searchParams }: { searchParams: Promise<Search> },
-): Promise<Metadata> {
-  const params = await searchParams;
-  const filtered = Boolean(
-    one(params.q) || one(params.range) || one(params.category) ||
-    one(params.finish) || one(params.sort),
-  );
+export const metadata: Metadata = {
+  title: 'Shop interior finishing materials',
+  description:
+    'Sintered stone slabs, wall panels, hardware and accessories, stocked in Nairobi. Browse by range, search the catalogue, and request a quote.',
+  alternates: { canonical: '/shop' },
+};
 
-  return {
-    title: 'Shop interior finishing materials',
-    description:
-      'Sintered stone slabs, wall panels, hardware and accessories, stocked in Nairobi. Search the range, filter by finish, and request a quote.',
-    // D29: every filtered view canonicalises to the base and carries noindex,
-    // so a multi facet grid cannot generate hundreds of thin duplicate URLs.
-    alternates: { canonical: '/shop' },
-    ...(filtered ? { robots: { index: false, follow: true } } : {}),
-  };
-}
-
-/** The finish is a spec, so it is read from there rather than being a column. */
-const finishOf = (p: CatalogueProduct) => p.specs?.['Finish'] ?? null;
-
-/** Every category slug in a range, so a group filters to its whole subtree. */
+/** Every category slug in a range, so a group counts its whole subtree. */
 const slugSetOf = (group: CategoryGroup) => new Set(subtreeSlugs(group));
 
+/**
+ * The shop opens on its ranges, D119. The grid and its controls live on each
+ * range's own page, and on /shop/all for everything at once. An old filtered
+ * address (`?range=`, `?category=`, `?q=`) is sent where it now belongs.
+ */
 export default async function ShopPage({ searchParams }: { searchParams: Promise<Search> }) {
   const params = await searchParams;
-  const q = one(params.q).trim().toLowerCase();
-  const range = one(params.range);
-  const category = one(params.category);
-  const finish = one(params.finish);
-  const sort = one(params.sort) || 'name';
+  const legacy = legacyShopRedirect(params);
+  if (legacy) redirect(legacy);
 
   const [all, groups] = await Promise.all([getPublishedProducts(), getCategoryTree()]);
+  const summary = rangeSummary(groups);
 
-  // Facet counts come from the WHOLE range, not the filtered view, so a count
-  // never drops to zero under your own filter and leaves you unable to widen
-  // the search again.
-  const countIn = (slugs: Set<string>) =>
-    all.filter((p) => (p.category ? slugs.has(p.category.slug) : false)).length;
-
-  const facetGroups: FacetGroup[] = groups.map((group) => ({
-    value: group.slug,
-    label: group.name,
-    count: countIn(slugSetOf(group)),
-    // Sub ranges sit in the same list as their parent range, named after it,
-    // so a native select can still offer every level without nesting.
-    children: flattenTree(group.children).map((child) => ({
-      value: child.slug,
-      label: child.parent_id === group.id ? child.name : `${flattenTree(group.children).find((c) => c.id === child.parent_id)?.name ?? ''} › ${child.name}`,
-      count: child.total_count,
-    })),
-  }));
-
-  const finishCounts = new Map<string, number>();
-  for (const p of all) {
-    const f = finishOf(p);
-    if (f) finishCounts.set(f, (finishCounts.get(f) ?? 0) + 1);
-  }
-  const finishFacets: Facet[] = [...finishCounts]
-    .sort((a, b) => b[1] - a[1])
-    .map(([value, count]) => ({ value, label: value, count }));
-
-  const activeGroup = groups.find((g) => g.slug === range);
-  const rangeSlugs = activeGroup ? slugSetOf(activeGroup) : null;
-
-  let products = all.filter((p) => {
-    if (q && !p.name.toLowerCase().includes(q)) return false;
-    if (rangeSlugs && !(p.category ? rangeSlugs.has(p.category.slug) : false)) return false;
-    if (category && p.category?.slug !== category) return false;
-    if (finish && finishOf(p) !== finish) return false;
-    return true;
-  });
-
-  if (sort === 'price-asc' || sort === 'price-desc') {
-    // Unpriced items sort last either way: a POA product has no place in a
-    // cheapest-first list, and putting it at zero would be a lie.
-    products = [...products].sort((a, b) => {
-      if (a.price == null) return 1;
-      if (b.price == null) return -1;
-      return sort === 'price-asc' ? a.price - b.price : b.price - a.price;
-    });
-  }
-
-  const filtered = Boolean(q || range || category || finish);
-  // Several real rooms crossfading rather than one static photograph,
-  // reported directly as wanting the same cinematic feel as the home hero.
-  // One per product so the same room never repeats, and held to `application`
-  // shots specifically, wide interior context, per the guideline's own
-  // photography direction, rather than a slab close up standing in as a hero.
   const heroImages = all
     .map((p) => p.images?.find((i) => i.role === 'application'))
     .filter((img): img is NonNullable<typeof img> => img !== undefined)
     .slice(0, 5);
 
-  // One rail, standing for the whole business rather than the range with the
-  // most photography: up to three products per RANGE_GROUPS entry, badged
-  // stock preferred within each, so sintered stone cannot fill the row on
-  // its own and panels, flooring, hardware and accessories actually appear
-  // in it too. A second rail per range was tried and reported back as
-  // repetitive right after this one, so this is the only curated row before
-  // the general grid.
-  //
-  // Built from RANGE_GROUPS, the six ranges Beco actually deals in, rather
-  // than the raw top level `groups` from the database: that list also
-  // carries loose Drive folders that never became a real range, "Drawer
-  // Rails" and "Fluted Wall Panels" among them, which were crowding out
-  // Hinges and Office Accessories under the old fixed 12 item cap, reported
-  // directly against the running rail. No overall cap now: six ranges at up
-  // to three each tops out at eighteen, a length RailTrack's own scrollable
-  // row already handles.
+  // One rail for the whole business: up to three products per RANGE_GROUPS
+  // entry, badged stock preferred, so sintered stone cannot fill the row on
+  // its own. See the D94 note in docs/DECISIONS.md for why RANGE_GROUPS and
+  // not the raw tree.
   const featured = RANGE_GROUPS.flatMap((spec) => {
     const group = groups.find((g) => g.slug === spec.slug);
     if (!group) return [];
@@ -170,80 +90,77 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
-      {/* Everything the bar filters is passed as ITS children rather than
-          rendered as its sibling here: see `ShopControls`' own LAYOUT note
-          for why that is what actually keeps the bar stuck to the header
-          while scrolling, rather than only for the first few pixels. */}
-      <ShopControls
-        groups={facetGroups}
-        finishes={finishFacets}
-        total={all.length}
-        showing={products.length}
-      >
-        {/* --- One curated row, only while browsing rather than filtering: a
-                featured rail under a search or a facet is noise about things
-                nobody asked for, the same reasoning ComingSoon below already
-                uses. "View all" jumps to the catalogue grid below rather
-                than linking to `/shop`, the page already open: that link
-                used to go nowhere a reader could see happen, reported
-                directly as reading as not clickable. --- */}
-        {!filtered ? (
-          <SlabRail
-            products={featured}
-            eyebrow="Featured"
-            heading="On the floor right now."
-            viewAllHref="#the-whole-catalogue"
-            viewAllLabel="See everything"
-          />
-        ) : null}
-
-        {/* --- The whole catalogue section, on a distinct surface rather than
-                flat white: reported directly that the site's surfaces read as
-                plain white throughout, with nothing to lift the product cards
-                off the page the way ProductCard's own "no border, no shadow"
-                principle assumes something will. Full bleed neutral-50, the
-                same token the home page's "Why Beco" section already uses,
-                so the docked filter panel above and the featured rail keep
-                their white ground while the browsing grid itself sits on a
-                quieter, warmer surface. --- */}
-        <section id="the-whole-catalogue" className="scroll-mt-48 bg-neutral-50">
-          <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-20">
+      {/* --- The ranges, first. A material supplier is shopped by range, not
+              by scrolling a flat grid of everything, and each tile is the
+              door to a page that can rank on its own. The search beside the
+              heading is a plain form: it lands on the flat list with the
+              term, no script needed. D119. --- */}
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-20">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
             <div className="flex items-center gap-4">
               <span aria-hidden className="h-px w-8 bg-warm-red" />
               <h2 className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                {filtered ? 'Matching the filter' : 'The whole catalogue'}
+                Browse by range
               </h2>
             </div>
-
-            <div className="mt-8">
-              {products.length === 0 ? (
-                <EmptyState
-                  title="Nothing matches that"
-                  description="Try a shorter search, or clear the filters to see the whole range."
-                  action={
-                    <Link href="/shop" className={buttonClasses({ variant: 'primary' })}>
-                      Show everything
-                    </Link>
-                  }
-                />
-              ) : (
-                <ProductGridPaginated products={products} />
-              )}
-            </div>
-
-            {/* --- Ranges still being photographed. Shown so the site does not
-                    present Beco as a stone supplier with a sideline in handles,
-                    and said plainly so nobody thinks they are on the floor
-                    today. Only when the reader is looking at everything: under
-                    a filter it is noise about things they did not ask for. --- */}
-            {!filtered ? <ComingSoon groups={groups} /> : null}
+            <p className="mt-4 font-display text-3xl leading-[1.1] text-charcoal sm:text-4xl">
+              {summary.products} products across {summary.ranges} {summary.ranges === 1 ? 'range' : 'ranges'}.
+            </p>
           </div>
-        </section>
-      </ShopControls>
+          <form action="/shop/all" method="get" role="search" className="flex w-full gap-2 sm:w-auto">
+            <label htmlFor="shop-search" className="sr-only">Search the catalogue</label>
+            <input
+              id="shop-search"
+              name="q"
+              type="search"
+              enterKeyHint="search"
+              placeholder="Search a stone or colour"
+              className="h-11 min-w-0 flex-1 rounded-[2px] border border-neutral-300 bg-high-vis-white px-3 font-ui text-base text-charcoal placeholder:text-neutral-500 focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red sm:w-72"
+            />
+            <button type="submit" className={buttonClasses({ variant: 'secondary' })}>
+              Search
+            </button>
+          </form>
+        </div>
+
+        <div className="mt-10">
+          <RangeTiles groups={groups} products={all} />
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-200 pt-6">
+          <p className="font-ui text-base text-neutral-700">Prefer one list? Everything we stock, on one page.</p>
+          <Link
+            href="/shop/all"
+            className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-warm-red-deep underline-offset-4 hover:underline"
+          >
+            See everything
+          </Link>
+        </div>
+      </section>
+
+      {/* --- One curated row under the ranges, the same rail the home page
+              draws from, linking to the flat list rather than back to this
+              page. --- */}
+      {featured.length > 0 ? (
+        <SlabRail
+          products={featured}
+          eyebrow="Featured"
+          heading="On the floor right now."
+          viewAllHref="/shop/all"
+          viewAllLabel="See everything"
+        />
+      ) : null}
+
+      {/* --- Ranges still being photographed, said plainly so nobody thinks
+              they are on the floor today, and so the site does not present
+              Beco as a stone supplier with a sideline in handles. --- */}
+      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-16 sm:pb-20">
+        <ComingSoon groups={groups} />
+      </section>
     </main>
   );
 }
-
 
 function ComingSoon({ groups }: { groups: CategoryGroup[] }) {
   const empty = groups
@@ -252,7 +169,7 @@ function ComingSoon({ groups }: { groups: CategoryGroup[] }) {
   if (empty.length === 0) return null;
 
   return (
-    <section className="mt-24 border-t border-neutral-200 pt-12">
+    <section className="border-t border-neutral-200 pt-12">
       <h2 className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
         Also stocked, being photographed
       </h2>

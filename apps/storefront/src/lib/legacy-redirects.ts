@@ -165,7 +165,7 @@ export const isGone = (pathname: string): boolean => GONE.some((pattern) => patt
 export const legacyQueryRedirect = (search: URLSearchParams): string | null => {
   if (search.has('s')) {
     const term = (search.get('s') ?? '').trim();
-    return term ? `/shop?q=${encodeURIComponent(term)}` : '/shop';
+    return term ? `/shop/all?q=${encodeURIComponent(term)}` : '/shop';
   }
   if (search.has('p') || search.has('page_id') || search.has('cat') || search.has('product')) return '/';
   return null;
@@ -184,5 +184,5 @@ export const shopSearchFor = (slug: string): string => {
     .split(/[^a-z0-9]+/)
     .filter((w) => w && !['slab', 'slabs', 'the', 'and', 'of', 'in', 'for', 'product', 'products'].includes(w))
     .slice(0, 4);
-  return words.length > 0 ? `/shop?q=${encodeURIComponent(words.join(' '))}` : '/shop';
+  return words.length > 0 ? `/shop/all?q=${encodeURIComponent(words.join(' '))}` : '/shop';
 };

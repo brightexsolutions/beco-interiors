@@ -89,27 +89,43 @@ LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN
 
 ---
 
-## `/shop`
+## `/shop`, the range index (D119)
 
 | Control | What it does | Status |
 |---|---|---|
-| Search box | Rewrites `?q=`, debounced at 250ms, server re-filters | Server: `?q=calc` narrows the grid |
-| "Filters" button (mobile, D82) | Opens and closes the facet panel; a red badge shows how many of range, finish, sort are active | Test: `aria-expanded` and the panel toggle. Server: closed bar ~100px, panel opens with full-width controls and a "Show N results" close |
-| Range select | Rewrites `?range=` for a group or `?category=` for a range, clearing the other so the two cannot disagree | Server: `?range=hardware` 6 of 30, `?category=handles` 6, `?range=sintered-stone` 24, `?range=wall-panels` 0. Test: shares the desktop row rather than wrapping onto its own line, see the real bug fixed below |
-| Finish select | Rewrites `?finish=` | Server: `?finish=Polished` 4 of 30. Test: same row-sharing coverage as Range |
-| Sort select | Rewrites `?sort=` | Server: `price-desc` orders 95,000 then 85,000 then 75,000. Test: same row-sharing coverage as Range |
-| "Show N results" (mobile, D82) | Closes the facet panel, count matches the grid | Test |
-| Filter chips | Each removes its own filter | Test: clearing a chip rewrites the URL without that filter |
-| Clear all | Returns to bare `/shop`, including the search box | Test: rewrites to `/shop` with no query string, search input value cleared |
-| Range browse tiles | Navigate to the group page | Server, each 200 |
-| Range browse child links | Navigate to the range page | Server, each 200 |
-| Quick add to quote, on each card | Writes the product to the localStorage list | Test, asserts the list changed |
-| Empty state "Show everything" | Returns to `/shop` | **NOT CONFIRMED** |
+| Range tiles | One per range in `RANGE_GROUPS`, each links to `/shop/<range>`; states stock and the ranges beneath, or "Being photographed" | Test: `RangeTiles` (order, hrefs, loose folders excluded, sublines, axe). Server: each tile 200 |
+| Search form | Plain GET form, no script needed, lands on `/shop/all?q=` | Server: submitting lands on the flat list with the term |
+| "See everything" | Links to `/shop/all` | Server: 200 |
+| Featured rail "See everything" | Links to `/shop/all` | Server: 200 |
 | "Being photographed" links | Navigate to the empty category page | Server |
-| Featured rail "See everything" (D94, was "View all") | Jumps to the `#the-whole-catalogue` anchor below rather than linking to `/shop`, the page already open, which read as not clickable since nothing visibly happened | Server: anchor and matching `id` both present in the rendered HTML |
-| Filter bar sticks under the header while scrolling, on top of the content passing beneath it (D94) | Stays pinned at `top-20`, the header's own height, through Featured and the whole catalogue grid, not just for the first few pixels, and stays visually above the cards scrolling past rather than showing their title, price or Add button through it | Server: DOM nesting confirmed (`ShopControls` wraps Featured and the catalogue grid as children so its sticky layer has a containing block tall enough to hold). Bar is `z-30`, confirmed clear of every z-index actually used inside `/shop`'s own content, `ProductCard`'s own internal `z-10` on its title, price and action slot chief among them (its card root does not isolate a stacking context, so those values were never actually contained), and `RailTrack`'s arrow buttons at `z-20`. **Not walked on a device** |
+| Old addresses | `/shop?range=x` and `/shop?category=y` redirect to `/shop/x`, `/shop?q=` `?finish=` `?sort=` to `/shop/all` with the same query, bare `/shop` renders | Test: `legacyShopRedirect`. Server: 307 observed for each |
 
-Every filtered view carries `noindex` with canonical `/shop`, per D29. **Server confirmed.**
+## `/shop/all`, the flat list (D119)
+
+| Control | What it does | Status |
+|---|---|---|
+| Range chips | "All" current, each top level range a link to its page | Test: `RangeToolbar` (links, aria-current). Server |
+| Search | Debounced `?q=` on this page, scroll held | Test. Server |
+| Sort | `?sort=`, default dropped from the URL | Test. Server |
+| Count and Clear | "N of total", Clear only once something is set, resets to the bare page | Test |
+| Empty state "Show everything" | Returns to `/shop/all` | Server |
+
+Unfiltered `/shop/all` is indexable and in the sitemap; a searched or sorted view carries
+`noindex` with canonical `/shop/all`, per D29.
+
+## `/shop/[category]`, the strip (D119)
+
+| Control | What it does | Status |
+|---|---|---|
+| Range chips | On a group: "All" is this page, each child a link. On a child: siblings under the parent, "All" links to the parent, this page marked current | Test: `rangeChips`, `RangeToolbar`. Server |
+| Finish chips | Only when the range has more than one finish; toggles `?finish=` on this page | Test. Server: `?finish=Polished` narrows the grid |
+| Search, Sort, Count, Clear | As on `/shop/all`, scoped to this range | Test. Server |
+| Empty filtered state "Show the whole range" | Returns to the bare range page | Server |
+
+A searched, finish filtered or sorted range view carries `noindex` with canonical
+`/shop/<range>`, per D29; an empty range stays `noindex` per D27. **Server confirmed on the
+dev server, 4 October.**
+
 
 **Featured rail coverage (D94).** Rebuilt from `RANGE_GROUPS` rather than the raw category tree,
 which let two loose Drive folders ("Fluted Wall Panels", "Drawer Rails") crowd out genuinely
