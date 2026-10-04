@@ -64,7 +64,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Control | What it does | Status |
 |---|---|---|
 | Hero actions (D120) | "View products" goes to `/shop`, "Plan a visit" to `/contact` | Test: `CinematicHero`. Server: both hrefs read off the rendered page, desktop and phone |
-| Hero room buttons (D120) | One per room, numbered and named on desktop, bars only on phones; pressing one shows that room and its caption, `aria-current` on the room showing | Test. Server: pressing Living room then Reception changed the photograph and the caption |
+| Hero room buttons (D120) | One per room, numbered and named on desktop, 8px squares on phones, no rules or bars anywhere in the hero (D121); pressing one shows that room and its caption, `aria-current` on the room showing | Test. Server: pressing Living room then Reception changed the photograph and the caption |
 | Hero auto advance and Pause (D120) | Moves to the next room every 6.5s, wraps after the last, stops on Pause and resumes on Play; never advances under reduced motion, where Play is offered instead; a hidden tab does not advance | Test, fake timers. **Server: not walked under reduced motion on a device** |
 | Hero caption link (D120) | "See the range" (desktop) or the material line (phone) links to the material's range while it has stock, plain text otherwise | Test, both cases |
 | Hero image weight (D120) | Desktop fetches only the 16:9 frames, phones only the 3:4 frames, and only the room showing plus the next one on load; every frame under 150KB | Test: `hero-rooms.test.ts` stats each file. Server: request log on load showed `kitchen-wide` and `bathroom-wide` on desktop, the two `-tall` frames on a phone. **Lighthouse not run** |

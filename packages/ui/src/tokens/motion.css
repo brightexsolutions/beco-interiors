@@ -422,8 +422,7 @@
   /* --- D120: the home hero's rooms. Each photograph pushes in slowly for
          as long as it is on screen, the outgoing one keeps its push while it
          fades so nothing snaps, and the first holds still for 1.6s so the
-         LCP image is never animated on entry. The room buttons' bar fills
-         over the same interval. Transform only. --- */
+         LCP image is never animated on entry. Transform only. --- */
   .beco-hero-push {
     animation: beco-hero-push 9s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
   }
@@ -434,16 +433,6 @@
     from { transform: scale(1); }
     to   { transform: scale(1.08) translate3d(-1%, -1%, 0); }
   }
-  .beco-hero-progress {
-    animation-name: beco-hero-progress;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-  }
-  @keyframes beco-hero-progress {
-    from { transform: scaleX(0); }
-    to   { transform: scaleX(1); }
-  }
-
   .beco-ambient img,
   .beco-ambient video {
     animation: beco-ambient-drift 28s ease-in-out 1600ms infinite alternate;
