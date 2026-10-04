@@ -140,6 +140,36 @@ Create bucket `beco-product-images` in the same Cloudflare account. Connect a cu
 `img.beco.co.ke`. Generate an S3 compatible access key for the import pipeline, stored server
 side only.
 
+**Direct uploads need two bucket settings, D116.** A photograph added from the dashboard goes
+from the browser straight into the bucket under a presigned PUT, so Vercel never carries the
+file and its 4.5MB request body cap does not apply. Without the CORS rule the browser's PUT is
+refused and the dashboard falls back to posting files under 4MB through Vercel, with a toast
+for anything larger.
+
+CORS policy, Bucket settings, CORS policy, one rule:
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "https://dashboard.beco.co.ke",
+      "https://staging-dashboard.beco.co.ke",
+      "http://localhost:3001"
+    ],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["content-type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Object lifecycle, Bucket settings, Object lifecycle rules: prefix `uploads/`, delete objects
+one day after upload. The finishing action deletes a staged object as soon as it has read it,
+this rule only sweeps the ones a browser signed and never finished.
+
+The access key the dashboard holds must have Object Read and Write on this bucket: it signs the
+PUT, reads the staged object back, writes the derivatives and deletes the staging copy.
+
 ### 3.7 Vercel projects
 
 **Two separate projects from one repository.** This is the security boundary in Section 10, and

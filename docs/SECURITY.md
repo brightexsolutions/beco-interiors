@@ -138,6 +138,8 @@ for a role that cannot use it.
 | Convert a won quote; confirm, fulfil, record payment | own | no | yes | yes |
 | **Cancel an order** | **no** | no | yes | yes |
 | Edit products, ranges, photographs | no | yes | yes | yes |
+| Sign a direct photograph upload (D116): products area | no | yes | yes | yes |
+| Sign a direct photograph upload: team photo, blog cover | no | no | team yes, blog if granted | yes |
 | **Open the Drive import, start one on staging or production** | no | **no** | **no** | yes |
 | Announcements, reports, the leaderboard | no | no | yes | yes |
 | Business identity, KRA, payment details, notifications | no | no | yes | yes |

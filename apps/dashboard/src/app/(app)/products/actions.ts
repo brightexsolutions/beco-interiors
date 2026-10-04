@@ -15,7 +15,7 @@ import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { productMutationMessage } from '@/lib/product-errors';
 import { processProductPhoto } from '@/lib/product-photo';
-import { photoUploadProblem } from '@/lib/photo-upload';
+import { readPhotoUpload } from '@/lib/photo-source';
 import { deleteProductDerivatives, isProductStorageConfigured, uploadProductDerivatives } from '@/lib/product-storage';
 import { parseProductImages } from '@/lib/products';
 import { revalidateStorefront } from '@/lib/storefront-revalidate';
@@ -268,9 +268,8 @@ export async function addProductImage(_prev: ProductActionState, form: FormData)
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Check the photograph, then try again.' };
 
-  const file = form.get('photo');
-  const problem = photoUploadProblem(file);
-  if (problem || !(file instanceof File)) return { error: problem ?? 'Choose a photograph first.' };
+  const photo = await readPhotoUpload(form);
+  if (photo.error !== undefined) return { error: photo.error };
   if (!isProductStorageConfigured()) {
     return { error: 'Photograph storage is not configured. Add the R2 keys, then try again.' };
   }
@@ -292,7 +291,7 @@ export async function addProductImage(_prev: ProductActionState, form: FormData)
 
   let processed;
   try {
-    processed = await processProductPhoto(Buffer.from(await file.arrayBuffer()));
+    processed = await processProductPhoto(photo.buffer);
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'That file is not a photograph we can read.' };
   }
