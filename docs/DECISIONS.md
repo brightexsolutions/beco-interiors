@@ -2670,5 +2670,15 @@ change is the part Beco asked for in words: no runs, no emails, on the working b
 rule that nothing deploys unless CI passed stands, because the deploy path starts from a pull
 request to `main` and that is still gated.
 
+**The fifth cause, found by the first green-ish run.** With the four above fixed, the component
+suite still timed out on one DropdownMenu test under CI load, the same test that had been
+flaky locally. Profiling the gap after the test body showed Floating UI, under every Radix
+popper, asking each ancestor whether it matches `:modal` and `:popover-open` on every position
+pass, and jsdom's selector engine answering `:modal` by re-matching `:fullscreen` up the whole
+tree, recursively: 11,720 `:modal` checks and 12.6 million `:fullscreen` checks for one open
+menu, twenty seconds of CPU per test. `vitest.setup.ts` now answers those three top layer
+pseudo classes with `false`, since none of those states exist in jsdom; the file went from
+124 seconds to 1.3. A longer timeout would have hidden it.
+
 **Reverses if:** the team wants the record on `dev` again, one line in `ci.yml`.
 

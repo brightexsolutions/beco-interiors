@@ -64,6 +64,25 @@ if (typeof Element !== 'undefined') {
   }
 }
 
+/**
+ * Floating UI, under every Radix popper, asks each ancestor whether it
+ * matches `:modal` and `:popover-open` on every position pass. jsdom's
+ * selector engine (nwsapi) answers `:modal` by re-matching `:fullscreen` up
+ * the whole tree, recursively: one open DropdownMenu measured at 11,720
+ * `:modal` checks and 12.6 million `:fullscreen` checks, twenty seconds of
+ * CPU after the test body had finished, and a timeout under CI load. None
+ * of those states exist in jsdom, so answer them directly. Everything else
+ * still goes to the real matcher.
+ */
+if (typeof Element !== 'undefined') {
+  const nativeMatches = Element.prototype.matches;
+  const TOP_LAYER = new Set([':modal', ':popover-open', ':fullscreen']);
+  Element.prototype.matches = function matches(this: Element, selector: string) {
+    if (TOP_LAYER.has(selector)) return false;
+    return nativeMatches.call(this, selector);
+  };
+}
+
 if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
   window.ResizeObserver = class {
     observe() {}
