@@ -140,13 +140,17 @@ describe('fetchCategoryBySlug against local Postgres', () => {
 });
 
 describe('fetchCategoryGroupOptions against local Postgres', () => {
-  it('lists the group but excludes it when told to, and never lists a child', async () => {
+  // Under D104 a range can hold a sub range, so the range is a parent option
+  // too, named with its group. Excluding the group removes its whole subtree,
+  // or a group could be filed under its own child.
+  it('lists the group and the range as parents, and excluding the group drops both', async () => {
     const client = await signInAs(`${RUN}-pm@beco.co.ke`);
     const all = await fetchCategoryGroupOptions(client);
     expect(all.some((o) => o.id === groupId)).toBe(true);
-    expect(all.some((o) => o.id === childId)).toBe(false);
+    expect(all.find((o) => o.id === childId)?.name).toBe('ZZ Taxo Group › ZZ Taxo Child');
 
     const excluding = await fetchCategoryGroupOptions(client, groupId);
     expect(excluding.some((o) => o.id === groupId)).toBe(false);
+    expect(excluding.some((o) => o.id === childId)).toBe(false);
   });
 });
