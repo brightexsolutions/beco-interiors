@@ -2680,5 +2680,8 @@ menu, twenty seconds of CPU per test. `vitest.setup.ts` now answers those three 
 pseudo classes with `false`, since none of those states exist in jsdom; the file went from
 124 seconds to 1.3. A longer timeout would have hidden it.
 
+**Outcome.** Run 37202363371 on `dev`, dispatched by hand after the fifth fix, passed both
+jobs: the first green run since 12 September.
+
 **Reverses if:** the team wants the record on `dev` again, one line in `ci.yml`.
 

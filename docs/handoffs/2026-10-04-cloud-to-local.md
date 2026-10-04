@@ -100,9 +100,10 @@ supabase start && supabase test db && pnpm test:integration && supabase stop
 pnpm build
 ```
 
-If you want the record on `dev`, dispatch CI from the Actions tab. The first run after this
-handoff is the proof that the four root causes in D118 are closed; if it is red, the failure is
-yours to read before anything deploys.
+CI was dispatched by hand on `dev` at commit 7d9d2e1 on 4 October and passed, both jobs,
+run 37202363371: the first green run in the repository since 12 September. That is the state
+you inherit. If you want a fresh record on `dev`, dispatch CI from the Actions tab; if it is
+red, the failure is yours to read before anything deploys.
 
 ## 4. Known gaps left on purpose
 
