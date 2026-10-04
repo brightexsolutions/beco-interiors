@@ -18,3 +18,4 @@ export * from './dashboard-blog';
 export * from './dashboard-import';
 export * from './return-path';
 export * from './bearer';
+export * from './dashboard-upload';

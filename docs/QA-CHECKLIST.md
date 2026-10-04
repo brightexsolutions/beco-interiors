@@ -423,7 +423,7 @@ Page URL fields (both products and ranges) carry the hint "Old links still work"
 | Edit | Opens a detail sheet at `?edit=slug`. One column, Save and Delete stay pinned, no sideways scroll | Test: `ProductResults` plus `ProductEditor` |
 | New product | Charcoal labelled FAB, desktop and phone. Opens `?new=1` as an unpublished draft | Test: `NewProductFab`, `ProductCreate`, `createProduct` action |
 | SKU | Optional supplier code on create and edit. Search already matches it. Shown on the storefront product page | Test: `createProductSchema`, `updateProduct`, `ProductCreate`, `ProductEditor`, `ProductResults` |
-| Add photograph | Upload JPEG/PNG/WebP, role, alt. Writes R2 derivatives and `products.images` | Test: `ProductImages`, `addProductImage`, `processProductPhoto` |
+| Add photograph | JPEG/PNG/WebP up to 12MB, role, alt. The file goes straight to R2 under a presigned PUT with a percentage on the button, then the action reads it back, writes 400/800/1600 webp and `products.images` (D116). A failed PUT falls back to the form post under 4MB | Test: `ProductImages` (staged key sent, fallback keeps the file, error toast), `stagePhoto`, `putFile`, `createPhotoUpload`, `takeStagedUpload`, `readPhotoUpload`, `addProductImage`, `processProductPhoto`. **Server** still to confirm against a real bucket with the CORS rule |
 | Remove photograph | `ConfirmDialog` names the product. Deletes the shot from storage | Test: `ProductImages` |
 | Save (product) | Writes name, SKU, price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache. Closes the sheet on success | Test: `updateProduct` action, integration against local Postgres. Sheet close: `product-editor.test.tsx` |
 | Delete product | `ConfirmDialog` names the product. Soft delete. Quotes keep their line and price. Closes the sheet | Test: `ProductEditor` plus integration |
@@ -493,7 +493,7 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 | Deactivate / Reactivate | ConfirmDialog names the person. Sessions end. Quotes keep attribution. Nothing is deleted | Test: `UserEditor`, `setStaffActive` |
 | Reset password | ConfirmDialog. Shows a new secret once. Re-arms `must_change_password` | Test: `resetStaffPassword` |
 | Show on /team | Sales only. Writes `is_public`. Directors cannot be listed | Test: `UserEditor`, `saveStaffPublicProfile`. Constraint `users_only_sales_are_public` |
-| Upload / replace photograph | JPEG, PNG or WebP. 400/800/1600 webp on R2. Preview loads from dashboard `/api/img`. Busts storefront `/team` | Test: `UserEditor`, `uploadStaffPhoto`, img route |
+| Upload / replace photograph | JPEG, PNG or WebP up to 12MB, direct to R2 with a percentage on the button (D116). 400/800/1600 webp on R2. Preview loads from dashboard `/api/img`. Busts storefront `/team` | Test: `UserEditor`, `uploadStaffPhoto`, `readPhotoUpload`, img route |
 | Remove photograph | ConfirmDialog names the person. Deletes the R2 objects | Test: `UserEditor`, `removeStaffPhoto` |
 | Product manager at `/users` | Proxy bounces to `/products` | `access.test.ts`. **Server** still to walk as Aisha |
 

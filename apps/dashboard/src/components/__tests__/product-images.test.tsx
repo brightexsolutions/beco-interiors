@@ -2,9 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
+import { toast } from '@beco/ui';
 import type { CatalogueProduct } from '@/lib/products';
 
-const addProductImage = vi.fn(async () => ({ ok: 'Photograph added.' }));
+const addProductImage = vi.fn(async (_prev: unknown, _form: FormData) => ({ ok: 'Photograph added.' }));
 const removeProductImage = vi.fn(async () => ({ ok: 'Photograph removed.' }));
 const saveProductImages = vi.fn(async () => ({ ok: 'Photographs updated.' }));
 vi.mock('@/app/(app)/products/actions', () => ({
@@ -13,7 +14,20 @@ vi.mock('@/app/(app)/products/actions', () => ({
   saveProductImages: (...a: Parameters<typeof saveProductImages>) => saveProductImages(...a),
 }));
 
+const stagePhoto = vi.fn(async (..._a: unknown[]) => ({ kind: 'staged' as const, key: 'uploads/0123456789abcdef0123456789abcdef' }));
+vi.mock('@/lib/direct-upload', () => ({
+  stagePhoto: (...a: unknown[]) => stagePhoto(...a),
+}));
+vi.mock('@/app/(app)/uploads/actions', () => ({ createPhotoUpload: vi.fn() }));
+
 const { ProductImages } = await import('../product-images');
+
+/** jsdom checks `required` on a file input against state user.upload cannot set, so submit never fires. The browser does not have that problem. */
+const submitButton = () => {
+  const button = screen.getByRole('button', { name: 'Add photograph' }) as HTMLButtonElement;
+  button.form!.noValidate = true;
+  return button;
+};
 
 const product: CatalogueProduct = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -66,6 +80,47 @@ describe('ProductImages', () => {
     render(<ProductImages product={product} />);
     expect(screen.getByRole('button', { name: 'Add photograph' })).toBeEnabled();
     expect(screen.getByLabelText(/^photograph/i)).toHaveAttribute('type', 'file');
+  });
+
+  it('stages the file straight to R2 and sends the action the key, not the bytes', async () => {
+    const user = userEvent.setup();
+    render(<ProductImages product={product} />);
+    const file = new File([new Uint8Array([1, 2, 3])], 'slab.jpg', { type: 'image/jpeg' });
+    await user.upload(screen.getByLabelText(/^photograph/i), file);
+    await user.click(submitButton());
+    await vi.waitFor(() => expect(addProductImage).toHaveBeenCalled());
+    expect(stagePhoto).toHaveBeenCalledWith(expect.any(File), 'products', expect.any(Function), expect.any(Function));
+    const sent = addProductImage.mock.calls.at(-1)![1] as unknown as FormData;
+    expect(sent.get('uploadKey')).toBe('uploads/0123456789abcdef0123456789abcdef');
+    expect(sent.get('photo')).toBeNull();
+    expect(sent.get('role')).toBe('slab');
+    expect(sent.get('alt')).toBe('Limestone Ivory slab');
+  });
+
+  it('keeps the file in the form post when staging says to fall back', async () => {
+    stagePhoto.mockResolvedValueOnce({ kind: 'fallback' } as never);
+    const user = userEvent.setup();
+    render(<ProductImages product={product} />);
+    await user.upload(screen.getByLabelText(/^photograph/i), new File([new Uint8Array([1])], 'slab.jpg', { type: 'image/jpeg' }));
+    await user.click(submitButton());
+    await vi.waitFor(() => expect(addProductImage).toHaveBeenCalledTimes(2));
+    const sent = addProductImage.mock.calls.at(-1)![1] as unknown as FormData;
+    expect(sent.get('uploadKey')).toBeNull();
+    expect(sent.get('photo')).toBeInstanceOf(File);
+  });
+
+  it('shows the staging error and does not call the action', async () => {
+    stagePhoto.mockResolvedValueOnce({ kind: 'error', error: 'That photograph is larger than 12MB. Compress it and try again.' } as never);
+    const user = userEvent.setup();
+    render(<ProductImages product={product} />);
+    await user.upload(screen.getByLabelText(/^photograph/i), new File([new Uint8Array([1])], 'slab.jpg', { type: 'image/jpeg' }));
+    const calls = addProductImage.mock.calls.length;
+    const error = vi.spyOn(toast, 'error').mockImplementation(() => '' as never);
+    await user.click(submitButton());
+    await vi.waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringMatching(/larger than 12MB/)));
+    expect(addProductImage).toHaveBeenCalledTimes(calls);
+    expect(screen.getByRole('button', { name: 'Add photograph' })).toBeEnabled();
+    error.mockRestore();
   });
 
   it('has no accessibility violations', async () => {

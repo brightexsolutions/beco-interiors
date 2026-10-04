@@ -2582,3 +2582,32 @@ and ranges by hand in the same screen, which was always theirs.
 *Reverses if:* Beco take over the Drive folder's upkeep, at which point the rule widens to
 `beco_admin` with the production confirm dialog as the gate.
 
+## D116, 4 October 2026: photographs upload straight to R2, Vercel never carries the file
+
+**Decision.** A photograph added from the dashboard (product shot, team photo, blog cover) is
+PUT by the browser directly into the R2 bucket under a presigned URL, then the finishing action
+is handed the staging key instead of the file. The URL is signed by a server action that holds
+the same route gate as the finishing action, puts exactly one object under `uploads/` with a
+random 32 hex name, and expires in five minutes. The finishing action re-checks the object's
+size and type against what R2 holds, reads it, makes the derivatives and deletes the staging
+copy whatever happens. A bucket lifecycle rule sweeps anything a browser abandoned.
+
+**Why.** Vercel caps a function's request body at 4.5MB on every plan, and nothing in the Next
+config lifts it. The code allowed 12MB, so a phone JPEG of 5MB would have been refused at the
+edge with a generic error, before our size message could run. Most phone photographs are 3 to
+6MB. Sending the bytes to Cloudflare directly removes the cap and also removes Vercel from the
+slow part of the upload.
+
+**What was considered.** Raising the client cap to 4MB and compressing in the browser: loses
+detail on the one asset the storefront sells with, and still fails on the many phones that
+produce a 4MB file. An S3 POST policy that signs the size: R2 does not support POST policies.
+Signing Content-Length on the PUT: a browser will not let script set that header, so the size
+is enforced where it can be, when the server takes the object.
+
+**Fallback.** If the PUT fails, most likely because the bucket CORS rule is missing, a file
+under 4MB goes the old way inside the form post and a larger one is refused with a message
+that names the size. Nothing is silently lost.
+
+**Reverses if:** the dashboard moves off Vercel to a host without a body cap. Then the direct
+path is still faster and stays.
+
