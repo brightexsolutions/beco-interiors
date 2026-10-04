@@ -201,16 +201,23 @@ export function CategoryEditor({
         </div>
 
         <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-neutral-200 bg-high-vis-white px-5 py-3 sm:flex-row sm:justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setConfirmOpen(true)}
-            disabled={busy || blockedBy != null}
-            title={blockedBy ? `Cannot delete: ${blockedBy}` : undefined}
-          >
-            <Icon name="trash" />
-            {blockedBy ? `Delete range (${blockedBy})` : 'Delete range'}
-          </Button>
+          <div className="flex min-w-0 flex-col items-start gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmOpen(true)}
+              disabled={busy || blockedBy != null}
+              aria-describedby={blockedBy ? 'category-delete-blocked' : undefined}
+            >
+              <Icon name="trash" />
+              Delete range
+            </Button>
+            {blockedBy ? (
+              <p id="category-delete-blocked" className="font-ui text-sm text-neutral-500">
+                Empty it first: {blockedBy}.
+              </p>
+            ) : null}
+          </div>
           <Button type="submit" form="category-editor" variant="primary" disabled={busy}>
             {saving ? 'Saving…' : 'Save'}
           </Button>
