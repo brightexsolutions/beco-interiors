@@ -17,11 +17,11 @@
 export const SERVICES = [
   {
     title: 'Consultation and selection',
-    body: 'Real samples, side by side: colours, finishes and thicknesses weighed against your project and your budget, so the choice is informed rather than the most expensive option in the room.',
+    body: 'We put real samples side by side: colours, finishes and thicknesses weighed against your project and your budget, so your choice is informed rather than the most expensive option in the room.',
   },
   {
     title: 'Site assessment',
-    body: 'Anything that needs fabrication or installation gets a measurement or a site visit before the quote, not after, so what you are quoted is what actually fits.',
+    body: 'Where we fabricate or install, we measure or visit the site before we quote, not after, so what we quote is what actually fits.',
   },
   {
     title: 'Fabrication and installation',

@@ -2716,3 +2716,45 @@ parameter.
 **Reverses if:** the catalogue grows past a few hundred products, when option B's sidebar
 facets become the right answer inside a range, on top of this index.
 
+## D120, 4 October 2026: the home hero shows our finished rooms, and we speak as we
+
+**Decision.** The home hero is `CinematicHero`: five of our own finished installations, full
+screen and one at a time, a kitchen, a bathroom, a living room, a reception and a bar, each
+captioned with the room and the material we supplied in it, the caption linking to that
+material's range while it has stock. One line of type, "The room starts with the surface.",
+and two actions, "View products" to `/shop` and "Plan a visit" to `/contact`. Each photograph
+pushes in slowly for as long as it is on screen and crossfades to the next every 6.5s; room
+buttons with a filling bar jump to any room, and a Pause control stops the sequence. The
+rooms are a static manifest, `HERO_ROOMS`, cut twice from `public/site-photos/` into a 16:9
+desktop frame and a 3:4 phone frame, every file under the 150KB hero budget. `PinnedHero`,
+its range chips and `RotatingRoomWord` with its typing caret are retired. The About page and
+the home About section speak in the first person: "we" stock, advise, measure, install and
+deliver, rather than Beco being described from outside.
+
+**Why.** Brown chose the third of three directions put forward with mockups on 4 October, and
+asked for it cinematic, minimal in wording, with those two actions, and showing different
+rooms as finished work rather than ranges or product shots. The previous hero veiled one
+photograph so heavily the material barely read, paired a typed room word with photographs
+that did not match it, and hung the ranges on unlabelled round thumbnails. A finished room
+answers the buyer's real question, whether it works in a space like theirs, which a slab
+cannot. The first person voice was asked for in the same message: the About copy described
+Beco as a third party, which reads as a directory listing, not as the people you would be
+dealing with.
+
+**Motion, inside D31.** Transform and opacity only. The first photograph, the LCP element,
+holds still for 1.6s before its push starts. The outgoing room keeps its push while it fades
+so nothing snaps. No pinning, no scroll coupling. Under reduced motion nothing advances or
+moves and Play is offered instead, and a hidden tab does not advance. Only the room on screen
+and the next are mounted as images, so first paint fetches two photographs, the right frame
+for the screen.
+
+**What was considered.** The showroom film behind the hero, as the Direction 3 mockup showed:
+15MB, and Brown asked for rooms rather than the showroom. A video of rooms would be the next
+step if Beco shoots one; the component takes images today. Pexels photography for flooring,
+hardware and accessories, as `HERO_RANGE_IMAGES` uses: not our finished work, which is the
+whole point of this hero, so those ranges are not in it until Beco has real installations to
+show.
+
+**Reverses if:** Beco shoots landscape footage of finished rooms, when a film slot replaces the
+photographs with the same caption and controls.
+
