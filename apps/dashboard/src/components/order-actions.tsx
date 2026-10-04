@@ -41,6 +41,8 @@ export function OrderActions({
   const [paidState, markPaid, paying] = useActionState(markOrderPaid, INITIAL);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [paidOpen, setPaidOpen] = useState(false);
+  // Which status button was pressed, so only that one shows the spinner.
+  const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
   const router = useRouter();
   useActionToast(statusState);
   useActionToast(paidState);
@@ -62,10 +64,16 @@ export function OrderActions({
   return (
     <div className="flex flex-col gap-2">
       {next.map((item) => (
-        <form key={item.status} action={setStatus}>
+        <form key={item.status} action={setStatus} onSubmit={() => setPendingStatus(item.status)}>
           <Lock orderId={orderId} updatedAt={updatedAt} />
           <input type="hidden" name="status" value={item.status} />
-          <Button type="submit" variant="outline" disabled={setting} className="h-11 w-full py-0">
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={setting}
+            pending={setting && pendingStatus === item.status}
+            className="h-11 w-full py-0"
+          >
             {item.label}
           </Button>
         </form>

@@ -37,7 +37,7 @@ export function SignInForm({ next, denied }: { next: string; denied: boolean }) 
         </Field>
       </div>
 
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" pending={pending}>
         {pending ? 'Signing in' : 'Sign in'}
       </Button>
     </form>

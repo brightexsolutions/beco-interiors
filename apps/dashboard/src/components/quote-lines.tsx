@@ -263,7 +263,8 @@ export function QuoteLines({
             <Button
               type="submit"
               form="quote-lines-save"
-              disabled={!dirty || saving}
+              disabled={!dirty}
+              pending={saving}
               title={!dirty ? 'No changes to save.' : 'Save changed items'}
             >
               {saving ? 'Saving' : 'Save'}
@@ -367,7 +368,7 @@ export function QuoteLines({
                   disabled={dirty}
                 />
               </Field>
-              <Button type="submit" variant="outline" disabled={adding || dirty} className="shrink-0">
+              <Button type="submit" variant="outline" disabled={dirty} pending={adding} className="shrink-0">
                 {adding ? 'Adding' : 'Add'}
               </Button>
             </div>

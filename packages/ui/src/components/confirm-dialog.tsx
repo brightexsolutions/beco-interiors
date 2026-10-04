@@ -128,12 +128,10 @@ export function ConfirmDialog({
           <Button ref={cancelRef} variant="ghost" onClick={close} disabled={busy}>
             {cancelLabel}
           </Button>
-          <Button
-            variant={destructive ? 'primary' : 'secondary'}
-            onClick={handleConfirm}
-            disabled={busy}
-          >
-            {busy ? 'Working…' : confirmLabel}
+          {/* The verb stays while it runs, with the spinner beside it, so the
+              reader still knows what they pressed. */}
+          <Button variant={destructive ? 'primary' : 'secondary'} onClick={handleConfirm} pending={busy}>
+            {confirmLabel}
           </Button>
         </div>
       </div>

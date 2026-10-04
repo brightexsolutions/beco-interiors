@@ -146,7 +146,7 @@ export function AnnouncementEditor({
         </FormSection>
       </div>
       <div className="shrink-0 border-t border-neutral-200 px-5 py-3">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" pending={pending}>
           {pending ? 'Saving' : 'Save'}
         </Button>
       </div>

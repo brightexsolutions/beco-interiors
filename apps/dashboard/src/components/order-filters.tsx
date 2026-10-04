@@ -1,8 +1,8 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
-import { ChipGroup, Input, Select } from '@beco/ui';
+import { useEffect, useState } from 'react';
+import { Busy, ChipGroup, Input, Select } from '@beco/ui';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import type { OrderOwnerFilter } from '@/lib/orders';
 
 export interface OrderOwnerOption {
@@ -11,10 +11,7 @@ export interface OrderOwnerOption {
 }
 
 export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[] }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const { searchParams, setParam, isPending } = useQueryNavigation();
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
 
   const owner = searchParams.get('owner') || ownerOptions[0]?.value || 'all';
@@ -41,14 +38,6 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
     { value: 'phone', label: 'Phone' },
     { value: 'whatsapp', label: 'WhatsApp' },
   ];
-
-  const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  };
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -131,6 +120,7 @@ export function OrderFilters({ ownerOptions }: { ownerOptions: OrderOwnerOption[
           </Select>
         </label>
       </div>
+      <Busy pending={isPending} />
     </div>
   );
 }

@@ -195,7 +195,7 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(quotes, requestedPage);
 
@@ -222,6 +222,7 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
           row, so mobile gets full cards instead, not a squeezed table. */}
       <div className="hidden xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} quotes`}
           columns={columns}
           rows={paged.items}

@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../lib/cn';
+import { Spinner } from './spinner';
 
 /**
  * The reference component. Every other component follows this shape.
@@ -61,7 +62,16 @@ const button = cva(
 export const buttonClasses = button;
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
-  VariantProps<typeof button>;
+  VariantProps<typeof button> & {
+    /**
+     * The action this button started is still running. The button disables
+     * itself, says so to assistive technology with aria-busy, and shows the
+     * spinner before its label. Callers swap the label to the present
+     * participle at the same time ("Saving"), so the words and the mark
+     * agree. D117: every action in the dashboard shows this while it works.
+     */
+    pending?: boolean | undefined;
+  };
 
 /**
  * Forwards its ref, so a dialog can place initial focus on a specific button.
@@ -69,8 +79,19 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
  * reason Cancel comes first.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, variant, size, ...props },
+  { className, variant, size, pending = false, disabled, children, ...props },
   ref,
 ) {
-  return <button ref={ref} className={cn(button({ variant, size }), className)} {...props} />;
+  return (
+    <button
+      ref={ref}
+      className={cn(button({ variant, size }), className)}
+      disabled={disabled || pending}
+      aria-busy={pending || undefined}
+      {...props}
+    >
+      {pending ? <Spinner /> : null}
+      {children}
+    </button>
+  );
 });

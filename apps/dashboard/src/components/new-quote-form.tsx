@@ -117,7 +117,7 @@ export function NewQuoteForm() {
   const canSave = lines.length > 0 && !saving;
 
   const saveButton = (className?: string) => (
-    <Button type="submit" disabled={!canSave} className={className}>
+    <Button type="submit" disabled={!canSave} pending={saving} className={className}>
       {saving ? 'Saving' : 'Save quote'}
     </Button>
   );

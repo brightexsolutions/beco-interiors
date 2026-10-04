@@ -108,7 +108,7 @@ export function SettingsForm({
         title="Settings"
         actions={
           <>
-            <Button type="submit" form="settings-save" disabled={pending} className="hidden sm:inline-flex">
+            <Button type="submit" form="settings-save" pending={pending} className="hidden sm:inline-flex">
               {pending ? 'Saving' : 'Save settings'}
             </Button>
             {canGrant ? (
@@ -345,7 +345,7 @@ export function SettingsForm({
           <p className="min-w-0 flex-1 font-ui text-sm text-neutral-500" aria-live="polite">
             {dirty ? 'Unsaved changes' : 'All saved'}
           </p>
-          <Button type="submit" form="settings-save" disabled={pending}>
+          <Button type="submit" form="settings-save" pending={pending}>
             {pending ? 'Saving' : 'Save settings'}
           </Button>
         </div>

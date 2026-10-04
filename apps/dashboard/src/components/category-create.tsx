@@ -79,8 +79,8 @@ export function CategoryCreate({
         <Button type="button" variant="ghost" onClick={() => router.push(returnTo)}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? 'Creating…' : 'Create'}
+        <Button type="submit" variant="primary" pending={pending}>
+          {pending ? 'Creating' : 'Create'}
         </Button>
       </div>
     </form>

@@ -44,6 +44,12 @@ export interface DataTableProps<T> {
   rows: T[];
   getRowKey: (row: T) => string;
   emptyState?: React.ReactNode;
+  /**
+   * The rows on screen are about to be replaced: a filter, sort or page
+   * change is in flight. The body dims and the table says so with aria-busy,
+   * so a slow network reads as "coming" rather than "did nothing". D117.
+   */
+  busy?: boolean | undefined;
   className?: string | undefined;
 }
 
@@ -55,6 +61,7 @@ export function DataTable<T>({
   rows,
   getRowKey,
   emptyState,
+  busy = false,
   className,
 }: DataTableProps<T>) {
   const [sort, setSort] = useState<SortState>(null);
@@ -93,7 +100,7 @@ export function DataTable<T>({
   // follow one across eight columns, the first cell carries the row's name,
   // and numeric columns sit flush right in tabular figures.
   return (
-    <div className={cn('overflow-x-auto', className)}>
+    <div className={cn('overflow-x-auto', className)} aria-busy={busy || undefined}>
       <table className="w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
         <thead className="sticky top-0 z-[1] bg-high-vis-white">
@@ -135,7 +142,7 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className={cn('transition-opacity duration-200', busy && 'opacity-50')}>
           {sorted.map((row) => (
             <tr key={getRowKey(row)} className="border-b border-neutral-100 transition-colors last:border-b-0 hover:bg-neutral-50">
               {columns.map((col, index) => (

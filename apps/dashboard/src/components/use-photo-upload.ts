@@ -56,7 +56,7 @@ export function usePhotoUpload({
   const settle = useCallback(() => setPhase('idle'), []);
 
   const label =
-    phase === 'uploading' ? `Uploading ${Math.round(progress * 100)}%` : phase === 'processing' ? 'Processing…' : null;
+    phase === 'uploading' ? `Uploading ${Math.round(progress * 100)}%` : phase === 'processing' ? 'Processing' : null;
 
   return { onSubmit, phase, progress, label, settle };
 }

@@ -128,7 +128,7 @@ export function BlogEditor({
         <Button type="button" variant={view === 'preview' ? 'secondary' : 'ghost'} onClick={() => setView('preview')}>
           Preview
         </Button>
-        <Button type="submit" form="blog-save" disabled={savePending}>
+        <Button type="submit" form="blog-save" pending={savePending}>
           {savePending ? 'Saving' : 'Save draft'}
         </Button>
       </div>
@@ -215,7 +215,7 @@ export function BlogEditor({
                 <Field label="Related stock" htmlFor="blog-related" hint="Optional">
                   <Input id="blog-related" name="related" />
                 </Field>
-                <Button type="submit" variant="secondary" disabled={genPending}>
+                <Button type="submit" variant="secondary" pending={genPending}>
                   <Icon name="sparkles" />
                   {genPending ? 'Generating' : 'Generate'}
                 </Button>
@@ -280,7 +280,7 @@ export function BlogEditor({
                     <Input id="blog-cover-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" />
                   </Field>
                   <div className="flex flex-col gap-2">
-                    <Button type="submit" variant="outline" disabled={coverPending || upload.phase !== 'idle'}>
+                    <Button type="submit" variant="outline" pending={coverPending || upload.phase !== 'idle'}>
                       <Icon name="upload" />
                       {upload.label ?? 'Upload cover'}
                     </Button>

@@ -292,7 +292,7 @@ export function ReportResults({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const urlView = parseView(searchParams.get('view') ?? undefined);
   const [view, setViewState] = useState(urlView);
 
@@ -368,6 +368,7 @@ export function ReportResults({
               </ChartCard>
               <div className="hidden xl:block">
                 <DataTable
+                  busy={isPending}
                   caption="Salesperson leaderboard"
                   columns={personColumns}
                   rows={leaderboard.people}
