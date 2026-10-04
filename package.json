@@ -22,6 +22,7 @@
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local > packages/types/src/database.ts",
     "drive:import": "tsx tools/drive-import/src/cli.ts",
+    "hero:frames": "tsx tools/drive-import/src/hero-frames-cli.ts",
     "backup:verify": "tsx tools/backup/src/verify.ts",
     "check:secrets": "tsx tools/backup/src/secret-scan.ts",
     "check:type-floor": "node tools/setup/assert-type-floor.mjs",

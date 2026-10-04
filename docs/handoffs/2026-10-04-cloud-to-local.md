@@ -21,7 +21,7 @@ git config user.email "info.brightexsolutions@gmail.com"
 
 The cloud work is the merges on `dev` dated 3 and 4 October. Each merge names its branch, each
 branch is one piece of work, and each piece has a decision in `docs/DECISIONS.md`, D104 to
-D118. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
+D121. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
 
 | Branch merged into dev | What it is | Decision |
 |---|---|---|
@@ -44,6 +44,7 @@ D118. Read `docs/STATUS.md` first; it is the plan of record at the end of the se
 | `ci/stop-the-red-runs` | CI fixed and quiet on dev pushes; workflow files valid again | D118 |
 | `storefront/shop-range-index` | The shop browses by range first; `/shop/all`; the strip inside a range | D119 |
 | `storefront/cinematic-room-hero` | The home hero shows our finished rooms; About copy in the first person | D120 |
+| `storefront/hero-premium-rooms` | No rules or bars on the hero; `pnpm hero:frames` to cut stock room photographs | D121 |
 
 ## 2. What the cloud could not do, and you can
 
@@ -85,6 +86,37 @@ the Updating and Saving states. Log anything off against the screen's row.
 dashboard (`/api/quote-confirmation`); it has been tested but never observed in a real inbox.
 Submit a quote on staging and check the customer and the Brightex ops mailbox.
 
+**Premium hero photography, blocked in the cloud.** Brown asked on 4 October for the hero to
+use premium room photographs, free stock if need be, showing each range in use. The cloud's
+network policy refuses every stock host (Pexels, Unsplash, Wikimedia), so the photographs were
+shortlisted from search and not downloaded. Look at each one before using it: these are picked
+from search descriptions, not seen.
+
+| Room, range | First choice | Fallback |
+|---|---|---|
+| Kitchen, sintered stone | [4800189](https://www.pexels.com/photo/4800189/), Curtis Adams, marble island under gold pendants | [35189706](https://www.pexels.com/photo/35189706/) |
+| Bathroom, sintered stone vanity | [11701114](https://www.pexels.com/photo/11701114/), Max Vakhtbovych, marble walls, double basin | [6585741](https://www.pexels.com/photo/6585741/) |
+| Living room, SPC flooring | [7027720](https://www.pexels.com/photo/7027720/), Curtis Adams | [18041820](https://www.pexels.com/photo/18041820/) |
+| Kitchen, hardware | [6538936](https://www.pexels.com/photo/6538936/), black handles on cabinetry | [6969865](https://www.pexels.com/photo/6969865/) |
+| Walk-in closet, accessories | [11701120](https://www.pexels.com/photo/11701120/) | [6670657](https://www.pexels.com/photo/6670657/) |
+| Living room, wall panels | Keep our own `living-room-slat-wall`, no stock photograph found yet | |
+
+For each one you keep:
+
+```sh
+pnpm hero:frames kitchen-stone pexels:4800189 --wide=centre --tall=attention
+```
+
+That writes `<slug>-wide.webp` (1600x900) and `<slug>-tall.webp` (900x1200) under
+`apps/storefront/public/hero/rooms/`, each under 150KB or not at all. Open both: if the crop
+loses the material, rerun with another `--wide` or `--tall` position. Then add the room to
+`HERO_ROOMS` in `apps/storefront/src/lib/hero-rooms.ts` with its alt text and a comment
+crediting the photographer and Pexels id, the way `HERO_RANGE_IMAGES` in `lib/ranges.ts`
+already does. Captions must name the material, not claim the room as our installation, since
+it is not. Delete the frames of any room you drop, run `pnpm test:component`, check the hero
+live on a phone and a desktop, and record the swap as D122, reversing D120's own-work-only
+rule for the hero on Brown's instruction.
+
 **Search Console and cron-job.org.** Both are Beco's to set up, with Brightex as manager.
 `docs/SEO-MIGRATION.md` is the procedure, now with an ordered table; `docs/DEPLOYMENT.md`
 covers the two cron-job.org jobs. Neither needs code.
@@ -120,7 +152,7 @@ red, the failure is yours to read before anything deploys.
 ## 5. The prompt to begin the local chat
 
 ```
-Read docs/handoffs/2026-10-04-cloud-to-local.md first, then docs/STATUS.md and D104 to D118
+Read docs/handoffs/2026-10-04-cloud-to-local.md first, then docs/STATUS.md and D104 to D121
 in docs/DECISIONS.md. The cloud session merged seventeen branches into dev between 3 and 4
 October; nothing has been deployed and main is untouched. Pull dev, run pnpm install, set the
 commit hooks and the Brightex Solutions author, and run the full local check list in section
@@ -131,7 +163,8 @@ supabase test db there; add the R2 CORS and lifecycle rules from docs/DEPLOYMENT
 upload one real phone photograph on staging from the dashboard, confirming the direct PUT,
 the derivatives and the toast; set GITHUB_ACTIONS_TOKEN on the dashboard and dispatch a
 dry-run import to staging, confirming the report artifact and the refresh step; submit a
-quote on staging and confirm the confirmation email arrives; walk docs/QA-CHECKLIST.md on a
+quote on staging and confirm the confirmation email arrives; swap the hero photographs per
+the "Premium hero photography" step in section 2 of the handoff; walk docs/QA-CHECKLIST.md on a
 real iPhone and Android over mobile data and log every defect against its row.
 
 Rules that stand: never touch production data, production only after a human approves, no
