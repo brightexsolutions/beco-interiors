@@ -130,7 +130,7 @@ export function UserResults({
       {creating ? (
         <UserCreate />
       ) : viewing ? (
-        <UserEditor key={`${viewing.id}-${viewing.updatedAt}-${resetKey(viewing)}`} user={viewing} viewerId={viewerId} />
+        <UserEditor key={`${viewing.id}-${resetKey(viewing)}`} user={viewing} viewerId={viewerId} />
       ) : null}
     </Sheet>
   );

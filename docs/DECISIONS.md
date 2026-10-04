@@ -2637,6 +2637,17 @@ have needed a wrapper around every navigation anyway, and a bar at the top of th
 far from the control that was pressed on a phone. Spinning every status button at once when
 any is pressed: wrong, it says all three are happening.
 
+**The defect this surfaced.** Driving the real dev server to capture the states found that a
+product Save produced no toast and left the sheet open, although the action returned
+`{ ok: 'Saved.' }`. `ProductResults` keyed the editor by `id` plus `updatedAt`. A server
+action's response carries the re-rendered tree, so the fresh row arrived in the same commit as
+the result, the key changed, React remounted the editor with its initial state, and the
+effects that toast and close never saw `ok`. The same key was on the range editor and the
+user editor, where every action bumps `updatedAt`, so every toast in that sheet was lost too.
+The jsdom tests passed because a mocked action does not re-render the parent. All three are
+keyed by `id` now, the editors already sync their fields from props, and each results test
+holds the editor to one mount across an `updatedAt` change. This is the case for walking the
+QA checklist against a running server rather than trusting the suite.
+
 **Reverses if:** Next ships a router pending hook, when the top bar becomes a cheap addition
 on top of this, not a replacement for it.
-
