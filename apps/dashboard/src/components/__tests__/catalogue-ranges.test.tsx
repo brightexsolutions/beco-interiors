@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useEffect } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
@@ -12,8 +13,12 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => params,
 }));
 
+const editorMounts = vi.fn();
 vi.mock('@/components/category-editor', () => ({
-  CategoryEditor: ({ category }: { category: CategoryRow }) => <p>Editing {category.name}</p>,
+  CategoryEditor: ({ category }: { category: CategoryRow }) => {
+    useEffect(() => editorMounts(), []);
+    return <p>Editing {category.name}</p>;
+  },
 }));
 
 vi.mock('@/components/category-create', () => ({
@@ -68,6 +73,14 @@ describe('CatalogueRanges, the range browser (D114)', () => {
 
   const sub = () => range({ id: 'sub-1', name: 'Heixin 12mm', slug: 'heixin-12mm', depth: 3, parentId: 'range-1', parentName: 'Limestone', productCount: 5 });
   const deep = () => [group({ productCount: 0, children: [range({ productCount: 4, childCount: 1, children: [sub()] })] })];
+
+  it('keeps the open range editor mounted across an updatedAt change, so a save keeps its toast and close (D117)', () => {
+    editorMounts.mockClear();
+    const editing = range();
+    const { rerender } = render(<CatalogueRanges tree={deep()} groupOptions={[]} editing={editing} creating={false} selectedId="range-1" />);
+    rerender(<CatalogueRanges tree={deep()} groupOptions={[]} editing={range({ updatedAt: '2026-10-04T12:00:00.000Z' })} creating={false} selectedId="range-1" />);
+    expect(editorMounts).toHaveBeenCalledTimes(1);
+  });
 
   it('opens on the major categories alone, each counting its whole subtree', () => {
     render(<CatalogueRanges tree={deep()} groupOptions={[]} editing={null} creating={false} selectedId={null} />);

@@ -93,7 +93,9 @@ export function CatalogueRanges({
         <CategoryCreate groupOptions={groupOptions} defaultParentId={createParentId} returnTo={withParam({ newRange: null, parent: null })} />
       ) : editing ? (
         <CategoryEditor
-          key={`${editing.id}-${editing.updatedAt}`}
+          // Keyed by id only, see ProductResults: a key on updatedAt loses the
+          // saved state to a remount before the toast and the close. D117.
+          key={editing.id}
           category={editing}
           groupOptions={groupOptions.filter((option) => option.id !== editing.id)}
           onSaved={closeSheet}

@@ -219,7 +219,10 @@ export function ProductResults({
         <ProductCreate categories={categories} returnTo={withParam('new', null)} />
       ) : editing ? (
         <ProductEditor
-          key={`${editing.id}-${editing.updatedAt}`}
+          // Keyed by id only. The action's response carries the fresh row, and
+          // a key on updatedAt remounted the editor on that commit, before its
+          // effects saw `ok`: no toast, sheet left open. D117.
+          key={editing.id}
           product={editing}
           categories={categories}
           onSaved={closeSheet}
