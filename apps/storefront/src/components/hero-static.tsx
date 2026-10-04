@@ -13,15 +13,15 @@ import { HERO_GRID_INSET } from '@/lib/layout';
  *
  * Deliberately static and server rendered: no crossfade timer, no
  * entrance choreography, no gradient. It is a degraded state whose one
- * job is to be solid and instant. The warm red rule is the single
- * accent, the same one every section eyebrow carries.
+ * job is to be solid and instant. No rules or separators, D121, the
+ * same as the real hero.
  */
 
 export function HeroStatic() {
   return (
     <section
       aria-label="Beco Interiors"
-      className="beco-hero-bleed relative border-b border-neutral-200 bg-charcoal"
+      className="beco-hero-bleed relative bg-charcoal"
     >
       <div
         className={cn(
@@ -30,12 +30,9 @@ export function HeroStatic() {
           'lg:min-h-[78vh] lg:pr-20',
         )}
       >
-        <div className="flex items-center gap-4">
-          <span aria-hidden className="beco-rule-draw h-px w-8 bg-warm-red" />
-          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
-            Beco Interiors, Nairobi
-          </p>
-        </div>
+        <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
+          Beco Interiors, Nairobi
+        </p>
 
         <h1 className="mt-6 max-w-[14ch] font-display text-5xl leading-[1.03] tracking-[-0.015em] text-high-vis-white xl:text-6xl">
           The room starts with the surface.

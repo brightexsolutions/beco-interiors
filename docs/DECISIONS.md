@@ -2724,7 +2724,7 @@ captioned with the room and the material we supplied in it, the caption linking 
 material's range while it has stock. One line of type, "The room starts with the surface.",
 and two actions, "View products" to `/shop` and "Plan a visit" to `/contact`. Each photograph
 pushes in slowly for as long as it is on screen and crossfades to the next every 6.5s; room
-buttons with a filling bar jump to any room, and a Pause control stops the sequence. The
+buttons (no longer with a filling bar, D121) jump to any room, and a Pause control stops the sequence. The
 rooms are a static manifest, `HERO_ROOMS`, cut twice from `public/site-photos/` into a 16:9
 desktop frame and a 3:4 phone frame, every file under the 150KB hero budget. `PinnedHero`,
 its range chips and `RotatingRoomWord` with its typing caret are retired. The About page and
@@ -2758,3 +2758,21 @@ show.
 **Reverses if:** Beco shoots landscape footage of finished rooms, when a film slot replaces the
 photographs with the same caption and controls.
 
+
+## D121, 4 October 2026: the hero carries no rules or bars
+
+**Decision.** The home hero draws no lines. The Warm Red rule before the eyebrow is gone, and
+the room buttons lose their filling progress bars: on desktop each room is its number and name,
+"01 Kitchen", bright when it is showing and grey otherwise; on a phone each is an 8px square in
+a 44px target. `HeroStatic` drops its rule and its bottom hairline to match. The
+`beco-hero-progress` keyframes are deleted from `motion.css`.
+
+**Why.** Brown asked directly, after seeing D120 live, for no line separators on the hero. Over
+a full bleed photograph the thin rules read as interface chrome laid across the room, and the
+room names already say which slide is showing and that there are more.
+
+**What was considered.** Keeping the bars as a timer and hiding them only on desktop: still a
+line, on the screen size most people see first.
+
+**Reverses if:** testing on a real device shows people do not realise the hero advances on its
+own, when a timer that is not a rule, for example the number counting, is the next thing to try.

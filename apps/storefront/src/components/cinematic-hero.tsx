@@ -139,12 +139,9 @@ export function CinematicHero({ rooms }: { rooms: readonly CinematicRoom[] }) {
       <div className={cn(HERO_GRID_INSET, HERO_GRID_INSET_RIGHT, 'absolute inset-x-0 bottom-0 z-10 pb-24 sm:pb-24 lg:pb-10')}>
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
           <div>
-            <div className="flex items-center gap-4">
-              <span aria-hidden className="beco-rule-draw h-px w-8 bg-warm-red" />
-              <p className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300" style={{ animationDelay: '120ms' }}>
-                Beco Interiors, Nairobi
-              </p>
-            </div>
+            <p className="beco-enter font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300" style={{ animationDelay: '120ms' }}>
+              Beco Interiors, Nairobi
+            </p>
             <h1 className="mt-5 max-w-[14ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] sm:text-6xl lg:text-7xl">
               <WordReveal text="The room starts with the surface." delay={200} />
             </h1>
@@ -179,7 +176,7 @@ export function CinematicHero({ rooms }: { rooms: readonly CinematicRoom[] }) {
           </div>
         </div>
 
-        <div className="mt-8 lg:mt-10">
+        <div className="mt-6 lg:mt-10">
           {/* Phone caption: one line above the controls. */}
           <p className="pt-2 font-ui text-base text-neutral-200 lg:hidden" aria-live={autoplay ? 'off' : 'polite'}>
             <span className="mr-2 text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">{room.room}</span>
@@ -191,38 +188,35 @@ export function CinematicHero({ rooms }: { rooms: readonly CinematicRoom[] }) {
           </p>
 
           <div className="flex items-center gap-3">
-            <ol className="flex flex-1 gap-2">
+            {/* No rules or bars here, on request: the rooms are named on
+                desktop and marked with small squares on a phone. */}
+            <ol className="flex flex-1 flex-wrap items-center gap-x-1 lg:gap-x-8">
               {rooms.map((r, i) => {
                 const isActive = i === active;
                 return (
-                  <li key={r.slug} className="min-w-0 flex-1">
+                  <li key={r.slug}>
                     <button
                       type="button"
                       onClick={() => go(i)}
                       aria-label={`Show the ${r.room.toLowerCase()}`}
                       aria-current={isActive ? 'true' : undefined}
-                      className="group flex h-11 w-full flex-col justify-center gap-2 text-left"
+                      className="group flex h-11 min-w-11 items-center justify-center lg:justify-start"
                     >
-                      <span className="relative block h-0.5 w-full overflow-hidden bg-high-vis-white/25">
-                        <span
-                          key={isActive && autoplay ? `${active}-run` : `${i}-still`}
-                          aria-hidden
-                          className={cn(
-                            'absolute inset-0 origin-left bg-high-vis-white',
-                            isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100 group-hover:bg-high-vis-white/50',
-                            isActive && autoplay && 'beco-hero-progress',
-                          )}
-                          style={isActive && autoplay ? { animationDuration: `${SLIDE_MS}ms` } : undefined}
-                        />
-                      </span>
                       <span
                         aria-hidden
                         className={cn(
-                          'hidden truncate font-ui text-xs font-semibold uppercase tracking-[0.14em] transition-colors lg:block',
+                          'block h-2 w-2 transition-colors lg:hidden',
+                          isActive ? 'bg-high-vis-white' : 'bg-high-vis-white/35 group-hover:bg-high-vis-white/70',
+                        )}
+                      />
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'hidden font-ui text-xs font-semibold uppercase tracking-[0.14em] transition-colors lg:inline',
                           isActive ? 'text-high-vis-white' : 'text-neutral-400 group-hover:text-neutral-200',
                         )}
                       >
-                        {String(i + 1).padStart(2, '0')} {r.room}
+                        <span className="tabular-nums">{String(i + 1).padStart(2, '0')}</span> {r.room}
                       </span>
                     </button>
                   </li>
