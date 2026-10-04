@@ -10,7 +10,7 @@ describe('safeReturnPath', () => {
 
   it('turns an absolute URL away', () => {
     expect(safeReturnPath('https://evil.example/steal')).toBe('/');
-    expect(safeReturnPath('javascript:alert(1)')).toBe('/');
+    expect(safeReturnPath('javascript:document.cookie')).toBe('/');
   });
 
   it('turns the protocol-relative and backslash shapes away, which start with a slash', () => {

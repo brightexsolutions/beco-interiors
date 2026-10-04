@@ -24,11 +24,17 @@ jobs:
           - app: dashboard
             project_id_secret: VERCEL_PROJECT_ID_DASHBOARD
     steps:
+      # Block style on purpose. A flow mapping cannot hold `${{ }}`: the inner
+      # braces close the mapping early and GitHub refuses the file, which it
+      # records as a failed run named after the file on every push.
       - uses: actions/checkout@v4
-        with: { ref: ${{ github.event.workflow_run.head_sha }} }
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
-        with: { node-version-file: .nvmrc, cache: pnpm }
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
 
       - name: Deploy ${{ matrix.app }} to preview
         env:
