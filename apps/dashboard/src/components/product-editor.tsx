@@ -427,8 +427,8 @@ export function ProductEditor({
             <Icon name="trash" />
             Delete product
           </Button>
-          <Button type="submit" form="product-editor" variant="primary" disabled={busy}>
-            {saving ? 'Saving…' : 'Save'}
+          <Button type="submit" form="product-editor" variant="primary" disabled={busy} pending={saving}>
+            {saving ? 'Saving' : 'Save'}
           </Button>
         </div>
       </div>

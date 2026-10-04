@@ -64,7 +64,7 @@ export function LaunchControls({
             defaultValue={toLocalInput(launchAt)}
           />
         </Field>
-        <Button type="submit" variant="outline" disabled={savingDate}>
+        <Button type="submit" variant="outline" pending={savingDate}>
           {savingDate ? 'Saving' : 'Save date'}
         </Button>
         {dateState.ok ? (

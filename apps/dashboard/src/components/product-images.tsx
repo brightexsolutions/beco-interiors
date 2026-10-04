@@ -193,7 +193,7 @@ export function ProductImages({
             }}
           />
         </Field>
-        <Button type="submit" variant="secondary" disabled={busy}>
+        <Button type="submit" variant="secondary" disabled={busy} pending={adding || upload.phase !== 'idle'}>
           <Icon name="upload" />
           {upload.label ?? 'Add photograph'}
         </Button>

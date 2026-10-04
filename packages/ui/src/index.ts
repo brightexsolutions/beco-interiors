@@ -1,4 +1,6 @@
 export { Button, buttonClasses, type ButtonProps } from './components/button';
+export { Spinner } from './components/spinner';
+export { Busy } from './components/busy';
 export { Fab, fabClasses, type FabProps } from './components/fab';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
 export { Dialog, type DialogProps } from './components/dialog';

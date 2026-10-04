@@ -218,8 +218,8 @@ export function CategoryEditor({
               </p>
             ) : null}
           </div>
-          <Button type="submit" form="category-editor" variant="primary" disabled={busy}>
-            {saving ? 'Saving…' : 'Save'}
+          <Button type="submit" form="category-editor" variant="primary" disabled={busy} pending={saving}>
+            {saving ? 'Saving' : 'Save'}
           </Button>
         </div>
       </div>

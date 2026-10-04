@@ -1,26 +1,15 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
-import { Input, Select } from '@beco/ui';
+import { useEffect, useState } from 'react';
+import { Busy, Input, Select } from '@beco/ui';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import { AUDIT_ACTIONS } from '@/lib/audit';
 
 export function AuditFilters() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const { searchParams, setParam, isPending } = useQueryNavigation();
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const entity = searchParams.get('entity') ?? '';
   const action = searchParams.get('action') ?? '';
-
-  const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  };
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -59,6 +48,7 @@ export function AuditFilters() {
           </option>
         ))}
       </Select>
+      <Busy pending={isPending} className="xl:col-span-full" />
     </form>
   );
 }

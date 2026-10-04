@@ -19,6 +19,12 @@ beforeEach(() => {
 });
 
 describe('ProductFilters', () => {
+  it('carries a live status region for the reload, empty until a change is in flight (D117)', () => {
+    render(<ProductFilters />);
+    const status = screen.getByRole('status');
+    expect(status).toBeEmptyDOMElement();
+  });
+
   it('writes availability into the URL, which is what the list reads', async () => {
     const user = userEvent.setup();
     render(<ProductFilters />);

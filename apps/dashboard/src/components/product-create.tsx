@@ -111,8 +111,8 @@ export function ProductCreate({
         <Button type="button" variant="ghost" onClick={() => router.push(returnTo)}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? 'Creating…' : 'Create product'}
+        <Button type="submit" variant="primary" pending={pending}>
+          {pending ? 'Creating' : 'Create product'}
         </Button>
       </div>
     </form>

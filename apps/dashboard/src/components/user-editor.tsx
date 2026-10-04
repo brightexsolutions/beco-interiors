@@ -166,8 +166,8 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
                 disabled={busy}
               />
             </Field>
-            <Button type="submit" variant="secondary" disabled={busy}>
-              {publicPending ? 'Saving…' : 'Save website listing'}
+            <Button type="submit" variant="secondary" disabled={busy} pending={publicPending}>
+              {publicPending ? 'Saving' : 'Save website listing'}
             </Button>
           </form>
 
@@ -220,7 +220,7 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
                 defaultValue={user.publicPhoto?.alt || defaultAlt}
               />
             </Field>
-            <Button type="submit" variant="secondary" disabled={busy}>
+            <Button type="submit" variant="secondary" disabled={busy} pending={photoPending || upload.phase !== 'idle'}>
               <Icon name="upload" />
               {upload.label ?? (user.publicPhoto ? 'Replace photograph' : 'Upload photograph')}
             </Button>

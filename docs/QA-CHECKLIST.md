@@ -19,6 +19,11 @@ thought it looked fine.
 | Changes state | The change survived a refresh |
 | Opens an external channel | WhatsApp opened prefilled, the dialler had the right number |
 
+**Feedback, on every control that writes (D117):** while it runs the button spins and says
+"Saving" or the like, when it lands a Done or Failed toast names the result, and a sheet that
+saved closes. While a list reloads the filter row reads "Updating" and the rows dim. A control
+that does none of this is a defect, log it against the screen's row.
+
 ## Status key
 
 - **Test** proven by an automated test, named in `docs/TEST-COVERAGE.md`

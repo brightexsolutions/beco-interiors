@@ -76,7 +76,7 @@ export function OrderDocumentPanel({
                     autoComplete="email"
                   />
                 </Field>
-                <Button type="submit" variant="secondary" disabled={sending}>
+                <Button type="submit" variant="secondary" pending={sending}>
                   {sending ? 'Sending' : 'Email'}
                 </Button>
               </form>

@@ -40,7 +40,7 @@ describe('QuoteFilters on a phone: chips', () => {
     const status = screen.getByRole('group', { name: 'Status' });
     expect(within(status).getByRole('button', { name: 'Won' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(within(status).getByRole('button', { name: 'Won' }));
-    expect(push).toHaveBeenLastCalledWith('/quotes?');
+    expect(push).toHaveBeenLastCalledWith('/quotes');
   });
 
   it('switches owner from a chip and source from the phone select (D112)', async () => {
@@ -94,7 +94,7 @@ describe('QuoteFilters', () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
     await user.selectOptions(screen.getByLabelText(/filter by status/i), '');
-    expect(push).toHaveBeenCalledWith('/quotes?');
+    expect(push).toHaveBeenCalledWith('/quotes');
   });
 
   it('hides the owner control when the caller offers only one option', () => {

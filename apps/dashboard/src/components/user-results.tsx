@@ -90,7 +90,7 @@ export function UserResults({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(users, requestedPage);
 
@@ -148,6 +148,7 @@ export function UserResults({
     <>
       <div className="hidden min-w-0 xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} users`}
           columns={desktopColumns(viewHref)}
           rows={paged.items}

@@ -180,7 +180,7 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(orders, requestedPage);
 
@@ -205,6 +205,7 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
     <>
       <div className="hidden xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} orders`}
           columns={columns}
           rows={paged.items}

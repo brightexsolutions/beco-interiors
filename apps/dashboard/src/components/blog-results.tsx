@@ -66,7 +66,7 @@ export function BlogResults({ posts }: { posts: StaffBlogPost[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(posts, requestedPage);
 
@@ -91,7 +91,13 @@ export function BlogResults({ posts }: { posts: StaffBlogPost[] }) {
   return (
     <>
       <div className="hidden min-w-0 xl:block">
-        <DataTable caption={`${paged.total} articles`} columns={columns()} rows={paged.items} getRowKey={(row) => row.id} />
+        <DataTable
+          caption={`${paged.total} articles`}
+          columns={columns()}
+          rows={paged.items}
+          getRowKey={(row) => row.id}
+          busy={isPending}
+        />
       </div>
       <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
         {paged.items.map((row) => (

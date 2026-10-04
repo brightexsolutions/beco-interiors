@@ -30,7 +30,7 @@ export function ChangePasswordForm({ email }: { email: string }) {
         <PasswordInput id="confirm" name="confirm" autoComplete="new-password" required />
       </Field>
 
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" pending={pending}>
         {pending ? 'Saving' : 'Save password'}
       </Button>
     </form>

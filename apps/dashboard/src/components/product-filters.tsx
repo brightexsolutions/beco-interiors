@@ -1,27 +1,16 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
-import { Input, Select } from '@beco/ui';
+import { useEffect, useState } from 'react';
+import { Busy, Input, Select } from '@beco/ui';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 
 export function ProductFilters() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const { searchParams, setParam, isPending } = useQueryNavigation();
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
 
   const availability = searchParams.get('availability') ?? '';
   const published = searchParams.get('published') ?? '';
   const stock = searchParams.get('stock') ?? '';
-
-  const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  };
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -85,6 +74,7 @@ export function ProductFilters() {
           <option value="out">Out of stock</option>
         </Select>
       </label>
+      <Busy pending={isPending} className="col-span-full xl:h-11 xl:shrink-0" />
     </div>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
-import { ChipGroup, Input, Select } from '@beco/ui';
+import { useEffect, useState } from 'react';
+import { Busy, ChipGroup, Input, Select } from '@beco/ui';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import type { QuoteOwnerFilter } from '@/lib/quotes';
 
 /**
@@ -39,23 +39,12 @@ const SOURCE_OPTIONS = [
 ];
 
 export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const { searchParams, setParam, isPending } = useQueryNavigation();
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
 
   const owner = searchParams.get('owner') || ownerOptions[0]?.value || 'all';
   const status = searchParams.get('status') ?? '';
   const source = searchParams.get('source') ?? '';
-
-  const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  };
 
   // Debounced so every keystroke does not push a new URL.
   useEffect(() => {
@@ -146,6 +135,7 @@ export function QuoteFilters({ ownerOptions }: { ownerOptions: OwnerOption[] }) 
           </Select>
         </label>
       </div>
+      <Busy pending={isPending} />
     </div>
   );
 }

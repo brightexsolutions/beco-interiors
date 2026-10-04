@@ -125,6 +125,33 @@ stamps exist. Lost and Reopened stay after a reopen.
 - Disabled controls state why
 - No `window.confirm` / `alert` / `prompt`
 
+## Feedback: every action is seen to start, run and finish (D117)
+
+A tap on a phone over a slow connection is the case to design for. The rule has three parts
+and no exceptions:
+
+1. **While it runs, the control says so.** The button that started the work gets
+   `pending`: it disables itself, shows the spinner before its label, carries `aria-busy`,
+   and its label turns to the present participle ("Saving", "Creating", "Sending",
+   "Uploading 43%"). No ellipsis, the spinner is the ellipsis. When several buttons share
+   one action (the status buttons on a quote or an order) only the pressed one spins, the
+   others disable. A `ConfirmDialog` keeps its verb on the confirm button and spins beside it
+2. **When it finishes, the result is stated.** Success and failure both arrive as a toast,
+   "Done" or "Failed" in words plus the message the action returned, via `useActionToast`.
+   A sheet that created or saved something also closes, which is the second signal. A form
+   whose error belongs to one field shows it on that field instead (sign in, change
+   password, the quote editor's notice), never silently
+3. **While a list reloads, the list says so.** Filters, search, sort and paging are
+   navigations. The filter row renders `Busy`, a live status line reading "Updating" with
+   the spinner, and the table dims to half with `aria-busy` until the new rows land. Both
+   come from one place: `useQueryNavigation` owns the transition and its `isPending`
+
+Page to page navigation shows the route's `loading.tsx`, a settled layout with the heading
+in place, never a spinner page.
+
+Pieces: `Spinner` (one mark, holds still under reduced motion), `Busy`, `Button pending`,
+`DataTable busy`, `useQueryNavigation`. Build on these; do not hand roll a loading word.
+
 ## shadcn
 
 **Dashboard only, never the storefront.** Construction may start from shadcn

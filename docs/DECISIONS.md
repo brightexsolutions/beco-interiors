@@ -2611,3 +2611,32 @@ that names the size. Nothing is silently lost.
 **Reverses if:** the dashboard moves off Vercel to a host without a body cap. Then the direct
 path is still faster and stays.
 
+## D117, 4 October 2026: every action is seen to start, run and finish
+
+**Decision.** Three signals, always: the control that started the work shows it running
+(`Button pending`: disabled, spinner, `aria-busy`, present participle label), the result is
+stated when it lands (toast via `useActionToast`, or the field error for a form whose error
+belongs to one input, plus the sheet closing on success), and a reloading list says so
+(`Busy` beside the filters, the table dimmed with `aria-busy`). The transition behind every
+filter and sort lives in one hook, `useQueryNavigation`, which is where `isPending` comes
+from. Status buttons that share one action track which one was pressed so only that one
+spins. Pending labels drop the ellipsis; the spinner carries that meaning. Section in
+`docs/DASHBOARD-UI.md`.
+
+**Why.** Beco asked for it in those words: a user must know when something is happening and
+when it has happened. The audit found the shape was there but uneven. Toasts covered every
+action, but "running" was a word swap on some buttons, nothing at all on the quote and order
+status buttons, the document email buttons and the photograph controls, and no list gave any
+sign between a filter change and the new rows arriving, which on Nairobi 4G is one to three
+seconds of apparently dead controls. Consistency is the point: one mark, one place it comes
+from, so nobody hand rolls a different loading word next quarter.
+
+**What was considered.** A global progress bar across the top of the page: Next has no
+router level pending signal for `router.push`, only `useLinkStatus` for links, so it would
+have needed a wrapper around every navigation anyway, and a bar at the top of the page is
+far from the control that was pressed on a phone. Spinning every status button at once when
+any is pressed: wrong, it says all three are happening.
+
+**Reverses if:** Next ships a router pending hook, when the top bar becomes a cheap addition
+on top of this, not a replacement for it.
+

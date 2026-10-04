@@ -72,7 +72,7 @@ export function UserCreate() {
         </FormSection>
       </div>
       <div className="shrink-0 border-t border-neutral-200 px-5 py-3">
-        <Button type="submit" disabled={pending || Boolean(state.password)}>
+        <Button type="submit" disabled={Boolean(state.password)} pending={pending}>
           {pending ? 'Creating' : state.password ? 'Created' : 'Create user'}
         </Button>
       </div>

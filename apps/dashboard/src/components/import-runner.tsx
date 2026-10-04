@@ -100,7 +100,8 @@ export function ImportRunner({
           <Button
             type="button"
             onClick={() => (needsConfirm ? setConfirming(true) : run())}
-            disabled={!configured || pending}
+            disabled={!configured}
+            pending={pending}
           >
             {pending ? 'Starting' : mode === 'dry-run' ? 'Check Drive' : 'Start import'}
           </Button>

@@ -169,7 +169,7 @@ export function ProductResults({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(products, requestedPage);
 
@@ -248,6 +248,7 @@ export function ProductResults({
           cannot scroll sideways. Do not collapse desktop to cards. */}
       <div className="hidden min-w-0 xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} products`}
           columns={desktopColumns(editHref)}
           rows={paged.items}

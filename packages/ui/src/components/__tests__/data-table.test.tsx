@@ -111,4 +111,14 @@ describe('DataTable', () => {
     const { container } = render(<DataTable caption="Quotes" columns={columns} rows={rows} getRowKey={(r) => r.id} />);
     expect(await axe(container)).toHaveNoViolations();
   });
+  it('dims the body and says busy while the rows are being replaced', () => {
+    const { container, rerender } = render(
+      <DataTable caption="Quotes" columns={columns} rows={rows} getRowKey={(r) => r.id} busy />,
+    );
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
+    expect(container.querySelector('tbody')).toHaveClass('opacity-50');
+    rerender(<DataTable caption="Quotes" columns={columns} rows={rows} getRowKey={(r) => r.id} />);
+    expect(container.querySelector('[aria-busy="true"]')).toBeNull();
+    expect(container.querySelector('tbody')).not.toHaveClass('opacity-50');
+  });
 });
