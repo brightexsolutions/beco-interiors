@@ -17,6 +17,18 @@ insert into users (id, email, full_name, role, is_active) values
 
 -- One quote raised this week and won this week by the salesperson, one won
 -- quote owned by nobody the salesperson can see, both inside the window.
+-- Baselines first: CI runs these tests on a database that `supabase start`
+-- has already seeded, so the pipeline and this week's wins are not zero
+-- before the rows below exist. Captured here as psql variables, as the
+-- superuser, which sees exactly what the admin below sees. Every count is
+-- then asserted as a delta against them.
+select
+  coalesce((quote_pipeline() ->> 'new')::int, 0) as pipeline_new,
+  coalesce((quote_pipeline() ->> 'won')::int, 0) as pipeline_won,
+  coalesce((select won from activity_series(8) order by week_start desc limit 1), 0) as week_won,
+  coalesce((select won_value from activity_series(8) order by week_start desc limit 1), 0::numeric) as week_won_value
+\gset base_
+
 insert into quotes (reference_number, customer_name, customer_phone, source, status, created_by, assigned_to, total_amount, finalized_at)
 values
   ('ZZ-Q-35-1', 'Week Customer', '0722000351', 'phone', 'won', :sales_id::uuid, :sales_id::uuid, 50000, now()),
@@ -32,12 +44,12 @@ select is(
 );
 
 select is(
-  (select won from activity_series(8) order by week_start desc limit 1), 2,
+  (select won from activity_series(8) order by week_start desc limit 1) - :base_week_won, 2,
   'an admin counts every quote won this week'
 );
 
 select is(
-  (select won_value from activity_series(8) order by week_start desc limit 1), 120000::numeric,
+  (select won_value from activity_series(8) order by week_start desc limit 1) - :base_week_won_value::numeric, 120000::numeric,
   'and their value'
 );
 
@@ -47,12 +59,12 @@ select is(
 );
 
 select is(
-  (quote_pipeline() ->> 'new')::int, 1,
+  (quote_pipeline() ->> 'new')::int - :base_pipeline_new, 1,
   'the pipeline counts the open quote'
 );
 
 select is(
-  (quote_pipeline() ->> 'won')::int, 2,
+  (quote_pipeline() ->> 'won')::int - :base_pipeline_won, 2,
   'and this month''s wins'
 );
 

@@ -469,6 +469,18 @@ Reasons it is worth the extra setup:
 
 Instead, **GitHub Actions owns deployment** through the Vercel CLI.
 
+**When CI runs (D118).** On every pull request, on a push to `main`, and by hand from the
+Actions tab (`workflow_dispatch`). A push to `dev` does not start a run. From 12 September to
+4 October every run on `dev` failed for reasons that had nothing to do with the commit under
+test: `supabase/setup-cli@v1` pinned CLI 2.20.3, which predates `[local_smtp]` and
+`[db.migrations].enabled` in `supabase/config.toml` and refused to parse it, so both jobs died
+at `supabase start`; from 3 October a test string, `javascript:alert(1)`, tripped the browser
+dialog grep; and two workflow files were invalid (a flow mapping holding `${{ }}` in the
+preview deploy, a `runner` context in a job level `env` in the import), so GitHub recorded a
+failed run named after each file on every push. All four are fixed. The gate is the pull
+request from `dev` to `main`, which is where green is required; the local machine runs the same
+checks before a deploy and can dispatch CI on `dev` when it wants the record.
+
 ```
   pull request
       |

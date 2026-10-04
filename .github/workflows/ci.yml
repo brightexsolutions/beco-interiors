@@ -1,9 +1,16 @@
 name: CI
 
+# Runs on a pull request and on main. A push to dev no longer starts a run:
+# every one of them had failed since 12 September (a Supabase CLI pin older
+# than config.toml, then a grep false positive), and a red run on every
+# working push is an email nobody reads. The gate is the pull request from
+# dev to main, which is where CI must be green. `workflow_dispatch` lets the
+# local machine start a run on dev by hand when it wants the proof. D118.
 on:
   pull_request:
   push:
-    branches: [main, dev]
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -74,6 +81,11 @@ jobs:
       # was nothing listening at that URL by the time the build asked for
       # it. Stopped at the very end instead, once nothing else needs it.
       - uses: supabase/setup-cli@v1
+        with:
+          # The action's default, 2.20.3, predates `[local_smtp]` and
+          # `[db.migrations].enabled` in supabase/config.toml and refuses to
+          # parse it, which is why both jobs died at `supabase start`.
+          version: latest
       - name: Start Supabase and export its local URL and anon key
         run: |
           supabase start
@@ -120,6 +132,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - uses: supabase/setup-cli@v1
+        with:
+          # The action's default, 2.20.3, predates `[local_smtp]` and
+          # `[db.migrations].enabled` in supabase/config.toml and refuses to
+          # parse it, which is why both jobs died at `supabase start`.
+          version: latest
       - name: Seed a local catalogue for the run
         run: |
           supabase start

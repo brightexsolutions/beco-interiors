@@ -2651,3 +2651,24 @@ QA checklist against a running server rather than trusting the suite.
 
 **Reverses if:** Next ships a router pending hook, when the top bar becomes a cheap addition
 on top of this, not a replacement for it.
+
+## D118, 4 October 2026: CI runs on pull requests and main, not on every dev push
+
+**Decision.** `ci.yml` triggers on `pull_request`, on a push to `main`, and on
+`workflow_dispatch`. A push to `dev` starts nothing. The Supabase CLI in CI is `latest`, not the
+action's default 2.20.3. The preview deploy and import workflows are valid again. The pgTAP
+activity test asserts deltas against a baseline, so it holds on the seeded database CI uses as
+well as on the bare one the local runner uses.
+
+**Why.** Beco was being emailed a failure for every push, and every one was red. Not one run
+had passed since 12 September: the pinned CLI could not parse `config.toml`, so `supabase
+start` died in both jobs before any test ran; since 3 October the browser dialog grep matched
+a `javascript:alert(1)` string in a validation test; and two workflow files were rejected by
+GitHub at push time (a flow mapping holding `${{ }}`, a `runner` context in a job level
+`env`), each recorded as a failed run named after the file. The fixes are small. The trigger
+change is the part Beco asked for in words: no runs, no emails, on the working branch. The
+rule that nothing deploys unless CI passed stands, because the deploy path starts from a pull
+request to `main` and that is still gated.
+
+**Reverses if:** the team wants the record on `dev` again, one line in `ci.yml`.
+
