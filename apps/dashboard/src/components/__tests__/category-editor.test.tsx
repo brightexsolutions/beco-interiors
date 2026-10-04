@@ -73,16 +73,18 @@ describe('CategoryEditor', () => {
 
   it('disables delete and states why when the range still has products in it', () => {
     render(<CategoryEditor category={{ ...range, productCount: 3 }} groupOptions={[]} />);
-    const button = screen.getByRole('button', { name: /delete range \(3 products in it\)/i });
+    const button = screen.getByRole('button', { name: 'Delete range' });
     expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleDescription(/3 products in it/);
   });
 
   it('disables delete and states why when the group still has ranges under it', () => {
     render(
       <CategoryEditor category={{ ...range, parentId: null, childCount: 2 }} groupOptions={[]} />,
     );
-    const button = screen.getByRole('button', { name: /delete range \(2 ranges filed under it\)/i });
+    const button = screen.getByRole('button', { name: 'Delete range' });
     expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleDescription(/2 ranges filed under it/);
   });
 
   it('locks the parent select when the group has children, so it cannot become a range itself', () => {

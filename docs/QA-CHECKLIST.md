@@ -405,7 +405,7 @@ tested):
 | File under (editor) | Offers only homes that fit: never the range's own sub ranges, never a parent that would push its existing levels past three. Disabled, with the reason, when nothing fits | Test: `categoryParentOptions`, `CategoryEditor` |
 | File under | Select of top level groups. Locked, with the reason stated, when the row already has children | Test: `CategoryEditor` |
 | Save (range) | Writes name, slug, parent, description, SEO overrides, published, sort order. Busts the storefront `/shop` pages for the range, its former slug and its parent. Closes the sheet on success | Test: `updateCategory` action, integration against local Postgres. Sheet close: `category-editor.test.tsx` |
-| Delete range | `ConfirmDialog` names the range. Disabled, with the blocking count in its own label, when products or child ranges are still filed under it. Refused server side too if reached anyway. Closes the sheet | Test: `CategoryEditor` plus `deleteCategory` action |
+| Delete range | `ConfirmDialog` names the range. Disabled when products or child ranges are still filed under it, with the reason on its own line beneath ("Empty it first: 2 ranges filed under it.") and wired by `aria-describedby`, so the label stays two words and fits a phone. Refused server side too if reached anyway. Closes the sheet | Test: `CategoryEditor` plus `deleteCategory` action |
 
 Page URL fields (both products and ranges) carry the hint "Old links still work", not a
 "redirect" mention: the person using this screen is a product manager, not a developer.
