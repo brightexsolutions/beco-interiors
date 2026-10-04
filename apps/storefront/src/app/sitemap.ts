@@ -56,6 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
       ...(newestProduct ? { lastModified: newestProduct } : {}),
     },
+    // The flat list of everything, D119. Indexable unfiltered, noindex with a search or sort.
+    { url: `${BASE}/shop/all`, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE}/about`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/contact`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/gallery`, changeFrequency: 'monthly', priority: 0.7 },

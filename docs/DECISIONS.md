@@ -2685,3 +2685,34 @@ jobs: the first green run since 12 September.
 
 **Reverses if:** the team wants the record on `dev` again, one line in `ci.yml`.
 
+## D119, 4 October 2026: the shop browses by range first, and the controls live inside a range
+
+**Decision.** `/shop` is an index: the hero, then one photographic tile per range Beco deals
+in (RANGE_GROUPS order, each a link to its page), a plain search form that lands on the flat
+list, a line stating how many products across how many ranges, the featured rail, and the
+"being photographed" list. The grid and its controls live on each range's own page,
+`/shop/<range>`, under a strip: chips to the ranges beneath (on a group) or beside (on a child,
+with "All" back to the parent), each chip a link to a real page; then finish chips, a search
+box and a sort select that are query parameters on that page. `/shop/all` is the one flat list
+of everything, with the top level ranges as its chips. An old `/shop?range=`, `?category=` or
+`?q=` address redirects to where that view now lives. The docked filter card, its native
+range select with three levels in one dropdown, the phone "Filters" panel and "Show N results"
+button are gone with `ShopControls`.
+
+**Why.** Brown chose this of three directions put forward with mockups on 4 October (A, a
+category rail on `/shop`; B, sidebar facets with a phone bottom sheet; C, this). A material
+supplier is shopped by range, not by scrolling a flat grid of everything, and the previous bar
+hid the ranges inside a select while giving finish and sort the same visual weight. Making
+every range chip a link rather than a parameter is also the search win: sub ranges become
+pages that can rank, breadcrumbs and the back button walk the tree, and a filtered view still
+canonicalises to its page with noindex per D29. The cost is one more tap from `/shop` to a
+product, which the search form and the flat list both shortcut.
+
+**What was considered.** Keeping the whole grid on `/shop` under the tiles: two ways to the
+same products on one page, and the tiles would have read as decoration above the real thing.
+Finish as its own pages: a finish is a spec that crosses ranges, thin as a page, so it stays a
+parameter.
+
+**Reverses if:** the catalogue grows past a few hundred products, when option B's sidebar
+facets become the right answer inside a range, on top of this index.
+

@@ -50,7 +50,7 @@ describe('GONE', () => {
 
 describe('legacyQueryRedirect', () => {
   it('keeps a search term and drops a post id', () => {
-    expect(legacyQueryRedirect(new URLSearchParams('s=black handles'))).toBe('/shop?q=black%20handles');
+    expect(legacyQueryRedirect(new URLSearchParams('s=black handles'))).toBe('/shop/all?q=black%20handles');
     expect(legacyQueryRedirect(new URLSearchParams('s='))).toBe('/shop');
     expect(legacyQueryRedirect(new URLSearchParams('p=123'))).toBe('/');
     expect(legacyQueryRedirect(new URLSearchParams('page_id=7'))).toBe('/');
@@ -60,8 +60,8 @@ describe('legacyQueryRedirect', () => {
 
 describe('shopSearchFor', () => {
   it('turns an unknown product slug into a shop search for its words', () => {
-    expect(shopSearchFor('calacatta-gold-slab')).toBe('/shop?q=calacatta%20gold');
-    expect(shopSearchFor('ht-8350-black-gold-handle.html')).toBe('/shop?q=ht%208350%20black%20gold');
+    expect(shopSearchFor('calacatta-gold-slab')).toBe('/shop/all?q=calacatta%20gold');
+    expect(shopSearchFor('ht-8350-black-gold-handle.html')).toBe('/shop/all?q=ht%208350%20black%20gold');
     expect(shopSearchFor('---')).toBe('/shop');
   });
 });
