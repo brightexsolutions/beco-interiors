@@ -13,7 +13,7 @@
  * undershoots the real gutter once the viewport passes 1380px, since the
  * centering margin alone does not include the section's own inner padding.
  *
- * Shared by `PinnedHero` and `HeroStatic` rather than each keeping its own
+ * Shared by `CinematicHero` and `HeroStatic` rather than each keeping its own
  * copy: both used to carry the site's very first, pre-widening gutter value
  * (`3.5rem` at `lg`, `pl-10` at `sm`) untouched through every later pass
  * that widened the gutter everywhere else, `px-40`/`px-24` among them,
@@ -23,3 +23,6 @@
  * way this one did.
  */
 export const HERO_GRID_INSET = 'pl-8 sm:pl-24 lg:pl-[calc(max(0px,(100vw-1380px)/2)+10rem)]';
+
+/** The same gutter on the right, for the hero's caption and controls, D120. */
+export const HERO_GRID_INSET_RIGHT = 'pr-8 sm:pr-24 lg:pr-[calc(max(0px,(100vw-1380px)/2)+10rem)]';

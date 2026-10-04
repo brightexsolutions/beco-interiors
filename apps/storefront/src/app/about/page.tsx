@@ -19,7 +19,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: 'About Beco Interiors',
   description:
-    'A Nairobi supplier of sintered stone, wall panels, hardware and interior accessories, holding stock on the ground at Urban Square, Industrial Area.',
+    'We supply sintered stone, wall panels, hardware and interior accessories in Nairobi, and we hold the stock on our own floor at Urban Square, Industrial Area.',
   alternates: { canonical: '/about' },
 };
 
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
 const PILLARS = [
   {
     title: 'Sintered stone',
-    body: 'Large format slabs for worktops, feature walls, vanities and flooring. Heat, scratch and stain resistant.',
+    body: 'We hold large format slabs for worktops, feature walls, vanities and flooring: heat, scratch and stain resistant.',
     // Matches the range group's slug, per D52, so the row is real
     // navigation rather than a list that happens to describe one.
     href: '/shop/sintered-stone',
@@ -79,19 +79,19 @@ const PILLARS = [
   },
   {
     title: 'Panels',
-    body: 'Wall panelling and cladding systems for interiors that need to go up quickly and cleanly.',
+    body: 'We supply wall panelling and cladding systems for interiors that need to go up quickly and cleanly.',
     href: '/shop/wall-panels',
     groupSlug: 'wall-panels',
   },
   {
     title: 'Hardware',
-    body: 'Handles, hinges, locks and legs, in finishes chosen to sit with the surfaces we supply.',
+    body: 'We stock handles, hinges, locks and legs, in finishes chosen to sit with the surfaces we supply.',
     href: '/shop/hardware',
     groupSlug: 'hardware',
   },
   {
     title: 'Accessories',
-    body: 'Floating shelf fittings, kitchen organisers and office accessories that finish a piece of joinery properly.',
+    body: 'We stock floating shelf fittings, kitchen organisers and office accessories that finish a piece of joinery properly.',
     href: '/shop/accessories',
     groupSlug: 'accessories',
   },
@@ -221,12 +221,12 @@ export default async function AboutPage() {
             </p>
           </div>
           <h1 className="beco-wipe mt-5 max-w-[15ch] font-display text-5xl leading-[1.02] tracking-[-0.02em] sm:text-6xl">
-            New here. Stocked already.
+            We are new. Our stock is not.
           </h1>
           <Reveal delay={140} className="mt-5 max-w-[46ch]">
             <p className="text-base leading-[1.6] text-neutral-200 sm:text-lg">
-              A Kenyan interior solutions company. The materials you specify, stocked in Nairobi
-              and priced the day you ask.
+              We are a Kenyan interior solutions company. We stock the materials you specify here
+              in Nairobi, and we price them the day you ask.
             </p>
           </Reveal>
           <Reveal delay={220} className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -280,17 +280,17 @@ export default async function AboutPage() {
           <div className="space-y-6">
             <Reveal>
               <p className="max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-                Great interiors are not simply about how a space looks. They are about how it
-                feels, how it functions, and how well every element works together. So we bring
-                quality products, practical solutions and a seamless client experience together,
-                from the first conversation to project completion.
+                We believe a great interior is not only about how a space looks. It is about how
+                it feels, how it works, and how well every element fits together. So we bring
+                quality products, practical solutions and a seamless experience together, from
+                our first conversation with you to the day your project is finished.
               </p>
             </Reveal>
             <Reveal delay={80}>
               <p className="max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-                We would rather understand what a project is trying to achieve and then guide the
-                choice, than sell the most expensive option in the room. It is an experience, not
-                just a product.
+                We would rather understand what your project is trying to achieve and guide the
+                choice than sell you the most expensive option in the room. For us it is an
+                experience, not just a product.
               </p>
             </Reveal>
           </div>
@@ -353,7 +353,7 @@ export default async function AboutPage() {
               </p>
             </div>
             <h2 className="mt-4 max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
-              Four things, properly stocked.
+              Four things, and we keep them in stock.
             </h2>
           </div>
         </div>
@@ -450,8 +450,8 @@ export default async function AboutPage() {
               We do not just supply it.
             </h2>
             <p className="mt-5 max-w-[58ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-              Consultation, a site assessment before anything is fabricated, installation for
-              sintered stone and wall panels, and delivery either way.
+              We advise you on the selection, we assess the site before anything is fabricated,
+              we install sintered stone and wall panels, and we deliver either way.
             </p>
           </div>
         </div>
@@ -496,8 +496,8 @@ export default async function AboutPage() {
                     A walk through, before you visit.
                   </h2>
                   <p className="mt-5 max-w-[36ch] text-base leading-[1.65] text-neutral-400 lg:text-lg">
-                    The full sintered stone range, hung and lit at Urban Square, before you have
-                    even booked a visit.
+                    Our full sintered stone range, hung and lit on our floor at Urban Square,
+                    before you have even booked a visit.
                   </p>
                 </div>
               </div>
@@ -533,8 +533,8 @@ export default async function AboutPage() {
         products={products}
         siteShots={SITE_SHOTS}
         eyebrow="Proof, not renders"
-        heading="This is what the range becomes."
-        body="The stone on the shop floor at Urban Square is the same stone in these rooms. Nothing here is generated."
+        heading="This is what our range becomes."
+        body="The stone on our floor at Urban Square is the same stone in these rooms. We supplied them, and nothing here is generated."
       />
 
       {/* --- Where the material goes. A photograph with the room type knocked
@@ -560,7 +560,7 @@ export default async function AboutPage() {
           </div>
         </div>
         <p className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pb-14 pt-8 text-center font-ui text-sm uppercase tracking-[0.16em] text-neutral-500">
-          Supplied, cut and installed across the city
+          We supply, cut and install across the city
         </p>
       </section>
 
@@ -594,22 +594,22 @@ export default async function AboutPage() {
               A project, start to finish.
             </h2>
             <p className="mt-5 max-w-[60ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-              Closing a sale is the beginning of delivering on it, not the end of the
-              relationship. This is the same path every project takes, whether it is one vanity
-              or a whole building.
+              For us, closing a sale is where delivering on it begins, not where the
+              relationship ends. We take every project down the same path, whether it is one
+              vanity or a whole building.
             </p>
           </div>
         </div>
 
         <ol className="mt-14 grid gap-x-16 gap-y-10 lg:grid-cols-2">
           {[
-            ['Discovery', 'Every project starts with a conversation: what is being built, the application, and what you actually need from it.'],
-            ['Consultation and selection', 'Real samples, side by side: colours, textures, finishes and thicknesses, weighed against your space and your budget.'],
-            ['Measurement and assessment', 'Where fabrication or installation is involved, a proper measurement or site visit comes before a quotation, not after.'],
-            ['Quotation', 'An itemised quote covering material, fabrication, installation and delivery, clear enough that you know exactly what you are agreeing to.'],
+            ['Discovery', 'We start with a conversation: what you are building, where the material goes, and what you need from it.'],
+            ['Consultation and selection', 'We put real samples side by side: colours, textures, finishes and thicknesses, weighed against your space and your budget.'],
+            ['Measurement and assessment', 'Where we fabricate or install, we measure or visit the site before we quote, not after.'],
+            ['Quotation', 'We itemise the quote: material, fabrication, installation and delivery, clear enough that you know exactly what you are agreeing to.'],
             ['Decision and closing', 'Once you are ready, we confirm the selection, the payment terms and a realistic timeline for production and installation.'],
-            ['Production, delivery and installation', 'For sintered stone and wall panels we install, the finished result is checked against the same specification the quote promised.'],
-            ['Completion', 'A project ends well when you were listened to and properly looked after the whole way through, not just sold to.'],
+            ['Production, delivery and installation', 'For the sintered stone and wall panels we install, we check the finished result against the same specification the quote promised.'],
+            ['Completion', 'We count a project finished when you were listened to and looked after the whole way through, not just sold to.'],
           ].map(([title, body], i) => (
             <Reveal as="li" key={title} delay={(i % 4) * 60}>
               <div className="grid gap-4 sm:grid-cols-[4.5rem_1fr] sm:gap-6">
@@ -666,17 +666,17 @@ export default async function AboutPage() {
       <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
-            {/* No eyebrow: "Who you would actually be talking to" already
+            {/* No eyebrow: "Who you would be talking to" already
                 names the section, and How it works right above already
                 carries one. Two openers of the same shape back to back,
                 then a third right after on The showroom, was the exact run
                 reported as reading templated. */}
             <h2 className="max-w-[18ch] font-display text-4xl leading-[1.08] tracking-[-0.015em] text-charcoal sm:text-5xl">
-              Who you would actually be talking to.
+              Who you would be talking to.
             </h2>
             <p className="mt-5 max-w-[62ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-              A growing team with different responsibilities and one shared objective: a smooth,
-              professional experience from the first conversation to handover.
+              We are a growing team with different responsibilities and one shared objective: a
+              smooth, professional experience for you from our first conversation to handover.
             </p>
           </div>
         </div>
@@ -689,10 +689,10 @@ export default async function AboutPage() {
             give one of these abstract role categories a card of its own. */}
         <ul className="mt-12 grid gap-6 sm:grid-cols-2">
           {[
-            ['Leadership and management', 'Strategic direction, operations, marketing, sales and the client experience overall.'],
-            ['The sales team', 'Works directly with clients, designers and contractors to understand a project and recommend what actually fits it.'],
-            ['Field sales agents', 'Take that same conversation out to sites, designers and businesses beyond the showroom floor.'],
-            ['Technical and installation teams', 'Bring an approved selection to life: measurement, fabrication, finishing and installation.'],
+            ['Leadership and management', 'Our leadership sets the direction and runs operations, marketing, sales and your experience overall.'],
+            ['The sales team', 'Our sales team works directly with you, your designer and your contractor to understand the project and recommend what fits it.'],
+            ['Field sales agents', 'Our field agents take that same conversation out to sites, designers and businesses beyond our showroom floor.'],
+            ['Technical and installation teams', 'Our technical team brings an approved selection to life: measurement, fabrication, finishing and installation.'],
           ].map(([role, body], i) => (
             <Reveal key={role} delay={(i % 4) * 60} as="li" className="h-full">
               <div className="h-full bg-high-vis-white p-8 shadow-[0_1px_2px_rgba(16,24,32,0.05),0_16px_32px_-16px_rgba(16,24,32,0.12)]">
@@ -790,8 +790,8 @@ export default async function AboutPage() {
               Materials are hard to choose from a screen.
             </h2>
             <p className="mt-6 max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-              The range is on the floor at Urban Square on Enterprise Road, in Industrial Area,
-              six days a week. Bring a drawing, a sample, or a photograph of the room, and we
+              Our range is on the floor at Urban Square on Enterprise Road, in Industrial Area,
+              six days a week. Bring us a drawing, a sample, or a photograph of the room, and we
               will tell you what it takes and what it costs.
             </p>
 

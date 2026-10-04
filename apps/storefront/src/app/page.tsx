@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {
   ProductCard, Reveal, CountUp, CutoutReveal, RangeCardGrid, buttonClasses, cn,
 } from '@beco/ui';
-import { PinnedHero, type HeroRangeSlide } from '@/components/pinned-hero';
+import { CinematicHero, type CinematicRoom } from '@/components/cinematic-hero';
 import { HeroStatic } from '@/components/hero-static';
 import { QuickAddToQuote } from '@/components/quick-add-to-quote';
 import { SlabRail } from '@/components/slab-rail';
@@ -22,6 +22,7 @@ import {
 import { getPublishedClients } from '@/lib/clients';
 import { SITE, SITE_SHOTS, whatsappLink } from '@/lib/site';
 import { RANGE_GROUPS, HERO_RANGE_IMAGES } from '@/lib/ranges';
+import { HERO_ROOMS } from '@/lib/hero-rooms';
 import { SERVICES } from '@/lib/services';
 
 /**
@@ -98,22 +99,15 @@ export default async function HomePage() {
   // carry every range.
   const stones = products.filter((p) => p.category?.slug?.includes('sintered-stone'));
 
-  // One slide per range, per D92, built from the static `HERO_RANGE_IMAGES`
-  // manifest rather than a live query: see that file's own note and D92 for
-  // why the hero cannot depend on data `pnpm db:reset` empties out. `href`
-  // still checks real stock, the same `hasStock` rule `rangeItems` above
-  // already applies, so a range that sells out never gets a hero link to a
-  // dead shop page.
-  const heroSlides: HeroRangeSlide[] = RANGE_GROUPS.map((range): HeroRangeSlide | null => {
-    const group = groups.find((g) => g.slug === range.slug);
+  // The hero's rooms, D120: our own finished work from a static manifest,
+  // so the first screen never depends on the catalogue. A caption links to
+  // its material's range only while that range has stock, the same rule
+  // `rangeItems` above applies, so the hero never links to an empty page.
+  const heroRooms: CinematicRoom[] = HERO_ROOMS.map((room) => {
+    const group = groups.find((g) => g.slug === room.rangeSlug);
     const hasStock = (group?.total_count ?? 0) > 0;
-    const image = HERO_RANGE_IMAGES[range.slug];
-    return image ? {
-      title: range.title, slug: range.slug, body: range.body,
-      src: image.path, alt: image.alt, width: image.width, height: image.height,
-      href: hasStock ? `/shop/${range.slug}` : null,
-    } : null;
-  }).filter((slide): slide is HeroRangeSlide => slide !== null);
+    return { ...room, href: hasStock ? `/shop/${room.rangeSlug}` : null };
+  });
 
   // The four ranges with no other dedicated section on the page, per D92:
   // sintered stone gets the hero, the featured grid below and the signature
@@ -175,12 +169,10 @@ export default async function HomePage() {
 
   return (
     <main>
-      {/* The hero is guaranteed: the full crossfade when the static range
-          manifest has something to show, a static charcoal hero with the
-          same words when it somehow does not, never nothing. In practice
-          `heroSlides` no longer depends on the database, so this branch is
-          the safety rail, not the common case D79 originally wrote it for. */}
-      {heroSlides.length > 0 ? <PinnedHero slides={heroSlides} /> : <HeroStatic />}
+      {/* The hero is guaranteed: the rooms when the manifest has any, a static
+          charcoal hero with the same words and actions when it somehow does
+          not, never nothing. */}
+      {heroRooms.length > 0 ? <CinematicHero rooms={heroRooms} /> : <HeroStatic />}
 
       {/* --- Who Beco is, straight after the hero. Reported directly: the
               hero and every section after it read as a sintered stone
@@ -195,7 +187,7 @@ export default async function HomePage() {
               <div className="beco-wipe flex items-center gap-4">
                 <span aria-hidden className="h-px w-8 bg-warm-red" />
                 <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  About Beco
+                  About us
                 </p>
               </div>
             </Reveal>
@@ -207,9 +199,9 @@ export default async function HomePage() {
             </Reveal>
             <Reveal delay={100}>
               <p className="mt-6 max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-                A Kenyan interior solutions company, bringing quality products, practical solutions
-                and a seamless client experience together, from the first conversation to the day a
-                project is finished.
+                We are a Kenyan interior solutions company. We bring quality products, practical
+                solutions and a seamless experience together, from our first conversation with you
+                to the day your project is finished.
               </p>
             </Reveal>
             <Reveal delay={140}>
@@ -217,7 +209,7 @@ export default async function HomePage() {
                 href="/about"
                 className="mt-7 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep underline-offset-8 hover:underline"
               >
-                More about Beco
+                More about us
               </Link>
             </Reveal>
           </div>

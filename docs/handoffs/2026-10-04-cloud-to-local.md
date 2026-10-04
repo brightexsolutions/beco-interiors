@@ -43,6 +43,7 @@ D118. Read `docs/STATUS.md` first; it is the plan of record at the end of the se
 | `dashboard/action-feedback` | Pending, result and reloading states on every action; editor key fix | D117 |
 | `ci/stop-the-red-runs` | CI fixed and quiet on dev pushes; workflow files valid again | D118 |
 | `storefront/shop-range-index` | The shop browses by range first; `/shop/all`; the strip inside a range | D119 |
+| `storefront/cinematic-room-hero` | The home hero shows our finished rooms; About copy in the first person | D120 |
 
 ## 2. What the cloud could not do, and you can
 
