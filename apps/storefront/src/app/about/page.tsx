@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { buttonClasses, Reveal } from '@beco/ui';
@@ -16,12 +17,13 @@ import { SERVICES } from '@/lib/services';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: 'About Beco Interiors',
+export const metadata: Metadata = pageMetadata({
+  title: 'About Beco Interiors, Nairobi',
   description:
     'We supply sintered stone, wall panels, hardware and interior accessories in Nairobi, and we hold the stock on our own floor at Urban Square, Industrial Area.',
-  alternates: { canonical: '/about' },
-};
+  path: '/about',
+  image: sectionOgImage('about'),
+});
 
 /**
  * The about page.

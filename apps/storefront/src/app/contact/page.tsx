@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal, buttonClasses } from '@beco/ui';
@@ -9,12 +10,13 @@ import { SITE, whatsappLink } from '@/lib/site';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: 'Contact and showroom',
+export const metadata: Metadata = pageMetadata({
+  title: 'Showroom and Contact, Nairobi',
   description:
-    'Beco Interiors, Urban Square, Enterprise Road, Industrial Area, Nairobi. Call +254 722 333 730, message us on WhatsApp, or request a quote.',
-  alternates: { canonical: '/contact' },
-};
+    'Visit our showroom at Urban Square, Enterprise Road, Industrial Area, Nairobi. Call +254 722 333 730, message us on WhatsApp, or request a quote online.',
+  path: '/contact',
+  image: sectionOgImage('contact'),
+});
 
 /**
  * Everything here is CONFIRMED, per docs/CONTENT-AUDIT.md. The prototype

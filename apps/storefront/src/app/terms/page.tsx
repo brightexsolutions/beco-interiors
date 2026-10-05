@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import { PageHeader } from '@/components/page-header';
 import { LegalSection } from '@/components/legal-section';
 import { SITE } from '@/lib/site';
@@ -26,11 +27,13 @@ export const revalidate = 3600;
  */
 const LAST_UPDATED = '24 September 2026';
 
-export const metadata: Metadata = {
-  title: 'Terms and conditions',
-  description: 'The terms Beco Interiors quotes, prices and delivers under.',
-  alternates: { canonical: '/terms' },
-};
+export const metadata: Metadata = pageMetadata({
+  title: 'Terms and Conditions',
+  description:
+    'The terms Beco Interiors quotes and delivers under in Nairobi: how quotes and prices work, payment, delivery and collection, and what if something is wrong.',
+  path: '/terms',
+  image: sectionOgImage('legal'),
+});
 
 export default function TermsPage() {
   return (

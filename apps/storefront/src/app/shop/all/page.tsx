@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Link from 'next/link';
 import { EmptyState, buttonClasses } from '@beco/ui';
 import { ProductGridPaginated } from '@/components/product-grid-paginated';
@@ -19,15 +20,16 @@ const read = (params: Search) => ({
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<Search> }): Promise<Metadata> {
   const filter = read(await searchParams);
-  return {
-    title: 'Everything we stock',
+  return pageMetadata({
+    title: 'All Interior Materials in Stock, Nairobi',
     description:
-      'Every stone, panel, handle and fitting Beco Interiors stocks in Nairobi, on one page. Search by name or sort by price, then request a quote.',
+      'Every stone, panel, handle and fitting we stock in Nairobi, on one page. Search by name or sort by price, then send us the list and we price all of it.',
     // D29: a searched or sorted view canonicalises to the bare list and
     // carries noindex, so this one page cannot become hundreds.
-    alternates: { canonical: '/shop/all' },
+    path: '/shop/all',
+    image: sectionOgImage('shop'),
     ...(isFilteredView(filter) ? { robots: { index: false, follow: true } } : {}),
-  };
+  });
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal, buttonClasses } from '@beco/ui';
@@ -28,15 +29,16 @@ export const revalidate = 3600;
 export async function generateMetadata(): Promise<Metadata> {
   const team = await getPublicTeam();
 
-  return {
-    title: 'Our sales team',
+  return pageMetadata({
+    title: 'Our Sales Team in Nairobi',
     description:
-      'The Beco Interiors sales team in Nairobi. Check that the person you are dealing with is genuinely ours before you pay anyone.',
-    alternates: { canonical: '/team' },
+      'The Beco Interiors sales team at Urban Square, Nairobi. Check that the person you are dealing with is genuinely ours before you pay anyone a deposit.',
+    path: '/team',
+    image: sectionOgImage('team'),
     // A page listing nobody is thin content. Same gate as an empty category,
     // and the same reason: it should be reachable and designed, not indexed.
     ...(team.length === 0 ? { robots: { index: false, follow: true } } : {}),
-  };
+  });
 }
 
 export default async function TeamPage() {

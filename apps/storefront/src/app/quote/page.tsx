@@ -1,15 +1,17 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import { PageHeader } from '@/components/page-header';
 import { QuoteBuilder } from '@/components/quote-builder';
 
-export const metadata: Metadata = {
-  title: 'Request a quote',
+export const metadata: Metadata = pageMetadata({
+  title: 'Request a Quote',
   description:
-    'Tell us what your project needs and we will price the whole list. No account required.',
-  alternates: { canonical: '/quote' },
+    'Tell us what your project needs and we price the whole list in one quote. No account needed. Or call +254 722 333 730 and message us on WhatsApp.',
+  path: '/quote',
+  image: sectionOgImage('quote'),
   // A personal working list, not a page for search results.
   robots: { index: false, follow: true },
-};
+});
 
 export default function QuotePage() {
   return (

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { buttonClasses } from '@beco/ui';
@@ -16,12 +17,13 @@ export const revalidate = 3600;
 
 type Search = Record<string, string | string[] | undefined>;
 
-export const metadata: Metadata = {
-  title: 'Shop interior finishing materials',
+export const metadata: Metadata = pageMetadata({
+  title: 'Shop Sintered Stone, Panels and Hardware',
   description:
-    'Sintered stone slabs, wall panels, hardware and accessories, stocked in Nairobi. Browse by range, search the catalogue, and request a quote.',
-  alternates: { canonical: '/shop' },
-};
+    'Sintered stone slabs, wall panels, cabinet hardware and accessories in stock in Nairobi. Pick a range, compare finishes and request one quote for all of it.',
+  path: '/shop',
+  image: sectionOgImage('shop'),
+});
 
 /** Every category slug in a range, so a group counts its whole subtree. */
 const slugSetOf = (group: CategoryGroup) => new Set(subtreeSlugs(group));
