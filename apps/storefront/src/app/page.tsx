@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { HOME_DESCRIPTION, HOME_TITLE, pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -45,7 +46,13 @@ export const revalidate = 3600;
  * page adds only its canonical, so `/?utm_source=` and the old WordPress
  * `/?p=` shapes resolve to one indexed address (D107).
  */
-export const metadata: Metadata = { alternates: { canonical: '/' } };
+export const metadata: Metadata = pageMetadata({
+  title: HOME_TITLE,
+  absoluteTitle: true,
+  description: HOME_DESCRIPTION,
+  path: '/',
+  image: sectionOgImage('home'),
+});
 
 const imageFor = (p: CatalogueProduct, role?: string) => {
   const img = role ? p.images?.find((i) => i.role === role) : primaryImage(p);

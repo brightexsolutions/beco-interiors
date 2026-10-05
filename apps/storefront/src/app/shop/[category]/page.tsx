@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import type { Metadata } from 'next';
+import { catalogueOgImage, pageMetadata, rangeDescription, rangeTitle } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -40,20 +41,22 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
   // disagree about whether this page exists for search.
   const indexable = await categoryIsIndexable(slug);
 
-  return {
-    title: category.name,
-    description:
-      category.description?.slice(0, 155) ??
-      `${category.name} stocked in Nairobi. Browse the range and request a quote from Beco Interiors.`,
-    alternates: { canonical: `/shop/${category.slug}` },
+  return pageMetadata({
+    title: rangeTitle(category.name),
+    description: rangeDescription(category.name, category.description),
+    path: `/shop/${category.slug}`,
+    // Drawn from a photograph of something in the range; the route falls
+    // back to the shop photograph, still named for this range, when the
+    // range has none yet.
+    image: catalogueOgImage('range', category.slug, `${category.name} from Beco Interiors, Nairobi`),
     // D27: a category with nothing in it is thin content, so it stays out of
     // the index until the import gives it something to say. The flip is
     // automatic on published product count, because Drive folders are still
     // being filled and nobody should have to remember to come back. D29: a
     // searched, finish filtered or sorted view is noindex too, canonical to
     // the bare range page above.
-    robots: indexable && !filtered ? undefined : { index: false, follow: true },
-  };
+    ...(indexable && !filtered ? {} : { robots: { index: false, follow: true } }),
+  });
 }
 
 export default async function CategoryPage({ params, searchParams }: Params) {

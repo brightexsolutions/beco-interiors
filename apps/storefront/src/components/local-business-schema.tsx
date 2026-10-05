@@ -1,5 +1,5 @@
 import { SITE } from '@/lib/site';
-import { SITE_URL } from '@/lib/seo';
+import { LOGO_SIZE, LOGO_URL, SITE_URL } from '@/lib/seo';
 
 /**
  * LocalBusiness, not Organization, because Beco sells to people who can
@@ -14,8 +14,11 @@ export const localBusinessSchema = () => ({
   '@id': `${SITE_URL}/#business`,
   name: SITE.name,
   url: SITE_URL,
-  logo: `${SITE_URL}/logo-mark.png`,
-  image: `${SITE_URL}/site-photos/living-room-slat-wall.webp`,
+  // The real mark, absolute, at its real size: Google reads a logo only
+  // from a crawlable URL it can fetch, never a relative path.
+  logo: { '@type': 'ImageObject', url: LOGO_URL, ...LOGO_SIZE },
+  // The home share card: a JPEG of Beco's own kitchen work with the logo.
+  image: `${SITE_URL}/og/home`,
   telephone: SITE.phone,
   email: SITE.email,
   priceRange: 'KES',

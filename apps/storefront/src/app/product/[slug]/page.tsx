@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { catalogueOgImage, pageMetadata, productDescription, productTitle, SITE_URL } from '@/lib/seo';
+import { absoluteCatalogueUrl } from '@/lib/image-loader';
 import Image from 'next/image';
 import Link from 'next/link';
 import { permanentRedirect } from 'next/navigation';
@@ -37,19 +39,21 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const product = await loadProduct(slug);
 
-  const image = primaryImage(product);
-  return {
-    // The override column wins, so Beco can tune a page without a deploy.
-    title: product.meta_title ?? `${product.name} sintered stone`,
+  return pageMetadata({
+    // The override columns win, so Beco can tune a page without a deploy.
+    title: product.meta_title ?? productTitle(product.name, product.category?.name),
     description:
       product.meta_description ??
-      product.short_description ??
-      `${product.name} sintered stone slabs, stocked in Nairobi. Heat, scratch and stain resistant. Request a quote from Beco Interiors.`,
-    alternates: { canonical: `/product/${product.slug}` },
-    openGraph: image
-      ? { images: [{ url: image.path, width: image.width, height: image.height }] }
-      : undefined,
-  };
+      productDescription(product.name, product.category?.name, product.short_description),
+    path: `/product/${product.slug}`,
+    // The card is drawn from the product's own primary photograph, as a
+    // JPEG: the catalogue derivatives are WebP, which WhatsApp will not show.
+    image: catalogueOgImage(
+      'product',
+      product.slug,
+      `${product.name}${product.category ? `, ${product.category.name}` : ''}, from Beco Interiors, Nairobi`,
+    ),
+  });
 }
 
 export default async function ProductPage({ params }: Params) {
@@ -308,7 +312,9 @@ function ProductSchema(p: {
     name: p.name,
     ...(p.sku ? { sku: p.sku } : {}),
     ...(p.description ? { description: p.description } : {}),
-    ...(p.image ? { image: [new URL(p.image, 'https://www.beco.co.ke').toString()] } : {}),
+    // An absolute derivative, not the bare key: `new URL(key, origin)` gave
+    // a URL with no width and no extension, which is a 404.
+    ...(p.image ? { image: [absoluteCatalogueUrl(p.image, 1600, SITE_URL)] } : {}),
     brand: { '@type': 'Brand', name: SITE.name },
     ...(p.category ? { category: p.category.name } : {}),
     offers: {

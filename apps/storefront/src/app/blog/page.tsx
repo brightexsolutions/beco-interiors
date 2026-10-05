@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { EmptyState } from '@beco/ui';
@@ -17,16 +18,17 @@ export async function generateMetadata(
   { searchParams }: { searchParams: Promise<Search> },
 ): Promise<Metadata> {
   const category = one((await searchParams).category);
-  return {
-    title: 'Blog',
+  return pageMetadata({
+    title: 'Interior Materials Blog and Buying Guides',
     description:
-      'Buying guides and material notes from Beco: what sintered stone is, where it works, and how to source interior materials in Nairobi.',
+      'Buying guides and material notes from Beco Interiors: what sintered stone is, where wall panels work, and how to source interior materials in Nairobi.',
     // Same rule the shop's own facets follow, D29: a filtered view
     // canonicalises to the base and carries noindex, so a category link
     // cannot generate a second indexable copy of the same list.
-    alternates: { canonical: '/blog' },
+    path: '/blog',
+    image: sectionOgImage('blog'),
     ...(category ? { robots: { index: false, follow: true } } : {}),
-  };
+  });
 }
 
 export default async function BlogIndexPage({ searchParams }: { searchParams: Promise<Search> }) {

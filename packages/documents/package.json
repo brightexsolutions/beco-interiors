@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./layout": "./src/pdf/types.ts"
+    "./layout": "./src/pdf/types.ts",
+    "./fonts": "./src/fonts.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

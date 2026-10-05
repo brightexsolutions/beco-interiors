@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HoverGallery } from '@beco/ui';
@@ -22,15 +23,16 @@ export async function generateMetadata(
   const params = await searchParams;
   const filtered = Boolean(one(params.type));
 
-  return {
-    title: 'Project gallery',
+  return pageMetadata({
+    title: 'Project Gallery, Interiors in Nairobi',
     description:
-      'Real interiors finished with Beco materials in Nairobi. Sintered stone worktops, feature walls, vanities and flooring, photographed on site.',
+      'Real interiors finished with Beco materials in Nairobi: sintered stone worktops, feature walls, vanities and flooring, photographed on site after fitting.',
     // D29 again: a type filtered view canonicalises to /gallery and carries
     // noindex, the same reasoning as the shop's facets.
-    alternates: { canonical: '/gallery' },
+    path: '/gallery',
+    image: sectionOgImage('gallery'),
     ...(filtered ? { robots: { index: false, follow: true } } : {}),
-  };
+  });
 }
 
 /**
