@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import type { Database } from '@beco/types';
+import { ensureTestUser } from './__tests__/ensure-test-user';
 import { fetchOrders } from './orders';
 
 config({ path: new URL('../../../../.env.local', import.meta.url).pathname, quiet: true });
@@ -35,26 +36,13 @@ beforeAll(async () => {
   await sb.from('quotes').delete().ilike('customer_name', `${PREFIX}%`);
   await sb.from('orders').delete().ilike('customer_name', `${PREFIX}%`);
   await sb.from('products').delete().eq('slug', 'zz-int-ord-product');
-  const { data: existingUsers } = await sb.from('users').select('id').ilike('email', 'zz-int-ord-%');
-  for (const u of existingUsers ?? []) await sb.auth.admin.deleteUser(u.id);
-
-  const { data: salesAuth, error: salesErr } = await sb.auth.admin.createUser({
+  salesId = await ensureTestUser(sb, {
     email: 'zz-int-ord-sales@beco.co.ke',
     password: PASSWORD,
-    email_confirm: true,
-  });
-  expect(salesErr).toBeNull();
-  salesId = salesAuth!.user!.id;
-  authUserIds.push(salesId);
-
-  const { error: usersErr } = await sb.from('users').insert({
-    id: salesId,
-    email: 'zz-int-ord-sales@beco.co.ke',
-    full_name: 'ZZ Ord Sales',
+    fullName: 'ZZ Ord Sales',
     role: 'beco_sales',
-    must_change_password: false,
   });
-  expect(usersErr).toBeNull();
+  authUserIds.push(salesId);
 
   const { data: product, error: productErr } = await sb
     .from('products')
