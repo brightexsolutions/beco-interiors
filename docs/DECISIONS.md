@@ -2718,10 +2718,6 @@ facets become the right answer inside a range, on top of this index.
 
 ## D120, 4 October 2026: the home hero shows our finished rooms, and we speak as we
 
-**Status, 5 October.** The hero half of this decision is held off `dev` on Brown's instruction and
-lives on branch `storefront/home-hero-cinematic-finished-rooms`, with D121. `dev` keeps `PinnedHero`. The first person
-About copy, the other half, is in `dev`.
-
 **Decision.** The home hero is `CinematicHero`: five of our own finished installations, full
 screen and one at a time, a kitchen, a bathroom, a living room, a reception and a bar, each
 captioned with the room and the material we supplied in it, the caption linking to that
@@ -2764,9 +2760,6 @@ photographs with the same caption and controls.
 
 
 ## D121, 4 October 2026: the hero carries no rules or bars
-
-**Status, 5 October.** Held off `dev` with D120, on branch `storefront/home-hero-cinematic-finished-rooms`, together
-with `pnpm hero:frames`.
 
 **Decision.** The home hero draws no lines. The Warm Red rule before the eyebrow is gone, and
 the room buttons lose their filling progress bars: on desktop each room is its number and name,
