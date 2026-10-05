@@ -54,7 +54,7 @@ export function RangeCardGrid({ items, className, autoplay = false }: RangeCardG
         // real photograph, not a reason to fall back to the plate.
         const single = item.image ?? item.images?.[0];
         const frame = (
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-card bg-charcoal after:pointer-events-none after:absolute after:inset-0 after:rounded-card after:ring-1 after:ring-inset after:ring-charcoal/15">
             {multi ? (
               // Staggered per card, on request: several of these autoplaying
               // at once used to all step in lockstep, reading as one grid

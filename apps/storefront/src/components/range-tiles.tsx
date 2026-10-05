@@ -36,7 +36,7 @@ export function RangeTiles({
         return (
           <li key={group.id} className="min-w-0">
             <Reveal delay={(i % 4) * 60}>
-              <Link href={`/shop/${group.slug}`} className="group relative block aspect-[3/4] overflow-hidden bg-charcoal text-high-vis-white">
+              <Link href={`/shop/${group.slug}`} className="group relative block aspect-[3/4] overflow-hidden rounded-card bg-charcoal text-high-vis-white">
                 {cover ? (
                   <Image
                     src={cover.path}
@@ -50,7 +50,7 @@ export function RangeTiles({
                 <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/40 to-charcoal/10" />
                 <span
                   aria-hidden
-                  className="absolute right-4 top-4 hidden h-10 w-10 items-center justify-center border border-high-vis-white/50 text-high-vis-white transition-colors group-hover:border-high-vis-white sm:flex"
+                  className="absolute right-4 top-4 hidden h-10 w-10 items-center justify-center rounded-control border border-high-vis-white/50 text-high-vis-white transition-colors group-hover:border-high-vis-white sm:flex"
                 >
                   →
                 </span>
@@ -60,7 +60,7 @@ export function RangeTiles({
                     {subline}
                   </span>
                 </span>
-                <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-high-vis-white/10" />
+                <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-high-vis-white/10" />
               </Link>
             </Reveal>
           </li>

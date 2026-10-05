@@ -114,7 +114,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-title"
         aria-describedby="confirm-description"
-        className="relative w-full max-w-[34rem] rounded-[4px] bg-high-vis-white p-6 shadow-[0_24px_60px_rgba(16,24,32,0.28)] sm:p-8"
+        className="relative w-full max-w-[34rem] rounded-card bg-high-vis-white p-6 shadow-[0_24px_60px_rgba(16,24,32,0.28)] sm:p-8"
       >
         <h2 id="confirm-title" className="font-display text-2xl leading-tight text-charcoal">
           {title}

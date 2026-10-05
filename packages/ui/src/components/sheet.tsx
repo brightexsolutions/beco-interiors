@@ -77,7 +77,7 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
         aria-describedby={description ? 'sheet-description' : undefined}
         className={cn(
           'relative flex h-[min(92dvh,44rem)] w-full max-w-[36rem] flex-col overflow-hidden bg-high-vis-white',
-          'rounded-t-[4px] lg:h-full lg:max-h-none lg:rounded-none lg:border-l lg:border-neutral-200',
+          'rounded-t-card lg:h-full lg:max-h-none lg:rounded-none lg:border-l lg:border-neutral-200',
           className,
         )}
       >

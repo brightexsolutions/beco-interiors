@@ -177,7 +177,7 @@ export default async function ProductPage({ params }: Params) {
             </a>
           </div>
 
-          <dl className="mt-10 flex flex-col gap-1 rounded-[2px] bg-neutral-50 px-6 font-ui text-base">
+          <dl className="mt-10 flex flex-col gap-1 rounded-card bg-neutral-50 px-6 font-ui text-base">
             {product.sku ? <Spec term="SKU" value={product.sku} /> : null}
             {product.category ? <Spec term="Category" value={product.category.name} /> : null}
             {product.face_type ? (

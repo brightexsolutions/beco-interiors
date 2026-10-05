@@ -297,7 +297,7 @@ export default async function AboutPage() {
 
           {statementPrimary ? (
             <Reveal delay={140} className="relative mx-auto w-full max-w-[26rem] pb-10 pl-10 lg:mx-0">
-              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden bg-neutral-100">
+              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100">
                 <div className="beco-wipe absolute inset-0">
                   <Image
                     src={statementPrimary.path}
@@ -310,11 +310,11 @@ export default async function AboutPage() {
                 </div>
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                  className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                 />
               </div>
               {statementAccent ? (
-                <div className="beco-clip absolute bottom-0 left-0 aspect-[4/3] w-2/3 overflow-hidden bg-neutral-100 shadow-[0_20px_48px_rgba(16,24,32,0.18)]">
+                <div className="beco-clip absolute bottom-0 left-0 aspect-[4/3] w-2/3 overflow-hidden rounded-card bg-neutral-100 shadow-[0_20px_48px_rgba(16,24,32,0.18)]">
                   <div className="beco-wipe absolute inset-0" style={{ animationDelay: '160ms' }}>
                     <Image
                       src={statementAccent.path}
@@ -327,7 +327,7 @@ export default async function AboutPage() {
                   </div>
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                    className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                   />
                 </div>
               ) : null}
@@ -375,7 +375,7 @@ export default async function AboutPage() {
               <Reveal key={pillar.title} delay={i * 70} className={large ? 'lg:col-span-7' : 'lg:col-span-5'}>
                 <Link href={pillar.href} className="group block h-full">
                   <div
-                    className={`beco-clip relative aspect-[4/3] w-full overflow-hidden bg-charcoal ${large ? 'lg:aspect-[16/10]' : 'lg:aspect-[4/3]'}`}
+                    className={`beco-clip relative aspect-[4/3] w-full overflow-hidden rounded-card bg-charcoal ${large ? 'lg:aspect-[16/10]' : 'lg:aspect-[4/3]'}`}
                   >
                     {shot ? (
                       <>
@@ -415,7 +415,7 @@ export default async function AboutPage() {
                     </div>
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                      className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                     />
                   </div>
                 </Link>
@@ -511,7 +511,7 @@ export default async function AboutPage() {
                   aria-hidden
                   className="pointer-events-none absolute -inset-10 -z-10 rounded-[3rem] bg-[radial-gradient(closest-side,rgba(200,170,120,0.4),transparent)] blur-3xl sm:-inset-16"
                 />
-                <div className="relative overflow-hidden bg-neutral-900 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
+                <div className="relative overflow-hidden rounded-card bg-neutral-900 shadow-[0_30px_80px_rgba(0,0,0,0.4)]">
                   <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
                 </div>
                 <p className="beco-plate mt-4 font-ui text-xs uppercase tracking-[0.16em] text-neutral-500">
@@ -724,14 +724,14 @@ export default async function AboutPage() {
         <div className="mt-6 grid gap-8 lg:grid-cols-12">
           <Reveal className="lg:col-span-5">
             <article className="flex h-full flex-col">
-              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden bg-charcoal lg:aspect-auto lg:min-h-[24rem]">
+              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden rounded-card bg-charcoal lg:aspect-auto lg:min-h-[24rem]">
                 <div className="beco-wipe absolute inset-0 flex flex-col justify-end p-7 sm:p-8">
                   <span aria-hidden className="mb-4 block h-px w-8 bg-warm-red" />
                   <p className="font-display text-4xl leading-[1.05] text-high-vis-white sm:text-5xl">
                     Irene Oketch
                   </p>
                 </div>
-                <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
               </div>
               <p className="mt-5 font-ui text-sm font-semibold uppercase tracking-[0.1em] text-charcoal">
                 Head of Brand and Marketing
@@ -757,13 +757,13 @@ export default async function AboutPage() {
                 // `/team` data.
                 <Reveal key={`${seat}-${i}`} delay={(i + 1) * 60} className="h-full">
                   <article className="flex h-full flex-col">
-                    <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 lg:aspect-auto lg:min-h-[13rem]">
+                    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100 lg:aspect-auto lg:min-h-[13rem]">
                       <div className="absolute inset-0 flex items-end p-5">
                         <p className="font-display text-xl leading-tight text-neutral-500">
                           {seat}
                         </p>
                       </div>
-                      <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/10" />
+                      <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/10" />
                     </div>
                     <p className="mt-3 font-ui text-xs font-semibold uppercase tracking-[0.1em] text-neutral-400">
                       Sales person

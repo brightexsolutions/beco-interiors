@@ -191,10 +191,10 @@ export const CataloguePicker = forwardRef<
                               width={48}
                               height={48}
                               loading="lazy"
-                              className="size-12 shrink-0 bg-neutral-100 object-cover"
+                              className="size-12 shrink-0 rounded-control bg-neutral-100 object-cover"
                             />
                           ) : (
-                            <span aria-hidden className="size-12 shrink-0 bg-neutral-100" />
+                            <span aria-hidden className="size-12 shrink-0 rounded-control bg-neutral-100" />
                           )}
                           <span className="min-w-0 flex-1">
                             <span className="block">{hit.name}</span>

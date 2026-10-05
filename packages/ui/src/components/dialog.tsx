@@ -86,7 +86,7 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
         aria-labelledby="dialog-title"
         style={fitToKeyboard ? { height: '100%', maxHeight: '100%' } : undefined}
         className={cn(
-          'relative flex h-[min(100dvh,56rem)] w-full max-w-[34rem] flex-col overflow-hidden bg-high-vis-white shadow-[0_24px_60px_-16px_rgba(16,24,32,0.28)] sm:h-[min(92dvh,56rem)] sm:max-h-[min(92dvh,56rem)] sm:rounded-[4px]',
+          'relative flex h-[min(100dvh,56rem)] w-full max-w-[34rem] flex-col overflow-hidden bg-high-vis-white shadow-[0_24px_60px_-16px_rgba(16,24,32,0.28)] sm:h-[min(92dvh,56rem)] sm:max-h-[min(92dvh,56rem)] sm:rounded-card',
           className,
         )}
       >

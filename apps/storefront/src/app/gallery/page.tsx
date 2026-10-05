@@ -266,7 +266,7 @@ function RoomShots() {
           const productSlug = shots.find((s) => s.productSlug)?.productSlug;
           const frame = (
             <>
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card bg-neutral-100">
                 {shots.length > 1 ? (
                   <HoverGallery
                     className="absolute inset-0"
@@ -292,7 +292,7 @@ function RoomShots() {
                 )}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                  className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                 />
               </div>
               <div className="mt-3 flex items-baseline justify-between gap-3">

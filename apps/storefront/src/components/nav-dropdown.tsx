@@ -171,7 +171,7 @@ export function NavDropdown({
           id={menuId}
           role="menu"
           aria-label={label}
-          className="absolute left-0 top-full z-50 w-[19rem] border border-neutral-200 bg-high-vis-white pt-1 shadow-[0_20px_50px_rgba(16,24,32,0.14)]"
+          className="absolute left-0 top-full z-50 w-[19rem] overflow-hidden rounded-card border border-neutral-200 bg-high-vis-white pt-1 shadow-[0_20px_50px_rgba(16,24,32,0.14)]"
         >
           {/* A red hairline across the top, the same eyebrow mark the sections
               use, so the menu belongs to the site rather than to a framework. */}

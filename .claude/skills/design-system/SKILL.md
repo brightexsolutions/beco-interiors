@@ -33,6 +33,14 @@ The prototype's warm cream, `#C8281E`, linen and gold are retired. Do not reintr
 8px base, everything a multiple. Section padding 120 desktop, 88 tablet, 64 mobile. Touch
 targets 44px minimum, 8px apart.
 
+## Corners
+
+Two values, D125. `rounded-control` (4px) for buttons, fields, steppers, menu rows, small tags and
+thumbnails. `rounded-card` (6px) for cards, image frames, dialogs, sheets and boxed notes, and on
+any inset outline over a rounded frame. Full bleed media, section bands, header and footer stay
+square. Dashboard floating panels keep `rounded-panel`. Never an arbitrary `rounded-[Npx]`, and
+never above 6px on a card.
+
 ## Radix and shadcn
 
 **Dashboard only.** The storefront never starts from shadcn, never imports a

@@ -34,7 +34,7 @@ export function StageBar({ title, stages, className }: { title: string; stages: 
         <p className="mt-3 font-ui text-base text-neutral-500">Nothing in the pipeline yet.</p>
       ) : (
         <>
-          <div aria-hidden className="mt-3 flex h-3 w-full gap-[2px] overflow-hidden rounded-[2px]">
+          <div aria-hidden className="mt-3 flex h-3 w-full gap-[2px] overflow-hidden rounded-control">
             {stages.map((stage, index) =>
               stage.value > 0 ? (
                 <div

@@ -151,7 +151,7 @@ export default async function ContactPage() {
               {SITE.address.city}
             </address>
 
-            <dl className="mt-10 flex max-w-[34rem] flex-col gap-3 rounded-[2px] bg-neutral-50 p-6 font-ui text-base">
+            <dl className="mt-10 flex max-w-[34rem] flex-col gap-3 rounded-card bg-neutral-50 p-6 font-ui text-base">
               {HOURS.map(([day, time]) => (
                 <div key={day} className="flex items-baseline justify-between gap-6">
                   <dt className="text-neutral-500">{day}</dt>
@@ -180,7 +180,7 @@ export default async function ContactPage() {
                 was a leftover from the old portrait footage this replaced,
                 forcing a landscape clip into a tall portrait frame rather
                 than genuinely widening it. Corrected to the real 16:9. */}
-            <div className="mx-auto w-full overflow-hidden bg-charcoal">
+            <div className="mx-auto w-full overflow-hidden rounded-card bg-charcoal">
               <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
             </div>
           </Reveal>

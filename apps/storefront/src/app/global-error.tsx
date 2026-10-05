@@ -53,7 +53,7 @@ export default function GlobalError({
             <button
               type="button"
               onClick={reset}
-              className="inline-flex min-h-[2.75rem] cursor-pointer items-center justify-center rounded-[2px] bg-warm-red-deep px-6 py-3.5 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white"
+              className="inline-flex min-h-[2.75rem] cursor-pointer items-center justify-center rounded-control bg-warm-red-deep px-6 py-3.5 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white"
             >
               Reload the site
             </button>
