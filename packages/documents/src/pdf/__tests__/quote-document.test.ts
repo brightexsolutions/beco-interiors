@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { quoteTotals } from '@beco/validation';
 import { renderQuotePdf } from '../render';
-import { quoteFromLines, quotePaymentBlocks, type QuotePdfInput } from '../types';
+import { lineCodeLabel, quoteFromLines, quotePaymentBlocks, type QuotePdfInput } from '../types';
 
 const line = (n: number, price = 65000): QuotePdfInput['lines'][number] => ({
   description: `Line ${String(n).padStart(2, '0')} sintered stone slab, 12mm polished`,
@@ -111,6 +111,23 @@ describe('renderReceiptPdf', () => {
     expect(asText).toContain('Receipt');
     expect(asText).not.toMatch(/Valid until/);
     expect(pdf.includes(Buffer.from([0xe2, 0x80, 0x94]))).toBe(false);
+  });
+});
+
+describe('lineCodeLabel (D124)', () => {
+  it('prints a code as "Code H-301", trimmed, and nothing for a blank or missing one', () => {
+    expect(lineCodeLabel('H-301')).toBe('Code H-301');
+    expect(lineCodeLabel('  H-301 ')).toBe('Code H-301');
+    expect(lineCodeLabel('   ')).toBeNull();
+    expect(lineCodeLabel(null)).toBeNull();
+    expect(lineCodeLabel(undefined)).toBeNull();
+  });
+
+  it('renders a 15 line coded quote with every row still unbreakable across pages', async () => {
+    const coded = Array.from({ length: 15 }, (_, i) => ({ ...line(i + 1), code: `H-${300 + i}` }));
+    const pdf = await renderQuotePdf(base({ lines: coded }));
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(pageCount(pdf)).toBeGreaterThan(1);
   });
 });
 

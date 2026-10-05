@@ -53,7 +53,8 @@ D124. Read `docs/STATUS.md` first; it is the plan of record at the end of the se
 These are yours. Each is a line in `docs/QA-CHECKLIST.md` or `docs/DEPLOYMENT.md` marked as
 not yet confirmed on a server.
 
-**Database.** Migrations 58 to 61 are new since the last deploy you made. Apply to staging first
+**Database.** Migrations 58 to 62 are new since the last deploy you made. Migration 62 (D124) adds
+`code` to quote and order lines and restates `convert_quote_to_order` to copy it. Apply to staging first
 with the pipeline, confirm `supabase test db` is green there, then production after approval.
 Migration 61 changes `set_order_status()` so only an admin can cancel; a salesperson's cancel
 button is already gone from the UI.
@@ -173,7 +174,7 @@ October; nothing has been deployed and main is untouched. Pull dev, run pnpm ins
 commit hooks and the Brightex Solutions author, and run the full local check list in section
 3 of the handoff. Report what is red before changing anything.
 
-Then, in this order: apply migrations 58 to 61 to staging through the pipeline and confirm
+Then, in this order: apply migrations 58 to 62 to staging through the pipeline and confirm
 supabase test db there; add the R2 CORS and lifecycle rules from docs/DEPLOYMENT.md 3.6 and
 upload one real phone photograph on staging from the dashboard, confirming the direct PUT,
 the derivatives and the toast; set GITHUB_ACTIONS_TOKEN on the dashboard and dispatch a

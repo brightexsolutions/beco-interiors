@@ -552,6 +552,7 @@ export type Database = {
       }
       order_items: {
         Row: {
+          code: string | null
           description: string
           id: string
           line_total: number | null
@@ -563,6 +564,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          code?: string | null
           description: string
           id?: string
           line_total?: number | null
@@ -574,6 +576,7 @@ export type Database = {
           unit_price?: number
         }
         Update: {
+          code?: string | null
           description?: string
           id?: string
           line_total?: number | null
@@ -834,6 +837,7 @@ export type Database = {
       }
       quote_items: {
         Row: {
+          code: string | null
           description: string
           id: string
           line_total: number | null
@@ -846,6 +850,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          code?: string | null
           description: string
           id?: string
           line_total?: number | null
@@ -858,6 +863,7 @@ export type Database = {
           unit_price?: number
         }
         Update: {
+          code?: string | null
           description?: string
           id?: string
           line_total?: number | null

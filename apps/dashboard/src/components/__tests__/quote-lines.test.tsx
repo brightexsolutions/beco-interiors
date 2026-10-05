@@ -39,6 +39,7 @@ vi.mock('@/lib/catalogue', () => ({
 const line = (over: Partial<QuoteLine> = {}): QuoteLine => ({
   id: '11111111-1111-4111-8111-111111111111',
   description: 'Amber Jade',
+  code: null,
   quantity: 1,
   unitPrice: 65000,
   listPrice: 65000,
@@ -73,6 +74,20 @@ describe('QuoteLines', () => {
     expect(screen.getByText(/65,000/).className).toContain('line-through');
     expect(screen.queryByRole('button', { name: 'Add from catalogue' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  });
+
+  it('prints the product code under the item, read-only and editable alike (D124)', () => {
+    const { rerender } = render(
+      <QuoteLines lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate={false} />,
+    );
+    expect(screen.getByText('Code H-301')).toBeInTheDocument();
+    rerender(<QuoteLines lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate />);
+    // Editable rows are narrow: the code alone on one line, "Code" for screen readers.
+    const code = screen.getByTitle('Code H-301');
+    expect(code).toHaveTextContent('Code H-301');
+    expect(code.className).toContain('whitespace-nowrap');
+    rerender(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    expect(screen.queryByText(/^Code /)).toBeNull();
   });
 
   it('keeps Save disabled until a line actually changes, and says why', () => {

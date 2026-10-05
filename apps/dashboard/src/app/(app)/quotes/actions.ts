@@ -410,6 +410,7 @@ export async function sendQuoteEmail(
     // before the attachment is opened (D109).
     lines: stored.quote.lines.map((line) => ({
       description: line.description,
+      code: line.code,
       quantity: line.quantity,
       unit: line.unit,
       lineTotal: line.unitPrice > 0 ? line.lineTotal : null,

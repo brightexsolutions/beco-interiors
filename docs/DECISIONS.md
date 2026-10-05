@@ -2852,3 +2852,32 @@ does nothing for the hundreds already in Drive.
 
 **Reverses if:** Sharp's prebuilt binary starts shipping an HEVC decoder, when the converter
 step can go.
+
+## D124, 5 October 2026: quote and order lines carry the product code
+
+**Decision.** `quote_items` and `order_items` gain `code`, the product's code when the line was
+written. A `before insert` trigger fills it from `products.sku` unless a code is given, so the web
+form, the counter form and adding catalogue lines all carry it without any of those functions
+being rewritten. `convert_quote_to_order` copies the quoted code onto the order. The dashboard
+shows it under each line's name, the PDF prints "Code H-301" under the description, and the
+priced quote and receipt emails put it before the quantity. One function, `lineCodeLabel`,
+writes it for the PDF and the email alike.
+
+**Why.** Brown asked that an item chosen by its code, a hinge or a handle, reach the quote as a
+single line with that code. A line said only the product's name, so a hinge named "Soft close
+hinge" with H-301 in its code field could not be told from its neighbours on the document the
+customer takes away. With D122 sorting hinges by finish and the Beco team keying codes into the
+dashboard, the code is now the thing that identifies the item.
+
+**A snapshot, like the price.** The code is copied, never read live: an issued quote does not
+change because a product's code was corrected afterwards, and an order carries what was quoted.
+Lines written before migration 62 carry no code. Backfilling would rewrite quotes already issued,
+and would fire the money and approval triggers on every old line for nothing.
+
+**What was considered.** Folding the code into `description`: it would survive, but a
+salesperson editing the description could delete it, and the PDF could not set it apart.
+Joining `products.sku` when rendering: live, so a corrected code would silently change an
+issued document.
+
+**Reverses if:** codes move to a variants table, one product with several coded variants, when
+the line would snapshot the variant's code instead.

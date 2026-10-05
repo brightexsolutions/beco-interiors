@@ -255,6 +255,21 @@ describe('lineTable', () => {
     expect(html).toContain('On application');
   });
 
+  it('puts the product code before the quantity, escaped, and leaves an uncoded line as it was (D124)', () => {
+    const html = lineTable(
+      [
+        { description: 'Soft close hinge', code: 'H-301', quantity: 10, unit: 'pc', lineTotal: 4500 },
+        { description: 'Hinge 1193', code: '  ', quantity: 2, unit: 'pc', lineTotal: 600 },
+        { description: 'Odd', code: '<b>', quantity: 1, lineTotal: 1 },
+      ],
+      money,
+    );
+    expect(html).toContain('Code H-301, 10 pc');
+    expect(html).toContain('>2 pc<');
+    expect(html).not.toContain('Code  ');
+    expect(html).toContain('Code &lt;b&gt;, 1');
+  });
+
   it('caps the table and names how many more lines the PDF carries', () => {
     const lines = Array.from({ length: MAX_EMAIL_LINES + 3 }, (_, i) => ({
       description: `Line ${i + 1}`,

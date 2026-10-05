@@ -13,6 +13,7 @@ export const toReceiptPdfInput = (order: OrderDetail, settings: QuoteSettings): 
   validUntil: null,
   lines: order.lines.map((line) => ({
     description: line.description,
+    code: line.code,
     quantity: line.quantity,
     unitPrice: line.unitPrice,
     lineTotal: line.lineTotal,

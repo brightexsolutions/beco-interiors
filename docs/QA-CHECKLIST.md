@@ -380,6 +380,7 @@ real phone** (M5 section D).
 | Control | What it does | Status |
 |---|---|---|
 | Line items | Lists every line, a discount struck through against the catalogue price | **Server** confirmed on the discounted seed quote |
+| Line code (D124) | A line for a coded product shows its code under the name: "Code H-301" read only, the code alone on one line beside the steppers. None for a custom line | Test: `QuoteLines`. **Server** 5 Oct: a coded hinge line showed H-301 on `/quotes/BEC-Q-00006`, the delivery line none; the PDF from View printed "Code H-301" under the item (read from the PDF text and rendered to an image) |
 | Requested (D101) | Delivery, Installation and Samples flags, captured on submission and previously fetched but never rendered anywhere. Delivery and Installation carry the `attention` tone (Warm Red) since each is a real pricing gap; Samples is `muted`, informational rather than a pricing gap. Delivery address shown beneath when set. Priced by adding a custom line, `add_custom_quote_line`, the existing "Not in the catalogue" control; no new pricing mechanism was built | Data layer only: `wants_installation`/`wants_samples` added to `fetchQuote`'s select and `QuoteDetail`. **NOT WALKED**: the panel itself has no test, matching this page's own established pattern (only its interactive children are unit tested, the page is walked manually) |
 | Save | One control on the Line items heading. Disabled until a qty or price changes, reason shown. Writes every dirty line through `update_quote_lines`. Unsaved + Changed mark the dirty state | `QuoteLines` tested |
 | Totals / Pricing on application | Shows a real total once every line is priced, the 0.3 line otherwise | **Server** confirmed both states |
@@ -477,6 +478,7 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 | Pagination | Previous / Next. Page lives in `?page=` | Test: `OrderResults` |
 | Empty state | Convert a won quote, or clear the search. No New order control | Test: `OrderResults` |
 | Line items | Item / Qty / Unit / Line on desktop. Phone: name, then qty × unit and line. Catalogue strike under the name. Totals sit under Line | Test: `OrderLines` |
+| Line code (D124) | "Code H-301" under the item, the code that was quoted, carried across on conversion | Test: `OrderLines`; pgTAP `38_line_codes` proves the copy. **Not walked on a converted order on a server** |
 | Confirm / Fulfil | Forward status only. Writes `set_order_status` | Test: `OrderActions`. RPC pgTAP |
 | Cancel order | ConfirmDialog names the order, confirm verb Cancel order | Test: `OrderActions` |
 | Mark paid | ConfirmDialog names the order, confirm verb Mark paid. Stamps `paid_at`. Stock unchanged. Emails a receipt if an address exists | Test: `OrderActions`, `markOrderPaid`. RPC pgTAP |

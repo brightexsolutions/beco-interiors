@@ -21,6 +21,8 @@
  * the project's small print floor, with body copy at 16px.
  */
 
+import { lineCodeLabel } from '../pdf/types';
+
 export const CHARCOAL = '#101820';
 /** The text safe variant, same reason button.tsx uses it: pure Warm Red
  *  carries white text at 4.38:1, under the 4.5 AA floor. */
@@ -203,6 +205,8 @@ export function buttons(items: Array<{ label: string; href: string; primary?: bo
 
 export interface EmailLine {
   description: string;
+  /** The product code, D124. */
+  code?: string | null;
   quantity: number;
   /** "slab", "pc", "m2". Null for a custom line. */
   unit?: string | null;
@@ -215,7 +219,10 @@ export const MAX_EMAIL_LINES = 8;
 
 const quantityOf = (line: EmailLine): string => {
   const qty = Number.isInteger(line.quantity) ? String(line.quantity) : line.quantity.toFixed(1);
-  return line.unit ? `${qty} ${line.unit}` : qty;
+  const amount = line.unit ? `${qty} ${line.unit}` : qty;
+  // The code first, so a hinge reads "Code H-301, 10 pc" under its name.
+  const code = lineCodeLabel(line.code);
+  return code ? `${code}, ${amount}` : amount;
 };
 
 /**
