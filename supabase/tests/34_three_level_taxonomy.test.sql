@@ -76,11 +76,17 @@ select is(
   'Handles is a major category, beside Sintered Stone'
 );
 
+-- The real subtree size, read before the role changes. The import adds sub
+-- ranges under Sintered Stone (Heixin 12mm, D104), so a literal count holds
+-- only on a database that has never imported.
+select count(*) as sintered_subtree
+  from category_subtree_ids((select id from categories where slug = 'sintered-stone')) \gset
+
 set local role anon;
 select is(
   (select count(*) from category_subtree_ids((select id from categories where slug = 'sintered-stone'))),
-  3::bigint,
-  'anon can walk a subtree, which the shop depends on'
+  :sintered_subtree::bigint,
+  'anon can walk a whole subtree, which the shop depends on'
 );
 
 select * from finish();
