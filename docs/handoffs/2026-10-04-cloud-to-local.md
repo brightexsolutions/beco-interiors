@@ -1,4 +1,4 @@
-# Handoff, 4 October 2026: cloud session to the local machine
+# Handoff, 4 to 5 October 2026: cloud session to the local machine
 
 Written for the agent on Brown's local machine, which owns the Drive import, the staging and
 production deploys, and real device QA. Everything below was built in a cloud session against
@@ -21,7 +21,7 @@ git config user.email "info.brightexsolutions@gmail.com"
 
 The cloud work is the merges on `dev` dated 3 and 4 October. Each merge names its branch, each
 branch is one piece of work, and each piece has a decision in `docs/DECISIONS.md`, D104 to
-D124. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
+D125. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
 
 | Branch merged into dev | What it is | Decision |
 |---|---|---|
@@ -46,6 +46,9 @@ D124. Read `docs/STATUS.md` first; it is the plan of record at the end of the se
 | `storefront/cinematic-room-hero` | About copy in the first person. Its home hero half was taken back out of dev on 5 October, see below | D120 |
 | `catalogue/hinges-by-colour` | Hinges import one product per photograph, sorted by finish | D122 |
 | `catalogue/hardware-split-heic-codes` | Door locks and legs split too; HEIC on Linux; codes on quote lines | D122, D123, D124 |
+| `storefront/hold-back-home-hero` | Takes the cinematic home hero back out of dev; the range hero is live again | D120, D121 status |
+| `design/subtle-corner-radius` | Slight corners: 4px controls, 6px cards and image frames, both apps | D125 |
+| `documents/subtle-corner-radius` | The same corners on the emails and the quote PDF | D125 |
 
 ## 2. What the cloud could not do, and you can
 
@@ -143,22 +146,53 @@ red, the failure is yours to read before anything deploys.
 ## 5. The prompt to begin the local chat
 
 ```
-Read docs/handoffs/2026-10-04-cloud-to-local.md first, then docs/STATUS.md and D104 to D124
-in docs/DECISIONS.md. The cloud session merged seventeen branches into dev between 3 and 4
-October; nothing has been deployed and main is untouched. Pull dev, run pnpm install, set the
-commit hooks and the Brightex Solutions author, and run the full local check list in section
-3 of the handoff. Report what is red before changing anything.
+You are the local agent for the Beco Interiors platform. A cloud session worked on dev from
+3 to 5 October 2026 and pushed everything to origin/dev. None of it is deployed and main is
+untouched. Your job: bring dev down, prove it is sound, deploy it to staging, verify it there,
+and deploy to production only when I say so.
 
-Then, in this order: apply migrations 58 to 62 to staging through the pipeline and confirm
-supabase test db there; add the R2 CORS and lifecycle rules from docs/DEPLOYMENT.md 3.6 and
-upload one real phone photograph on staging from the dashboard, confirming the direct PUT,
-the derivatives and the toast; set GITHUB_ACTIONS_TOKEN on the dashboard and dispatch a
-dry-run import to staging, confirming the report artifact and the refresh step; submit a
-quote on staging and confirm the confirmation email arrives; run the hardware import per the D122 step in section 2; walk docs/QA-CHECKLIST.md on a
-real iPhone and Android over mobile data and log every defect against its row.
+1. Sync. git fetch origin, then git checkout dev and git pull --ff-only origin dev. If local
+dev has commits that origin/dev does not, stop and tell me; never force push or reset. Then
+pnpm install --frozen-lockfile, git config core.hooksPath .githooks, and set the author to
+Brightex Solutions <info.brightexsolutions@gmail.com>. Read
+docs/handoffs/2026-10-04-cloud-to-local.md in full, then docs/STATUS.md and D104 to D125 in
+docs/DECISIONS.md, before changing anything.
 
-Rules that stand: never touch production data, production only after a human approves, no
-em dashes, no browser dialogs, every change tested, commits authored by Brightex Solutions
-with no agent attribution, nothing merged to main until Brown says so, and tell me what you
-could not verify rather than marking it done.
+2. Prove it locally. Run the full list in section 3 of the handoff: typecheck, secret scan,
+type floor, contrast, unit, component, dashboard, supabase test db, integration, and pnpm build
+for both apps. Report anything red and fix it on a branch off dev before going further. Then
+start both apps against supabase start and click through the home page, the shop by range, a
+product page, adding to the quote, and a dashboard quote with its PDF.
+
+3. What ships, and what does not. In: everything merged into dev (the handoff table), including
+migrations 58 to 62, the hardware split by finish (D122), HEIC decoding on Linux (D123), product
+codes on quote lines (D124) and the slight corners (D125). Not in: the cinematic home hero, which
+lives on storefront/home-hero-cinematic-finished-rooms (D120, D121). Do not merge or deploy
+that branch.
+
+4. Staging first. Follow docs/DEPLOYMENT.md sections 4 and 11 and the deploy path you used
+last time. Export first, per the backup rule. Apply migrations 58 to 62 to beco-staging, confirm
+the database tests pass there, then deploy both apps to staging. Then work through section 2
+of the handoff on staging: the R2 CORS and lifecycle rules and one real phone photograph
+uploaded from the dashboard; STOREFRONT_URL, REVALIDATE_SECRET and GITHUB_ACTIONS_TOKEN set; a
+Check only import from the dashboard button, reading the plan for HINGES, DOOR LOCKS and
+FURNITURE LEGS, then the real import and a look at whether the finishes match the photographs;
+a quote with a coded product showing its code on the dashboard and in the PDF; a quote
+submitted from the site with its confirmation email received. Report what passed, what failed,
+and what you could not check.
+
+5. Production only on my word. Stop after staging and wait for me to say "deploy production".
+Until then main does not move. When I do: open the pull request from dev to main, let CI go
+green, merge, and run the production deploy so migrations land before the apps, behind the
+approval gate, with the export first. Then check www.beco.co.ke and dashboard.beco.co.ke, the
+health endpoint, and one quote end to end, and tell me the result.
+
+6. Housekeeping. Delete the remote branches storefront/cinematic-room-hero and
+storefront/hero-premium-rooms; both are contained in storefront/home-hero-cinematic-finished-rooms
+and the cloud session was not allowed to delete them.
+
+Rules that stand: never touch production data, and nothing tests against it; production only
+after I approve; no em dashes; no browser dialogs; every change tested; commits authored by
+Brightex Solutions with no agent attribution; and tell me plainly what you could not verify
+rather than marking it done.
 ```
