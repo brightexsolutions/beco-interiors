@@ -165,7 +165,8 @@ section rhythm, the eyebrow pattern, the scroll reveal.
 - **Corner radius: slight, two values, D125.** The Beco team asked on 5 October for a subtle
   radius where the sharp corners were. `rounded-control` (4px) on buttons, fields, steppers, menu
   rows, small tags and thumbnails; `rounded-card` (6px) on cards, image frames, dialogs, sheets
-  and boxed notes, and on any inset outline drawn over a rounded frame. Nothing full bleed is
+  and boxed notes, and on any inset outline drawn over a rounded frame. Emails and the quote PDF use
+  the same two values. Nothing full bleed is
   rounded: heroes, section bands, header and footer meet the screen edge square. The dashboard's
   floating panels keep `rounded-panel` (D85). Never above 6px on a card: D92 tried `rounded-2xl`
   then `rounded-lg` (8px) and both were reported "not right". Use the tokens, never an arbitrary

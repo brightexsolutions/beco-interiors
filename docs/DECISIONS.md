@@ -2914,5 +2914,12 @@ edge without turning the site into rounded tiles.
 looks soft on a 44px button. Rounding full bleed media: a rounded hero floats in white margin and
 stops reading as the room.
 
+**The documents too, the same day, on Brown's go ahead.** The emails use the same two values:
+6px on the white card (its charcoal band rounds at the top, its footer at the foot), the reference
+box and the total block; 4px on the buttons, the PDF mark and the step numbers. Outlook on Windows
+ignores `border-radius` and draws them square, the old look rather than a broken one. The quote
+and receipt PDF has one boxed element, How to pay, which takes the card corner as
+`PDF_CARD_RADIUS`, 4.5pt, the same 6px at 0.75pt per CSS pixel; everything else on it is a rule.
+
 **Reverses if:** the team or Brown sees it live and wants it tighter or gone, when both values
-change in `tokens.css` alone.
+change in `tokens.css` alone, plus the two constants in `@beco/documents`.

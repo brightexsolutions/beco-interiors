@@ -53,10 +53,11 @@ describe('referenceBox', () => {
     expect(box).toContain('&lt;script&gt;x&lt;/script&gt;');
   });
 
-  it('is a sharp cornered bordered box, matching the brand corner rule', () => {
+  it('is a bordered box with the card corner, matching the site (D125)', () => {
     const box = referenceBox('Your reference', 'BEC-Q-00042');
     expect(box).toContain('border:1px solid');
-    expect(box).not.toMatch(/border-radius\s*:\s*[1-9]/);
+    expect(box).toContain('border-radius:6px');
+    expect(box).toContain('border-collapse:separate');
   });
 });
 
@@ -192,9 +193,16 @@ describe('premium building blocks', () => {
     expect(html).toContain('https://wa.me/254722333730?text=Hi%20Beco%2C%20about%20quote%20BEC-Q-1');
   });
 
-  it('has a sharp cornered layout, no border radius anywhere', () => {
-    const html = renderEmailShell({ preview: 'x', bodyHtml: contactButtons('x') + referenceBox('a', 'b') });
-    expect(html).not.toMatch(/border-radius\s*:\s*[1-9]/);
+  it('uses only the two site corner values, 6px for the card and boxes, 4px for buttons (D125)', () => {
+    const html = renderEmailShell({ preview: 'x', bodyHtml: contactButtons('x') + referenceBox('a', 'b') + steps(['One']) });
+    const radii = [...html.matchAll(/border-radius:([^;"]+)/g)].map((m) => m[1]!.trim());
+    expect(radii.length).toBeGreaterThan(0);
+    for (const radius of radii) expect(radius).toMatch(/^(?:(?:0|4px|6px)\s*)+$/);
+    expect(radii).toContain('6px');
+    expect(radii).toContain('4px');
+    // The card rounds its top on the charcoal band and its foot on the footer.
+    expect(html).toContain('border-radius:6px 6px 0 0');
+    expect(html).toContain('border-radius:0 0 6px 6px');
   });
 
   it('carries the showroom hours in the footer', () => {
@@ -292,6 +300,6 @@ describe('totalBlock', () => {
     expect(html).toContain('VAT at 16%');
     expect(html).toContain('&lt;x&gt;');
     expect(html).toContain('&amp;');
-    expect(html).not.toMatch(/border-radius\s*:\s*[1-9]/);
+    expect(html).toContain('border-radius:6px');
   });
 });

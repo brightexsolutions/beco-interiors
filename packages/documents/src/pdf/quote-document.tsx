@@ -2,7 +2,7 @@ import { Document, Image, Page, Text, View, StyleSheet } from '@react-pdf/render
 import { quoteTotals } from '@beco/validation';
 import { logoPath } from './fonts';
 import type { QuotePdfInput } from './types';
-import { lineCodeLabel, quoteFromLines, quotePaymentBlocks } from './types';
+import { lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks } from './types';
 
 /**
  * One template for a counter quote and a web quote. Line prices come from
@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     borderColor: RULE,
     borderLeftWidth: 3,
     borderLeftColor: CHARCOAL,
+    borderRadius: PDF_CARD_RADIUS,
     backgroundColor: '#f7f8f8',
   },
   payGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },

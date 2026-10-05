@@ -45,6 +45,13 @@ export interface QuotePdfInput {
 export interface QuotePdfTotals extends QuoteMoney {}
 
 /**
+ * The card corner, D125, in PDF points: the site's 6px at 0.75pt per CSS
+ * pixel, so the printed quote matches the screen. The document's one boxed
+ * element, the How to pay box, carries it; everything else is a rule.
+ */
+export const PDF_CARD_RADIUS = 6 * 0.75;
+
+/**
  * How a line's product code is printed, on the PDF and in the email alike,
  * D124: "Code H-301". Null when there is no code to print.
  */
