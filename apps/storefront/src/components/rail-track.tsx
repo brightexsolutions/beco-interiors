@@ -97,7 +97,7 @@ export function RailTrack({ products }: { products: CatalogueProduct[] }) {
               <Link href={`/product/${product.slug}`} className="group block">
                 {/* Fixed height rather than a fixed ratio, so the whole card
                     including its plate always fits the row's own height. */}
-                <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 shadow-[0_16px_44px_rgba(16,24,32,0.14)] lg:aspect-auto lg:h-[min(44vh,25rem)]">
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card bg-neutral-100 shadow-[0_16px_44px_rgba(16,24,32,0.14)] lg:aspect-auto lg:h-[min(44vh,25rem)]">
                   {img ? (
                     <Image
                       src={img.path}
@@ -110,7 +110,7 @@ export function RailTrack({ products }: { products: CatalogueProduct[] }) {
                   ) : null}
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                    className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                   />
                 </div>
 

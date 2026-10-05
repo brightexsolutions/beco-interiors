@@ -229,7 +229,7 @@ export default async function HomePage() {
               since this section is about Beco, not a material. */}
           {aboutPhotoPrimary ? (
             <Reveal delay={120} className="relative mx-auto w-full max-w-[26rem] pb-10 pl-10 lg:mx-0 lg:max-w-none">
-              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden bg-neutral-100">
+              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100">
                 <div className="beco-wipe absolute inset-0">
                   <Image
                     src={aboutPhotoPrimary.path}
@@ -240,10 +240,10 @@ export default async function HomePage() {
                     className="object-cover"
                   />
                 </div>
-                <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
               </div>
               {aboutPhotoAccent ? (
-                <div className="beco-clip absolute bottom-0 left-0 aspect-[4/3] w-2/3 overflow-hidden bg-neutral-100 shadow-[0_20px_48px_rgba(16,24,32,0.18)]">
+                <div className="beco-clip absolute bottom-0 left-0 aspect-[4/3] w-2/3 overflow-hidden rounded-card bg-neutral-100 shadow-[0_20px_48px_rgba(16,24,32,0.18)]">
                   <div className="beco-wipe absolute inset-0" style={{ animationDelay: '160ms' }}>
                     <Image
                       src={aboutPhotoAccent.path}
@@ -254,7 +254,7 @@ export default async function HomePage() {
                       className="object-cover"
                     />
                   </div>
-                  <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                  <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
                 </div>
               ) : null}
             </Reveal>
@@ -505,7 +505,7 @@ export default async function HomePage() {
           {beyondStoneRanges.map((range, i) => {
             const tile = (
               <>
-                <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card bg-neutral-100">
                   <Image
                     src={range.image.path}
                     alt={range.image.alt}
@@ -517,7 +517,7 @@ export default async function HomePage() {
                     aria-hidden
                     className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/75 via-charcoal/5 to-transparent"
                   />
-                  <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                  <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
                   <p className="absolute inset-x-0 bottom-0 p-5 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white">
                     {range.title}
                   </p>
@@ -699,7 +699,7 @@ export default async function HomePage() {
               corners the way a real film frame reads rather than a flat
               rectangle of video. --- */}
       <section aria-label="The showroom" className="bg-charcoal text-high-vis-white">
-        <div className="relative w-full overflow-hidden bg-neutral-950">
+        <div className="relative w-full overflow-hidden rounded-card bg-neutral-950">
           <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
           {/* The vignette: a radial darkening toward the corners, the
               cinematic cue itself, over the video everywhere. The gradient
@@ -778,7 +778,7 @@ export default async function HomePage() {
               a visible ring so its edges never depend on the map content
               inside it, and a lighter invert that actually differentiates
               from the panel behind it instead of disappearing into it. */}
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-900 ring-1 ring-inset ring-high-vis-white/10 sm:aspect-[21/9]">
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-card bg-neutral-900 ring-1 ring-inset ring-high-vis-white/10 sm:aspect-[21/9]">
             <iframe
               title="Beco Interiors on Google Maps"
               src={`https://www.google.com/maps?q=${encodeURIComponent(
@@ -799,7 +799,7 @@ export default async function HomePage() {
 
 function Stat({ value, label, suffix }: { value: number; label: string; suffix: string }) {
   return (
-    <div className="bg-charcoal p-6 sm:p-8">
+    <div className="rounded-card bg-charcoal p-6 sm:p-8">
       <span aria-hidden className="block h-px w-8 bg-warm-red" />
       {/* No tabular-nums: Cormorant gives '1' a full width advance under it,
           and "12mm" was reading as "1 2mm" at display size. The figures here

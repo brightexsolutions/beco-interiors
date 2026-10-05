@@ -371,7 +371,7 @@ function RangeCard({
   sizes?: string;
 }) {
   const photo = (
-    <div className="beco-ambient beco-sheen relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 shadow-[0_24px_64px_rgba(16,24,32,0.18)] after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15">
+    <div className="beco-ambient beco-sheen relative aspect-[3/4] w-full overflow-hidden rounded-card bg-neutral-100 shadow-[0_24px_64px_rgba(16,24,32,0.18)] after:pointer-events-none after:absolute after:inset-0 after:rounded-card after:ring-1 after:ring-inset after:ring-charcoal/15">
       <Image
         src={slide.src}
         alt={slide.alt}

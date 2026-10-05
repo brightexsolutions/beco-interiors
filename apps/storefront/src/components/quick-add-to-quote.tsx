@@ -27,7 +27,7 @@ export function QuickAddToQuote({ line }: { line: Omit<QuoteLine, 'quantity'> })
         type="button"
         onClick={() => { addLine(line, 1); setLocalQuantity(1); }}
         aria-label={`Add ${line.name} to your quote list`}
-        className="inline-flex h-11 items-center gap-1.5 border border-charcoal px-2.5 font-ui text-xs font-semibold uppercase tracking-[0.08em] text-charcoal transition-colors duration-200 hover:border-warm-red-deep hover:text-warm-red-deep"
+        className="inline-flex h-11 items-center gap-1.5 rounded-control border border-charcoal px-2.5 font-ui text-xs font-semibold uppercase tracking-[0.08em] text-charcoal transition-colors duration-200 hover:border-warm-red-deep hover:text-warm-red-deep"
       >
         <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-none stroke-current" strokeWidth="1.7">
           <path
@@ -61,7 +61,7 @@ export function QuickAddToQuote({ line }: { line: Omit<QuoteLine, 'quantity'> })
         type="button"
         onClick={() => { removeLine(line.slug); setLocalQuantity(0); }}
         aria-label={`Remove ${line.name} from your quote list`}
-        className="flex h-11 w-9 shrink-0 items-center justify-center border border-neutral-300 text-neutral-500 transition-colors duration-200 hover:border-warm-red-deep hover:text-warm-red-deep"
+        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-control border border-neutral-300 text-neutral-500 transition-colors duration-200 hover:border-warm-red-deep hover:text-warm-red-deep"
       >
         <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-none stroke-current" strokeWidth="1.7">
           <path

@@ -66,7 +66,7 @@ export function AccountMenu({ name }: { name: string }) {
           <Link
             role="menuitem"
             href="/change-password"
-            className="block rounded-card px-2.5 py-2 font-ui text-sm text-charcoal hover:bg-neutral-100"
+            className="block rounded-control px-2.5 py-2 font-ui text-sm text-charcoal hover:bg-neutral-100"
           >
             Change password
           </Link>
@@ -77,7 +77,7 @@ export function AccountMenu({ name }: { name: string }) {
             <button
               role="menuitem"
               type="submit"
-              className="block w-full rounded-card px-2.5 py-2 text-left font-ui text-sm text-charcoal hover:bg-neutral-100"
+              className="block w-full rounded-control px-2.5 py-2 text-left font-ui text-sm text-charcoal hover:bg-neutral-100"
             >
               Sign out
             </button>

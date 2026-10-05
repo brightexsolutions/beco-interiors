@@ -76,7 +76,7 @@ export function RangeToolbar({
                   href={chip.href}
                   aria-current={chip.active ? 'page' : undefined}
                   className={cn(
-                    'inline-flex h-11 items-center gap-2 border px-4 font-ui text-base font-semibold whitespace-nowrap transition-colors',
+                    'inline-flex h-11 items-center gap-2 rounded-control border px-4 font-ui text-base font-semibold whitespace-nowrap transition-colors',
                     chip.active
                       ? 'border-charcoal bg-charcoal text-high-vis-white'
                       : 'border-neutral-300 bg-high-vis-white text-charcoal hover:border-charcoal',
@@ -105,7 +105,7 @@ export function RangeToolbar({
                   aria-pressed={active}
                   onClick={() => write({ finish: active ? null : f.value })}
                   className={cn(
-                    'inline-flex h-11 items-center gap-2 border px-4 font-ui text-base font-semibold transition-colors',
+                    'inline-flex h-11 items-center gap-2 rounded-control border px-4 font-ui text-base font-semibold transition-colors',
                     active
                       ? 'border-charcoal bg-charcoal text-high-vis-white'
                       : 'border-neutral-300 bg-high-vis-white text-charcoal hover:border-charcoal',

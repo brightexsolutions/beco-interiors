@@ -115,8 +115,15 @@
      py-14 is 56px. --- */
   --spacing: 0.25rem;
 
-  --radius-card: 4px;
-  --radius-button: 2px;
+  /* Corners, D125. A slight radius, on the Beco team's request, 5 October:
+     the edge still reads deliberate, it just stops reading as a cut.
+     `rounded-control` for buttons, fields, steppers, menu rows and small
+     tags; `rounded-card` for cards, image frames, dialogs, sheets and boxed
+     notes. Nothing full bleed is rounded: a hero, a section band, the
+     header and footer meet the edge of the screen square. Both stay under
+     the 8px that D92 tried and Brown called "not right". */
+  --radius-control: 4px;
+  --radius-card: 6px;
   /* The dashboard shell only. Its chrome and content sit on floating panels
      with a softer corner than the storefront's near-square 4px card, on
      Brown's direction (see docs/DECISIONS.md D85). Storefront components keep

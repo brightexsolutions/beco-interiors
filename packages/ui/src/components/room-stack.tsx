@@ -51,7 +51,7 @@ export function RoomStack({ cards, className }: { cards: RoomStackCard[]; classN
         {cards.map((card, i) => (
           <figure
             key={card.key}
-            className="beco-stack-card absolute inset-0 origin-bottom overflow-hidden bg-neutral-100 shadow-[0_22px_60px_rgba(16,24,32,0.22)] will-change-transform"
+            className="beco-stack-card absolute inset-0 origin-bottom overflow-hidden rounded-card bg-neutral-100 shadow-[0_22px_60px_rgba(16,24,32,0.22)] will-change-transform"
             style={{
               // The static fan, matching slot `i` of the cycle exactly, so the
               // deck is a tidy hand of cards before the animation starts and

@@ -22,7 +22,7 @@ import { cn } from '../lib/cn';
 
 /** 16px, per the type floor. `text-base`, never `text-sm`, on any control. */
 const CONTROL = [
-  'block w-full rounded-[2px] border border-neutral-300 bg-high-vis-white',
+  'block w-full rounded-control border border-neutral-300 bg-high-vis-white',
   'font-ui text-base text-charcoal placeholder:text-neutral-500',
   'focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red',
   'aria-invalid:border-error',

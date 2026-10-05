@@ -67,14 +67,14 @@ export async function SiteFooter() {
               <a
                 href={whatsappLink()}
                 data-analytics="whatsapp_click"
-                className="inline-flex min-h-11 items-center justify-center rounded-[2px] border border-neutral-700 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] transition-colors hover:border-high-vis-white"
+                className="inline-flex min-h-11 items-center justify-center rounded-control border border-neutral-700 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] transition-colors hover:border-high-vis-white"
               >
                 WhatsApp
               </a>
               <a
                 href={SITE.phoneHref}
                 data-analytics="call_click"
-                className="inline-flex min-h-11 items-center justify-center rounded-[2px] border border-neutral-700 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] transition-colors hover:border-high-vis-white"
+                className="inline-flex min-h-11 items-center justify-center rounded-control border border-neutral-700 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] transition-colors hover:border-high-vis-white"
               >
                 Call us
               </a>

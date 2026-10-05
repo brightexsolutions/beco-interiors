@@ -62,7 +62,7 @@ export function HomeFocus({ focus, approvals }: { focus: HomeFocusData; approval
           <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <Link
               href="/quotes?owner=unassigned"
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-[2px] bg-high-vis-white px-3 sm:px-4 font-ui text-sm font-semibold text-charcoal hover:bg-neutral-100"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-control bg-high-vis-white px-3 sm:px-4 font-ui text-sm font-semibold text-charcoal hover:bg-neutral-100"
             >
               Open queue
               <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -71,7 +71,7 @@ export function HomeFocus({ focus, approvals }: { focus: HomeFocusData; approval
             </Link>
             <Link
               href="/quotes/new"
-              className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-[2px] border border-high-vis-white/30 px-4 font-ui text-sm font-semibold text-high-vis-white hover:border-high-vis-white"
+              className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control border border-high-vis-white/30 px-4 font-ui text-sm font-semibold text-high-vis-white hover:border-high-vis-white"
             >
               New quote
             </Link>

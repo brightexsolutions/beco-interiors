@@ -57,7 +57,7 @@ export function RangeBrowse({
                   href={`/shop/${group.slug}`}
                   className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-warm-red"
                 >
-                  <div className="relative aspect-[5/3] w-full overflow-hidden bg-charcoal">
+                  <div className="relative aspect-[5/3] w-full overflow-hidden rounded-card bg-charcoal">
                     {cover ? (
                       <Image
                         src={cover.path}
@@ -85,7 +85,7 @@ export function RangeBrowse({
                     )}
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                      className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                     />
                   </div>
 

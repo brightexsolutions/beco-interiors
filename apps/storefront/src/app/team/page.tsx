@@ -79,7 +79,7 @@ export default async function TeamPage() {
           {team.map((member, i) => (
             <Reveal key={member.id} delay={(i % 3) * 60}>
               <article className="flex h-full flex-col">
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100">
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100">
                   {member.public_photo ? (
                     <Image
                       src={member.public_photo.path}
@@ -101,7 +101,7 @@ export default async function TeamPage() {
                   )}
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                    className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                   />
                 </div>
 

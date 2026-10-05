@@ -219,7 +219,7 @@ function RangePill({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-button border px-3.5 font-ui text-sm font-semibold transition-colors duration-200',
+        'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-control border px-3.5 font-ui text-sm font-semibold transition-colors duration-200',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red',
         active
           ? 'border-charcoal bg-charcoal text-high-vis-white'

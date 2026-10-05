@@ -56,7 +56,7 @@ export function LoadingState({ count = 6, className }: { count?: number | undefi
         // still gets the skeleton's shape, just without the breathing.
         <div key={i} className="animate-pulse motion-reduce:animate-none">
           {/* Same 4:5 frame as ProductCard, so the swap causes no shift. */}
-          <div className="aspect-[4/5] w-full bg-neutral-100" />
+          <div className="aspect-[4/5] w-full rounded-card bg-neutral-100" />
           <div className="mt-4 h-4 w-2/3 bg-neutral-100" />
           <div className="mt-2 h-4 w-1/3 bg-neutral-100" />
         </div>

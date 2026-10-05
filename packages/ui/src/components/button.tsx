@@ -20,7 +20,7 @@ const button = cva(
     'text-sm', // 16px floor, never smaller
     // Fixed 44px, same as Input `h-11`. py-3.5 plus body line-height 1.6
     // grew past the input and wrapped labels like SAVE LINE.
-    'h-11 rounded-[2px] px-4',
+    'h-11 rounded-control px-4',
     'transition-colors duration-200 ease-brand',
     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px]',
     'focus-visible:outline-warm-red',

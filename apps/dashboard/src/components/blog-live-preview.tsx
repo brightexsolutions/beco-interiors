@@ -106,7 +106,7 @@ export function BlogLivePreview({
         {readingTime ? <> &middot; {readingTime} min read</> : null}
       </p>
       {coverSrc ? (
-        <div className="relative mt-8 aspect-[16/9] overflow-hidden bg-neutral-100">
+        <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-card bg-neutral-100">
           <img src={coverSrc} alt={coverAlt} className="h-full w-full object-cover" />
         </div>
       ) : null}

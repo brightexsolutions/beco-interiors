@@ -82,7 +82,7 @@ export function ProductImages({
       ) : (
         <ul className="space-y-3">
           {rows.map((image, index) => (
-            <li key={image.path} className="min-w-0 border border-neutral-200 p-3">
+            <li key={image.path} className="min-w-0 rounded-card border border-neutral-200 p-3">
               <div className="flex min-w-0 gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -90,7 +90,7 @@ export function ProductImages({
                   alt={image.alt || image.role}
                   width={72}
                   height={72}
-                  className="h-[72px] w-[72px] shrink-0 object-cover"
+                  className="h-[72px] w-[72px] shrink-0 rounded-control object-cover"
                 />
                 <div className="min-w-0 flex-1 space-y-2">
                   <Field label="Shot" htmlFor={`role-${index}`}>
@@ -155,7 +155,7 @@ export function ProductImages({
         </ul>
       )}
 
-      <form onSubmit={upload.onSubmit} className="min-w-0 space-y-3 border border-dashed border-neutral-300 p-4">
+      <form onSubmit={upload.onSubmit} className="min-w-0 space-y-3 rounded-card border border-dashed border-neutral-300 p-4">
         <input type="hidden" name="productId" value={product.id} />
         <input type="hidden" name="updatedAt" value={product.updatedAt} />
         <div className="flex items-center gap-2 text-charcoal">

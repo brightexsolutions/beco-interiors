@@ -80,7 +80,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
     // A product with no usable photographs still renders a page rather than
     // a hole. Pure White very nearly hit this.
     return (
-      <div className={cn('aspect-[4/5] w-full bg-neutral-100', className)} role="img"
+      <div className={cn('aspect-[4/5] w-full rounded-card bg-neutral-100', className)} role="img"
            aria-label="No photograph available yet" />
     );
   }
@@ -89,7 +89,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
     <div className={cn('relative min-w-0', className)}>
       {/* --- The frame. Every image stays mounted and crossfades, so pressing
               a card never leaves an empty frame while a file decodes. --- */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 sm:aspect-[5/4]">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100 sm:aspect-[5/4]">
         {ordered.map((img, i) => (
           <div
             key={`${img.role}-${i}`}
@@ -105,7 +105,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
 
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+          className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
         />
 
         {/* What is being looked at, named on the photograph itself. */}
@@ -165,7 +165,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
                     // enormous, wrongly cropped photograph under a handful of
                     // pixels of visible thumbnail. Never rely on transform
                     // alone for this again.
-                    'relative block h-20 w-16 shrink-0 overflow-hidden bg-neutral-100 sm:h-24 sm:w-20',
+                    'relative block h-20 w-16 shrink-0 overflow-hidden rounded-control bg-neutral-100 sm:h-24 sm:w-20',
                     'shadow-[0_12px_30px_rgba(16,24,32,0.28)] ring-1 ring-inset',
                     'transition-transform duration-500 ease-brand hover:-translate-y-2',
                     'motion-reduce:transition-none motion-reduce:hover:translate-y-0',

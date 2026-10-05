@@ -29,7 +29,7 @@ export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuot
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'group relative flex min-h-10 items-center justify-between gap-2 rounded-[6px] px-3 font-ui text-base transition-colors',
+                      'group relative flex min-h-10 items-center justify-between gap-2 rounded-card px-3 font-ui text-base transition-colors',
                       active
                         ? 'bg-charcoal font-semibold text-high-vis-white'
                         : 'text-neutral-700 hover:bg-neutral-100 hover:text-charcoal',

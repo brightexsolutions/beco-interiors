@@ -124,7 +124,7 @@ export default async function BlogPostPage({ params }: Params) {
           </p>
 
           {post.cover_image ? (
-            <div className="relative mt-8 aspect-[16/9] overflow-hidden bg-neutral-100">
+            <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-card bg-neutral-100">
               <Image
                 src={post.cover_image.path}
                 alt={post.cover_image_alt ?? ''}

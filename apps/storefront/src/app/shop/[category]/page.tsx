@@ -175,7 +175,7 @@ export default async function CategoryPage({ params, searchParams }: Params) {
             a normal 4:5 frame stacked under the copy. */}
         <aside className="lg:col-span-5 lg:flex lg:flex-col">
           {cover ? (
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 lg:aspect-auto lg:min-h-[28rem] lg:flex-1">
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100 lg:aspect-auto lg:min-h-[28rem] lg:flex-1">
               <Image
                 src={cover.path}
                 alt={cover.alt}
@@ -187,12 +187,12 @@ export default async function CategoryPage({ params, searchParams }: Params) {
               />
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
               />
             </div>
           ) : null}
 
-          <dl className="mt-6 flex flex-col gap-1 rounded-[2px] bg-neutral-50 px-5 py-1">
+          <dl className="mt-6 flex flex-col gap-1 rounded-card bg-neutral-50 px-5 py-1">
             <Fact
               term={isGroup ? 'Ranges' : 'In stock'}
               value={

@@ -2888,3 +2888,31 @@ issued document.
 
 **Reverses if:** codes move to a variants table, one product with several coded variants, when
 the line would snapshot the variant's code instead.
+
+## D125, 5 October 2026: a slight corner radius, in two values
+
+**Decision.** Corners are slightly rounded, from two tokens in `tokens.css`: `--radius-control`,
+4px, for buttons, fields, quantity steppers, menu rows, small tags and image thumbnails, and
+`--radius-card`, 6px, for product and range cards, image frames, dialogs, the phone sheet's top
+edge, the nav dropdown and boxed notes such as the spec lists and the quote summary. An inset
+outline drawn over a rounded frame is rounded with it, or its square corners show inside the
+curve. Nothing full bleed is rounded: the hero, section bands, the header and the footer meet the
+edge of the screen square, so the page itself keeps its hard frame. The dashboard's floating
+panels keep their 14px `rounded-panel` (D85) and its bottom navigation its own 10px. The old
+`--radius-button` (2px) is gone and every `rounded-[2px]`, `[3px]` and `[4px]` became one of the
+two tokens. The WhatsApp card's speech nub and chat bubbles, drawn to look like WhatsApp's own, and the
+chart legend swatches stay as they are. `radius.test.ts` fails on any other arbitrary pixel radius.
+
+**Why.** The Beco team asked, through Brown on 5 October, for a subtle radius on the components
+that carry an edge: the sharp corners read harsher than the materials they sell. This reverses
+the "sharp, no exceptions" rule CLAUDE.md held since D92, on the fresh, explicit instruction that
+rule asked for. It does not reverse D92's finding: 8px and 16px on cards were both reported "not
+right", so the card value stops at 6px and the control value at 4px, small enough to soften the
+edge without turning the site into rounded tiles.
+
+**What was considered.** One value everywhere: 4px reads as square on a large image frame and 6px
+looks soft on a 44px button. Rounding full bleed media: a rounded hero floats in white margin and
+stops reading as the room.
+
+**Reverses if:** the team or Brown sees it live and wants it tighter or gone, when both values
+change in `tokens.css` alone.

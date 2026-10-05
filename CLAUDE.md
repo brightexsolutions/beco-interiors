@@ -162,12 +162,14 @@ section rhythm, the eyebrow pattern, the scroll reveal.
   server rather than trusting a source grep scoped to `apps/storefront/src` alone. The footer is
   a deliberate exception, `lg:px-32` rather than `lg:px-40`: it carries several nav columns side
   by side, not one column of prose, and the site's own 160px read as compressing them
-- **Corner radius: sharp, no exceptions.** D2's own "a sharp edge reads more deliberate than a
-  blur" stands. D92 tried a rounded corner on boxed elements, `rounded-2xl` then `rounded-lg`,
-  reported directly as "not right" both times, then reversed outright rather than tuned a third
-  time: Brown's own call was to stay consistent with the sharp language everywhere instead of
-  rounding some elements and not others. Do not reintroduce rounded corners on cards, frames,
-  buttons or form controls without a fresh, explicit instruction
+- **Corner radius: slight, two values, D125.** The Beco team asked on 5 October for a subtle
+  radius where the sharp corners were. `rounded-control` (4px) on buttons, fields, steppers, menu
+  rows, small tags and thumbnails; `rounded-card` (6px) on cards, image frames, dialogs, sheets
+  and boxed notes, and on any inset outline drawn over a rounded frame. Nothing full bleed is
+  rounded: heroes, section bands, header and footer meet the screen edge square. The dashboard's
+  floating panels keep `rounded-panel` (D85). Never above 6px on a card: D92 tried `rounded-2xl`
+  then `rounded-lg` (8px) and both were reported "not right". Use the tokens, never an arbitrary
+  `rounded-[Npx]`
 - **Contrast** verified by script, never assumed. Warm Red on white checked at every size
 - **Copy is short.** No explanatory paragraphs inside interface elements, no marketing voice in
   the dashboard, no sentence where two words will do

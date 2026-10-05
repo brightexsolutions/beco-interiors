@@ -161,8 +161,8 @@ the look. `apps/storefront` does not import these widgets.
 - Land every new widget in `@beco/ui`. Never paste shadcn into `apps/dashboard`
   or `apps/storefront`.
 - Restyle against Beco tokens before it ships: Titillium, 16px floor, 44px
-  targets, charcoal and High-Vis White, Warm Red rationed, `rounded-[2px]` like
-  `Button`. If it looks like default shadcn, it is not finished.
+  targets, charcoal and High-Vis White, Warm Red rationed, `rounded-control` like
+  `Button` and `rounded-card` for anything boxed (D125). If it looks like default shadcn, it is not finished.
 - Do not run the shadcn CLI against either app. No `components.json` in
   `apps/dashboard` or `apps/storefront`.
 - `packages/ui/components.json` is the only shadcn config. Never in an app.

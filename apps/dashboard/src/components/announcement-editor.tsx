@@ -116,7 +116,7 @@ export function AnnouncementEditor({
               type="checkbox"
               name="isActive"
               defaultChecked={announcement?.isActive ?? true}
-              className="h-5 w-5 rounded-[2px] border-neutral-300"
+              className="h-5 w-5 rounded-control border-neutral-300"
             />
             Active
           </label>

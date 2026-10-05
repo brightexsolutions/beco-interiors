@@ -52,7 +52,7 @@ export function ProductThumb({
       height={56}
       loading="lazy"
       onError={() => setFailed(true)}
-      className={cn('shrink-0 bg-neutral-100 object-cover', box, className)}
+      className={cn('shrink-0 rounded-control bg-neutral-100 object-cover', box, className)}
     />
   );
 }

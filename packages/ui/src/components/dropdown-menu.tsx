@@ -71,7 +71,7 @@ export const DropdownMenuItem = forwardRef<
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
-        'flex min-h-11 items-center rounded-[2px] px-2.5 font-ui text-sm text-charcoal outline-none',
+        'flex min-h-11 items-center rounded-control px-2.5 font-ui text-sm text-charcoal outline-none',
         'focus:bg-neutral-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}

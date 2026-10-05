@@ -116,7 +116,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               type="search"
               enterKeyHint="search"
               placeholder="Search a stone or colour"
-              className="h-11 min-w-0 flex-1 rounded-[2px] border border-neutral-300 bg-high-vis-white px-3 font-ui text-base text-charcoal placeholder:text-neutral-500 focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red sm:w-72"
+              className="h-11 min-w-0 flex-1 rounded-control border border-neutral-300 bg-high-vis-white px-3 font-ui text-base text-charcoal placeholder:text-neutral-500 focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red sm:w-72"
             />
             <button type="submit" className={buttonClasses({ variant: 'secondary' })}>
               Search

@@ -78,9 +78,10 @@ export function ProductCard({
           photographed on white, so without an edge its card looks like an
           image that failed to load. The card itself still carries no border. */}
       <div className={cn(
-        'relative w-full overflow-hidden',
+        // `isolate` keeps the hover zoom inside the rounded corner in Safari.
+        'relative isolate w-full overflow-hidden rounded-card',
         hasVisual ? 'bg-neutral-100' : 'bg-charcoal',
-        'after:pointer-events-none after:absolute after:inset-0 after:ring-1 after:ring-inset after:ring-charcoal/15',
+        'after:pointer-events-none after:absolute after:inset-0 after:rounded-card after:ring-1 after:ring-inset after:ring-charcoal/15',
         FRAME[frame], imageClassName,
       )}>
         <div className="h-full w-full transition-transform duration-[600ms] ease-brand group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100">

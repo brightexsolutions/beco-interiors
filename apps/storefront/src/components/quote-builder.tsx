@@ -118,7 +118,7 @@ export function QuoteBuilder() {
           </div>
         </div>
 
-        <div className="bg-charcoal p-8 text-high-vis-white lg:p-10">
+        <div className="rounded-card bg-charcoal p-8 text-high-vis-white lg:p-10">
           <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-300">
             While you wait
           </p>
@@ -274,7 +274,7 @@ export function QuoteBuilder() {
             const step = line.unit === 'per slab' ? 0.5 : 1;
             return (
               <li key={line.slug} className="flex gap-4 py-5">
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden bg-white/10">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-control bg-white/10">
                   {line.image ? (
                     <Image src={line.image} alt="" fill sizes="64px" className="object-cover" />
                   ) : (
@@ -329,7 +329,7 @@ export function QuoteBuilder() {
               rule 3: it must navigate. */}
           <Link
             href="/shop"
-            className="flex min-h-11 items-center justify-center gap-2 border border-white/25 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white transition-colors duration-200 ease-brand hover:border-white/50 hover:bg-white/5"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-control border border-white/25 px-4 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-high-vis-white transition-colors duration-200 ease-brand hover:border-white/50 hover:bg-white/5"
           >
             <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 stroke-current" fill="none" strokeWidth="1.8">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
@@ -492,7 +492,7 @@ export function QuoteBuilder() {
           </fieldset>
 
           {result && !result.ok ? (
-            <p role="alert" className="rounded-[2px] border border-error px-4 py-3 font-ui text-base text-error">
+            <p role="alert" className="rounded-card border border-error px-4 py-3 font-ui text-base text-error">
               {result.error}
             </p>
           ) : null}

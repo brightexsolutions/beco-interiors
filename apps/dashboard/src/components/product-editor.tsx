@@ -271,7 +271,7 @@ export function ProductEditor({
                   form="product-editor"
                   checked={published}
                   onChange={(event) => setPublished(event.target.checked)}
-                  className="h-5 w-5 rounded-[2px] border-neutral-300 text-charcoal"
+                  className="h-5 w-5 rounded-control border-neutral-300 text-charcoal"
                 />
                 Published on the website
               </label>
