@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import sharp from 'sharp';
+import { readFileSync } from 'node:fs';
 import { finishOfPixel, readFinish, rgbToLab } from '../finish';
+import { toDecodable } from '../decode';
 
 /**
  * Synthetic photographs: a backdrop with blocks of colour on it, so each
@@ -87,6 +89,11 @@ describe('readFinish', { timeout: 20_000 }, () => {
     const reading = await readFinish(mixed);
     expect(reading.finish).toBeNull();
     expect(reading.share).toBeLessThan(0.45);
+  });
+
+  it('reads a real HEIC once it is decoded the way the import decodes it', async () => {
+    const heic = readFileSync(new URL('./fixtures/gold-on-white.heic', import.meta.url));
+    expect((await readFinish(toDecodable(heic, 'gold-on-white.heic', undefined, 'linux'))).finish).toBe('gold');
   });
 
   it('returns no finish for an empty frame', async () => {

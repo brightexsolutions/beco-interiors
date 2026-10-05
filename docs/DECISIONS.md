@@ -2820,10 +2820,35 @@ not read as a missing product and import twice.
 
 **What it costs.** Two photographs of the same hinge become two products, since nothing says
 they match. The team deletes the repeat. Every hinge photograph is HEIC, which only macOS
-decodes today (`decode.ts`), so the Hinges import runs from the Mac with `pnpm drive:import`,
-not from the dashboard's button, which runs on GitHub's Linux runners.
+decoded when this was written; D123 lets the dashboard's button decode it too.
 
 **Reverses if:** Beco renames the photographs after their codes, when D104's item rule takes
 over and this path is never reached; or the finish reading proves wrong often enough on the real
 photographs that sorting by hand is quicker, when Hinges comes out of `SPLIT_BY_FINISH` and its
 products all land in Hinges unsorted.
+
+## D123, 5 October 2026: HEIC decodes on Linux, so the import button handles hardware
+
+**Decision.** `toDecodable` converts HEIC with `heif-convert` from libheif everywhere but macOS,
+which keeps `sips`. The import workflow and CI both install `libheif-examples` and
+`libheif-plugin-libde265` (the HEVC decoder libheif needs) from Ubuntu's own archive. A missing
+converter now fails with what to install rather than "spawn ENOENT", and the import records the
+same advice against the file.
+
+**Why.** Every hardware photograph in Drive is iPhone HEIC, and the dashboard's import button
+runs on GitHub's Ubuntu runners, where nothing could decode it: the button skipped every hinge,
+door lock and furniture leg, and D122's split only worked from the Mac. Brown asked for the
+button to handle them.
+
+**Proof.** A real 927 byte HEIC is committed as a fixture. The decode test turns it into a PNG
+through `heif-convert`, and the finish test reads it as gold, on Ubuntu 24.04 with libheif
+1.17.6, the version GitHub's `ubuntu-latest` installs. Not yet run against Beco's own
+photographs on a runner: the first dispatch from the dashboard is that test.
+
+**What was considered.** A Sharp build with libheif compiled in: a custom native build to keep
+working across Sharp upgrades, for one decoder. Running the import on a macOS runner: ten times
+the Actions minutes. Asking Beco to set their iPhones to Most Compatible: right for new photos,
+does nothing for the hundreds already in Drive.
+
+**Reverses if:** Sharp's prebuilt binary starts shipping an HEVC decoder, when the converter
+step can go.

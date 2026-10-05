@@ -65,6 +65,11 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm --filter @beco/ui check:contrast
 
+      # The importer's HEIC test decodes a real file, the same way the
+      # import workflow does.
+      - name: Install the HEIC converter
+        run: sudo apt-get update -q && sudo apt-get install -y -q libheif-examples libheif-plugin-libde265
+
       # The jsdom suites: pure functions, the design system, the storefront
       # and the dashboard. No database needed for these.
       - run: pnpm test:unit

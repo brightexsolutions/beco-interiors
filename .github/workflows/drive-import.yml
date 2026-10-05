@@ -61,6 +61,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # Beco's hardware photographs are iPhone HEIC, which Sharp cannot
+      # decode. libheif's heif-convert can, with its HEVC plugin. Without
+      # this every hinge, door lock and furniture leg is skipped, D122.
+      - name: Install the HEIC converter
+        run: sudo apt-get update -q && sudo apt-get install -y -q libheif-examples libheif-plugin-libde265
+
       - name: Refuse to run without the Drive credential
         env:
           KEY_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}

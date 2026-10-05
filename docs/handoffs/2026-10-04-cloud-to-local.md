@@ -21,7 +21,7 @@ git config user.email "info.brightexsolutions@gmail.com"
 
 The cloud work is the merges on `dev` dated 3 and 4 October. Each merge names its branch, each
 branch is one piece of work, and each piece has a decision in `docs/DECISIONS.md`, D104 to
-D122. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
+D124. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
 
 | Branch merged into dev | What it is | Decision |
 |---|---|---|
@@ -45,6 +45,7 @@ D122. Read `docs/STATUS.md` first; it is the plan of record at the end of the se
 | `storefront/shop-range-index` | The shop browses by range first; `/shop/all`; the strip inside a range | D119 |
 | `storefront/cinematic-room-hero` | The home hero shows our finished rooms; About copy in the first person | D120 |
 | `catalogue/hinges-by-colour` | Hinges import one product per photograph, sorted by finish | D122 |
+| `catalogue/hardware-split-heic-codes` | Door locks and legs split too; HEIC on Linux; codes on quote lines | D122, D123, D124 |
 | `storefront/hero-premium-rooms` | No rules or bars on the hero; `pnpm hero:frames` to cut stock room photographs | D121 |
 
 ## 2. What the cloud could not do, and you can
@@ -118,9 +119,10 @@ it is not. Delete the frames of any room you drop, run `pnpm test:component`, ch
 live on a phone and a desktop, and record the swap as the next free decision number, reversing D120's own-work-only
 rule for the hero on Brown's instruction.
 
-**Hinges, one product per photograph (D122).** Run from the Mac, not the dashboard button: every
-hinge photograph is HEIC and only macOS decodes it. Against staging, `pnpm drive:import
---dry-run` first: the report should list `HINGES` under "Ranges split one product per
+**Hinges, door locks and furniture legs, one product per photograph (D122, D123).** Every one of
+these photographs is HEIC. The dashboard's import button now decodes it on GitHub's runners
+(D123); this has only run against a test file, so the first dispatch is the real test. Against
+staging, Check only first, from the dashboard or `pnpm drive:import --dry-run` on the Mac: the report should list `HINGES` under "Ranges split one product per
 photograph" with about 63 products, and `DOOR LOCKS` and `FURNITURE LEGS` beside it, about 11 and
 55. Then the real run. Check on staging: the old "Hinges"
 product is unpublished, Hardware then Hinges holds Black, Silver and Gold Hinges (whichever
@@ -165,7 +167,7 @@ red, the failure is yours to read before anything deploys.
 ## 5. The prompt to begin the local chat
 
 ```
-Read docs/handoffs/2026-10-04-cloud-to-local.md first, then docs/STATUS.md and D104 to D122
+Read docs/handoffs/2026-10-04-cloud-to-local.md first, then docs/STATUS.md and D104 to D124
 in docs/DECISIONS.md. The cloud session merged seventeen branches into dev between 3 and 4
 October; nothing has been deployed and main is untouched. Pull dev, run pnpm install, set the
 commit hooks and the Brightex Solutions author, and run the full local check list in section
@@ -176,7 +178,7 @@ supabase test db there; add the R2 CORS and lifecycle rules from docs/DEPLOYMENT
 upload one real phone photograph on staging from the dashboard, confirming the direct PUT,
 the derivatives and the toast; set GITHUB_ACTIONS_TOKEN on the dashboard and dispatch a
 dry-run import to staging, confirming the report artifact and the refresh step; submit a
-quote on staging and confirm the confirmation email arrives; run the Hinges import from the Mac per the D122 step in section 2; swap the hero photographs per
+quote on staging and confirm the confirmation email arrives; run the hardware import per the D122 step in section 2; swap the hero photographs per
 the "Premium hero photography" step in section 2 of the handoff; walk docs/QA-CHECKLIST.md on a
 real iPhone and Android over mobile data and log every defect against its row.
 

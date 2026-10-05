@@ -83,6 +83,11 @@ Retired ranges (`LIGHTING`, `LIGHTS`) are skipped whatever they hold, D103.
 
 ## Running it
 
+HEIC, every iPhone photograph, is converted before Sharp sees it: `sips` on macOS, `heif-convert`
+from libheif on Linux, which the workflow installs (D123). On a Linux machine of your own,
+`apt install libheif-examples libheif-plugin-libde265`.
+
+
 From the dashboard: Catalogue, Drive import. Check only, Import, or Re-encode everything,
 against staging or production; the screen dispatches `.github/workflows/drive-import.yml` and
 shows the runs and the last report (D105). From a terminal: `pnpm drive:import --dry-run`, then
