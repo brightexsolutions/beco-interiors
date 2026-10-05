@@ -5,6 +5,13 @@ import '@beco/ui/src/tokens/tokens.css';
 export const metadata: Metadata = {
   title: 'Beco Interiors',
   description: 'Premium interior materials in Nairobi.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

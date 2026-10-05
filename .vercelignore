@@ -1,0 +1,16 @@
+node_modules
+.next
+.turbo
+_incoming
+.tmp-hero
+.git
+files
+.playwright-mcp
+.agents
+.impeccable
+.pnpm-store
+coverage
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
