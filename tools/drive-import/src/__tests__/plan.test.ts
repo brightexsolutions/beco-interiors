@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan } from '../plan';
+import { buildPlan, photoRef } from '../plan';
 import type { DriveFile } from '../classify';
 import type { FolderNode } from '../misnest';
 
@@ -331,5 +331,85 @@ describe('buildPlan against the taxonomy Beco actually keep, D104', () => {
     expect(plan.files).toEqual([]);
     const issue = plan.issues.find((i) => i.path === 'HANDLES/BLACK HANDLES/PULLS/H1');
     expect(issue?.reason).toContain('more than two folders below a range');
+  });
+});
+
+describe('ranges split by finish, D122', () => {
+  // HINGES as it is in Drive on 5 October: phone photographs, nothing named.
+  const hinges = [
+    f('h1', 'HINGES/IMG_1193.HEIC'),
+    f('h2', 'HINGES/IMG_1215.HEIC'),
+    f('h3', 'HINGES/BF8BC386-1505-4521-97FF-7FB9A96DC2A9.jpg'),
+  ];
+
+  it('makes each loose photograph its own product, named after its photo number', () => {
+    const plan = buildPlan(hinges, [], []);
+    expect(plan.files.map((x) => [x.productSlug, x.productName, x.productPath])).toEqual([
+      ['hinge-1193', 'Hinge 1193', 'HINGES/IMG_1193'],
+      ['hinge-1215', 'Hinge 1215', 'HINGES/IMG_1215'],
+      ['hinge-bf8bc386', 'Hinge bf8bc386', 'HINGES/BF8BC386-1505-4521-97FF-7FB9A96DC2A9'],
+    ]);
+  });
+
+  it('files each under the range for now, as its own shot, marked for the run to read the finish', () => {
+    const plan = buildPlan(hinges, [], []);
+    for (const file of plan.files) {
+      expect(file.categoryPath).toBe('HINGES');
+      expect(file.categoryChain.map((c) => c.slug)).toEqual(['hinges']);
+      expect(file.role).toBe('slab');
+      expect(file.splitByFinish).toMatchObject({ folder: 'HINGES', noun: 'Hinge' });
+    }
+    expect(plan.productsWithoutSlab).toEqual([]);
+    expect(plan.productsWithUnknowns).toEqual([]);
+  });
+
+  it('reports the split once, and no longer as one umbrella product', () => {
+    const plan = buildPlan(hinges, [], []);
+    expect(plan.finishFolders).toEqual([{ folder: 'HINGES', count: 3 }]);
+    expect(plan.looseFolders).toEqual([]);
+    const issues = plan.issues.filter((i) => i.path === 'HINGES');
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.reason).toContain('own product');
+    expect(issues[0]!.reason).toContain('unpublished');
+    expect(plan.files.some((x) => x.productSlug === 'hinges')).toBe(false);
+  });
+
+  it('still lets names win: a hinge folder whose files name each item splits by name, not finish', () => {
+    const plan = buildPlan([f('n1', 'HINGES/H-301 SOFT CLOSE.jpg'), f('n2', 'HINGES/H-302 FULL OVERLAY.jpg')], [], []);
+    expect(plan.files.map((x) => x.productName)).toEqual(['H-301 Soft Close', 'H-302 Full Overlay']);
+    expect(plan.files.every((x) => !x.splitByFinish)).toBe(true);
+    expect(plan.finishFolders).toEqual([]);
+  });
+
+  it('leaves every other loose range as one umbrella product, as before', () => {
+    const plan = buildPlan([f('l1', 'FURNITURE LEGS/IMG_4517.HEIC'), f('l2', 'FURNITURE LEGS/IMG_4518.HEIC')], [], []);
+    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['furniture-legs']));
+    expect(plan.finishFolders).toEqual([]);
+  });
+
+  it('keeps a product folder inside the range as one product', () => {
+    const plan = buildPlan([f('p1', 'HINGES/SOFT CLOSE/IMG_1.HEIC'), f('p2', 'HINGES/SOFT CLOSE/IMG_2.HEIC')], [], []);
+    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['soft-close']));
+    expect(plan.files.every((x) => !x.splitByFinish)).toBe(true);
+  });
+
+  it('gives an unchanged photograph the same slug on every run', () => {
+    const first = buildPlan(hinges, [], []);
+    const known = hinges.map((h) => ({ driveFileId: h.id, path: h.path, md5: h.md5 ?? null, role: null, productId: null }));
+    const second = buildPlan(hinges, [], known);
+    expect(second.files.map((x) => x.productSlug)).toEqual(first.files.map((x) => x.productSlug));
+    expect(second.files.every((x) => !x.needsDownload)).toBe(true);
+  });
+});
+
+describe('photoRef', () => {
+  it('takes the number a phone gave the photograph', () => {
+    expect(photoRef('IMG_1193.HEIC')).toBe('1193');
+    expect(photoRef('PXL_20260831_092311.jpg')).toBe('092311');
+    expect(photoRef('IMG_1193 2.HEIC')).toBe('1193');
+  });
+
+  it('takes the start of a random name, lowercased', () => {
+    expect(photoRef('BF8BC386-1505-4521-97FF-7FB9A96DC2A9.jpg')).toBe('bf8bc386');
   });
 });
