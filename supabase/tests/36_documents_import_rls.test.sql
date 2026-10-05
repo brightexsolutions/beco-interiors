@@ -39,13 +39,20 @@ insert into testimonials (client_name, quote_text, is_published) values
   ('Draft Client',     'Not yet.',    false);
 insert into import_runs (mode) values ('full');
 
+-- The true totals, read before any role is set. Staging and a local stack
+-- after a real import already hold rows, so a role is held to seeing all of
+-- them, never to a literal 1 that only an empty database satisfies.
+select count(*) as documents_total from documents \gset
+select count(*) as import_runs_total from import_runs \gset
+select count(*) as published_testimonials from testimonials where is_published \gset
+
 -- ---------- anonymous ----------
 set local role anon;
 
 select is_empty($$select id from documents$$, 'anon reads no documents');
 select is(
-  (select count(*) from testimonials), 1::bigint,
-  'anon reads only the published testimonial'
+  (select count(*) from testimonials), :published_testimonials::bigint,
+  'anon reads only the published testimonials'
 );
 select is_empty($$select id from import_runs$$, 'anon reads no import runs');
 select throws_ok(
@@ -60,7 +67,7 @@ reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000002","role":"authenticated"}';
 
-select is((select count(*) from documents), 1::bigint, 'sales reads the issued documents');
+select is((select count(*) from documents), :documents_total::bigint, 'sales reads every issued document');
 select lives_ok(
   $$insert into documents (type, reference_number, storage_path)
       values ('receipt', 'BR-TEST-0001', 'documents/BR-TEST-0001.pdf')$$,
@@ -76,7 +83,7 @@ select throws_ok(
 -- ---------- beco_product_manager ----------
 set local request.jwt.claims = '{"sub":"aaaaaaaa-0000-0000-0000-000000000004","role":"authenticated"}';
 
-select is((select count(*) from import_runs), 1::bigint, 'the product manager reads import runs');
+select is((select count(*) from import_runs), :import_runs_total::bigint, 'the product manager reads every import run');
 select is((select count(*) from import_state), 1::bigint, 'the product manager reads the import state');
 select throws_ok(
   $$insert into import_issues (run_id, path, reason)
