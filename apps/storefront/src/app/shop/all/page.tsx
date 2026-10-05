@@ -36,6 +36,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
  * The one flat list, D119: for the reader who wants to scroll everything, or
  * who searched from /shop. The chips here are the top level ranges, each a
  * link to its own page, so this list is also the way back into the tree.
+ * No "All" chip: it would link to this page, and the count under the strip
+ * already says the list is whole. Dropping it lets the strip fit one line.
  */
 export default async function AllProductsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const filter = read(await searchParams);
@@ -46,7 +48,7 @@ export default async function AllProductsPage({ searchParams }: { searchParams: 
     allCount: all.length,
     items: groups.filter((g) => g.total_count > 0),
     activeSlug: null,
-  });
+  }).filter((chip) => chip.href !== '/shop/all');
 
   return (
     <main>
@@ -61,19 +63,11 @@ export default async function AllProductsPage({ searchParams }: { searchParams: 
           </ol>
         </nav>
 
-        <div className="flex items-center gap-4">
-          <span aria-hidden className="h-px w-8 bg-warm-red" />
-          <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">The whole catalogue</p>
-        </div>
-        <h1 className="mt-5 max-w-[15ch] font-display text-5xl leading-[1.04] tracking-[-0.015em] text-charcoal sm:text-6xl">
+        <h1 className="font-display text-4xl leading-[1.04] tracking-[-0.015em] text-charcoal sm:text-5xl">
           Everything we stock.
         </h1>
-        <p className="mt-6 max-w-[56ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-          Every stone, panel, handle and fitting on the floor at Urban Square, on one page. Pick a
-          range to narrow it, or search by name.
-        </p>
 
-        <div className="mt-10">
+        <div className="mt-8">
           <RangeToolbar chips={chips} finishes={[]} total={all.length} showing={products.length} searchPlaceholder="Search the catalogue" />
         </div>
       </div>
