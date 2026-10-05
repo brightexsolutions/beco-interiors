@@ -6,8 +6,10 @@ production, and how a release is undone.
 Incident response and data restore live in `docs/RUNBOOK.md`. This document is about getting
 code and infrastructure into place.
 
-**Status: not yet provisioned.** This is the procedure M1 executes. Steps are written to be
-followed and verified, not read.
+**Status: Vercel projects exist, DNS for the site does not.** Checked 30 September 2026
+against the signed-in Vercel team `brightex-solutions-projects` and the live `beco.co.ke`
+zone. Nameservers are already Cloudflare. The site hostnames are attached in Vercel and are
+not in DNS yet. Mail and Resend records are already on the zone. Do not recreate them.
 
 ---
 
@@ -19,8 +21,8 @@ followed and verified, not read.
 | pnpm | 11 or later | 11.24.0, via corepack |
 | Docker | Any recent | Installed, **not currently running.** Needed for local Supabase |
 | Supabase CLI | Latest | **Not installed.** `brew install supabase/tap/supabase` |
-| Vercel CLI | Latest | 54.7.1, present |
-| gh | Latest | 2.96.0, present but **not authenticated** |
+| Vercel CLI | Latest | 59.16.0, present, signed in as `brightexsolutions` |
+| gh | Latest | 2.96.0, present, signed in as `brightexsolutions` |
 | git | 2.4 or later | 2.50.1, present |
 
 ```sh
@@ -176,13 +178,31 @@ PUT, reads the staged object back, writes the derivatives and deletes the stagin
 it is about the public site not reaching admin tools. Studio is routes inside the dashboard per
 D9, not a third project.
 
-| Project | Root Directory | Domain |
-|---|---|---|
-| `beco-storefront` | `apps/storefront` | `www.beco.co.ke`, apex redirects to it |
-| `beco-dashboard` | `apps/dashboard` | `dashboard.beco.co.ke` |
+| Project | ID | Root Directory | Domain |
+|---|---|---|---|
+| `beco-interiors` (the storefront) | `prj_T2pPefNqtwy9KpMTK1PAN6fkOqJi` | `apps/storefront` | `beco.co.ke`, `www.beco.co.ke` |
+| `beco-dashboard` | `prj_bGXMoh6CcsEgbkGinhlVEanqRmDs` | `apps/dashboard` | `dashboard.beco.co.ke` |
 
-For each: connect the repository, set the Root Directory, and set the Ignored Build Step to
-Turborepo's, so a storefront change does not rebuild the dashboard and burn build minutes.
+Both sit on the `brightex-solutions-projects` team (`team_2Xm7dgXNaVgIBXGvL7iM6X7u`), the
+account the Vercel CLI is signed into as `brightexsolutions`. The storefront keeps its original
+name. Node is 22.x. Install command is `pnpm install --frozen-lockfile`. The storefront has a
+production deployment. The dashboard has the domain attached and has never been deployed.
+
+There is no third project. `staging.beco.co.ke` is a hostname on these two, not a new project.
+`img.beco.co.ke` is the R2 bucket, not a Vercel project. Studio stays inside the dashboard.
+
+GitHub Actions already has `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and
+`VERCEL_PROJECT_ID_STOREFRONT`. `VERCEL_PROJECT_ID_DASHBOARD` is set to the dashboard id above.
+The `Production` GitHub environment exists and has no required reviewers yet, so the approval
+gate in section 11 is not armed. A `staging` environment does not exist yet.
+
+Do not point the domain's nameservers at Vercel. They are already `ezra.ns.cloudflare.com` and
+`kristin.ns.cloudflare.com`. Vercel's "not configured" warning is the missing A records below,
+not a request to leave Cloudflare.
+
+The storefront project is already receiving Git preview builds. Section 11 still says GitHub
+Actions owns deployment, so that connection stays a known exception until the Actions workflow
+is the one doing the deploy. The dashboard is not building from Git. It has no deployments.
 
 **Environment variables, and the boundary that matters:**
 
@@ -224,19 +244,48 @@ backwards produces a redirect loop that looks like a Vercel bug and is not one.
   5  Set Cloudflare SSL/TLS to Full (Strict)
 ```
 
-Records:
+Vercel, checked 30 September, wants an A record for each hostname it already owns. Add these
+in Cloudflare as **DNS only** (grey cloud). Switch to proxied only after Vercel reports the
+certificate.
 
 ```
-  beco.co.ke          A or CNAME -> Vercel      proxied    redirects to www
-  www                 CNAME      -> Vercel      proxied
-  dashboard           CNAME      -> Vercel      proxied    noindex, robots blocked
-  staging             CNAME      -> Vercel      proxied    noindex, password protected
-  img                 CNAME      -> R2          proxied    product image CDN
-  MX                  -> Zoho                   DNS only   untouched, human mail
-  send                MX + TXT (SPF)            DNS only   Resend
-  resend._domainkey   TXT                       DNS only   DKIM
-  _dmarc              TXT p=none, later quarantine         DNS only
+  beco.co.ke          A    76.76.21.21     grey, then proxied     storefront
+  www                 A    76.76.21.21     grey, then proxied     storefront
+  dashboard           A    76.76.21.21     grey, then proxied     dashboard, noindex
 ```
+
+Not created yet, and not new Vercel projects:
+
+```
+  staging             A    76.76.21.21     grey, then proxied     add the hostname
+                                           to the existing projects first, see below
+  img                 CNAME to the R2      proxied                bucket beco-product-images
+                      custom domain target                        Cloudflare fills the target
+```
+
+Already on the zone. Leave them.
+
+```
+  MX                  workplaceproemail.com (10) and .net (20)     DNS only
+  TXT apex SPF        include:_spf.olodoan.com                     DNS only
+  send                CNAME send.forge.rmta.net                    existing mail, not Resend
+  rsend               CNAME rsend.forge.rmta.net                   Resend bounce host
+                      resolves to feedback-smtp.us-east-1.amazonses.com
+  resend._domainkey   TXT                                          Resend DKIM, present
+  _dmarc              TXT p=quarantine                             already stricter than p=none
+```
+
+### Staging and images, without a new Vercel project
+
+`staging.beco.co.ke` is the storefront's staging hostname. In the `beco-interiors` project,
+Settings, Domains, add `staging.beco.co.ke` and assign it to the Preview environment, not
+Production. Then add the A record above, grey cloud first. Protect the hostname with Vercel
+deployment protection and `noindex`. It must use the `beco-staging` Supabase project, never
+production. The dashboard does not get its own staging hostname in this plan.
+
+`img.beco.co.ke` is not added in Vercel. In the same Cloudflare account, R2, bucket
+`beco-product-images`, Custom Domains, connect `img.beco.co.ke`. Cloudflare writes the CNAME.
+Do not point that name at `76.76.21.21`.
 
 Cloudflare configuration:
 
@@ -255,10 +304,13 @@ cache.
 
 ### 3.11 Resend
 
-Add `beco.co.ke` as a sending domain under the becointeriorsdev Resend account. Add the DKIM
-and SPF records as **DNS only**. **Do not touch the Zoho MX records**, which carry human mail.
+`beco.co.ke` is already the sending domain. DKIM is at `resend._domainkey`. The bounce host is
+`rsend`, not `send`. `send` belongs to the existing mail host and must stay a CNAME to
+`send.forge.rmta.net`. Human mail is Workplace Pro Email (`workplaceproemail.com` and `.net`),
+not Zoho. DMARC is already `p=quarantine`.
 
-Start DMARC at `p=none`, move to `p=quarantine` once reports are clean.
+The `RESEND_API_KEY` in local `.env.local` was rejected by Resend. Create a new key with
+Sending access only, on the becointeriorsdev account, and put that on the dashboard project.
 
 **Verify:** Resend reports the domain verified, and a test send arrives in Gmail and Outlook
 without a spam flag.
