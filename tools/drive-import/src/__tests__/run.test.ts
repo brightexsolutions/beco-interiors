@@ -62,6 +62,13 @@ describe('finishPlacement, D122', () => {
       ],
     });
     expect(finishPlacement(split, 'gold').chain[1]).toEqual({ path: 'HINGES/GOLD HINGES', slug: 'gold-hinges', name: 'Gold Hinges' });
+    expect(finishPlacement({ folder: 'FURNITURE LEGS', noun: 'Furniture Leg', ref: '4517' }, 'gold')).toEqual({
+      name: 'Gold Furniture Leg 4517',
+      chain: [
+        { path: 'FURNITURE LEGS', slug: 'furniture-legs', name: 'Furniture Legs' },
+        { path: 'FURNITURE LEGS/GOLD FURNITURE LEGS', slug: 'gold-furniture-legs', name: 'Gold Furniture Legs' },
+      ],
+    });
   });
 
   it('leaves an unclear finish in the range itself, unsorted, rather than guessing', () => {

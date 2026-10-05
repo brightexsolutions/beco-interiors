@@ -129,7 +129,13 @@ export const RETIRED_FOLDERS = new Set(['LIGHTING', 'LIGHTS']);
  * nothing, so sort them by colour and let the Beco team set the codes in the
  * dashboard. Add a range here when its folder is in the same state.
  */
-export const SPLIT_BY_FINISH: ReadonlyMap<string, string> = new Map([['HINGES', 'Hinge']]);
+export const SPLIT_BY_FINISH: ReadonlyMap<string, string> = new Map([
+  ['HINGES', 'Hinge'],
+  // Same state in Drive on 5 October, phone photographs only, and added on
+  // Brown's go ahead the same day.
+  ['DOOR LOCKS', 'Door Lock'],
+  ['FURNITURE LEGS', 'Furniture Leg'],
+]);
 
 /**
  * A short, stable reference for a photograph with no name: the number a
@@ -279,6 +285,8 @@ export const buildPlan = (
   const looseImported = new Set<string>();
   /** Loose photographs per range split by finish. */
   const finishByFolder = new Map<string, number>();
+  /** One real photo number per split range, for the report's example name. */
+  const finishExample = new Map<string, string>();
   /** Role bearing filenames per product folder, for the mixed folder check. */
   const namedByFolder = new Map<string, { folderName: string; filenames: string[] }>();
   /** Item folders: distinct items and file counts, for the report. */
@@ -393,6 +401,7 @@ export const buildPlan = (
       const productSlug = claimSlug(slugify(`${splitNoun} ${ref}`), productPath, top);
       const chain = chainFor(dirs);
       finishByFolder.set(top, (finishByFolder.get(top) ?? 0) + 1);
+      if (!finishExample.has(top)) finishExample.set(top, ref);
       files.push({
         ...base,
         categorySlug: chain[0]!.slug,
@@ -531,7 +540,7 @@ export const buildPlan = (
       path: folder,
       reason:
         `The ${count} photograph(s) in "${folder}" carry phone names, so each is imported as its ` +
-        `own product, "${noun} 1193" after its photo number, filed under a sub range by the ` +
+        `own product, "${noun} ${finishExample.get(folder)}" after its photo number, filed under a sub range by the ` +
         `finish read from the photograph (Black ${titleise(folder)}, Silver ${titleise(folder)}, ` +
         `Gold ${titleise(folder)}). One whose finish is unclear stays in ${titleise(folder)} ` +
         'itself. Set each code, name and price in the dashboard, move any that were misread, ' +

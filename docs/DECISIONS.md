@@ -2789,7 +2789,10 @@ Hinges, whose identity is `HINGES/BLACK HINGES`, the path Beco would give that f
 Finishes are black, white, silver, gold, bronze and copper. A photograph with no clear finish
 stays in Hinges itself as "Hinge 1193" rather than being guessed into a sub range. The old
 "Hinges" product is unpublished, never deleted, with an issue recorded. `SPLIT_BY_FINISH` in
-`plan.ts` names the ranges this applies to, Hinges alone today.
+`plan.ts` names the ranges this applies to: Hinges, and since the same day, on Brown's go ahead,
+Door Locks and Furniture Legs, both in the same state in Drive (about 11 and 55 phone
+photographs, no subfolders). Products read "Gold Furniture Leg 4517" under Furniture Legs, then
+Gold Furniture Legs.
 
 **Why.** Brown's instruction, 5 October: each hinge is a separate item with its own code and
 price, and quoting one bundled product with thirty photographs made it impossible to tell which

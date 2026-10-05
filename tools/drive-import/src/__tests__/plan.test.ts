@@ -130,28 +130,29 @@ describe('buildPlan incrementality', () => {
   });
 
   it('imports loose files in a real category as one umbrella product, on request 14 September', () => {
-    // FURNITURE LEGS, OFFICE ACCESSORIES, HINGES and DOOR LOCKS are all real
-    // categories with real photographs and no per-item folders. Withholding
+    // OFFICE ACCESSORIES and KITCHEN ACCESSORIES are real categories with
+    // real photographs and no per-item folders. (Hinges, door locks and
+    // furniture legs were too, until D122 split them by finish.) Withholding
     // them entirely, the previous behaviour, left every one of those ranges
     // with nothing to show at all. Every raw camera filename still resolves
     // to `unknown`, never guessed, exactly as it would inside a real
     // product folder: this only changes where the files land, not how a
     // role is decided.
     const listing = Array.from({ length: 5 }, (_, i) =>
-      f(`fl-${i}`, `FURNITURE LEGS/IMG_${4480 + i}.HEIC`),
+      f(`oa-${i}`, `OFFICE ACCESSORIES/IMG_${4480 + i}.HEIC`),
     );
     const plan = buildPlan(listing, [], []);
     expect(plan.files).toHaveLength(5);
     expect(plan.files.every((x) => x.role === 'unknown')).toBe(true);
-    expect(plan.files.every((x) => x.productSlug === 'furniture-legs')).toBe(true);
-    expect(plan.files.every((x) => x.categorySlug === 'furniture-legs')).toBe(true);
-    expect(plan.files[0]!.productName).toBe('Furniture Legs');
-    expect(plan.productsWithUnknowns).toContain('furniture-legs');
-    expect(plan.productsWithoutSlab).toContain('furniture-legs');
+    expect(plan.files.every((x) => x.productSlug === 'office-accessories')).toBe(true);
+    expect(plan.files.every((x) => x.categorySlug === 'office-accessories')).toBe(true);
+    expect(plan.files[0]!.productName).toBe('Office Accessories');
+    expect(plan.productsWithUnknowns).toContain('office-accessories');
+    expect(plan.productsWithoutSlab).toContain('office-accessories');
 
-    const issue = plan.issues.find((i) => i.path === 'FURNITURE LEGS');
+    const issue = plan.issues.find((i) => i.path === 'OFFICE ACCESSORIES');
     expect(issue?.reason).toContain('Imported as ONE product');
-    expect(issue?.reason).toContain('Furniture Legs');
+    expect(issue?.reason).toContain('Office Accessories');
   });
 
   it('still imports nothing for a file with no category folder at all', () => {
@@ -381,9 +382,25 @@ describe('ranges split by finish, D122', () => {
     expect(plan.finishFolders).toEqual([]);
   });
 
+  it('splits door locks and furniture legs the same way, each under its own name', () => {
+    const plan = buildPlan([
+      f('d1', 'DOOR LOCKS/IMG_5692.HEIC'),
+      f('l1', 'FURNITURE LEGS/IMG_4517.HEIC'),
+      f('l2', 'FURNITURE LEGS/IMG_4518.HEIC'),
+    ], [], []);
+    expect(plan.files.map((x) => [x.productSlug, x.productName, x.categoryPath])).toEqual([
+      ['door-lock-5692', 'Door Lock 5692', 'DOOR LOCKS'],
+      ['furniture-leg-4517', 'Furniture Leg 4517', 'FURNITURE LEGS'],
+      ['furniture-leg-4518', 'Furniture Leg 4518', 'FURNITURE LEGS'],
+    ]);
+    expect(plan.finishFolders).toEqual([{ folder: 'DOOR LOCKS', count: 1 }, { folder: 'FURNITURE LEGS', count: 2 }]);
+    const legs = plan.issues.find((i) => i.path === 'FURNITURE LEGS')!;
+    expect(legs.reason).toContain('"Furniture Leg 4517"');
+  });
+
   it('leaves every other loose range as one umbrella product, as before', () => {
-    const plan = buildPlan([f('l1', 'FURNITURE LEGS/IMG_4517.HEIC'), f('l2', 'FURNITURE LEGS/IMG_4518.HEIC')], [], []);
-    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['furniture-legs']));
+    const plan = buildPlan([f('l1', 'KITCHEN ACCESSORIES/IMG_1.HEIC'), f('l2', 'KITCHEN ACCESSORIES/IMG_2.HEIC')], [], []);
+    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['kitchen-accessories']));
     expect(plan.finishFolders).toEqual([]);
   });
 

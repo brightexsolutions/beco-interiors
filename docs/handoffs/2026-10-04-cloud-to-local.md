@@ -121,7 +121,8 @@ rule for the hero on Brown's instruction.
 **Hinges, one product per photograph (D122).** Run from the Mac, not the dashboard button: every
 hinge photograph is HEIC and only macOS decodes it. Against staging, `pnpm drive:import
 --dry-run` first: the report should list `HINGES` under "Ranges split one product per
-photograph" with about 63 products. Then the real run. Check on staging: the old "Hinges"
+photograph" with about 63 products, and `DOOR LOCKS` and `FURNITURE LEGS` beside it, about 11 and
+55. Then the real run. Check on staging: the old "Hinges"
 product is unpublished, Hardware then Hinges holds Black, Silver and Gold Hinges (whichever
 finishes the photographs read as) plus any unsorted ones, and each is quotable on its own. Look
 through the finishes against the photographs and note how many were misread, since that decides

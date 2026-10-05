@@ -54,7 +54,7 @@ never guessed into a role.**
 | `CATEGORY/SUB RANGE/PRODUCT/photos` | A sub range under the range, its products under it. `HEIXIN 12MM` |
 | `CATEGORY/SUB RANGE/one photo per item` | Every file names its own item (`B762 BLACK`, `HT-8350 BLACK GOLD`), so each becomes a product and the folder becomes a sub range. `BLACK HANDLES` |
 | `CATEGORY/photos` | Camera named files with no product folder: one umbrella product, reported |
-| `HINGES/photos` | A range in `SPLIT_BY_FINISH`, D122: each camera named photo is its own product, `Hinge 1193`, filed under `Black Hinges`, `Silver Hinges` and so on by the finish `readFinish` reads from its pixels at run time. No clear finish stays in the range. The old umbrella product is unpublished |
+| `HINGES/photos`, `DOOR LOCKS/photos`, `FURNITURE LEGS/photos` | A range in `SPLIT_BY_FINISH`, D122: each camera named photo is its own product, `Hinge 1193`, filed under `Black Hinges`, `Silver Hinges` and so on by the finish `readFinish` reads from its pixels at run time. No clear finish stays in the range. The old umbrella product is unpublished |
 | Deeper than two folders below a range | Reported and skipped. The site shows three levels, no more |
 
 A folder is a PRODUCT when it holds photographs directly and a CATEGORY when it holds only
