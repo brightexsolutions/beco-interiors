@@ -108,6 +108,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1121.0
         version: 3.1121.0
+      '@beco/documents':
+        specifier: workspace:*
+        version: link:../../packages/documents
       '@beco/supabase-client':
         specifier: workspace:*
         version: link:../../packages/supabase-client
@@ -135,6 +138,9 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.18)(react@19.2.8)(supports-color@7.2.0)
+      sharp:
+        specifier: ^0.35.4
+        version: 0.35.4(@types/node@22.20.1)
     devDependencies:
       '@types/react':
         specifier: 19.2.18

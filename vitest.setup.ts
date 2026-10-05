@@ -23,7 +23,12 @@ expect.extend(axeMatchers);
 // context as inconclusive rather than fatal, and a component's axe check
 // keeps working either way. This trades console noise on every test run for
 // a stub, not a skipped check.
-HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;
+// Guarded, like everything below, so a file that opts into the node
+// environment (the share card renderer, which needs real Buffers for sharp)
+// can still load this setup.
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;
+}
 
 /**
  * Radix menus (DropdownMenu and later Popover) dispatch PointerEvents and
@@ -99,6 +104,7 @@ if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined
  */
 afterEach(() => {
   cleanup();
+  if (typeof document === 'undefined') return;
   // Radix menus lock the body. If a test fails while one is open, jsdom
   // keeps `pointer-events: none` and the next userEvent.click waits forever.
   document.body.style.pointerEvents = '';

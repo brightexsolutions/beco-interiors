@@ -35,3 +35,16 @@ export default function imageLoader({ src, width }: { src: string; width: number
   const nearest = WIDTHS.find((w) => w >= width) ?? WIDTHS[WIDTHS.length - 1];
   return `${host}/${src}-${nearest}.webp`;
 }
+
+/**
+ * The same derivative as an ABSOLUTE URL, for the places a relative one
+ * fails: structured data, and the share card route fetching a photograph
+ * server side. A relative image host (the `/api/img` development proxy) is
+ * resolved against `base`, the origin the page is served from.
+ *
+ * Passing a bare key through `new URL(key, origin)` instead, as the product
+ * and post schema once did, yields `https://www.beco.co.ke/12mm-.../slab-0`:
+ * no width, no extension, and a 404.
+ */
+export const absoluteCatalogueUrl = (key: string, width: number, base: string): string =>
+  new URL(imageLoader({ src: key, width }), base).toString();
