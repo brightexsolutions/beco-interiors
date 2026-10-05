@@ -85,6 +85,15 @@ export const emailHero = (kind: 'request' | 'quote' | 'receipt'): EmailHero => {
   return { src: `${site}/email/hero-${kind}.jpg`, alt: alts[kind] };
 };
 
+/**
+ * Corners, D125: the site's two values, so an email reads as the same
+ * company. 6px on the card and on boxed blocks, 4px on buttons and small
+ * marks. Outlook on Windows ignores border-radius and draws them square,
+ * which is the old look, not a broken one.
+ */
+const RADIUS_CARD = '6px';
+const RADIUS_CONTROL = '4px';
+
 const text = (size: number, color: string, extra = '') =>
   `font-family:${SANS};font-size:${size}px;line-height:1.6;color:${color};${extra}`;
 
@@ -123,7 +132,7 @@ export function referenceBox(label: string, value: string, rows: Array<[string, 
     .join('');
   return (
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ` +
-    `style="margin:8px 0 24px;border:1px solid ${RULE};border-left:4px solid ${CHARCOAL};background:${PANEL}">` +
+    `style="margin:8px 0 24px;border-collapse:separate;border:1px solid ${RULE};border-left:4px solid ${CHARCOAL};border-radius:${RADIUS_CARD};background:${PANEL}">` +
     '<tr><td style="padding:18px 20px">' +
     `<p style="margin:0 0 4px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">` +
     `${escapeHtml(label)}</p>` +
@@ -152,7 +161,7 @@ export function attachmentNote(filename: string, caption: string): string {
     '<tr>' +
     `<td width="44" valign="top" style="padding:2px 12px 0 0">` +
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
-    `<td align="center" style="width:32px;height:40px;border:1px solid ${CHARCOAL};${text(14, CHARCOAL, 'font-weight:700;line-height:40px')}">PDF</td>` +
+    `<td align="center" style="width:32px;height:40px;border:1px solid ${CHARCOAL};border-radius:${RADIUS_CONTROL};${text(14, CHARCOAL, 'font-weight:700;line-height:40px')}">PDF</td>` +
     '</tr></table></td>' +
     `<td valign="top"><p style="margin:0;${text(16, CHARCOAL, 'font-weight:600;word-break:break-word')}">${escapeHtml(filename)}</p>` +
     `<p style="margin:0;${text(14, MUTED)}">${escapeHtml(caption)}</p></td>` +
@@ -170,7 +179,7 @@ export function steps(items: string[]): string {
           '<tr>' +
           `<td width="36" valign="top" style="padding:0 0 12px">` +
           `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
-          `<td align="center" style="width:26px;height:26px;background:${CHARCOAL};${text(14, PAPER, 'font-weight:700;line-height:26px')}">${i + 1}</td>` +
+          `<td align="center" style="width:26px;height:26px;background:${CHARCOAL};border-radius:${RADIUS_CONTROL};${text(14, PAPER, 'font-weight:700;line-height:26px')}">${i + 1}</td>` +
           '</tr></table></td>' +
           `<td valign="top" style="padding:1px 0 12px;${text(16, CHARCOAL)}">${escapeHtml(item)}</td>` +
           '</tr>',
@@ -192,8 +201,8 @@ export function buttons(items: Array<{ label: string; href: string; primary?: bo
       return (
         `<td class="beco-stack" style="padding:0 8px 8px 0">` +
         `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
-        `<td style="background:${bg};border:1px solid ${CHARCOAL}">` +
-        `<a href="${escapeHtml(href)}" style="display:inline-block;padding:13px 22px;${text(16, fg, 'font-weight:600;line-height:1.2;text-decoration:none;letter-spacing:0.02em;white-space:nowrap')}">` +
+        `<td style="background:${bg};border:1px solid ${CHARCOAL};border-radius:${RADIUS_CONTROL}">` +
+        `<a href="${escapeHtml(href)}" style="display:inline-block;border-radius:${RADIUS_CONTROL};padding:13px 22px;${text(16, fg, 'font-weight:600;line-height:1.2;text-decoration:none;letter-spacing:0.02em;white-space:nowrap')}">` +
         `${escapeHtml(label)}</a></td></tr></table></td>`
       );
     })
@@ -274,7 +283,7 @@ export function totalBlock(label: string, amount: string, rows: Array<[string, s
     )
     .join('');
   return (
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:${CHARCOAL}">` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;border-collapse:separate;border-radius:${RADIUS_CARD};background:${CHARCOAL}">` +
     `<tr><td style="padding:22px 24px 20px">` +
     `<p style="margin:0 0 6px;${text(14, '#b6bec6', 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">${escapeHtml(label)}</p>` +
     `<p style="margin:0;font-family:${SERIF};font-size:40px;line-height:1.1;letter-spacing:-0.01em;color:${PAPER}">${escapeHtml(amount)}</p>` +
@@ -353,10 +362,10 @@ export function renderEmailShell({
     '<tr><td align="center" style="padding:32px 12px">' +
     '<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->' +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ` +
-    `style="max-width:600px;width:100%;background:${PAPER}">` +
+    `style="max-width:600px;width:100%;border-collapse:separate;border-radius:${RADIUS_CARD};overflow:hidden;background:${PAPER}">` +
     // Header band: the white mark and the wordmark as real text, so it
     // survives a client that blocks images.
-    `<tr><td class="beco-pad" style="background:${CHARCOAL};padding:24px 40px">` +
+    `<tr><td class="beco-pad" style="background:${CHARCOAL};border-radius:${RADIUS_CARD} ${RADIUS_CARD} 0 0;padding:24px 40px">` +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
     '<td valign="middle"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
     `<td style="padding-right:14px"><img src="${logo}" width="40" height="39" alt="Beco" ` +
@@ -378,7 +387,7 @@ export function renderEmailShell({
     // Body
     `<tr><td class="beco-pad" style="padding:40px 40px 32px">${bodyHtml}</td></tr>` +
     // Footer: the showroom
-    `<tr><td class="beco-pad" style="background:${PANEL};border-top:1px solid ${RULE};padding:28px 40px">` +
+    `<tr><td class="beco-pad" style="background:${PANEL};border-top:1px solid ${RULE};border-radius:0 0 ${RADIUS_CARD} ${RADIUS_CARD};padding:28px 40px">` +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
     '<td class="beco-stack" valign="top" style="padding:0 16px 12px 0">' +
     `<p style="margin:0 0 4px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">Showroom</p>` +

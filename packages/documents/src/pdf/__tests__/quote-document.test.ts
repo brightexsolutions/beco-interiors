@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { quoteTotals } from '@beco/validation';
 import { renderQuotePdf } from '../render';
-import { lineCodeLabel, quoteFromLines, quotePaymentBlocks, type QuotePdfInput } from '../types';
+import { lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks, type QuotePdfInput } from '../types';
 
 const line = (n: number, price = 65000): QuotePdfInput['lines'][number] => ({
   description: `Line ${String(n).padStart(2, '0')} sintered stone slab, 12mm polished`,
@@ -111,6 +111,18 @@ describe('renderReceiptPdf', () => {
     expect(asText).toContain('Receipt');
     expect(asText).not.toMatch(/Valid until/);
     expect(pdf.includes(Buffer.from([0xe2, 0x80, 0x94]))).toBe(false);
+  });
+});
+
+describe('PDF_CARD_RADIUS (D125)', () => {
+  it('is the site card corner, 6px, in points', () => {
+    expect(PDF_CARD_RADIUS).toBe(4.5);
+  });
+
+  it('renders the rounded How to pay box without breaking the document', async () => {
+    const pdf = await renderQuotePdf(base({ tillNumber: '123456' }));
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(pageCount(pdf)).toBe(1);
   });
 });
 
