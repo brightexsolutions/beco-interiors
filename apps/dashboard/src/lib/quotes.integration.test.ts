@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import type { Database } from '@beco/types';
+import { ensureTestUser } from './__tests__/ensure-test-user';
 import { fetchNewQuoteCount } from './nav-counts';
 import { fetchQuotes } from './quotes';
 
@@ -44,31 +45,19 @@ beforeAll(async () => {
   // Clean up anything a previous crashed run left behind.
   await sb.from('quotes').delete().ilike('customer_name', `${PREFIX}%`);
   await sb.from('products').delete().eq('slug', 'zz-int-quotes-product');
-  const { data: existingUsers } = await sb.from('users').select('id, email').ilike('email', 'zz-int-quotes-%');
-  for (const u of existingUsers ?? []) await sb.auth.admin.deleteUser(u.id);
-
-  const { data: salesAuth, error: salesErr } = await sb.auth.admin.createUser({
+  salesId = await ensureTestUser(sb, {
     email: 'zz-int-quotes-sales@beco.co.ke',
     password: PASSWORD,
-    email_confirm: true,
+    fullName: 'ZZ Sales',
+    role: 'beco_sales',
   });
-  expect(salesErr, 'creating the test sales auth user failed').toBeNull();
-  const { data: adminAuth, error: adminErr } = await sb.auth.admin.createUser({
+  adminId = await ensureTestUser(sb, {
     email: 'zz-int-quotes-admin@beco.co.ke',
     password: PASSWORD,
-    email_confirm: true,
+    fullName: 'ZZ Admin',
+    role: 'beco_admin',
   });
-  expect(adminErr, 'creating the test admin auth user failed').toBeNull();
-
-  salesId = salesAuth!.user!.id;
-  adminId = adminAuth!.user!.id;
   authUserIds.push(salesId, adminId);
-
-  const { error: usersErr } = await sb.from('users').insert([
-    { id: salesId, email: 'zz-int-quotes-sales@beco.co.ke', full_name: 'ZZ Sales', role: 'beco_sales', must_change_password: false },
-    { id: adminId, email: 'zz-int-quotes-admin@beco.co.ke', full_name: 'ZZ Admin', role: 'beco_admin', must_change_password: false },
-  ]);
-  expect(usersErr, 'seeding the test users rows failed').toBeNull();
 
   const { data: product, error: productErr } = await sb
     .from('products')
