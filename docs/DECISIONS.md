@@ -2923,3 +2923,39 @@ and receipt PDF has one boxed element, How to pay, which takes the card corner a
 
 **Reverses if:** the team or Brown sees it live and wants it tighter or gone, when both values
 change in `tokens.css` alone, plus the two constants in `@beco/documents`.
+
+## D126, 5 October 2026: every page draws its own link preview, and the dashboard has none
+
+**Decision.** Every storefront page states a complete share card through one function,
+`pageMetadata` in `apps/storefront/src/lib/seo.ts`: title, description, canonical, og:url, site
+name, a 1200 by 630 JPEG og:image with its alt, and a large Twitter card. The images come from
+routes under `/og/`: `/og/<section>` for pages with no photograph of their own, drawn at build from
+one of Beco's own site photographs, and `/og/product/<slug>`, `/og/range/<slug>` and
+`/og/blog/<slug>`, drawn on first request from the record's own photograph and cached for the
+hour its page is. Each card is the photograph with a charcoal band carrying the real logo mark, an
+eyebrow and the page's name, set in the self hosted Titillium and Cormorant through `next/og`, then
+encoded by sharp as a baseline JPEG under 300KB. A card whose photograph will not load falls back
+to the section photograph, still named for the page. The image origin is the canonical one on
+production and the preview's own host on a Vercel preview (`ogOrigin`). Product titles name the
+product's own range rather than "sintered stone" on every item. The JSON-LD logo is an absolute
+`ImageObject`, and the product and post schema images are absolute derivatives rather than bare
+R2 keys. `/quote` is no longer disallowed in robots.txt, so its noindex is read, and `/og/` is
+allowed explicitly. The dashboard sets noindex, nofollow at its root layout, drops the shop copy
+from its description, and states no Open Graph tags, on top of its robots.txt and X-Robots-Tag.
+
+**Why.** Shared links showed the wrong picture or none. Four causes, all fixed: the default image
+was a portrait WebP declared as landscape, and WhatsApp does not render WebP; the product and post
+pages passed a bare R2 key as og:image, which resolved to a 404 on the canonical host; a page that
+set `openGraph` at all replaced the layout's whole object, so the product page lost its site name
+and type; and every image pointed at www.beco.co.ke, which is not yet on DNS. The dashboard
+described itself as "Premium interior materials in Nairobi", so a pasted dashboard link previewed
+as the shop, and three of its pages never set noindex themselves.
+
+**Rejected.** Handing scrapers the WebP derivatives: WhatsApp and some LinkedIn paths drop them.
+The `opengraph-image` file convention: its alt is fixed per file, and the metadata could not be
+unit tested as one object per page. A text rendering endpoint taking the title from the query
+string: anyone could draw any words under Beco's logo. A JPEG derivative per photograph in the
+import: a second set of files for one use, and no logo on it.
+
+*Reverses if:* a scraper Beco cares about is seen rejecting the generated JPEGs, or the image host
+moves to img.beco.co.ke and a ready made JPEG derivative becomes cheaper than drawing one.
