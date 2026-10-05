@@ -2,6 +2,8 @@ import type { QuoteMoney } from '@beco/validation';
 
 export interface QuotePdfLine {
   description: string;
+  /** The product code, printed under the description, D124. */
+  code?: string | null;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -41,6 +43,15 @@ export interface QuotePdfInput {
 }
 
 export interface QuotePdfTotals extends QuoteMoney {}
+
+/**
+ * How a line's product code is printed, on the PDF and in the email alike,
+ * D124: "Code H-301". Null when there is no code to print.
+ */
+export const lineCodeLabel = (code?: string | null): string | null => {
+  const trimmed = code?.trim();
+  return trimmed ? `Code ${trimmed}` : null;
+};
 
 const DEFAULT_ADDRESS = 'Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi';
 

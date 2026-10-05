@@ -351,9 +351,9 @@ export const executePlan = async (
           run_id: runId,
           path: file.path,
           reason: heic
-            ? 'HEIC could not be decoded. iPhone photographs need converting to JPEG, or the ' +
-              'camera set to Settings, Camera, Formats, Most Compatible. Skipped, and the rest ' +
-              'of the run continued.'
+            ? 'HEIC could not be decoded. The machine running the import needs a HEIC converter: ' +
+              'sips on macOS, or libheif-examples and libheif-plugin-libde265 on Linux, which ' +
+              'the import workflow installs. Skipped, and the rest of the run continued.'
             : `Could not process: ${message}. Skipped, and the rest of the run continued.`,
           detail: { error: message },
         });

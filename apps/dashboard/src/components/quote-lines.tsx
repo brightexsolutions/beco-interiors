@@ -61,6 +61,7 @@ function LineEditor({
             </span>
           ) : null}
         </p>
+        {line.code ? <p className="font-ui text-sm tabular-nums text-neutral-500">Code {line.code}</p> : null}
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <span className="font-ui text-sm tabular-nums text-neutral-500">
             {line.quantity} × {line.unitPrice > 0 ? money(line.unitPrice) : 'price on application'}
@@ -93,6 +94,15 @@ function LineEditor({
             ) : null}
             {dirty ? <span className="ml-2 font-ui text-sm font-semibold text-neutral-700">Changed</span> : null}
           </p>
+          {/* The item column is narrow beside the steppers, and "Code H-301"
+              broke across two lines at the hyphen. One line, the word
+              "Code" kept for screen readers and the hover title. */}
+          {line.code ? (
+            <p className="mt-0.5 truncate whitespace-nowrap font-ui text-sm tabular-nums text-neutral-500" title={`Code ${line.code}`}>
+              <span className="sr-only">Code </span>
+              {line.code}
+            </p>
+          ) : null}
           {line.listPrice != null && Number(unitPrice) !== line.listPrice ? (
             <p className="mt-0.5 font-ui text-sm text-neutral-500">
               Catalogue <span className="line-through">{money(line.listPrice)}</span>

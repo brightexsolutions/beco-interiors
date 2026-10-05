@@ -9,6 +9,8 @@ type SupabaseClient = ReturnType<typeof createServerClient>;
 export interface QuoteLine {
   id: string;
   description: string;
+  /** The product code when the line was written, D124. Null for a custom line or an uncoded product. */
+  code: string | null;
   quantity: number;
   unitPrice: number;
   listPrice: number | null;
@@ -204,7 +206,7 @@ export async function fetchQuote(
   const [{ data: items }, { data: documents }, settings, names] = await Promise.all([
     supabase
       .from('quote_items')
-      .select('id, description, quantity, unit_price, list_price, line_total, product_id, products(unit)')
+      .select('id, description, code, quantity, unit_price, list_price, line_total, product_id, products(unit)')
       .eq('quote_id', quote.id)
       .order('sort_order', { ascending: true }),
     supabase
@@ -227,6 +229,7 @@ export async function fetchQuote(
     return {
       id: row.id,
       description: row.description,
+      code: row.code ?? null,
       quantity: Number(row.quantity),
       unitPrice: Number(row.unit_price),
       listPrice: row.list_price == null ? null : Number(row.list_price),

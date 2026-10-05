@@ -54,7 +54,7 @@ never guessed into a role.**
 | `CATEGORY/SUB RANGE/PRODUCT/photos` | A sub range under the range, its products under it. `HEIXIN 12MM` |
 | `CATEGORY/SUB RANGE/one photo per item` | Every file names its own item (`B762 BLACK`, `HT-8350 BLACK GOLD`), so each becomes a product and the folder becomes a sub range. `BLACK HANDLES` |
 | `CATEGORY/photos` | Camera named files with no product folder: one umbrella product, reported |
-| `HINGES/photos` | A range in `SPLIT_BY_FINISH`, D122: each camera named photo is its own product, `Hinge 1193`, filed under `Black Hinges`, `Silver Hinges` and so on by the finish `readFinish` reads from its pixels at run time. No clear finish stays in the range. The old umbrella product is unpublished |
+| `HINGES/photos`, `DOOR LOCKS/photos`, `FURNITURE LEGS/photos` | A range in `SPLIT_BY_FINISH`, D122: each camera named photo is its own product, `Hinge 1193`, filed under `Black Hinges`, `Silver Hinges` and so on by the finish `readFinish` reads from its pixels at run time. No clear finish stays in the range. The old umbrella product is unpublished |
 | Deeper than two folders below a range | Reported and skipped. The site shows three levels, no more |
 
 A folder is a PRODUCT when it holds photographs directly and a CATEGORY when it holds only
@@ -82,6 +82,11 @@ Retired ranges (`LIGHTING`, `LIGHTS`) are skipped whatever they hold, D103.
 - Five products have no on stand shot at all
 
 ## Running it
+
+HEIC, every iPhone photograph, is converted before Sharp sees it: `sips` on macOS, `heif-convert`
+from libheif on Linux, which the workflow installs (D123). On a Linux machine of your own,
+`apt install libheif-examples libheif-plugin-libde265`.
+
 
 From the dashboard: Catalogue, Drive import. Check only, Import, or Re-encode everything,
 against staging or production; the screen dispatches `.github/workflows/drive-import.yml` and

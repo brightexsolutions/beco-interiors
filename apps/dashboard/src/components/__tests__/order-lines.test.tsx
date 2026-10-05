@@ -7,6 +7,7 @@ import type { OrderLine } from '@/lib/order-detail';
 const line = (over: Partial<OrderLine> = {}): OrderLine => ({
   id: '11111111-1111-4111-8111-111111111111',
   description: 'ZZ Seed Jatoba Brown',
+  code: null,
   quantity: 4,
   unitPrice: 77000,
   listPrice: 77000,
@@ -38,6 +39,13 @@ describe('OrderLines', () => {
     expect(screen.getAllByText(/308,000/).every((node) => !node.className.includes('line-through'))).toBe(true);
     expect(screen.getByText('Total')).toBeInTheDocument();
     expect(screen.getByText(/265,517/)).toBeInTheDocument();
+  });
+
+  it('prints the product code under the item, and nothing when there is none (D124)', () => {
+    const { rerender } = render(<OrderLines lines={[line({ code: 'H-301' })]} totals={priced} />);
+    expect(screen.getByText('Code H-301')).toBeInTheDocument();
+    rerender(<OrderLines lines={[line()]} totals={priced} />);
+    expect(screen.queryByText(/^Code /)).toBeNull();
   });
 
   it('does not strike the catalogue price when the unit matches list', () => {

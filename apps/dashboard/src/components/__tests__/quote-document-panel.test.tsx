@@ -130,6 +130,7 @@ describe('QuoteDocumentPanel', () => {
     const line: QuoteLine = {
       id: '11111111-1111-4111-8111-111111111111',
       description: 'Amber Jade',
+      code: null,
       quantity: 1,
       unitPrice: 65000,
       listPrice: 65000,

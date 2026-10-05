@@ -2,7 +2,7 @@ import { Document, Image, Page, Text, View, StyleSheet } from '@react-pdf/render
 import { quoteTotals } from '@beco/validation';
 import { logoPath } from './fonts';
 import type { QuotePdfInput } from './types';
-import { quoteFromLines, quotePaymentBlocks } from './types';
+import { lineCodeLabel, quoteFromLines, quotePaymentBlocks } from './types';
 
 /**
  * One template for a counter quote and a web quote. Line prices come from
@@ -59,6 +59,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   body: { fontSize: 10, lineHeight: 1.5 },
+  /** The product code under a line's description, D124. */
+  code: { fontSize: 9, color: MUTED, marginTop: 1 },
   tableHeader: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -199,7 +201,10 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
 
         {quote.lines.map((line, index) => (
           <View key={`${line.description}-${index}`} style={styles.row} wrap={false}>
-            <Text style={[styles.body, styles.desc]}>{line.description}</Text>
+            <View style={styles.desc}>
+              <Text style={styles.body}>{line.description}</Text>
+              {lineCodeLabel(line.code) ? <Text style={styles.code}>{lineCodeLabel(line.code)}</Text> : null}
+            </View>
             <Text style={[styles.body, styles.qty]}>{line.quantity}</Text>
             <Text style={[styles.body, styles.unit]}>
               {line.unitPrice > 0 ? kes(line.unitPrice) : 'POA'}

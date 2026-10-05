@@ -12,6 +12,7 @@ export const toPdfInput = (quote: QuoteDetail, settings: QuoteSettings): QuotePd
   validUntil: quote.validUntil,
   lines: quote.lines.map((line) => ({
     description: line.description,
+    code: line.code,
     quantity: line.quantity,
     unitPrice: line.unitPrice,
     lineTotal: line.lineTotal,

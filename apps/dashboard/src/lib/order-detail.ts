@@ -10,6 +10,8 @@ type SupabaseClient = ReturnType<typeof createServerClient>;
 export interface OrderLine {
   id: string;
   description: string;
+  /** Copied from the quote line, D124. */
+  code: string | null;
   quantity: number;
   unitPrice: number;
   listPrice: number | null;
@@ -68,7 +70,7 @@ export async function fetchOrder(
   const [{ data: items }, settings] = await Promise.all([
     supabase
       .from('order_items')
-      .select('id, description, quantity, unit_price, list_price, line_total, product_id')
+      .select('id, description, code, quantity, unit_price, list_price, line_total, product_id')
       .eq('order_id', order.id)
       .order('sort_order', { ascending: true }),
     fetchQuoteSettings(supabase),
@@ -100,6 +102,7 @@ export async function fetchOrder(
   const lines: OrderLine[] = (items ?? []).map((row) => ({
     id: row.id,
     description: row.description,
+    code: row.code ?? null,
     quantity: Number(row.quantity),
     unitPrice: Number(row.unit_price),
     listPrice: row.list_price == null ? null : Number(row.list_price),

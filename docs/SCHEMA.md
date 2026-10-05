@@ -218,6 +218,7 @@ the UI. See D86.
 | `quote_id` | uuid FK quotes on delete cascade | |
 | `product_id` | uuid FK products **null** | **Nullable on purpose.** A salesperson can add an item not yet in the catalog rather than being blocked at the counter |
 | `description` | text | Snapshot, so the line survives the product changing |
+| `code` | text null, 1 to 80 chars | The product's code (`products.sku`) when the line was written, filled by the `quote_items_code` trigger on every insert path unless a code is given. A snapshot like the price: editing the product's code later never changes an issued line. Null for a custom line or an uncoded product. Migration 62, D124 |
 | `quantity` | numeric(12,2) | |
 | `list_price` | numeric(12,2) null | What it should have cost |
 | `unit_price` | numeric(12,2) | What it did cost. **Stored on the line, never read live from products**, so a quote issued last week does not silently reprice |
@@ -282,6 +283,8 @@ Answers "did we send them the quote, and when" from the dashboard rather than fr
 | `sent_to` | text null |
 | `sent_at` | timestamptz null |
 | `sent_channel` | text null |
+
+`order_items.code` (migration 62, D124): copied from the quote line by `convert_quote_to_order`, so an order carries the code that was quoted; a line inserted any other way takes the product's code through the `order_items_code` trigger.
 
 `sent_to` and `sent_at` are nullable because a counter customer may take only a printed copy,
 which makes "was this sent" a three state question rather than two. The `/reports` sales

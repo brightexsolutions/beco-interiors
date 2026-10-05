@@ -63,6 +63,7 @@ const receiptEmailBody = (order: OrderDetail) => ({
     : null,
   lines: order.lines.map((line) => ({
     description: line.description,
+    code: line.code,
     quantity: line.quantity,
     lineTotal: line.lineTotal,
   })),
