@@ -2776,3 +2776,51 @@ line, on the screen size most people see first.
 
 **Reverses if:** testing on a real device shows people do not realise the hero advances on its
 own, when a timer that is not a rule, for example the number counting, is the next thing to try.
+
+## D122, 5 October 2026: hinges import one product per photograph, sorted by finish
+
+**Decision.** `HINGES` in Drive is about sixty phone photographs, `IMG_1163.HEIC` to
+`IMG_1331.HEIC` and three random names, with nothing in any filename to say which hinge is
+which. The importer used to make them one umbrella product, "Hinges", holding every photograph.
+Each photograph is now its own product. The plan names it after its photo number, "Hinge
+1193", slug `hinge-1193`, stable from run to run. As it imports, `readFinish` reads the finish
+from the pixels and files it under a sub range: "Black Hinge 1193" under Hinges, then Black
+Hinges, whose identity is `HINGES/BLACK HINGES`, the path Beco would give that folder in Drive.
+Finishes are black, white, silver, gold, bronze and copper. A photograph with no clear finish
+stays in Hinges itself as "Hinge 1193" rather than being guessed into a sub range. The old
+"Hinges" product is unpublished, never deleted, with an issue recorded. `SPLIT_BY_FINISH` in
+`plan.ts` names the ranges this applies to, Hinges alone today.
+
+**Why.** Brown's instruction, 5 October: each hinge is a separate item with its own code and
+price, and quoting one bundled product with thirty photographs made it impossible to tell which
+hinge was being priced. Where the codes are unclear, sort by colour, and the Beco team sets
+each code, name and price in the dashboard. Names still win when they exist: a hinge folder
+whose files name each item splits by name under D104, and never reaches the finish reader.
+
+**How the finish is read.** The photograph is shrunk to 96px, the backdrop is the median of its
+border ring, and every pixel more than 16 CIELAB units from the backdrop is the piece. Each piece
+pixel votes by lightness and hue; neutral pixels split into black, silver and white, coloured
+ones into gold, bronze and copper, and blue or green abstain. The winner needs 45% of the
+piece's votes, and the piece must fill 3% of the frame, or there is no finish. A majority rather
+than an average because a polished hinge averages to a muddy grey: its highlights read white
+and its shadows black, and only a vote over the whole piece reads it as silver.
+
+**The dashboard owns the result.** Name, category, code and price are set on the first import
+only (D54). Proven against the local stack on synthetic photographs: a hinge renamed, coded,
+priced, moved and given a new slug in the dashboard came through a second run untouched, and a
+second run changed no row. That last part needed two fixes to `executePlan`. An unchanged file
+whose product has no row yet is now processed (`needsProcessing`): the hinge photographs were
+already imported into the umbrella product, so without it none would ever become its own
+product, and a database reset left unchanged products missing. And an existing product is
+found by its Drive path when its slug no longer matches, so a slug edited in the dashboard does
+not read as a missing product and import twice.
+
+**What it costs.** Two photographs of the same hinge become two products, since nothing says
+they match. The team deletes the repeat. Every hinge photograph is HEIC, which only macOS
+decodes today (`decode.ts`), so the Hinges import runs from the Mac with `pnpm drive:import`,
+not from the dashboard's button, which runs on GitHub's Linux runners.
+
+**Reverses if:** Beco renames the photographs after their codes, when D104's item rule takes
+over and this path is never reached; or the finish reading proves wrong often enough on the real
+photographs that sorting by hand is quicker, when Hinges comes out of `SPLIT_BY_FINISH` and its
+products all land in Hinges unsorted.

@@ -21,7 +21,7 @@ git config user.email "info.brightexsolutions@gmail.com"
 
 The cloud work is the merges on `dev` dated 3 and 4 October. Each merge names its branch, each
 branch is one piece of work, and each piece has a decision in `docs/DECISIONS.md`, D104 to
-D121. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
+D122. Read `docs/STATUS.md` first; it is the plan of record at the end of the session.
 
 | Branch merged into dev | What it is | Decision |
 |---|---|---|
@@ -44,6 +44,7 @@ D121. Read `docs/STATUS.md` first; it is the plan of record at the end of the se
 | `ci/stop-the-red-runs` | CI fixed and quiet on dev pushes; workflow files valid again | D118 |
 | `storefront/shop-range-index` | The shop browses by range first; `/shop/all`; the strip inside a range | D119 |
 | `storefront/cinematic-room-hero` | The home hero shows our finished rooms; About copy in the first person | D120 |
+| `catalogue/hinges-by-colour` | Hinges import one product per photograph, sorted by finish | D122 |
 | `storefront/hero-premium-rooms` | No rules or bars on the hero; `pnpm hero:frames` to cut stock room photographs | D121 |
 
 ## 2. What the cloud could not do, and you can
@@ -114,8 +115,19 @@ loses the material, rerun with another `--wide` or `--tall` position. Then add t
 crediting the photographer and Pexels id, the way `HERO_RANGE_IMAGES` in `lib/ranges.ts`
 already does. Captions must name the material, not claim the room as our installation, since
 it is not. Delete the frames of any room you drop, run `pnpm test:component`, check the hero
-live on a phone and a desktop, and record the swap as D122, reversing D120's own-work-only
+live on a phone and a desktop, and record the swap as the next free decision number, reversing D120's own-work-only
 rule for the hero on Brown's instruction.
+
+**Hinges, one product per photograph (D122).** Run from the Mac, not the dashboard button: every
+hinge photograph is HEIC and only macOS decodes it. Against staging, `pnpm drive:import
+--dry-run` first: the report should list `HINGES` under "Ranges split one product per
+photograph" with about 63 products. Then the real run. Check on staging: the old "Hinges"
+product is unpublished, Hardware then Hinges holds Black, Silver and Gold Hinges (whichever
+finishes the photographs read as) plus any unsorted ones, and each is quotable on its own. Look
+through the finishes against the photographs and note how many were misread, since that decides
+whether colour sorting stays (D122, "Reverses if"). Then the Beco team sets each hinge's code,
+name and price in the dashboard and deletes repeat photographs of the same hinge. Production
+after approval, the same way.
 
 **Search Console and cron-job.org.** Both are Beco's to set up, with Brightex as manager.
 `docs/SEO-MIGRATION.md` is the procedure, now with an ordered table; `docs/DEPLOYMENT.md`
@@ -152,7 +164,7 @@ red, the failure is yours to read before anything deploys.
 ## 5. The prompt to begin the local chat
 
 ```
-Read docs/handoffs/2026-10-04-cloud-to-local.md first, then docs/STATUS.md and D104 to D121
+Read docs/handoffs/2026-10-04-cloud-to-local.md first, then docs/STATUS.md and D104 to D122
 in docs/DECISIONS.md. The cloud session merged seventeen branches into dev between 3 and 4
 October; nothing has been deployed and main is untouched. Pull dev, run pnpm install, set the
 commit hooks and the Brightex Solutions author, and run the full local check list in section
@@ -163,7 +175,7 @@ supabase test db there; add the R2 CORS and lifecycle rules from docs/DEPLOYMENT
 upload one real phone photograph on staging from the dashboard, confirming the direct PUT,
 the derivatives and the toast; set GITHUB_ACTIONS_TOKEN on the dashboard and dispatch a
 dry-run import to staging, confirming the report artifact and the refresh step; submit a
-quote on staging and confirm the confirmation email arrives; swap the hero photographs per
+quote on staging and confirm the confirmation email arrives; run the Hinges import from the Mac per the D122 step in section 2; swap the hero photographs per
 the "Premium hero photography" step in section 2 of the handoff; walk docs/QA-CHECKLIST.md on a
 real iPhone and Android over mobile data and log every defect against its row.
 

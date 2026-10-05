@@ -84,6 +84,19 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('');
   }
 
+  if (plan.finishFolders.length) {
+    L.push('RANGES SPLIT ONE PRODUCT PER PHOTOGRAPH, SORTED BY FINISH');
+    L.push('--------------------------------------------------------');
+    L.push('  Phone named photographs, so each became its own product, filed by the finish');
+    L.push('  read from the photograph as it imports. Codes, names and prices are set in the');
+    L.push('  dashboard; the import never undoes those edits.');
+    L.push('');
+    for (const { folder, count } of plan.finishFolders) {
+      L.push(`  ${String(count).padStart(4)} product(s)  ${folder}`);
+    }
+    L.push('');
+  }
+
   if (plan.galleryFiles) {
     L.push(`  ${plan.galleryFiles} gallery and brand file(s) skipped, which is correct.`);
     L.push('  Site photos, site videos and brand identity are not products.');

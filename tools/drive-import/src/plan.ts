@@ -54,6 +54,13 @@ export interface PlannedFile {
   outcome: Classified['outcome'];
   /** Only new and changed files are downloaded. Everything else is metadata. */
   needsDownload: boolean;
+  /**
+   * Set for a loose photograph in a range split by finish, D122. The run
+   * reads the finish from the pixels and files the product under that
+   * finish's sub range, so the plan, which never sees pixels, leaves the
+   * product in the range itself.
+   */
+  splitByFinish?: { folder: string; noun: string; ref: string };
 }
 
 export interface Issue {
@@ -71,6 +78,8 @@ export interface ImportPlan {
   looseFolders: Array<{ folder: string; count: number }>;
   /** Folders where every photograph is its own item, and how many items came out. */
   itemFolders: Array<{ folder: string; items: number; files: number }>;
+  /** Ranges whose loose photographs became one product each, sorted by finish. */
+  finishFolders: Array<{ folder: string; count: number }>;
   /** Gallery and brand files, correctly loose, handled elsewhere. */
   galleryFiles: number;
   counts: ReturnType<typeof summarise>;
@@ -111,6 +120,28 @@ const NON_PRODUCT_FOLDERS = new Set([
  * and the "Lights" folder of loose phone photographs still exists in Drive.
  */
 export const RETIRED_FOLDERS = new Set(['LIGHTING', 'LIGHTS']);
+
+/**
+ * Ranges whose loose phone photographs each become their own product, filed
+ * by the finish read from the photograph, D122. The value is what one item
+ * is called, for its placeholder name. Brown's instruction, 5 October: the
+ * hinges are separate items with separate codes and prices, their files say
+ * nothing, so sort them by colour and let the Beco team set the codes in the
+ * dashboard. Add a range here when its folder is in the same state.
+ */
+export const SPLIT_BY_FINISH: ReadonlyMap<string, string> = new Map([['HINGES', 'Hinge']]);
+
+/**
+ * A short, stable reference for a photograph with no name: the number a
+ * phone gave it ("IMG_1193" is 1193), or the start of a random name. It is
+ * the product's slug, so it must not change between runs.
+ */
+export const photoRef = (filename: string): string => {
+  const name = stem(filename).trim().replace(COPY_COUNTER, '');
+  const digits = isCameraName(name) ? name.match(/(\d{3,})(?!.*\d{3,})/) : null;
+  if (digits) return digits[1]!;
+  return slugify(name).replace(/-/g, '').slice(0, 8) || 'photo';
+};
 
 /** The most category folders a product may sit under, counted from the Drive root. */
 const MAX_CATEGORY_DEPTH = 2;
@@ -246,6 +277,8 @@ export const buildPlan = (
       as opposed to a genuinely stray file at the root with no category at
       all, which stays reported but unimported. */
   const looseImported = new Set<string>();
+  /** Loose photographs per range split by finish. */
+  const finishByFolder = new Map<string, number>();
   /** Role bearing filenames per product folder, for the mixed folder check. */
   const namedByFolder = new Map<string, { folderName: string; filenames: string[] }>();
   /** Item folders: distinct items and file counts, for the report. */
@@ -348,6 +381,29 @@ export const buildPlan = (
         productSlug,
         productName: titleiseItem(itemName),
         role: seen === 0 ? 'slab' : 'application',
+      });
+      continue;
+    }
+
+    // A range split by finish, D122: each loose photograph is its own item.
+    const splitNoun = dirs.length === 1 ? SPLIT_BY_FINISH.get(top.toUpperCase()) : undefined;
+    if (splitNoun) {
+      const ref = photoRef(filename);
+      const productPath = `${top}/${stem(filename).trim()}`;
+      const productSlug = claimSlug(slugify(`${splitNoun} ${ref}`), productPath, top);
+      const chain = chainFor(dirs);
+      finishByFolder.set(top, (finishByFolder.get(top) ?? 0) + 1);
+      files.push({
+        ...base,
+        categorySlug: chain[0]!.slug,
+        categoryPath: top,
+        categoryChain: chain,
+        productPath,
+        productSlug,
+        productName: `${splitNoun} ${ref}`,
+        // The only photograph of its product, so it is the product's own shot.
+        role: 'slab',
+        splitByFinish: { folder: top, noun: splitNoun, ref },
       });
       continue;
     }
@@ -469,6 +525,21 @@ export const buildPlan = (
     });
   }
 
+  for (const [folder, count] of finishByFolder) {
+    const noun = SPLIT_BY_FINISH.get(folder.toUpperCase())!;
+    issues.push({
+      path: folder,
+      reason:
+        `The ${count} photograph(s) in "${folder}" carry phone names, so each is imported as its ` +
+        `own product, "${noun} 1193" after its photo number, filed under a sub range by the ` +
+        `finish read from the photograph (Black ${titleise(folder)}, Silver ${titleise(folder)}, ` +
+        `Gold ${titleise(folder)}). One whose finish is unclear stays in ${titleise(folder)} ` +
+        'itself. Set each code, name and price in the dashboard, move any that were misread, ' +
+        'and delete repeat photographs of the same item; the import never undoes those edits. ' +
+        `The earlier single "${titleise(folder)}" product is unpublished.`,
+    });
+  }
+
   // One issue per folder, not per file.
   for (const [folder, count] of looseByFolder) {
     if (NON_PRODUCT_FOLDERS.has(folder.toUpperCase())) continue;
@@ -500,6 +571,7 @@ export const buildPlan = (
       items: entry.items.size,
       files: entry.files,
     })),
+    finishFolders: [...finishByFolder].map(([folder, count]) => ({ folder, count })),
     galleryFiles: [...looseByFolder]
       .filter(([f]) => NON_PRODUCT_FOLDERS.has(f.toUpperCase()))
       .reduce((n, [, c]) => n + c, 0),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { productWriteFields, type ProductIdentity, type ProductPhotography } from '../run';
+import { finishPlacement, needsProcessing, productWriteFields, type ProductIdentity, type ProductPhotography } from '../run';
 import type { ImageEntry } from '../merge-images';
 
 /**
@@ -47,5 +47,42 @@ describe('productWriteFields', () => {
 
     expect(write).toEqual(fields);
     expect(write).toMatchObject({ name: 'Amber Jade', category_id: 'cat-123' });
+  });
+});
+
+describe('finishPlacement, D122', () => {
+  const split = { folder: 'HINGES', noun: 'Hinge', ref: '1193' };
+
+  it('files a read finish under its own sub range, named the way Beco would name the folder', () => {
+    expect(finishPlacement(split, 'black')).toEqual({
+      name: 'Black Hinge 1193',
+      chain: [
+        { path: 'HINGES', slug: 'hinges', name: 'Hinges' },
+        { path: 'HINGES/BLACK HINGES', slug: 'black-hinges', name: 'Black Hinges' },
+      ],
+    });
+    expect(finishPlacement(split, 'gold').chain[1]).toEqual({ path: 'HINGES/GOLD HINGES', slug: 'gold-hinges', name: 'Gold Hinges' });
+  });
+
+  it('leaves an unclear finish in the range itself, unsorted, rather than guessing', () => {
+    expect(finishPlacement(split, null)).toEqual({
+      name: 'Hinge 1193',
+      chain: [{ path: 'HINGES', slug: 'hinges', name: 'Hinges' }],
+    });
+  });
+});
+
+describe('needsProcessing', () => {
+  it('processes a new or changed file whether or not its product exists', () => {
+    expect(needsProcessing({ needsDownload: true }, true)).toBe(true);
+    expect(needsProcessing({ needsDownload: true }, false)).toBe(true);
+  });
+
+  it('processes an unchanged file only when its product has no row yet', () => {
+    // The old single Hinges product's photographs are unchanged files, and
+    // each must still become a product of its own.
+    expect(needsProcessing({ needsDownload: false }, false)).toBe(true);
+    // Running twice must change nothing the second time.
+    expect(needsProcessing({ needsDownload: false }, true)).toBe(false);
   });
 });
