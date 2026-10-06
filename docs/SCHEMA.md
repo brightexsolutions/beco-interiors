@@ -371,9 +371,11 @@ because those two leads leave the site into channels analytics cannot follow and
 only signal we get.
 
 Anonymous inserts are bounded (migration 60, D108): `event_type` must be one of the values above
-and `metadata` at most 2KB, or the row is refused. Nothing writes here yet; GA4 carries the
-storefront's events, and the lead counters in `dashboard_summary()` read an empty table until a
-server-side writer lands.
+and `metadata` at most 2KB, or the row is refused. The storefront writes here from the browser
+with the anon key (D128): `whatsapp_click` and `call_click` from any `data-analytics` control,
+`add_to_cart` after an add to quote, `quote_submitted` after a confirmed submission. `metadata`
+holds `page_path` and, where the page has one, `product_slug` or `category_slug`, each capped at
+200 characters. Never a name, phone, email or quote reference.
 
 **Needs a retention policy.** A row per page view will outgrow a 500MB free tier eventually.
 

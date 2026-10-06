@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AddToQuote } from '../add-to-quote';
 import { readList } from '@/lib/quote-list';
+import { track } from '@/lib/analytics';
+
+vi.mock('@/lib/analytics', () => ({ track: vi.fn() }));
 
 /**
  * Rule 3: no decorative controls. "Add to quote" is the primary conversion
@@ -17,7 +20,22 @@ import { readList } from '@/lib/quote-list';
 const slabLine = { slug: 'amber-jade', name: 'Amber Jade', unit: 'per slab', image: '/img/a.webp' };
 const handleLine = { slug: 'gold-bar-handle', name: 'Gold Bar Handle', unit: 'per piece', image: '/img/h.webp' };
 
-beforeEach(() => window.localStorage.clear());
+beforeEach(() => {
+  window.localStorage.clear();
+  vi.mocked(track).mockClear();
+});
+
+describe('AddToQuote, analytics (D128)', () => {
+  it('records add_to_cart with the product slug once the line is on the list', async () => {
+    const user = userEvent.setup();
+    render(<AddToQuote line={handleLine} />);
+    expect(track).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Add to quote' }));
+    expect(readList()).toHaveLength(1);
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith('add_to_cart', { product_slug: 'gold-bar-handle' });
+  });
+});
 
 describe('AddToQuote, a discrete item', () => {
   it('writes the product to the quote list', async () => {

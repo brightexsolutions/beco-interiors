@@ -107,6 +107,38 @@ describe('media', () => {
   });
 });
 
+describe('storefront analytics, D128', () => {
+  const code = policy('storefront');
+  const connect = code.slice(code.indexOf('const ga4Connect = ['), code.indexOf('const csp = ['));
+
+  it('lets gtag.js load from Google Tag Manager', () => {
+    const script = code.slice(code.indexOf('const scriptSrc = ['), code.indexOf('const ga4Connect'));
+    expect(script).toContain("'https://www.googletagmanager.com'");
+  });
+
+  it('lets GA4 send hits to each collection host it uses, named one by one', () => {
+    for (const host of [
+      'https://www.google-analytics.com',
+      'https://region1.google-analytics.com',
+      'https://analytics.google.com',
+      'https://region1.analytics.google.com',
+      'https://www.googletagmanager.com',
+    ]) {
+      expect(connect, `connect-src is missing ${host}`).toContain(`'${host}'`);
+    }
+    expect(code).toContain('`connect-src \'self\' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? \'\'} ${ga4Connect}`');
+  });
+
+  it('lets the GA4 pixel fallback load as an image', () => {
+    expect(code).toMatch(/"img-src [^"]*https:\/\/www\.google-analytics\.com[^"]*https:\/\/www\.googletagmanager\.com"/);
+  });
+
+  it("allows Vercel's CDN scripts in development only, since production serves them from 'self'", () => {
+    expect(code).toContain("...(isDev ? ['https://va.vercel-scripts.com'] : [])");
+    expect(code).not.toMatch(/^\s*'https:\/\/va\.vercel-scripts\.com',\s*$/m);
+  });
+});
+
 describe('the test helper itself', () => {
   it('strips a line comment', () => {
     expect(stripLineComment("  'foo', // a note")).toBe("  'foo', ");

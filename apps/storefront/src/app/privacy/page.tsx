@@ -76,8 +76,10 @@ export default function PrivacyPage() {
 
           <LegalSection title="Cookies and tracking">
             <p>
-              This site does not currently run advertising or tracking cookies. If that changes,
-              this page will say so before it happens, not after.
+              We measure how the site is used with Google Analytics, which sets its own cookies,
+              and with Vercel&apos;s analytics, which sets none. We also count calls, WhatsApp
+              messages and quote requests by the page they started from. None of this records
+              your name, number or what you asked for, and none of it is used for advertising.
             </p>
           </LegalSection>
 

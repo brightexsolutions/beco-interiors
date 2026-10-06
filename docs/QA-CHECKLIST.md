@@ -56,6 +56,9 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Footer social icons | **Deliberately not links.** Five platforms drawn, all five URLs null until Beco supplies handles, so the icon is drawn without an anchor rather than shipping `href="#"` | Test |
 | Footer "Terms & conditions" and "Privacy policy" (replaces the old Brightex credit, on direct request) | Navigate to `/terms` and `/privacy` | Server, each 200 |
 | Skip to content | Moves focus to `#main` | **NOT CONFIRMED** |
+| Every `data-analytics` call and WhatsApp link (D128) | Still dials or opens WhatsApp, and also sends `call_click` or `whatsapp_click` to GA4 (production only) and a row to `analytics_events` | Test: listener, 8 tests, default not prevented. **NOT CONFIRMED** on a deployed site: GA4 Realtime and the `analytics_events` row have not been observed, nothing has been deployed |
+| Add to quote, product page and quick add (D128) | Also sends `add_to_cart` with the product slug | Test. **NOT CONFIRMED** on a deployed site |
+| Send my request, on success (D128) | Also sends `quote_submitted`, with no form data | Test. **NOT CONFIRMED** on a deployed site |
 
 ---
 
