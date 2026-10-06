@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildPlan, exportItemName, exportRef, isExportName, photoRef } from '../plan';
+import { renderReport } from '../report';
 import type { DriveFile } from '../classify';
 import type { FolderNode } from '../misnest';
 
@@ -304,13 +305,91 @@ describe('buildPlan against the taxonomy Beco actually keep, D104', () => {
   });
 
   it('keeps a folder of camera named files as ONE umbrella product', () => {
+    // Was 15MM SINTERED STONES until 6 October, which now splits per
+    // photograph. Any range outside the split lists keeps the old rule.
     const listing = [
-      f('c1', '15MM SINTERED STONES/IMG_4197.heic'),
-      f('c2', '15MM SINTERED STONES/IMG_4200.heic'),
+      f('c1', 'SPC FLOORING/IMG_4197.heic'),
+      f('c2', 'SPC FLOORING/IMG_4200.heic'),
     ];
     const plan = buildPlan(listing, [], []);
-    expect(plan.files.every((x) => x.productSlug === '15mm-sintered-stones')).toBe(true);
+    expect(plan.files.every((x) => x.productSlug === 'spc-flooring')).toBe(true);
     expect(plan.itemFolders).toEqual([]);
+    expect(plan.photoFolders).toEqual([]);
+  });
+
+  /**
+   * 15MM SINTERED STONES as it is in Drive on 6 October: five phone
+   * photographs of different stones, no subfolders. Brown: one bundled
+   * product showing several stones is wrong. Split one per photograph like
+   * the hinges, but filed in the range itself, with no finish sorting.
+   */
+  describe('15mm stones, one product per photograph', () => {
+    const stones = ['IMG_4197.heic', 'IMG_4198.heic', 'IMG_4199.heic', 'IMG_4200.heic', 'IMG_4202.heic']
+      .map((name, i) => f(`m${i}`, `15MM SINTERED STONES/${name}`));
+    const plan = buildPlan(stones, [], []);
+
+    it('makes each photograph its own product, named after its photo number', () => {
+      expect(plan.files.map((x) => [x.productSlug, x.productName, x.role])).toEqual([
+        ['15mm-sintered-stone-4197', '15mm Sintered Stone 4197', 'slab'],
+        ['15mm-sintered-stone-4198', '15mm Sintered Stone 4198', 'slab'],
+        ['15mm-sintered-stone-4199', '15mm Sintered Stone 4199', 'slab'],
+        ['15mm-sintered-stone-4200', '15mm Sintered Stone 4200', 'slab'],
+        ['15mm-sintered-stone-4202', '15mm Sintered Stone 4202', 'slab'],
+      ]);
+    });
+
+    it('files every one in the range itself, never a colour sub range', () => {
+      for (const x of plan.files) {
+        expect(x.categoryPath).toBe('15MM SINTERED STONES');
+        expect(x.categoryChain.map((c) => c.slug)).toEqual(['15mm-sintered-stones']);
+        expect(x.splitByFinish).toBeUndefined();
+      }
+      expect(plan.finishFolders).toEqual([]);
+    });
+
+    it('keeps each on its own Drive path and gives it the same slug every run', () => {
+      expect(plan.files[0]!.productPath).toBe('15MM SINTERED STONES/IMG_4197');
+      const known = stones.map((s) => ({ driveFileId: s.id, path: s.path, md5: s.md5 ?? null, role: null, productId: null }));
+      const again = buildPlan(stones, [], known);
+      expect(again.files.map((x) => x.productSlug)).toEqual(plan.files.map((x) => x.productSlug));
+      expect(again.files.every((x) => !x.needsDownload)).toBe(true);
+    });
+
+    it('drops the umbrella product and tells Beco to name each photograph after its stone', () => {
+      expect(plan.files.some((x) => x.productSlug === '15mm-sintered-stones')).toBe(false);
+      expect(plan.photoFolders).toEqual([{ folder: '15MM SINTERED STONES', count: 5 }]);
+      expect(plan.looseFolders).toEqual([]);
+      const issue = plan.issues.find((i) => i.path === '15MM SINTERED STONES')!;
+      expect(issue.reason).toContain("Set each stone's name in the dashboard catalogue");
+      expect(issue.reason).toContain('"15mm Sintered Stone 4197"');
+      expect(issue.reason).toContain('unpublished');
+    });
+
+    it('lists the folder in the run report under its own heading', () => {
+      const report = renderReport(plan);
+      expect(report).toContain('RANGES SPLIT ONE PRODUCT PER PHOTOGRAPH\n');
+      expect(report).toContain('   5 product(s)  15MM SINTERED STONES');
+      expect(report).not.toContain('SORTED BY FINISH');
+    });
+
+    it('hands over to the item rule once the photographs are named after their stones', () => {
+      const named = buildPlan([
+        f('n1', '15MM SINTERED STONES/CALACATTA VIOLA.heic'),
+        f('n2', '15MM SINTERED STONES/PIETRA GREY.heic'),
+      ], [], []);
+      expect(named.files.map((x) => [x.productName, x.productSlug, x.categoryPath])).toEqual([
+        ['Calacatta Viola', 'calacatta-viola', '15MM SINTERED STONES'],
+        ['Pietra Grey', 'pietra-grey', '15MM SINTERED STONES'],
+      ]);
+      expect(named.photoFolders).toEqual([]);
+      expect(named.itemFolders).toEqual([{ folder: '15MM SINTERED STONES', items: 2, files: 2 }]);
+    });
+
+    it('leaves a 15mm stone in its own product folder exactly as before', () => {
+      const foldered = buildPlan([f('p1', '15MM SINTERED STONES/PIETRA GREY/SLAB.jpg')], [], []);
+      expect(foldered.files[0]!.productSlug).toBe('pietra-grey');
+      expect(foldered.photoFolders).toEqual([]);
+    });
   });
 
   it('gives two items with the same name in different folders two products', () => {

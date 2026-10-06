@@ -193,7 +193,7 @@ export const executePlan = async (
   // photograph. That product is superseded, so it comes off the site rather
   // than sitting beside the products that replace it. Unpublished, never
   // deleted: the dashboard can bring it back, and nothing else is touched.
-  for (const { folder } of plan.finishFolders) {
+  for (const { folder } of [...plan.finishFolders, ...plan.photoFolders]) {
     const { data: retired } = await sb
       .from('products')
       .update({ is_published: false })
