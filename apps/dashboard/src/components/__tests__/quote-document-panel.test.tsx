@@ -63,6 +63,10 @@ describe('QuoteDocumentPanel', () => {
       'href',
       '/quotes/BEC-Q-00042/pdf?download=1',
     );
+    // WhatsApp document sharing is archived (SHARE_DOCUMENTS_ON_WHATSAPP):
+    // email and download only, and Download takes the row.
+    expect(screen.queryByRole('button', { name: /whatsapp/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /whatsapp/i })).toBeNull();
   });
 
   it('shows the error when the PDF cannot be opened, rather than a blank frame', async () => {

@@ -49,7 +49,9 @@ describe('OrderDocumentPanel', () => {
       'href',
       '/orders/BEC-O-00042/pdf?download=1',
     );
-    expect(screen.getByRole('button', { name: /whatsapp/i })).toBeInTheDocument();
+    // WhatsApp document sharing is archived (SHARE_DOCUMENTS_ON_WHATSAPP).
+    expect(screen.queryByRole('button', { name: /whatsapp/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /whatsapp/i })).toBeNull();
   });
 
   it('lets you type an address when the order has none', async () => {
