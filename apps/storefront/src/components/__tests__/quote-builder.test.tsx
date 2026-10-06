@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QuoteBuilder } from '../quote-builder';
 import { STORAGE_KEY, readList } from '@/lib/quote-list';
+import { track } from '@/lib/analytics';
 
 /**
  * The quote flow is the product, so the form is proven to RENDER and to carry
@@ -17,6 +18,8 @@ import { STORAGE_KEY, readList } from '@/lib/quote-list';
  * The server action itself is covered against the real database by
  * submit-quote.integration.test.ts. This file is about the form.
  */
+vi.mock('@/lib/analytics', () => ({ track: vi.fn() }));
+
 vi.mock('@/app/quote/actions', () => ({
   submitQuote: vi.fn(async () => ({ ok: true as const, reference: 'BQ-2026-0001' })),
 }));
@@ -29,6 +32,36 @@ const line = {
 beforeEach(() => {
   window.localStorage.clear();
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify([line]));
+  vi.mocked(track).mockClear();
+});
+
+describe('QuoteBuilder: analytics (D128)', () => {
+  it('records quote_submitted once the server returns a reference, carrying nothing from the form', async () => {
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+    await user.type(await screen.findByLabelText(/Your name/), 'Achieng');
+    await user.type(screen.getByLabelText(/Phone number/), '0722333730');
+    await user.click(screen.getByRole('button', { name: 'Send my request' }));
+    await vi.waitFor(() => expect(track).toHaveBeenCalledTimes(1));
+    // No second argument at all: no name, phone, reference or list contents.
+    expect(vi.mocked(track).mock.calls[0]).toEqual(['quote_submitted']);
+  });
+
+  it('records nothing when the server rejects the submission', async () => {
+    const { submitQuote } = await import('@/app/quote/actions');
+    vi.mocked(submitQuote).mockResolvedValueOnce({
+      ok: false,
+      error: 'Please check the highlighted fields.',
+      fieldErrors: { customerPhone: ['Enter a valid Kenyan phone number'] },
+    } as never);
+    const user = userEvent.setup();
+    render(<QuoteBuilder />);
+    await user.type(await screen.findByLabelText(/Your name/), 'Achieng');
+    await user.type(screen.getByLabelText(/Phone number/), '123');
+    await user.click(screen.getByRole('button', { name: 'Send my request' }));
+    expect(await screen.findByText('Enter a valid Kenyan phone number')).toBeDefined();
+    expect(track).not.toHaveBeenCalled();
+  });
 });
 
 describe('QuoteBuilder', () => {

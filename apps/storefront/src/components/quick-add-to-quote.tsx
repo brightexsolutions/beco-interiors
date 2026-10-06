@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { QuantityStepper } from '@beco/ui';
+import { track } from '@/lib/analytics';
 import { addLine, removeLine, setQuantity, stepFor, type QuoteLine } from '@/lib/quote-list';
 
 /**
@@ -25,7 +26,12 @@ export function QuickAddToQuote({ line }: { line: Omit<QuoteLine, 'quantity'> })
     return (
       <button
         type="button"
-        onClick={() => { addLine(line, 1); setLocalQuantity(1); }}
+        onClick={() => {
+          addLine(line, 1);
+          setLocalQuantity(1);
+          // After the write, so the event means it is on the list. D128.
+          track('add_to_cart', { product_slug: line.slug });
+        }}
         aria-label={`Add ${line.name} to your quote list`}
         className="inline-flex h-11 items-center gap-1.5 rounded-control border border-charcoal px-2.5 font-ui text-xs font-semibold uppercase tracking-[0.08em] text-charcoal transition-colors duration-200 hover:border-warm-red-deep hover:text-warm-red-deep"
       >

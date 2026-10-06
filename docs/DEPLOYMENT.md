@@ -712,8 +712,13 @@ The brief requires the CSP be written explicitly rather than left permissive. St
     script-src 'self' 'unsafe-inline' https://www.googletagmanager.com;
     style-src 'self' 'unsafe-inline';
     font-src 'self';
-    img-src 'self' data: blob: https://img.beco.co.ke https://www.google-analytics.com;
-    connect-src 'self' https://<project>.supabase.co https://www.google-analytics.com;
+    img-src 'self' data: blob: https://img.beco.co.ke https://www.google-analytics.com
+            https://www.googletagmanager.com;
+    media-src 'self' https://img.beco.co.ke;
+    connect-src 'self' https://<project>.supabase.co https://www.google-analytics.com
+                https://region1.google-analytics.com https://analytics.google.com
+                https://region1.analytics.google.com https://www.googletagmanager.com;
+    frame-src https://www.google.com;
     frame-ancestors 'none';
     form-action 'self';
     base-uri 'self';
@@ -726,6 +731,13 @@ The brief requires the CSP be written explicitly rather than left permissive. St
   Referrer-Policy             strict-origin-when-cross-origin
   Permissions-Policy          camera=(), microphone=(), geolocation=()
 ```
+
+The GA4 hosts are named one by one rather than as `*.google-analytics.com`, because the policy
+carries no wildcard host and `tools/backup/src/__tests__/csp.test.ts` holds it to that. If GA4
+Realtime shows nothing and the browser console shows a CSP violation naming another Google
+host, add that host explicitly and to the test. Vercel Web Analytics and Speed Insights load and
+post under `/_vercel` on the site's own origin, so `'self'` covers them; in development only,
+`script-src` also allows `https://va.vercel-scripts.com` for their debug builds. D128.
 
 `font-src 'self'` is possible only because fonts are self hosted, per D3. There is no
 `fonts.gstatic.com` entry and there should never be one.
@@ -813,17 +825,44 @@ nobody can prove the migration helped or notice a drop.
 
 ### 9.2 Google Analytics 4
 
-1. Beco signs in at `analytics.google.com`, creates an account and property
-2. Data Streams, Web, `https://www.beco.co.ke`. Copy the Measurement ID, `G-XXXXXXXXXX`, into
-   `NEXT_PUBLIC_GA4_ID`
-3. Admin, Property access management, add Brightex as **Editor**
-4. Admin, Data Streams, Enhanced measurement on
-5. Mark as **key events**: `quote_submitted`, `whatsapp_click`, `call_click`, `add_to_cart`
+The code is in place (D128). It does nothing until a human does the steps below, and nothing
+here has been confirmed on production yet.
+
+**What the code does.** `GoogleAnalytics` in the storefront root layout loads gtag.js,
+`afterInteractive`, only when `VERCEL_ENV` is `production` and `NEXT_PUBLIC_GA4_ID` matches
+`G-` followed by capitals and digits. Previews, staging and local development load no GA4 at
+all. `AnalyticsListener` sends every click on a `data-analytics` element, and `track()` sends
+`add_to_cart` after an add to quote and `quote_submitted` after a confirmed submission, to GA4
+when it is loaded and to `analytics_events` always, through the anon key under migration 60's
+policy. Params are a product or category slug and the page path, never personal data.
+
+**What a human must do, in this order:**
+
+1. Beco signs in at `analytics.google.com` with **Beco's own business Google account**, not
+   becointeriorsdev@gmail.com and not a Brightex account, and creates an account and property
+2. Data Streams, Web, `https://www.beco.co.ke`. Copy the Measurement ID, `G-XXXXXXXXXX`
+3. Vercel, the `beco-interiors` storefront project, Settings, Environment Variables: add
+   `NEXT_PUBLIC_GA4_ID` with that ID, scoped to **Production only**. Not Preview. It is inlined at
+   build, so it takes effect on the next production deploy, not on the running one
+4. Vercel, the same project, **Analytics** tab, Enable. Then **Speed Insights** tab, Enable.
+   `<Analytics />` and `<SpeedInsights />` are already rendered by the storefront, but they
+   record nothing until these two switches are on, and the dashboard project gets neither
+5. GA4, Admin, Property access management, add Brightex as **Editor**
+6. GA4, Admin, Data Streams, Enhanced measurement on, and keep "Page changes based on browser
+   history events" ticked: App Router navigations are client side, and that is how they count
+   as page views
+7. Deploy production, open the live site, click a phone and a WhatsApp link, and confirm both in
+   GA4 Realtime. Events appear in the event list only once they have fired
+8. GA4, Admin, Events (or Key events): mark as **key events** `quote_submitted`,
+   `whatsapp_click`, `call_click`, `add_to_cart`
+9. GA4, Admin, Product links, Search Console links: link the `beco.co.ke` Search Console
+   property from 9.1
 
 Every event is also written to `analytics_events` in Beco's own database, so the reporting
-survives losing GA4 access and is queryable without Google's interface.
-
-Link GA4 to Search Console under Admin, Product links.
+survives losing GA4 access and is queryable without Google's interface. The dashboard's lead
+counters and conversion report read from there. Check it after step 7 with
+`select event_type, metadata, created_at from analytics_events order by id desc limit 10`,
+as an admin, on `beco-prod`.
 
 ### 9.3 Google Business Profile
 

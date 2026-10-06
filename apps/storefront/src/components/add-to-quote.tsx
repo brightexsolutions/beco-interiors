@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { buttonClasses, cn, QuantityStepper } from '@beco/ui';
+import { track } from '@/lib/analytics';
 import { addLine, lineCount, stepFor, type QuoteLine } from '@/lib/quote-list';
 
 /**
@@ -49,6 +50,8 @@ export function AddToQuote({ line }: { line: Omit<QuoteLine, 'quantity'> }) {
           onClick={() => {
             setCount(lineCount(addLine(line, quantity)));
             setAdded(true);
+            // After the write, so the event means it is on the list. D128.
+            track('add_to_cart', { product_slug: line.slug });
           }}
           className={cn(buttonClasses({ variant: added ? 'outline' : 'primary' }), 'flex-1 sm:flex-none')}
         >

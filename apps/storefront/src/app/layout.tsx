@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import '@beco/ui/src/tokens/tokens.css';
 import { KeyboardAwareFocus, ScrollMotion } from '@beco/ui';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { AnalyticsListener } from '@/components/analytics-listener';
+import { GoogleAnalytics } from '@/components/google-analytics';
 import { AnnouncementBar } from '@/components/announcement-bar';
 import { LaunchBanner } from '@/components/launch-banner';
 import { SiteSplash } from '@/components/site-splash';
@@ -78,6 +82,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ScrollMotion />
         {/* Keeps a focused quote form field above the phone keyboard. */}
         <KeyboardAwareFocus />
+        {/* Measurement, D128. Vercel Web Analytics and Speed Insights load
+            from this origin under /_vercel and only record once enabled in
+            the Vercel project. GA4 renders only on production with a valid
+            ID. The listener sends every data-analytics click to GA4 and to
+            analytics_events. None of these render anything visible. */}
+        <AnalyticsListener />
+        <GoogleAnalytics />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

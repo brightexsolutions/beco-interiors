@@ -13,6 +13,7 @@ import {
 } from '@/lib/quote-list';
 import { submitQuote, type SubmitResult } from '@/app/quote/actions';
 import { SITE, whatsappLink } from '@/lib/site';
+import { track } from '@/lib/analytics';
 
 /**
  * The quote builder.
@@ -187,7 +188,12 @@ export function QuoteBuilder() {
     startTransition(async () => {
       const outcome = await submitQuote(payload);
       setResult(outcome);
-      if (outcome.ok) clearList();
+      if (outcome.ok) {
+        clearList();
+        // Only on a confirmed reference, and with nothing from the form:
+        // no name, phone, email, reference or list contents. D128.
+        track('quote_submitted');
+      }
     });
   };
 
