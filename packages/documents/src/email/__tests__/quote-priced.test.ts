@@ -89,7 +89,7 @@ describe('buildPricedQuoteEmail', () => {
         { description: 'Black handle B100', quantity: 10, unit: 'pc', lineTotal: 15000 },
       ],
       totals: { gross: 145000, net: 125000, vat: 20000 },
-      vatRate: 16,
+      vatRate: 0.16,
     });
     expect(email.html).toContain('Calacatta Gold 12mm');
     expect(email.html).toContain('KES 130,000');
@@ -122,5 +122,20 @@ describe('buildPricedQuoteEmail', () => {
   it('opens on the quote photograph', () => {
     const email = buildPricedQuoteEmail({ reference: 'r', customerName: 'A', validUntil: null, isPriced: true });
     expect(email.html).toContain('/email/hero-quote.jpg');
+  });
+});
+
+describe('the VAT rate line', () => {
+  it('reads the rate as the fraction settings store, never printing 0.16%', () => {
+    const email = buildPricedQuoteEmail({
+      reference: 'BEC-Q-00412',
+      customerName: 'Wanjiku',
+      validUntil: null,
+      isPriced: true,
+      totals: { gross: 116, net: 100, vat: 16 },
+      vatRate: 0.16,
+    });
+    expect(email.html).toContain('VAT at 16%');
+    expect(email.html).not.toContain('0.16%');
   });
 });
