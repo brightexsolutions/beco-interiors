@@ -33,7 +33,7 @@ describe('RangeToolbar', () => {
     render(<RangeToolbar chips={CHIPS} finishes={FINISHES} total={24} showing={24} />);
     const nav = screen.getByRole('navigation', { name: 'Ranges' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/shop/sintered-stone', '/shop/12mm-sintered-stones', '/shop/15mm-sintered-stones']);
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/shop/sintered-stone#range-strip', '/shop/12mm-sintered-stones#range-strip', '/shop/15mm-sintered-stones#range-strip']);
     expect(links[0]).toHaveAttribute('aria-current', 'page');
     expect(links[1]).not.toHaveAttribute('aria-current');
     expect(links[1]).toHaveTextContent('12mm16');
@@ -125,5 +125,15 @@ describe('RangeToolbar', () => {
       expect(link).toHaveClass('whitespace-nowrap');
     }
     expect(screen.getByRole('button', { name: /Polished/ })).toHaveClass('whitespace-nowrap');
+  });
+
+  it('lands a range chip on the strip of the page it opens, not the top', () => {
+    const { container } = render(<RangeToolbar chips={CHIPS} finishes={FINISHES} total={24} showing={24} />);
+    const strip = container.querySelector('#range-strip');
+    expect(strip).not.toBeNull();
+    expect(strip).toHaveClass('scroll-mt-28');
+    for (const link of within(screen.getByRole('navigation', { name: 'Ranges' })).getAllByRole('link')) {
+      expect(link.getAttribute('href')).toMatch(/#range-strip$/);
+    }
   });
 });
