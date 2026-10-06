@@ -23,6 +23,21 @@ describe('CustomerContact', () => {
     expect(screen.getByRole('link', { name: 'WhatsApp' }).getAttribute('href')).toContain('Beco%20order%20BEC-O-00007');
   });
 
+  // jsdom cannot lay out, so the guarantee is held by the classes that make
+  // overflow impossible: each label stays on one line and each button is
+  // never narrower than that line, and the row wraps instead of squeezing.
+  it('keeps every label inside its button: nowrap, never below its label, in a row that wraps', () => {
+    render(<CustomerContact phone="0722333730" email="a@example.com" reference="BEC-Q-1" kind="quote" />);
+    const row = screen.getByRole('group', { name: 'Contact the customer' });
+    expect(row).toHaveClass('flex', 'flex-wrap');
+    expect(row.className).not.toMatch(/grid-cols/);
+    for (const name of ['Call', 'WhatsApp', 'Email']) {
+      const link = screen.getByRole('link', { name });
+      expect(link).toHaveClass('whitespace-nowrap', 'min-w-fit', 'flex-1', 'h-11');
+      expect(link.className).not.toMatch(/\btruncate\b|overflow-hidden|min-w-0/);
+    }
+  });
+
   it('is axe clean', async () => {
     const { container } = render(<CustomerContact phone="0722333730" email={null} reference="BEC-Q-1" kind="quote" />);
     expect(await axe(container)).toHaveNoViolations();
