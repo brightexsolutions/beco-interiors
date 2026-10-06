@@ -146,5 +146,17 @@ describe('AppShell', () => {
     const main = container.querySelector('main')!;
     expect(main.className).not.toMatch(/\bz-(2|3|4|5)\d\b/);
   });
+
+  it('gives the phone header home link a full 44px target, not the 32px of its mark', () => {
+    render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const links = screen.getAllByRole('link', { name: 'Beco Operations, home' });
+    const phone = links.find((l) => l.className.includes('ml-1'));
+    expect(phone).toBeDefined();
+    expect(phone).toHaveClass('min-h-11');
+  });
 });
 
