@@ -42,9 +42,9 @@ describe('ProductFilters', () => {
     expect(push).toHaveBeenCalledWith('/products?published=draft');
   });
 
-  it('puts search and the three filters on one row from lg', () => {
+  it('puts search and the three filters on one row from xl', () => {
     const { container } = render(<ProductFilters />);
-    expect(container.firstChild).toHaveClass('xl:flex', 'xl:items-end');
+    expect(container.firstChild).toHaveClass('xl:flex-row', 'xl:items-center');
   });
 
   it('has no accessibility violations', async () => {

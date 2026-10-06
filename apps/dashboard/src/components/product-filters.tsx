@@ -1,80 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Busy, Input, Select } from '@beco/ui';
-import { useQueryNavigation } from '@/lib/use-query-navigation';
+import { ListFilters } from '@/components/list-filters';
 
-export function ProductFilters() {
-  const { searchParams, setParam, isPending } = useQueryNavigation();
-  const [search, setSearch] = useState(searchParams.get('search') ?? '');
+const AVAILABILITY_OPTIONS = [
+  { value: '', label: 'Any' },
+  { value: 'in_stock', label: 'In stock' },
+  { value: 'pre_order', label: 'Pre-order' },
+  { value: 'poa', label: 'Enquire' },
+  { value: 'out', label: 'Out of stock' },
+];
 
-  const availability = searchParams.get('availability') ?? '';
-  const published = searchParams.get('published') ?? '';
-  const stock = searchParams.get('stock') ?? '';
+const PUBLISHED_OPTIONS = [
+  { value: '', label: 'Any' },
+  { value: 'published', label: 'Published' },
+  { value: 'draft', label: 'Draft' },
+];
 
-  useEffect(() => {
-    const id = setTimeout(() => {
-      if (search !== (searchParams.get('search') ?? '')) setParam('search', search);
-    }, 300);
-    return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+const STOCK_OPTIONS = [
+  { value: '', label: 'Any' },
+  { value: 'low', label: 'Low stock' },
+  { value: 'out', label: 'Out of stock' },
+];
 
-  // Phone: search full width, three filters under it. Desktop (lg):
-  // search plus the three selects share one row. Do not stack them on lg.
+/** Phone: search full width, the three filters under it. From xl, one row. */
+export function ProductFilters({ count }: { count?: string | undefined } = {}) {
   return (
-    <div className="grid min-w-0 grid-cols-3 gap-2 overflow-x-hidden xl:flex xl:items-end">
-      <label className="col-span-full min-w-0 xl:min-w-0 xl:flex-1">
-        <Input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Name, SKU or slug"
-          aria-label="Search products"
-          className="min-w-0"
-        />
-      </label>
-      <label className="min-w-0 xl:w-44 xl:shrink-0">
-        <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Availability</span>
-        <Select
-          value={availability}
-          onChange={(event) => setParam('availability', event.target.value)}
-          aria-label="Filter by availability"
-          className="min-w-0"
-        >
-          <option value="">Any</option>
-          <option value="in_stock">In stock</option>
-          <option value="pre_order">Pre-order</option>
-          <option value="poa">Enquire</option>
-          <option value="out">Out of stock</option>
-        </Select>
-      </label>
-      <label className="min-w-0 xl:w-40 xl:shrink-0">
-        <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Published</span>
-        <Select
-          value={published}
-          onChange={(event) => setParam('published', event.target.value)}
-          aria-label="Filter by published"
-          className="min-w-0"
-        >
-          <option value="">Any</option>
-          <option value="published">Published</option>
-          <option value="draft">Draft</option>
-        </Select>
-      </label>
-      <label className="min-w-0 xl:w-40 xl:shrink-0">
-        <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Stock</span>
-        <Select
-          value={stock}
-          onChange={(event) => setParam('stock', event.target.value)}
-          aria-label="Filter by stock"
-          className="min-w-0"
-        >
-          <option value="">Any</option>
-          <option value="low">Low stock</option>
-          <option value="out">Out of stock</option>
-        </Select>
-      </label>
-      <Busy pending={isPending} className="col-span-full xl:h-11 xl:shrink-0" />
-    </div>
+    <ListFilters
+      searchLabel="Search products"
+      searchPlaceholder="Name, SKU or slug"
+      count={count}
+      filters={[
+        { param: 'availability', label: 'Availability', options: AVAILABILITY_OPTIONS },
+        { param: 'published', label: 'Published', options: PUBLISHED_OPTIONS },
+        { param: 'stock', label: 'Stock', options: STOCK_OPTIONS },
+      ]}
+    />
   );
 }

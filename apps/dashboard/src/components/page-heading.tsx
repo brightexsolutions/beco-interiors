@@ -20,7 +20,9 @@ export function PageHeading({
   actions?: React.ReactNode | undefined;
 }) {
   return (
-    <header className="mb-8 border-b border-neutral-200 pb-6">
+    // A little tighter on a phone, where the space under the hairline was
+    // pushing the first row of every list below the fold's midpoint.
+    <header className="mb-6 border-b border-neutral-200 pb-5 sm:mb-8 sm:pb-6">
       {eyebrow ? (
         <p className="flex items-center gap-3 font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
           <span aria-hidden className="inline-block h-px w-6 bg-warm-red" />

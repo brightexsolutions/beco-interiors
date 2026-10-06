@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -16,6 +15,8 @@ import {
   type DataTableColumn,
 } from '@beco/ui';
 import { AnnouncementEditor } from '@/components/announcement-editor';
+import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import {
   ANNOUNCEMENT_TYPE_LABEL,
   ANNOUNCEMENT_WINDOW_LABEL,
@@ -89,21 +90,15 @@ const desktopColumns = (editHref: (id: string) => string): DataTableColumn<Staff
   },
 ];
 
-function AnnouncementCard({ row, href }: { row: StaffAnnouncement; href: string }) {
+function AnnouncementRow({ row, href }: { row: StaffAnnouncement; href: string }) {
   const value = announcementWindow(row);
   return (
-    <li className="min-w-0">
-      <Link
-        href={href}
-        aria-label={`Edit ${row.title}`}
-        className="block min-w-0 overflow-hidden rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
-      >
-        <p className="font-semibold text-charcoal">{row.title}</p>
-        <p className="mt-1 text-neutral-500">
-          {ANNOUNCEMENT_TYPE_LABEL[row.type]} · {ANNOUNCEMENT_WINDOW_LABEL[value]}
-        </p>
-      </Link>
-    </li>
+    <ListRowLink href={href} label={`Edit ${row.title}`}>
+      <p className="font-ui text-base font-semibold text-charcoal [overflow-wrap:anywhere]">{row.title}</p>
+      <p className="mt-1 font-ui text-base text-neutral-500">
+        {ANNOUNCEMENT_TYPE_LABEL[row.type]} · {ANNOUNCEMENT_WINDOW_LABEL[value]}
+      </p>
+    </ListRowLink>
   );
 }
 
@@ -118,8 +113,8 @@ export function AnnouncementResults({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the filter row (D117), so a filter change dims the list.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(announcements, requestedPage);
 
@@ -139,11 +134,11 @@ export function AnnouncementResults({
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   const closeSheet = () => {
-    startTransition(() => router.push(withParam('edit', null, ['new'])));
+    navigate(() => router.push(withParam('edit', null, ['new'])));
   };
 
   const sheetOpen = Boolean(editing) || creating;
@@ -162,11 +157,13 @@ export function AnnouncementResults({
   if (announcements.length === 0) {
     return (
       <>
-        <EmptyState
-          title="No announcements here"
-          description="Nothing matches this filter yet. Clear search, or create an announcement."
-          fill
-        />
+        <BusyRegion busy={isPending}>
+          <EmptyState
+            title="No announcements here"
+            description="Nothing matches this filter yet. Clear search, or create an announcement."
+            fill
+          />
+        </BusyRegion>
         {sheet}
       </>
     );
@@ -184,11 +181,11 @@ export function AnnouncementResults({
         />
       </div>
 
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
+      <ListRows busy={isPending} label="Announcements" className="border-y border-neutral-200">
         {paged.items.map((row) => (
-          <AnnouncementCard key={row.id} row={row} href={editHref(row.id)} />
+          <AnnouncementRow key={row.id} row={row} href={editHref(row.id)} />
         ))}
-      </ul>
+      </ListRows>
 
       <Pagination
         className="mt-4"

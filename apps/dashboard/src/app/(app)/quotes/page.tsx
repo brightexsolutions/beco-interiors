@@ -5,6 +5,7 @@ import { PageHeading } from '@/components/page-heading';
 import { QuoteFilters, type OwnerOption } from '@/components/quote-filters';
 import { QuoteResults } from '@/components/quote-results';
 import { fetchQuotes, type QuoteListItem, type QuoteOwnerFilter } from '@/lib/quotes';
+import { QueryNavigationProvider } from '@/lib/use-query-navigation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -74,32 +75,36 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
         }
       />
 
-      <Panel>
-        <TableToolbar
-          filters={<QuoteFilters ownerOptions={ownerOptions} />}
-          count={`${quotes.length} ${quotes.length === 1 ? 'quote' : 'quotes'}`}
-        />
-        {approval ? (
-          <div className="flex flex-wrap items-center gap-2 px-4 pt-3 sm:px-5">
-            <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-charcoal bg-charcoal px-3 font-ui text-sm font-semibold text-high-vis-white">
-              Needs approval
-              <Link
-                href={withoutApproval ? `/quotes?${withoutApproval}` : '/quotes'}
-                aria-label="Show every quote, not only those needing approval"
-                className="-mr-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-300 hover:bg-high-vis-white/10 hover:text-high-vis-white"
-              >
-                <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </Link>
-            </span>
+      {/* One transition for the filters and the list, so a filter change
+          dims the rows and shows Busy until they land. D117. */}
+      <QueryNavigationProvider>
+        <Panel>
+          <TableToolbar
+            filters={
+              <QuoteFilters ownerOptions={ownerOptions} count={`${quotes.length} ${quotes.length === 1 ? 'quote' : 'quotes'}`} />
+            }
+          />
+          {approval ? (
+            <div className="flex flex-wrap items-center gap-2 px-4 pt-3 sm:px-5">
+              <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-charcoal bg-charcoal px-3 font-ui text-sm font-semibold text-high-vis-white">
+                Needs approval
+                <Link
+                  href={withoutApproval ? `/quotes?${withoutApproval}` : '/quotes'}
+                  aria-label="Show every quote, not only those needing approval"
+                  className="-mr-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-300 hover:bg-high-vis-white/10 hover:text-high-vis-white"
+                >
+                  <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </Link>
+              </span>
+            </div>
+          ) : null}
+          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+            <QuoteResults quotes={quotes} />
           </div>
-        ) : null}
-        <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
-          <QuoteResults quotes={quotes} />
-        </div>
-      </Panel>
-
+        </Panel>
+      </QueryNavigationProvider>
     </>
   );
 }

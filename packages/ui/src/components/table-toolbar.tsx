@@ -28,14 +28,18 @@ export function TableToolbar({
         {search ? <div className="min-w-0 xl:w-80">{search}</div> : null}
         {filters ? <div className="min-w-0 flex-1">{filters}</div> : null}
       </div>
-      <div className="flex shrink-0 items-center justify-between gap-3 xl:justify-end">
-        {count ? (
-          <p aria-live="polite" className="font-ui text-sm tabular-nums text-neutral-500">
-            {count}
-          </p>
-        ) : null}
-        {actions}
-      </div>
+      {/* Only when there is something to put in it: an empty block still
+          takes the column's gap, 12px of nothing above the list on a phone. */}
+      {count || actions ? (
+        <div className="flex shrink-0 items-center justify-between gap-3 xl:justify-end">
+          {count ? (
+            <p aria-live="polite" className="font-ui text-sm tabular-nums text-neutral-500">
+              {count}
+            </p>
+          ) : null}
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }

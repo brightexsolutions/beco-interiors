@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -14,6 +13,8 @@ import {
   paginate,
   type DataTableColumn,
 } from '@beco/ui';
+import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import type { StaffBlogPost } from '@/lib/blog';
 
 function EditAction({ href, name }: { href: string; name: string }) {
@@ -65,8 +66,8 @@ const columns = (): DataTableColumn<StaffBlogPost>[] => [
 export function BlogResults({ posts }: { posts: StaffBlogPost[] }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the filter row (D117), so a filter change dims the list.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(posts, requestedPage);
 
@@ -75,16 +76,18 @@ export function BlogResults({ posts }: { posts: StaffBlogPost[] }) {
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   if (posts.length === 0) {
     return (
-      <EmptyState
-        title="No articles here"
-        description="Nothing matches this filter yet. Clear search, or write an article."
-        fill
-      />
+      <BusyRegion busy={isPending}>
+        <EmptyState
+          title="No articles here"
+          description="Nothing matches this filter yet. Clear search, or write an article."
+          fill
+        />
+      </BusyRegion>
     );
   }
 
@@ -99,20 +102,14 @@ export function BlogResults({ posts }: { posts: StaffBlogPost[] }) {
           busy={isPending}
         />
       </div>
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
+      <ListRows busy={isPending} label="Articles" className="border-y border-neutral-200">
         {paged.items.map((row) => (
-          <li key={row.id}>
-            <Link
-              href={`/studio/blog/${row.id}`}
-              aria-label={`Edit ${row.title}`}
-              className="block min-w-0 overflow-hidden rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
-            >
-              <p className="font-semibold text-charcoal">{row.title}</p>
-              <p className="mt-1 text-neutral-500">{row.status === 'published' ? 'Published' : 'Draft'}</p>
-            </Link>
-          </li>
+          <ListRowLink key={row.id} href={`/studio/blog/${row.id}`} label={`Edit ${row.title}`}>
+            <p className="font-ui text-base font-semibold text-charcoal [overflow-wrap:anywhere]">{row.title}</p>
+            <p className="mt-1 font-ui text-base text-neutral-500">{row.status === 'published' ? 'Published' : 'Draft'}</p>
+          </ListRowLink>
         ))}
-      </ul>
+      </ListRows>
       <Pagination
         className="mt-4"
         page={paged.page}
