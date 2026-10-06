@@ -18,9 +18,19 @@ export function CustomerContact({
   kind: 'quote' | 'order';
 }) {
   const noun = kind === 'quote' ? 'quote' : 'order';
-  const button = cn(buttonClasses({ variant: 'outline' }), 'h-11 px-2 py-0');
+  // Equal thirds squeezed WHATSAPP past its own border in the narrow side
+  // column: uppercase at the button's 0.09em tracking is wider than a third
+  // of ~300px. Each button now grows to share the row but never shrinks
+  // below its label (min-w-fit, whitespace-nowrap from buttonClasses), and
+  // the row wraps rather than squeezing, so Email drops to a line of its
+  // own when three will not fit. Tighter tracking and padding keep three
+  // on one line wherever they can.
+  const button = cn(
+    buttonClasses({ variant: 'outline' }),
+    'h-11 min-w-fit flex-1 whitespace-nowrap px-3 py-0 tracking-[0.04em]',
+  );
   return (
-    <div className={cn('grid gap-2', email ? 'grid-cols-3' : 'grid-cols-2')}>
+    <div role="group" aria-label="Contact the customer" className="flex flex-wrap gap-2">
       <a href={`tel:${phone.replace(/\s+/g, '')}`} className={button}>
         Call
       </a>

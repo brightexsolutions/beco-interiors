@@ -1,9 +1,29 @@
 'use client';
 
 import { forwardRef, useEffect, useId, useRef, useState, useTransition } from 'react';
-import { Button, ChipGroup, Dialog, Field, Input, cn } from '@beco/ui';
+import { Button, Dialog, Field, Input, Select, cn } from '@beco/ui';
 import { listCatalogueRanges, searchCatalogue, type CatalogueHit, type CatalogueRange } from '@/lib/catalogue';
 import { groupHitsByCategory } from '@/lib/catalogue-search';
+
+/**
+ * The range select's options: ranges that hold products, in the catalogue's
+ * own order, each run of siblings under its parent as an optgroup so a
+ * nested range reads as "Sintered Stone, 12mm Sintered Stones" the way the
+ * product editor's range select does. Empty ranges are left out: a
+ * salesperson raising a quote has nothing to pick in one.
+ */
+export function rangeSelectGroups(
+  ranges: CatalogueRange[],
+): { label: string | null; ranges: CatalogueRange[] }[] {
+  const groups: { label: string | null; ranges: CatalogueRange[] }[] = [];
+  for (const range of ranges) {
+    if (range.productCount <= 0) continue;
+    const last = groups[groups.length - 1];
+    if (last && last.label === range.groupName) last.ranges.push(range);
+    else groups.push({ label: range.groupName, ranges: [range] });
+  }
+  return groups;
+}
 
 const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
@@ -31,6 +51,7 @@ export const CataloguePicker = forwardRef<
   }
 >(function CataloguePicker({ onAdd, disabled, disabledHint, className }, ref) {
   const searchId = useId();
+  const rangeId = `${searchId}-range`;
   const listId = `${searchId}-results`;
   const searchRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -84,9 +105,7 @@ export const CataloguePicker = forwardRef<
 
   const chosen = Array.from(selected.values());
   const addLabel = chosen.length === 1 ? 'Add 1 item' : `Add ${chosen.length} items`;
-  // Stocked ranges first, in the catalogue's own order, empty ones after,
-  // so the chips a salesperson actually needs are the first ones visible.
-  const orderedRanges = [...ranges.filter((r) => r.productCount > 0), ...ranges.filter((r) => r.productCount === 0)];
+  const rangeGroups = rangeSelectGroups(ranges);
   const hitGroups = groupHitsByCategory(hits);
   const selectedRange = ranges.find((item) => item.id === range);
   const emptyMessage = selectedRange
@@ -123,7 +142,12 @@ export const CataloguePicker = forwardRef<
         initialFocusRef={searchRef}
       >
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="shrink-0 space-y-3 px-5 pt-4 sm:px-6">
+          {/* Search and range share one line from sm up, stack on a phone.
+              The range is one select, not a chip per range: thirty chips
+              filled the whole dialog on a laptop and pushed the list, the
+              only part that scrolls, down to nothing. D112: five or more
+              options are a select. */}
+          <div className="grid shrink-0 gap-3 px-5 pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,15rem)] sm:px-6">
             <Field label="Search" htmlFor={searchId} hint="Name or range">
               <Input
                 ref={searchRef}
@@ -140,19 +164,30 @@ export const CataloguePicker = forwardRef<
                 }}
               />
             </Field>
-            {/* Ranges as chips: one tap, and every range visible at a glance,
-                rather than a native select that hides them behind a wheel. */}
-            <ChipGroup
-              label="Range"
-              value={range}
-              clearValue=""
-              onChange={setRange}
-              className="-mx-5 px-5 sm:-mx-6 sm:px-6"
-              options={[
-                { value: '', label: 'All ranges' },
-                ...orderedRanges.map((item) => ({ value: item.id, label: item.name, count: item.productCount })),
-              ]}
-            />
+            <Field label="Range" htmlFor={rangeId}>
+              <Select
+                id={rangeId}
+                value={range}
+                aria-controls={listId}
+                onChange={(event) => setRange(event.target.value)}
+              >
+                <option value="">All ranges</option>
+                {rangeGroups.map((group) => {
+                  const options = group.ranges.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {`${item.name} (${item.productCount})`}
+                    </option>
+                  ));
+                  return group.label ? (
+                    <optgroup key={`${group.label}-${group.ranges[0]!.id}`} label={group.label}>
+                      {options}
+                    </optgroup>
+                  ) : (
+                    options
+                  );
+                })}
+              </Select>
+            </Field>
           </div>
 
           <ul id={listId} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-3">
