@@ -63,6 +63,16 @@ const csp = [
 const config: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['@react-pdf/renderer', 'fontkit', 'yoga-layout', 'sharp', 'pdfjs-dist'],
+  // The quote, receipt and report PDFs read their TTF fonts and the logo from
+  // packages/documents at request time, by a path built from import.meta.url.
+  // The file tracer cannot follow a path built at run time, so no deployment
+  // carried them and every PDF failed in production with ENOENT on
+  // titillium-400.ttf, while local runs, which read the files from disk,
+  // passed. Named here so every server route, the PDF routes and the actions
+  // that email or share a PDF alike, ships them. About 236KB.
+  outputFileTracingIncludes: {
+    '/**': ['../../packages/documents/src/pdf/fonts/*.ttf', '../../packages/documents/src/pdf/assets/*'],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '20mb',
