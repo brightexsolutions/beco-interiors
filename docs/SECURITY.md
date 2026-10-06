@@ -127,6 +127,24 @@ table has RLS on (`03_role_separation`). Audit triggers stand on users, categori
 quotes, orders, documents, blog posts, announcements, clients and settings. Soft delete on
 everything with commercial meaning. No `window.confirm`, `alert` or `prompt` anywhere (lint).
 
+## Finding, 6 October 2026: anyone could insert an order (migration 63)
+
+Migration 6 created `orders_insert_anon` and `order_items_insert_anon` as
+`for insert with check (true)` with no role, so any role, the anonymous web visitor
+included, could write an order or an order line directly with the public anon key.
+The 3 October review (D108) did not catch it. Found during the customers work and
+confirmed by a direct anonymous insert against a local stack. Live in production from
+the first deploy until migration 63.
+
+Fixed in migration 63, `close_anon_order_insert`: both policies dropped. Nothing
+legitimate used them: every order is written by `convert_quote_to_order`, a security
+definer function, and admins keep `orders_write_admin`. pgTAP
+`39_orders_insert_closed.test.sql` proves anon and a salesperson are refused on both
+tables, an admin still writes, and the conversion function stays security definer.
+
+Not yet checked: whether any order rows were inserted this way before the fix. Look
+for orders with no `quote_id` and no admin `created_by` on beco-prod.
+
 ## Who may do what, by function (D110, 3 October 2026)
 
 Routes are the coarse gate (`lib/access.ts`). Inside a route, these are the functions that
