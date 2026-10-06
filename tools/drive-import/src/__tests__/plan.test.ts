@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan, photoRef } from '../plan';
+import { buildPlan, exportItemName, exportRef, isExportName, photoRef } from '../plan';
 import type { DriveFile } from '../classify';
 import type { FolderNode } from '../misnest';
 
@@ -428,5 +428,96 @@ describe('photoRef', () => {
 
   it('takes the start of a random name, lowercased', () => {
     expect(photoRef('BF8BC386-1505-4521-97FF-7FB9A96DC2A9.jpg')).toBe('bf8bc386');
+  });
+});
+
+/**
+ * 6 October: a gold handle was published as
+ * "34D00DD2-442A-4748-BF08-86C2643EE870", its iPhone export filename. An
+ * export or phone name is never a product name; it gets a readable
+ * placeholder for Beco to rename in the dashboard. Names typed by Beco are
+ * left exactly as typed. The listing is the real GOLD HANDLES and KNOBS
+ * folders, cut down, plus phone names for the other export shapes.
+ */
+describe('export named items in an item folder', () => {
+  const handles = [
+    f('g1', 'HANDLES/GOLD HANDLES/34D00DD2-442A-4748-BF08-86C2643EE870.jpg'),
+    f('g2', 'HANDLES/GOLD HANDLES/537 GOLD'),
+    f('g3', 'HANDLES/GOLD HANDLES/A7355 K GOLD'),
+    f('g4', 'HANDLES/GOLD HANDLES/IMG_4410.HEIC'),
+    f('g5', 'HANDLES/GOLD HANDLES/A7782 WHITE GOLD'),
+    f('k1', 'HANDLES/KNOBS/HT-8355 K GOLD KNOB'),
+    f('k2', 'HANDLES/KNOBS/A36 BLACK KNOB'),
+    f('k3', 'HANDLES/KNOBS/PXL_20260831_092311.jpg'),
+  ];
+  const plan = buildPlan(handles, [], []);
+  const by = (id: string) => plan.files.find((x) => x.driveFileId === id)!;
+
+  it('gives a UUID or phone named handle a placeholder of finish, noun and short reference', () => {
+    expect(by('g1').productName).toBe('Gold Handle 34D0');
+    expect(by('g1').productSlug).toBe('gold-handle-34d0');
+    expect(by('g4').productName).toBe('Gold Handle 4410');
+    // Knobs names no finish, so none is invented.
+    expect(by('k3').productName).toBe('Knob 092311');
+  });
+
+  it('keeps the export named item on its own Drive path, so an existing row is still found', () => {
+    expect(by('g1').productPath).toBe('HANDLES/GOLD HANDLES/34D00DD2-442A-4748-BF08-86C2643EE870');
+  });
+
+  it('gives the placeholder the same slug on every run', () => {
+    const known = handles.map((h) => ({ driveFileId: h.id, path: h.path, md5: h.md5 ?? null, role: null, productId: null }));
+    const again = buildPlan(handles, [], known);
+    expect(again.files.map((x) => x.productSlug)).toEqual(plan.files.map((x) => x.productSlug));
+  });
+
+  it('leaves names Beco typed exactly as before, name and slug', () => {
+    expect(by('g2').productName).toBe('537 Gold');
+    expect(by('g2').productSlug).toBe('537-gold');
+    expect(by('g3').productName).toBe('A7355 K Gold');
+    expect(by('k1').productName).toBe('HT-8355 K Gold Knob');
+  });
+
+  it('still makes the folder an item folder with export names in it', () => {
+    expect(plan.itemFolders).toContainEqual({ folder: 'HANDLES/GOLD HANDLES', items: 5, files: 5 });
+  });
+
+  it('never makes a folder of nothing but export names an item folder', () => {
+    const loose = buildPlan([
+      f('u1', 'HANDLES/GOLD HANDLES/34D00DD2-442A-4748-BF08-86C2643EE870.jpg'),
+      f('u2', 'HANDLES/GOLD HANDLES/IMG_4410.HEIC'),
+    ], [], []);
+    expect(loose.itemFolders).toEqual([]);
+  });
+
+  it('names a phone photograph in an item folder outside HANDLES by its folder, once', () => {
+    const hinges = buildPlan([
+      f('h1', 'HINGES/H-301 SOFT CLOSE.jpg'),
+      f('h2', 'HINGES/H-302 FULL OVERLAY.jpg'),
+      f('h3', 'HINGES/IMG_1193.HEIC'),
+    ], [], []);
+    expect(hinges.files.map((x) => x.productName)).toEqual(['H-301 Soft Close', 'H-302 Full Overlay', 'Hinges 1193']);
+  });
+});
+
+describe('isExportName and exportRef', () => {
+  it.each([
+    'IMG_1234.HEIC', 'PXL_20260831_092311.jpg', 'DSC02078.JPG',
+    '34D00DD2-442A-4748-BF08-86C2643EE870.jpg', '1F5DC2CDE1F147B1', '20260512093011',
+  ])('reads %s as an export name', (name) => expect(isExportName(name)).toBe(true));
+
+  it.each(['B762 BLACK', 'HT-8350 BLACK GOLD', '8084', 'A7355', 'ASSORTMENT', 'DEADBEEF'])(
+    'reads %s as a real item name',
+    (name) => expect(isExportName(name)).toBe(false),
+  );
+
+  it('shortens a UUID to its first four characters, uppercase', () => {
+    expect(exportRef('34d00dd2-442a-4748-bf08-86c2643ee870.jpg')).toBe('34D0');
+    expect(exportRef('IMG_1234.HEIC')).toBe('1234');
+  });
+
+  it('builds the placeholder from the folder, with the noun only where ITEM_NOUNS gives one', () => {
+    expect(exportItemName('GOLD HANDLES', 'Handle', '34D0')).toBe('Gold Handle 34D0');
+    expect(exportItemName('HINGES', undefined, '1234')).toBe('Hinges 1234');
   });
 });
