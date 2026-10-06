@@ -41,12 +41,30 @@ export interface FinishReading {
 }
 
 const SIDE = 96;
+/** Under this CIELAB chroma a pixel is neutral: black, silver or white. */
+const NEUTRAL_CHROMA = 12;
 /** Below this share of the frame there is no subject to read. */
 const MIN_SUBJECT = 0.03;
 /** The winner must carry at least this share of the subject's votes. */
 const MIN_SHARE = 0.45;
 /** How far, in CIELAB, a pixel must sit from the backdrop to be subject. */
 const SUBJECT_DISTANCE = 16;
+/**
+ * A neutral piece whose median lightness is under this share of the
+ * backdrop's is dark metal, whatever its absolute lightness.
+ *
+ * Matte black and gunmetal hinges shot on a white sheet came out L 34 to 52,
+ * not under 30: the camera exposes for the bright backdrop and the piece's
+ * satin face mirrors it, so their pixels voted silver and IMG_1187, IMG_1307
+ * and IMG_1308 were filed as Silver Hinges. Measured against the backdrop
+ * they sit at 0.38 to 0.52 of its lightness, every silver hinge at 0.57 or
+ * more, on white and on grey alike. A gunmetal lock or leg falls under it
+ * too, which is where Brown wants gunmetal filed. See D122, 6 October.
+ */
+const DARK_RELATIVE = 0.545;
+/** The share of the piece that must be neutral before it can read as dark metal,
+    so a gold leg on a gunmetal bracket goes to the vote instead. */
+const MIN_NEUTRAL = 0.8;
 
 type Lab = [number, number, number];
 
@@ -73,7 +91,7 @@ export const rgbToLab = (r: number, g: number, b: number): Lab => {
  */
 export const finishOfPixel = ([l, a, b]: Lab): Finish | null => {
   const chroma = Math.hypot(a, b);
-  if (chroma < 12) {
+  if (chroma < NEUTRAL_CHROMA) {
     if (l < 30) return 'black';
     if (l > 88) return 'white';
     return 'silver';
@@ -115,17 +133,27 @@ export const readFinish = async (source: Buffer): Promise<FinishReading> => {
   const backdrop: Lab = [median(border.map((p) => p[0])), median(border.map((p) => p[1])), median(border.map((p) => p[2]))];
 
   const votes = new Map<Finish, number>();
+  const neutralL: number[] = [];
   let subject = 0;
   for (const p of labs) {
     const distance = Math.hypot(p[0] - backdrop[0], p[1] - backdrop[1], p[2] - backdrop[2]);
     if (distance < SUBJECT_DISTANCE) continue;
     subject++;
+    if (Math.hypot(p[1], p[2]) < NEUTRAL_CHROMA) neutralL.push(p[0]);
     const vote = finishOfPixel(p);
     if (vote) votes.set(vote, (votes.get(vote) ?? 0) + 1);
   }
 
   const subjectShare = subject / labs.length;
   if (subjectShare < MIN_SUBJECT) return { finish: null, share: 0, subject: subjectShare };
+
+  // Dark metal, judged against the backdrop rather than on an absolute
+  // scale, before the pixel vote. Its neutral pixels all count for black:
+  // the ones that voted silver were the backdrop mirrored in its face.
+  const neutralShare = neutralL.length / subject;
+  if (neutralShare >= MIN_NEUTRAL && median(neutralL) < DARK_RELATIVE * backdrop[0]) {
+    return { finish: 'black', share: neutralShare, subject: subjectShare };
+  }
 
   let winner: Finish | null = null;
   let best = 0;
