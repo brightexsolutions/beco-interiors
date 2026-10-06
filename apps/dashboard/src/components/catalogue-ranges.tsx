@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useOptimistic } from 'react';
 import { Icon, Sheet, buttonClasses, cn } from '@beco/ui';
 import { CategoryEditor } from '@/components/category-editor';
 import { CategoryCreate } from '@/components/category-create';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import { flattenCategoryTree, subtreeProductCount, type CategoryGroupRow, type CategoryParentOption, type CategoryRow } from '@/lib/categories';
 
 /**
@@ -45,12 +46,17 @@ export function CatalogueRanges({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  // The page's shared transition (D117): a pill tap is pending in the filter
+  // row's Busy and the product table's dimming, not only here.
+  const { searchParams, navigate } = useQueryNavigation();
+  // The tapped pill opens at once, before the server answers; it settles to
+  // the URL's selection when the navigation lands, or falls back if it fails.
+  // Without this a tap on Nairobi 4G sat dead for a second or more.
+  const [shownId, showId] = useOptimistic(selectedId);
 
   const all = flattenCategoryTree(tree);
   const byId = new Map(all.map((node) => [node.id, node]));
-  const selected = selectedId ? (byId.get(selectedId) ?? null) : null;
+  const selected = shownId ? (byId.get(shownId) ?? null) : null;
 
   // The path from the major category down to the selection, so each row
   // knows which of its pills is open.
@@ -70,13 +76,18 @@ export function CatalogueRanges({
   };
 
   const filterTo = (id: string | null) => {
-    startTransition(() => router.push(withParam({ category: id, page: null })));
+    if (id === (shownId ?? null)) return;
+    const href = withParam({ category: id, page: null });
+    navigate(() => {
+      showId(id);
+      return router.push(href);
+    });
   };
 
   const editHref = (id: string) => withParam({ range: id, newRange: null, parent: null });
   const newHref = (parentId: string | null) => withParam({ newRange: '1', parent: parentId, range: null });
   const closeSheet = () => {
-    startTransition(() => router.push(withParam({ range: null, newRange: null, parent: null })));
+    navigate(() => router.push(withParam({ range: null, newRange: null, parent: null })));
   };
 
   const sheetOpen = Boolean(editing) || creating;

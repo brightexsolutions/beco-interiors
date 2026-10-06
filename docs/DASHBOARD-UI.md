@@ -144,7 +144,12 @@ and no exceptions:
 3. **While a list reloads, the list says so.** Filters, search, sort and paging are
    navigations. The filter row renders `Busy`, a live status line reading "Updating" with
    the spinner, and the table dims to half with `aria-busy` until the new rows land. Both
-   come from one place: `useQueryNavigation` owns the transition and its `isPending`
+   come from one place: `useQueryNavigation` owns the transition and its `isPending`.
+   When the controls and the list are separate components (the catalogue's range pills,
+   filter row and product list), wrap them in `QueryNavigationProvider` so all three share
+   one transition; without it each hears only its own navigations. A control whose own
+   state is the selection (a range pill) shows the new choice at once with `useOptimistic`,
+   before the server answers
 
 Page to page navigation shows the route's `loading.tsx`, a settled layout with the heading
 in place, never a spinner page.

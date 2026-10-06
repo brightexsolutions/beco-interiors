@@ -158,4 +158,26 @@ describe('ProductResults', () => {
     );
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('shows a page the server already sliced as it is, with the whole result\'s total, and pages by URL', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+    params = new URLSearchParams('category=handles&page=2');
+    const onPage = product({ id: '99999999-9999-4999-8999-999999999999', name: 'Ninth Handle', slug: 'ninth-handle' });
+    render(
+      <ProductResults
+        products={[onPage]}
+        paging={{ page: 2, pageCount: 3, from: 9, to: 9, total: 17 }}
+        editing={null}
+        creating={false}
+        categories={[]}
+      />,
+    );
+    // Not re-sliced in the browser: page 2 of a one row array would be empty.
+    expect(screen.getAllByText('Ninth Handle').length).toBeGreaterThan(0);
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav).toHaveTextContent(/9.9 of 17/);
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(push).toHaveBeenCalledWith('/products?category=handles&page=3');
+  });
 });

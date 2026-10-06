@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -19,6 +18,7 @@ import {
 import { ProductEditor } from '@/components/product-editor';
 import { ProductCreate } from '@/components/product-create';
 import { ProductThumb } from '@/components/product-thumb';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import {
   isLowStock,
   productAvailabilityLabel,
@@ -155,23 +155,41 @@ function ProductCard({ product, href }: { product: CatalogueProduct; href: strin
   );
 }
 
+/** Where `products` sits in the whole result, when the server already paged it. */
+export interface ProductPaging {
+  page: number;
+  pageCount: number;
+  from: number;
+  to: number;
+  total: number;
+}
+
 export function ProductResults({
   products,
+  paging,
   editing,
   creating,
   categories,
 }: {
+  /** The rows to show. With `paging`, one page the server sliced; without, the whole list. */
   products: CatalogueProduct[];
+  /**
+   * The catalogue page slices on the server and passes this, so a range pill
+   * sends eight products to the browser, not every product in the range with
+   * its description and specs: 178KB per tap for Handles before, on 4G.
+   */
+  paging?: ProductPaging | undefined;
   editing: CatalogueProduct | null;
   creating: boolean;
   categories: ProductCategoryOption[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the range pills and the filter row on this page, so the
+  // table dims for a navigation any of them starts. D117.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
-  const paged = paginate(products, requestedPage);
+  const paged = paging ? { ...paging, items: products } : paginate(products, requestedPage);
 
   const withParam = (key: string, value: string | null, extraClear: string[] = []) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -189,15 +207,15 @@ export function ProductResults({
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   const closeSheet = () => {
-    startTransition(() => router.push(withParam('edit', null, ['new'])));
+    navigate(() => router.push(withParam('edit', null, ['new'])));
   };
 
   const refresh = () => {
-    startTransition(() => router.refresh());
+    navigate(() => router.refresh());
   };
 
   const sheetOpen = Boolean(editing) || creating;
@@ -259,7 +277,14 @@ export function ProductResults({
         />
       </div>
 
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
+      {/* The cards dim like the table does, since below xl they are the list. */}
+      <ul
+        aria-busy={isPending || undefined}
+        className={cn(
+          'grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden transition-opacity duration-200 xl:hidden',
+          isPending && 'opacity-50',
+        )}
+      >
         {paged.items.map((product) => (
           <ProductCard key={product.id} product={product} href={editHref(product.slug)} />
         ))}
