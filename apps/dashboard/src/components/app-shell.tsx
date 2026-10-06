@@ -107,7 +107,10 @@ export function AppShell({
           </div>
 
           {/* Desktop top bar */}
-          <div className="hidden items-center justify-between gap-4 border-b border-neutral-200 bg-high-vis-white/80 px-8 py-3 backdrop-blur lg:flex">
+          {/* relative z-20: backdrop-blur makes this bar its own stacking
+              context, so without a z-index of its own the main panel below
+              painted over it and hid the account menu that opens from it. */}
+          <div className="relative z-20 hidden items-center justify-between gap-4 border-b border-neutral-200 bg-high-vis-white/80 px-8 py-3 backdrop-blur lg:flex">
             <TopBarCrumb />
             <div className="flex shrink-0 items-center gap-1.5">
               <ThemeToggle />
