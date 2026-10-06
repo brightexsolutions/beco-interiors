@@ -51,7 +51,45 @@ const OLD_CATEGORY_TO_NEW: ReadonlyArray<[string, string]> = [
   ['lights', '/shop'],
 ];
 
+/**
+ * The old site's real category paths, from Search Console's indexed pages on
+ * 6 October 2026. WooCommerce nested them, so the single slug list above
+ * missed them all and they fell through to /shop: the WPC wall panels page,
+ * the old site's second best page by clicks, among them. Each goes to the
+ * range that does its job now. Lighting was retired (D103), so its pages go
+ * to the shop. WPC panels go to the Wall Panels group, which holds every
+ * panel Beco sells.
+ */
+const OLD_CATEGORY_PATHS: ReadonlyArray<[string, string]> = [
+  ['sintered-stones/bold-marble-designs', '/shop/sintered-stone'],
+  ['sintered-stones/plain-neutral-designs', '/shop/sintered-stone'],
+  ['outdoor-decking-cladding', '/shop/wall-panels'],
+  ['outdoor-decking-cladding/wpc-wall-panels', '/shop/wall-panels'],
+  ['outdoor-decking-cladding/wpc-wall-panels/composite-cladding', '/shop/wall-panels'],
+  ['outdoor-decking-cladding/wpc-wall-panels/solid-carbon-panels', '/shop/wall-panels'],
+  ['furniture-fittings-accessories', '/shop/hardware'],
+  ['furniture-fittings-accessories/handles', '/shop/handles'],
+  ['furniture-fittings-accessories/malpha-hinges', '/shop/hinges'],
+  ['furniture-fittings-accessories/sofa-legs', '/shop/furniture-legs'],
+  ['furniture-fittings-accessories/push-to-open-systems', '/shop/hardware'],
+  ['furniture-fittings-accessories/skirting-accessories', '/shop/wall-panel-accessories'],
+  ['furniture-fittings-accessories/wireless-charging-ports', '/shop/office-accessories'],
+  ['lighting/:path*', '/shop'],
+];
+
 export const LEGACY_REDIRECTS: readonly LegacyRedirect[] = [
+  // The old site's real nested categories first, so they win over the
+  // catch all below.
+  ...OLD_CATEGORY_PATHS.flatMap(([path, destination]) => [
+    { source: `/product-category/${path}`, destination },
+    ...(path.endsWith(':path*') ? [] : [{ source: `/product-category/${path}/page/:page`, destination }]),
+  ]),
+  // The old Yoast sitemap Search Console still holds: point it at ours, so
+  // Google walks from the sitemap it trusts to the new one.
+  { source: '/sitemap_index.xml', destination: '/sitemap.xml' },
+  // A single old page with no counterpart; it showed rooms, as the gallery does.
+  { source: '/living-room-walk-through', destination: '/gallery' },
+
   // WooCommerce category and tag archives.
   ...OLD_CATEGORY_TO_NEW.map(([slug, destination]) => ({
     source: `/product-category/${slug}`,
@@ -149,7 +187,6 @@ export const GONE: readonly RegExp[] = [
   /^\/comments\/feed(\/|$)/,
   /\/feed\/?$/,
   /^\/wp-sitemap(-[a-z0-9-]+)?\.xml$/,
-  /^\/sitemap_index\.xml$/,
   /^\/[a-z0-9-]+-sitemap\.xml$/,
   /^\/readme\.html$/,
   /^\/license\.txt$/,
