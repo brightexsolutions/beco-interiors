@@ -58,15 +58,26 @@ const ROLE_LABEL: Record<GalleryRole, string> = {
   unknown: 'Product photo',
 };
 
+/**
+ * The badge for a photograph. A hardware photograph comes through the import
+ * with the `slab` role, because it is the item's own shot, and a hinge
+ * labelled "Full slab" tells the reader the site does not know what it sells.
+ * Off a slab product, that shot is just the product photo.
+ */
+export const roleLabel = (role: GalleryRole, slab = true): string =>
+  role === 'slab' && !slab ? ROLE_LABEL.unknown : ROLE_LABEL[role];
+
 export const orderImages = (images: readonly GalleryImage[]): GalleryImage[] =>
   [...images].sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
 
 export interface ProductGalleryProps {
   images: readonly GalleryImage[];
+  /** False for anything that is not sold as a slab: hinges, handles, legs. */
+  slab?: boolean | undefined;
   className?: string | undefined;
 }
 
-export function ProductGallery({ images, className }: ProductGalleryProps) {
+export function ProductGallery({ images, slab = true, className }: ProductGalleryProps) {
   const ordered = orderImages(images);
   const [active, setActive] = useState(0);
   const current = ordered[active];
@@ -110,7 +121,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
 
         {/* What is being looked at, named on the photograph itself. */}
         <p className="absolute left-0 top-0 bg-charcoal px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-high-vis-white">
-          {ROLE_LABEL[current.role]}
+          {roleLabel(current.role, slab)}
         </p>
       </div>
 
@@ -140,7 +151,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
                   type="button"
                   role="tab"
                   aria-selected={i === active}
-                  aria-label={`${ROLE_LABEL[img.role]}, photograph ${i + 1} of ${ordered.length}`}
+                  aria-label={`${roleLabel(img.role, slab)}, photograph ${i + 1} of ${ordered.length}`}
                   onClick={() => setActive(i)}
                   style={
                     fan
@@ -194,7 +205,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
       ) : null}
 
       <p aria-live="polite" className="sr-only">
-        {ROLE_LABEL[current.role]}, photograph {active + 1} of {ordered.length}
+        {roleLabel(current.role, slab)}, photograph {active + 1} of {ordered.length}
       </p>
     </div>
   );

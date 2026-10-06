@@ -12,7 +12,9 @@ import { AddToQuote } from '@/components/add-to-quote';
 import { ProductGrid } from '@/components/product-grid';
 import {
   getProductBySlug, getCanonicalProductSlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
+  getCategoryWithTree,
 } from '@/lib/products';
+import { isStoneRange, specNote } from '@/lib/material';
 import { SITE, whatsappLink } from '@/lib/site';
 import { shopSearchFor } from '@/lib/legacy-redirects';
 
@@ -77,9 +79,15 @@ export default async function ProductPage({ params }: Params) {
     ),
   }));
 
-  const related = product.category
-    ? await getRelatedProducts(product.category.slug, product.slug)
-    : [];
+  const [related, place] = product.category
+    ? await Promise.all([
+        getRelatedProducts(product.category.slug, product.slug),
+        getCategoryWithTree(product.category.slug),
+      ])
+    : [[], null];
+  // Stone wording only where the range sits under Sintered Stone, so a hinge
+  // is never called a slab. See lib/material.ts for why the tree decides.
+  const stone = isStoneRange(place ? [place.category, ...place.ancestors] : []);
   const hero = primaryImage(product);
   const whatsappIntent = `I'm interested in ${product.name}${product.sku ? ` (${product.sku})` : ''}`;
 
@@ -106,7 +114,7 @@ export default async function ProductPage({ params }: Params) {
       </nav>
 
       <div className="grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(21rem,0.85fr)] lg:gap-14">
-        <ProductGallery images={images} />
+        <ProductGallery images={images} slab={stone} />
 
         <div className="lg:pt-4">
           <h1 className="font-display text-4xl leading-[1.05] text-charcoal sm:text-5xl">
@@ -202,8 +210,7 @@ export default async function ProductPage({ params }: Params) {
               credibility than the gap does. */}
           {Object.keys(product.specs ?? {}).length === 0 ? (
             <p className="mt-4 max-w-[52ch] font-ui text-sm text-neutral-500">
-              Full specification, including slab dimensions and finish options, comes with your
-              quote. Ask and we will send it before you commit to anything.
+              {specNote(stone)}
             </p>
           ) : null}
 
