@@ -90,4 +90,40 @@ describe('RangeToolbar', () => {
     const { container } = render(<RangeToolbar chips={CHIPS} finishes={FINISHES} total={24} showing={24} />);
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('folds the desktop search to an icon that opens and focuses the field', async () => {
+    const user = userEvent.setup();
+    render(<RangeToolbar chips={CHIPS} finishes={FINISHES} total={24} showing={24} />);
+    const open = screen.getByRole('button', { name: 'Open search' });
+    expect(open).toHaveAttribute('aria-expanded', 'false');
+    await user.click(open);
+    expect(open).toHaveAttribute('aria-expanded', 'true');
+    await vi.waitFor(() => expect(screen.getByLabelText('Search')).toHaveFocus());
+  });
+
+  it('keeps the search open while it holds a query', () => {
+    search = new URLSearchParams('q=calacatta');
+    render(<RangeToolbar chips={CHIPS} finishes={FINISHES} total={24} showing={2} />);
+    expect(screen.getByRole('button', { name: 'Open search' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByLabelText('Search')).toHaveValue('calacatta');
+  });
+
+  it('turns more than three finishes into one select that writes the finish parameter', async () => {
+    const user = userEvent.setup();
+    const many: Facet[] = ['3D Digital', 'Polished', 'Soft Matte', 'Bush Hammered', 'Matte'].map((v, i) => ({ value: v, label: v, count: i + 1 }));
+    render(<RangeToolbar chips={CHIPS} finishes={many} total={24} showing={24} />);
+    expect(screen.queryByRole('group', { name: 'Finish' })).toBeNull();
+    await user.selectOptions(screen.getByLabelText('Finish'), 'Bush Hammered');
+    expect(replace).toHaveBeenLastCalledWith('/shop/sintered-stone?finish=Bush+Hammered', { scroll: false });
+    await user.selectOptions(screen.getByLabelText('Finish'), '');
+    expect(replace).toHaveBeenLastCalledWith('/shop/sintered-stone', { scroll: false });
+  });
+
+  it('never lets a chip or finish label wrap onto two lines', () => {
+    render(<RangeToolbar chips={CHIPS} finishes={FINISHES} total={24} showing={24} />);
+    for (const link of within(screen.getByRole('navigation', { name: 'Ranges' })).getAllByRole('link')) {
+      expect(link).toHaveClass('whitespace-nowrap');
+    }
+    expect(screen.getByRole('button', { name: /Polished/ })).toHaveClass('whitespace-nowrap');
+  });
 });

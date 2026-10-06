@@ -7,6 +7,13 @@ import { Busy, Input, Select, cn } from '@beco/ui';
 import { SHOP_SORTS, isShopSort, type Facet, type RangeChip } from '@/lib/shop';
 
 /**
+ * Up to three finishes stay as buttons; more become one select, so a range
+ * with seven finishes still fits its strip on one line (the dashboard's rule
+ * from D112, a group of five or more options is a select, tightened here).
+ */
+const MAX_FINISH_BUTTONS = 3;
+
+/**
  * The strip above a range's grid, D119. Range chips are LINKS to real pages,
  * so a sub range can rank on its own and the back button walks the tree.
  * Finish, search and sort are query parameters on the page being browsed;
@@ -15,9 +22,11 @@ import { SHOP_SORTS, isShopSort, type Facet, type RangeChip } from '@/lib/shop';
  *
  * On a phone the chip row scrolls sideways in one line, no panel, no
  * "Filters" button; the search and the sort share the row beneath. On a
- * desktop the chips, finishes, search and sort sit on one line, the chips
- * scrolling within their share of it when a range has more than fit. The
- * count and Clear sit on a quiet line under the row.
+ * desktop the chips, finishes, search and sort sit on one line: the search
+ * folds to a 44px icon until it is used, and the per range counts show from
+ * xl up, which is what lets five ranges fit a 1190px laptop. The chips still
+ * scroll inside their share if a range ever has more than fit. The count and
+ * Clear sit on a quiet line under the row.
  */
 export function RangeToolbar({
   chips,
@@ -37,6 +46,11 @@ export function RangeToolbar({
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useState(params.get('q') ?? '');
+  // Desktop only: the search folds to an icon so the ranges, search and sort
+  // fit one line on a laptop. It stays open while it holds a query.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const searchShown = searchOpen || query !== '';
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const finish = params.get('finish') ?? '';
@@ -72,7 +86,7 @@ export function RangeToolbar({
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
         {chips.length > 1 ? (
-          <nav aria-label="Ranges" className="-mx-8 overflow-x-auto px-8 sm:-mx-24 sm:px-24 lg:mx-0 lg:min-w-0 lg:flex-1 lg:px-0 [scrollbar-width:none]">
+          <nav aria-label="Ranges" className="-mx-8 overflow-x-auto px-8 sm:-mx-24 sm:px-24 lg:mx-0 lg:min-w-0 lg:shrink lg:px-0 [scrollbar-width:none]">
             <ul className="flex w-max gap-2">
               {chips.map((chip) => (
                 <li key={chip.href}>
@@ -87,7 +101,7 @@ export function RangeToolbar({
                     )}
                   >
                     {chip.label}
-                    <span className={cn('font-normal tabular-nums', chip.active ? 'text-neutral-300' : 'text-neutral-500')}>
+                    <span className={cn('font-normal tabular-nums lg:hidden xl:inline', chip.active ? 'text-neutral-300' : 'text-neutral-500')}>
                       {chip.count}
                     </span>
                   </Link>
@@ -97,8 +111,8 @@ export function RangeToolbar({
           </nav>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap">
-          {finishes.length > 1 ? (
+        <div className="flex flex-wrap items-center gap-3 lg:ml-auto lg:shrink-0 lg:flex-nowrap">
+          {finishes.length > 1 && finishes.length <= MAX_FINISH_BUTTONS ? (
             <div role="group" aria-label="Finish" className="flex flex-wrap gap-2 lg:flex-nowrap">
               {finishes.map((f) => {
                 const active = finish === f.value;
@@ -109,7 +123,7 @@ export function RangeToolbar({
                     aria-pressed={active}
                     onClick={() => write({ finish: active ? null : f.value })}
                     className={cn(
-                      'inline-flex h-11 items-center gap-2 rounded-control border px-4 font-ui text-base font-semibold transition-colors',
+                      'inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-control border px-4 font-ui text-base font-semibold transition-colors lg:px-3',
                       active
                         ? 'border-charcoal bg-charcoal text-high-vis-white'
                         : 'border-neutral-300 bg-high-vis-white text-charcoal hover:border-charcoal',
@@ -123,7 +137,47 @@ export function RangeToolbar({
             </div>
           ) : null}
 
-          <span className="relative min-w-0 flex-1 basis-[12rem] lg:w-48 lg:flex-none lg:basis-auto">
+          {finishes.length > MAX_FINISH_BUTTONS ? (
+            <>
+              <label htmlFor="range-finish" className="sr-only">Finish</label>
+              <Select
+                id="range-finish"
+                value={finish}
+                onChange={(e) => write({ finish: e.target.value || null })}
+                className="w-[11rem] shrink-0 lg:w-40"
+              >
+                <option value="">Finish: any</option>
+                {finishes.map((f) => (
+                  <option key={f.value} value={f.value}>{`${f.label} (${f.count})`}</option>
+                ))}
+              </Select>
+            </>
+          ) : null}
+
+          <button
+            type="button"
+            aria-label="Open search"
+            aria-expanded={searchShown}
+            aria-controls="range-search"
+            onClick={() => { setSearchOpen(true); requestAnimationFrame(() => searchInput.current?.focus()); }}
+            className={cn(
+              'hidden h-11 w-11 shrink-0 items-center justify-center rounded-control border border-neutral-300 bg-high-vis-white text-charcoal transition-colors hover:border-charcoal',
+              !searchShown && 'lg:inline-flex',
+            )}
+          >
+            <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 stroke-current" fill="none" strokeWidth="1.8">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          <span
+            data-search-shown={searchShown}
+            className={cn(
+              'relative min-w-0 flex-1 basis-[12rem] lg:w-48 lg:flex-none lg:basis-auto',
+              !searchShown && 'lg:hidden',
+            )}
+          >
             <label htmlFor="range-search" className="sr-only">Search</label>
             <svg
               aria-hidden
@@ -136,11 +190,14 @@ export function RangeToolbar({
               <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
             </svg>
             <Input
+              ref={searchInput}
               id="range-search"
               type="search"
               enterKeyHint="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onBlur={() => { if (!query.trim()) setSearchOpen(false); }}
+              onKeyDown={(e) => { if (e.key === 'Escape' && !query) { setSearchOpen(false); e.currentTarget.blur(); } }}
               placeholder={searchPlaceholder}
               className="w-full pl-9"
             />
