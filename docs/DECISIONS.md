@@ -3113,7 +3113,7 @@ above the grid, not all of them.
 
 ## D130, 6 October 2026: Beco keeps a real record of its clients, reversing REVIEW 2.6
 
-**Decision.** A `customers` table, migration 63, one record per client keyed by the national part
+**Decision.** A `customers` table, migration 64, one record per client keyed by the national part
 of the phone number (`phone_key`, so 0722..., +254722... and 254722... are one person), unique
 among records that are not soft deleted. It holds name, phone as entered, email, company, the
 client's KRA PIN (a letter, nine digits, a letter, checked in zod and in a `check`), location,

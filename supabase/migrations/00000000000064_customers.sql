@@ -168,13 +168,10 @@ comment on column quotes.customer_id is
 comment on column orders.customer_id is
   'Copied from the quote on conversion. D130.';
 
--- orders_insert_anon (migration 6) still accepts a direct order insert from
--- any role. It must not be a way to attach a stranger's order to a real
--- customer, so a direct insert carries no customer. Conversion is security
--- definer and admins have orders_write_admin, so neither is affected.
-drop policy orders_insert_anon on orders;
-create policy orders_insert_anon on orders for insert
-  with check (customer_id is null);
+-- No direct order insert needs guarding here: migration 64 dropped the open
+-- orders_insert_anon policy, so only convert_quote_to_order (security
+-- definer) and admins (orders_write_admin) write orders. A direct insert
+-- carrying a customer is refused with every other direct insert.
 
 -- ---------------------------------------------------------------------------
 -- The customer overview: one row per live customer with what the list

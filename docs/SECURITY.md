@@ -168,7 +168,7 @@ Tested in `21_convert_quote_to_order.test.sql` (cancel), `10_quote_pricing_appro
 ## Customers, 6 October 2026 (D130)
 
 The `customers` table holds names, phone numbers, KRA PINs and staff notes, so it is closed by
-default and opened role by role, each proven in `39_customers.test.sql` (85 assertions):
+default and opened role by role, each proven in `40_customers.test.sql` (85 assertions):
 
 | Who | Read | Create | Edit | Soft delete | Hard delete |
 |---|---|---|---|---|---|
@@ -190,8 +190,7 @@ history before D130 and is visible on the quote as a web submission.
 `customer_for_phone` and `backfill_customers` are granted to nobody; anon is tested to be refused
 both. `link_quote_customer` follows every quote mutation: owner or admin, under the lock.
 
-**Follow up, not changed here.** `orders_insert_anon` (migration 6) is a policy with no role,
-so any role, anon included, may insert an `orders` row directly. Nothing in the product does,
-conversion is security definer, but the policy is wider than anything needs. Migration 63
-narrowed it only so a direct insert cannot carry a `customer_id`; removing it is a separate
-change that wants its own test pass.
+**Resolved.** `orders_insert_anon` (migration 6) let any role, anon included, insert an
+`orders` row directly. Migration 63 dropped it and its `order_items` twin, with its own test
+file; see "Finding, 6 October 2026" above. A direct order carrying a `customer_id` is refused
+with every other direct insert, and `40_customers.test.sql` still asserts it for anon.

@@ -198,7 +198,7 @@ begin
   values (v_q5, v_slab_a, 'ZZ Seed Bvlgari', 2, v_slab_a_price, v_slab_a_price);
 end $$;
 
--- The seed runs after the migrations, so the migration 63 backfill never
+-- The seed runs after the migrations, so the migration 64 backfill never
 -- saw these quotes. Run it again here so every fictional quote has its
 -- customer record, as it would in production (D130).
 select backfill_customers();

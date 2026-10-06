@@ -1,7 +1,7 @@
 import type { ClientType } from '@beco/types';
 
 /**
- * Pure helpers for finding a customer record (D130). Until migration 63 a
+ * Pure helpers for finding a customer record (D130). Until migration 64 a
  * returning customer was inferred from earlier quotes sharing a phone
  * number; now there is a `customers` table, and these build the search it
  * answers. No database access here, so every rule is unit tested.
@@ -33,7 +33,7 @@ export const CLIENT_TYPE_LABEL: Record<ClientType, string> = {
 };
 
 /** The national part of a Kenyan number, so 0722..., +254722... and 254722... are one person.
- *  The same rule as `customer_phone_key()` in migration 63, which keys the table. */
+ *  The same rule as `customer_phone_key()` in migration 64, which keys the table. */
 export const phoneKey = (raw: string): string => {
   const digits = raw.replace(/\D/g, '');
   if (digits.startsWith('254')) return digits.slice(3);

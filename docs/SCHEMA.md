@@ -174,7 +174,7 @@ former slug 301s to the current one. From `docs/REVIEW.md` 2.3.
 
 ### customers
 
-One record per client, D130, migration 63. Reverses `docs/REVIEW.md` 2.6: until 6 October 2026 a
+One record per client, D130, migration 64. Reverses `docs/REVIEW.md` 2.6: until 6 October 2026 a
 returning customer was inferred from quotes sharing a phone number.
 
 | Column | Type | Notes |
@@ -206,7 +206,7 @@ admins also read soft deleted ones. Insert: `beco_sales` and admins, as themselv
 `deleted_at` or move `created_by`; admins on any row including `deleted_at`, never `created_by`.
 No delete policy and `delete` revoked: nobody hard deletes. Anon has no grant at all and reaches
 the table only through `submit_quote`. `beco_editor` reads nothing. Tested in
-`39_customers.test.sql`.
+`40_customers.test.sql`.
 
 ---
 
@@ -454,12 +454,12 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `is_brightex_user()` | D42: `role = 'brightex_admin'` **and** email in `settings.brightex_allowed_emails`. An explicit address list, not a domain suffix, because Brightex's addresses are gmail.com |
 | `current_user_role()` | Reads the caller's role for policies. Null for an inactive account |
 | `audit_trigger()` | Writes `audit_log` on insert, update and soft delete |
-| `submit_quote(...)` | The public quote write, one atomic transaction, `security definer`. Products, descriptions and prices resolved from the catalogue, never the request. Enforces the D68 half-slab rule per product. Links the quote to the customer with that phone, or creates one; never edits an existing customer (migration 63, D130) |
+| `submit_quote(...)` | The public quote write, one atomic transaction, `security definer`. Products, descriptions and prices resolved from the catalogue, never the request. Enforces the D68 half-slab rule per product. Links the quote to the customer with that phone, or creates one; never edits an existing customer (migration 64, D130) |
 | `add_catalogue_quote_line(...)` | Dashboard. Adds a published product to an existing quote, snapshots name and `list_price`, optimistic lock. Unpublished or deleted products are refused |
 | `add_catalogue_quote_lines(...)` | Dashboard. Adds several published products under one lock so a second add cannot race `updated_at`. Unpublished or deleted products refuse the whole batch |
 | `update_quote_lines(...)` | Dashboard. Saves every dirty line in one lock so a second row cannot race `updated_at` |
 | `add_custom_quote_line(...)` | Dashboard. Adds a line with `product_id` null and a description snapshot |
-| `create_counter_quote(...)` | Dashboard. Walk-in or phone quote in one transaction. `created_by` and `assigned_to` are the salesperson. Refuses `web`. Takes `p_customer_id` since migration 63: with one, the quote snapshots that record's name, phone, email and company; without, the typed details are snapshotted and the quote links to or creates the customer with that number. A soft deleted customer is refused |
+| `create_counter_quote(...)` | Dashboard. Walk-in or phone quote in one transaction. `created_by` and `assigned_to` are the salesperson. Refuses `web`. Takes `p_customer_id` since migration 64: with one, the quote snapshots that record's name, phone, email and company; without, the typed details are snapshotted and the quote links to or creates the customer with that number. A soft deleted customer is refused |
 | `claim_quote(...)` | Dashboard. Salesperson takes an unassigned quote. Optimistic lock |
 | `assign_quote(...)` | Dashboard. Admin assigns to a Beco salesperson or Beco admin. Refuses `brightex_admin`. Migration 34 |
 | `set_quote_status(...)` | Dashboard. Moves a quote through reviewing, quoted, won or lost. Lost requires a reason. Cannot quietly un-lose; that is `reopen_quote` |
@@ -479,10 +479,10 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
 | `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
 | `staff_names(p_ids uuid[])` | `security definer`. Display names for the given staff ids, so a salesperson sees who owns or prepared a quote without reading the colleague's `users` row. Sales and admins only; nothing for a product manager or anon. A deactivated colleague keeps their name on history. Migration 55, D102 |
-| `customer_phone_key(p_phone)` | Immutable. The national part of a number, the rule `phoneKey` in `customer-search.ts` follows. Drives the generated `customers.phone_key`. Migration 63, D130 |
-| `customer_for_phone(name, phone, email, company, location)` | `security definer`, no grant to anon or authenticated: called only inside `submit_quote` and `create_counter_quote`. Returns the live customer with that phone key, or creates one. **Never updates an existing record.** Migration 63 |
-| `backfill_customers()` | `security definer`, no grant. One customer per phone key among live unlinked quotes (newest name and phone, older email and company fill gaps), then links quotes and orders. Idempotent. Run by migration 63 and by `seed.sql` |
-| `link_quote_customer(p_quote_id, p_customer_id, p_expected_updated_at)` | Dashboard. Points a quote and its converted order at a live customer. Owner or admin, optimistic lock, `PT409` when stale. The quote's snapshot does not change. Migration 63 |
+| `customer_phone_key(p_phone)` | Immutable. The national part of a number, the rule `phoneKey` in `customer-search.ts` follows. Drives the generated `customers.phone_key`. Migration 64, D130 |
+| `customer_for_phone(name, phone, email, company, location)` | `security definer`, no grant to anon or authenticated: called only inside `submit_quote` and `create_counter_quote`. Returns the live customer with that phone key, or creates one. **Never updates an existing record.** Migration 64 |
+| `backfill_customers()` | `security definer`, no grant. One customer per phone key among live unlinked quotes (newest name and phone, older email and company fill gaps), then links quotes and orders. Idempotent. Run by migration 64 and by `seed.sql` |
+| `link_quote_customer(p_quote_id, p_customer_id, p_expected_updated_at)` | Dashboard. Points a quote and its converted order at a live customer. Owner or admin, optimistic lock, `PT409` when stale. The quote's snapshot does not change. Migration 64 |
 | `end_user_sessions(p_user_id)` | `security definer`. Deletes that user's GoTrue sessions and refresh tokens. `is_brightex_user()` gated. Called after deactivation and password reset. `execute` to `authenticated` only. Migration 45 |
 
 **Stale edit conflicts raise SQLSTATE `PT409`, never `40001`.** Every function above that
