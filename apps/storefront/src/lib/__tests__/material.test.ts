@@ -68,7 +68,7 @@ describe('specNote', () => {
   });
 
   it('carries no em dash in either line', () => {
-    expect(specNote(true) + specNote(false)).not.toMatch(/—/);
+    expect(specNote(true) + specNote(false)).not.toMatch(/\u2014/);
   });
 });
 
