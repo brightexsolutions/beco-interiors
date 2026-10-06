@@ -131,4 +131,20 @@ describe('AppShell', () => {
     );
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('lifts the blurred desktop bar above the panel, so the account menu it opens is not hidden', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const bar = [...container.querySelectorAll('div')].find((d) => d.className.includes('backdrop-blur'));
+    expect(bar).toBeDefined();
+    // backdrop-blur makes the bar a stacking context; without its own z-index
+    // the later <main> paints over it and the menu inside it.
+    expect(bar).toHaveClass('relative', 'z-20');
+    const main = container.querySelector('main')!;
+    expect(main.className).not.toMatch(/\bz-(2|3|4|5)\d\b/);
+  });
 });
+
