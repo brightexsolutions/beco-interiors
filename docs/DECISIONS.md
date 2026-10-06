@@ -2834,6 +2834,17 @@ over and this path is never reached; or the finish reading proves wrong often en
 photographs that sorting by hand is quicker, when Hinges comes out of `SPLIT_BY_FINISH` and its
 products all land in Hinges unsorted.
 
+**Amended 6 October 2026: 15mm stones split per photograph, unsorted.** Brown found "15mm
+Sintered Stones" imported as one product whose photographs show different stones: the Drive
+folder holds five loose phone photographs, `IMG_4197` to `IMG_4202`, and no product folders.
+`SPLIT_PER_PHOTO` in `plan.ts`, beside `SPLIT_BY_FINISH`, names ranges split the same way but
+with no finish reading, since a colour sub range means nothing for stone. Each photograph is
+now "15mm Sintered Stone 4197", slug `15mm-sintered-stone-4197`, filed directly in 15mm
+Sintered Stones. The umbrella product is unpublished, never deleted, by the same step that
+retires the hinge umbrella, and the issue asks Beco to rename each photograph in Drive after its
+stone. Once they do, D104's item rule names the products after the stones and this path is not
+reached; a test holds that hand over. Name and category are set on first import only (D54).
+
 ## D123, 5 October 2026: HEIC decodes on Linux, so the import button handles hardware
 
 **Decision.** `toDecodable` converts HEIC with `heif-convert` from libheif everywhere but macOS,

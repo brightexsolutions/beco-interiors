@@ -97,6 +97,18 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('');
   }
 
+  if (plan.photoFolders.length) {
+    L.push('RANGES SPLIT ONE PRODUCT PER PHOTOGRAPH');
+    L.push('---------------------------------------');
+    L.push('  Phone named photographs, so each became its own product in the range itself.');
+    L.push('  Rename each photograph after what it shows, or name it in the dashboard.');
+    L.push('');
+    for (const { folder, count } of plan.photoFolders) {
+      L.push(`  ${String(count).padStart(4)} product(s)  ${folder}`);
+    }
+    L.push('');
+  }
+
   if (plan.galleryFiles) {
     L.push(`  ${plan.galleryFiles} gallery and brand file(s) skipped, which is correct.`);
     L.push('  Site photos, site videos and brand identity are not products.');

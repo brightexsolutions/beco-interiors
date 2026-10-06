@@ -80,6 +80,8 @@ export interface ImportPlan {
   itemFolders: Array<{ folder: string; items: number; files: number }>;
   /** Ranges whose loose photographs became one product each, sorted by finish. */
   finishFolders: Array<{ folder: string; count: number }>;
+  /** Ranges whose loose photographs became one product each, filed in the range itself. */
+  photoFolders: Array<{ folder: string; count: number }>;
   /** Gallery and brand files, correctly loose, handled elsewhere. */
   galleryFiles: number;
   counts: ReturnType<typeof summarise>;
@@ -135,6 +137,19 @@ export const SPLIT_BY_FINISH: ReadonlyMap<string, string> = new Map([
   // Brown's go ahead the same day.
   ['DOOR LOCKS', 'Door Lock'],
   ['FURNITURE LEGS', 'Furniture Leg'],
+]);
+
+/**
+ * Ranges whose loose phone photographs each become their own product, the
+ * way D122 splits the hinges, but filed in the range itself: a colour sub
+ * range means nothing for stone. The value is what one item is called.
+ * Brown, 6 October: `15MM SINTERED STONES` held five phone photographs of
+ * different stones and imported as one product showing all of them. Once
+ * Beco names each photograph after its stone, D104's item rule names the
+ * products and this path is never reached.
+ */
+export const SPLIT_PER_PHOTO: ReadonlyMap<string, string> = new Map([
+  ['15MM SINTERED STONES', '15mm Sintered Stone'],
 ]);
 
 /**
@@ -287,6 +302,9 @@ export const buildPlan = (
   const finishByFolder = new Map<string, number>();
   /** One real photo number per split range, for the report's example name. */
   const finishExample = new Map<string, string>();
+  /** Loose photographs per range split one per photograph, unsorted. */
+  const photoByFolder = new Map<string, number>();
+  const photoExample = new Map<string, string>();
   /** Role bearing filenames per product folder, for the mixed folder check. */
   const namedByFolder = new Map<string, { folderName: string; filenames: string[] }>();
   /** Item folders: distinct items and file counts, for the report. */
@@ -389,6 +407,31 @@ export const buildPlan = (
         productSlug,
         productName: titleiseItem(itemName),
         role: seen === 0 ? 'slab' : 'application',
+      });
+      continue;
+    }
+
+    // A range split per photograph with no finish sorting: each loose
+    // photograph is its own product, filed in the range itself.
+    const photoNoun = dirs.length === 1 ? SPLIT_PER_PHOTO.get(top.toUpperCase()) : undefined;
+    if (photoNoun) {
+      const ref = photoRef(filename);
+      const productPath = `${top}/${stem(filename).trim()}`;
+      const productName = `${photoNoun} ${ref}`;
+      const productSlug = claimSlug(slugify(productName), productPath, top);
+      const chain = chainFor(dirs);
+      photoByFolder.set(top, (photoByFolder.get(top) ?? 0) + 1);
+      if (!photoExample.has(top)) photoExample.set(top, productName);
+      files.push({
+        ...base,
+        categorySlug: chain[0]!.slug,
+        categoryPath: top,
+        categoryChain: chain,
+        productPath,
+        productSlug,
+        productName,
+        // The only photograph of its product, so it is the product's own shot.
+        role: 'slab',
       });
       continue;
     }
@@ -549,6 +592,19 @@ export const buildPlan = (
     });
   }
 
+  for (const [folder, count] of photoByFolder) {
+    issues.push({
+      path: folder,
+      reason:
+        `The ${count} photograph(s) in "${folder}" carry phone names, so each is imported as its ` +
+        `own product, "${photoExample.get(folder)}" after its photo number, in ${titleise(folder)}. ` +
+        'Rename each photograph in Drive after the stone it shows, and the next import names ' +
+        'the products after the stones. Or set each name in the dashboard, which the import never ' +
+        `undoes, and delete repeat photographs of the same stone. The earlier single ` +
+        `"${titleise(folder)}" product is unpublished.`,
+    });
+  }
+
   // One issue per folder, not per file.
   for (const [folder, count] of looseByFolder) {
     if (NON_PRODUCT_FOLDERS.has(folder.toUpperCase())) continue;
@@ -581,6 +637,7 @@ export const buildPlan = (
       files: entry.files,
     })),
     finishFolders: [...finishByFolder].map(([folder, count]) => ({ folder, count })),
+    photoFolders: [...photoByFolder].map(([folder, count]) => ({ folder, count })),
     galleryFiles: [...looseByFolder]
       .filter(([f]) => NON_PRODUCT_FOLDERS.has(f.toUpperCase()))
       .reduce((n, [, c]) => n + c, 0),
