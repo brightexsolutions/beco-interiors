@@ -75,7 +75,7 @@ in the title row. The create action is a labelled charcoal FAB on desktop
 and on a phone, only when the plan names a create path. Orders have none:
 conversion is from a won quote. No lede under the title on operations lists. Optional KPI
 row using `StatCard`. Toolbar of search and filters: from `lg` they share
-**one row**. Then `DataTable` on desktop, cards on mobile. Every list row
+**one row**. Then `DataTable` on desktop, `ListRows` below xl (D129). Every list row
 has an explicit View or Edit action, last column named Actions, not a
 click-anywhere row. Paginate. Empty state fills the panel. Skeleton
 matches that shape. The stored quote source `web` is labelled Website
@@ -145,17 +145,20 @@ and no exceptions:
    navigations. The filter row renders `Busy`, a live status line reading "Updating" with
    the spinner, and the table dims to half with `aria-busy` until the new rows land. Both
    come from one place: `useQueryNavigation` owns the transition and its `isPending`.
-   When the controls and the list are separate components (the catalogue's range pills,
-   filter row and product list), wrap them in `QueryNavigationProvider` so all three share
-   one transition; without it each hears only its own navigations. A control whose own
-   state is the selection (a range pill) shows the new choice at once with `useOptimistic`,
-   before the server answers
+   When the controls and the list are separate components, which on every list they are,
+   wrap them in `QueryNavigationProvider` so they share one transition; without it each
+   hears only its own navigations, and the filter row said Updating while the list sat
+   undimmed. Quotes, orders, catalogue, users, announcements, blog, audit and reports all
+   do (D129). The phone rows (`ListRows`) and the empty state (`BusyRegion`) dim with the
+   table. A control whose own state is the selection (a range pill, a filter select) shows
+   the new choice at once with `useOptimistic`, before the server answers
 
 Page to page navigation shows the route's `loading.tsx`, a settled layout with the heading
 in place, never a spinner page.
 
 Pieces: `Spinner` (one mark, holds still under reduced motion), `Busy`, `Button pending`,
-`DataTable busy`, `useQueryNavigation`. Build on these; do not hand roll a loading word.
+`DataTable busy`, `ListRows busy`, `BusyRegion`, `useQueryNavigation`,
+`QueryNavigationProvider`. Build on these; do not hand roll a loading word.
 
 ## shadcn
 
@@ -236,10 +239,11 @@ the rest wrapped badly in ways a desktop never shows. What changed:
 
 - **List cards** (quotes, orders): the customer owns a row and wraps; the figure sits on the
   next row with the status chips; nothing is truncated to make room. A chevron marks the card as
-  the link, no "View" word
+  the link, no "View" word. *Since D129 these are rows, not cards; the content is the same*
 - **Chips wrap.** `ChipGroup` no longer scrolls sideways with a chip cut at the edge; every
   option is on screen. A group with five or more options is a select on the phone: source on
-  quotes, status on orders
+  quotes, status on orders. *Superseded for list filters by D129: every list filter is now a
+  captioned select; `ChipGroup` stays for the import runner*
 - **Headings**: title, lede, then the actions at full width; from `sm` the actions sit beside
   the title. The four "New" controls (product, user, announcement, article) are heading buttons,
   charcoal, not pills floating over the list under the bottom bar
@@ -279,4 +283,26 @@ ranges and a third row appears. The rows a reader is not inside are not drawn. A
 rows names the path, "Sintered Stone / 12mm Sintered Stones, 24 products", and carries Edit and
 Add range for that selection alone; New category sits in the heading. Drafts are dashed and say
 so. The collapse toggle is gone because there is nothing left to collapse.
+
+## 6 October 2026, list filters and rows on a phone (D129)
+
+Brown on the quotes list on a phone: "some proper design is needed here". The filters took two
+thirds of the screen. Every list now filters through one bar, and the rule for the next list is
+to use it, not to build a filter row:
+
+- **`ListFilters`** (`apps/dashboard/src/components/list-filters.tsx`). Pass the search's name
+  and placeholder, the filters as `{ param, label, options, fallback? }`, and the count. Search
+  is full width; each filter is a `FilterSelect` (`@beco/ui`), the caption and the current
+  value drawn inside one 44px box; the count takes the grid's next free cell. Two across on a
+  phone, three or four across from `md`, one row with search from `xl`. No chip rows on list
+  filters: they wrapped to two lines each. The params are the ones the chips wrote
+- **`ListRows` and `ListRowLink`** (`list-rows.tsx`) below `xl`: rows divided by a rule, the
+  whole row the link with a chevron. Not a bordered card inside the panel. `marked` draws a 2px
+  charcoal edge, which is how a new quote reads at a glance now that the 4px card border is gone
+- **The page** wraps its filters and results in `QueryNavigationProvider` and passes the count to
+  the filters, not to `TableToolbar`
+
+Measured on the local server: at 390 by 844 the first quote row starts at y 417, was 671. Every
+select 44px tall. No horizontal overflow at 390, 820, 1280 or 1440. At 1280 the orders row,
+four filters, is the tightest: search narrows to 112px before anything clips.
 

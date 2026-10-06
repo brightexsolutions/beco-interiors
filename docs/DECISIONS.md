@@ -3071,3 +3071,42 @@ browser: `VERCEL_ENV` is not a public variable, and a preview would still ship t
 *Reverses if:* Beco moves to Google Tag Manager, at which point the container replaces
 `GoogleAnalytics` and the listener pushes to `dataLayer`; or a server side writer for
 `analytics_events` lands, at which point the browser insert and its anon policy can go.
+
+## D129, 6 October 2026: list filters are captioned selects, and list rows are rows
+
+**Decision.** Every dashboard list filters through one bar, `ListFilters` in
+`apps/dashboard/src/components`: search full width, then each filter as a `FilterSelect` from
+`@beco/ui`, a 44px native select that draws its own caption and current value inside the box,
+"Owner / Everyone", "Status / Any". Below the wide layout they sit in one compact grid: two
+across on a phone, with the result count taking the next free cell, so on quotes the count
+sits beside Source; three or four across from `md`. From `xl` (D113) search, filters and count
+share one row, as before. The selects write the same query parameters the chip rows wrote, so
+links, the back button and the server rendering are unchanged. Quotes, orders, catalogue,
+users, announcements, blog and audit use it. Below `xl` the results are `ListRows`: rows
+divided by a rule, the whole row the link, with a chevron, not a bordered rounded card inside
+the page's panel. A new quote keeps its mark as a 2px charcoal rule down the row's edge, every
+other row carrying the same edge transparent so the text lines up. Each page wraps its filters
+and results in `QueryNavigationProvider`, so a filter change dims the rows, the table and the
+empty state with `aria-busy`, and the count reads Updating until the rows land; the reports
+page does the same for its period controls in the heading. The chosen value shows in its select
+at once, through `useOptimistic`, before the server answers. The page heading is a little
+tighter on a phone.
+
+**Why.** Brown, on the live quotes list on a phone: "some proper design is needed here". At
+390px the owner and status chip rows wrapped to two lines each and, with a labelled search
+and a source select, took about two thirds of the screen before the first quote, which then
+sat in a card inside the panel. Measured on the local server at 390 by 844, the first quote
+row started at y 671 before and starts at y 417 after, inside the top half. The "Updating"
+line beside the filters was the only sign of a filter change; the list and the table did not
+dim, although `docs/DASHBOARD-UI.md` said they did, because the filters and the results each
+held their own transition.
+
+**What was considered.** Chips that scroll in one row: D112 rejected the half chip at the edge.
+A label above each select: a row per filter, the height this was meant to save. The caption as
+part of each option's text, "Owner: Everyone": the phone's picker would read the prefix on
+every line. A custom dropdown: a native select is what the phone's own picker opens, which a
+salesperson already knows, and it stays testable in jsdom.
+
+*Reverses if:* staff report a filter they reach for many times an hour that is slower behind a
+picker than it was as a chip, in which case that one filter returns as a single row of chips
+above the grid, not all of them.
