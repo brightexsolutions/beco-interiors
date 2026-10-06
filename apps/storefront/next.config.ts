@@ -14,6 +14,24 @@ const scriptSrc = [
   // is stable, and record that as a follow up rather than forgetting it.
   "'unsafe-inline'",
   ...(isDev ? ["'unsafe-eval'"] : []),
+  // gtag.js, D128. Loaded on production only, but the policy is one string.
+  'https://www.googletagmanager.com',
+  // In development @vercel/analytics and @vercel/speed-insights load their
+  // debug builds from Vercel's CDN. In production both are served from this
+  // origin under /_vercel, which 'self' already covers, so this stays dev only.
+  ...(isDev ? ['https://va.vercel-scripts.com'] : []),
+].join(' ');
+
+// GA4's collection endpoints, named one by one because this policy carries
+// no wildcard host (the CSP test holds it to that). gtag sends hits to
+// region1.google-analytics.com for most properties, falls back to the
+// www host, and uses the analytics.google.com pair when Google signals or
+// some consent modes are on. D128.
+const ga4Connect = [
+  'https://www.google-analytics.com',
+  'https://region1.google-analytics.com',
+  'https://analytics.google.com',
+  'https://region1.analytics.google.com',
   'https://www.googletagmanager.com',
 ].join(' ');
 
@@ -24,12 +42,14 @@ const csp = [
   // 'self' only, which is possible because fonts are self hosted. See D3.
   // There is no fonts.gstatic.com entry and there should never be one.
   "font-src 'self'",
-  "img-src 'self' data: blob: https://img.beco.co.ke https://www.google-analytics.com",
+  "img-src 'self' data: blob: https://img.beco.co.ke https://www.google-analytics.com https://www.googletagmanager.com",
   // Showroom and site footage, served from our own origin or the R2 image
   // domain. Stated explicitly rather than left to fall back to default-src,
   // because rule 7 asks for a CSP written out rather than inherited.
   "media-src 'self' https://img.beco.co.ke",
-  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} https://www.google-analytics.com`,
+  // Supabase takes the analytics_events insert as well as everything else.
+  // Vercel Web Analytics and Speed Insights post to /_vercel on 'self'.
+  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} ${ga4Connect}`,
   // The showroom's map embed, and nothing else: stated explicitly rather
   // than left to fall back to default-src, per rule 7. No API key embed,
   // so no additional connect-src or script-src entry is needed for it.

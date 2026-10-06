@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QuickAddToQuote } from '../quick-add-to-quote';
 import { readList } from '@/lib/quote-list';
+import { track } from '@/lib/analytics';
+
+vi.mock('@/lib/analytics', () => ({ track: vi.fn() }));
 
 /**
  * Rule 3: no decorative controls. The button is replaced by the stepper and
@@ -13,7 +16,24 @@ import { readList } from '@/lib/quote-list';
 const handleLine = { slug: 'gold-bar-handle', name: 'Gold Bar Handle', unit: 'per piece', image: '/img/h.webp' };
 const slabLine = { slug: 'amber-jade', name: 'Amber Jade', unit: 'per slab', image: '/img/a.webp' };
 
-beforeEach(() => window.localStorage.clear());
+beforeEach(() => {
+  window.localStorage.clear();
+  vi.mocked(track).mockClear();
+});
+
+describe('QuickAddToQuote, analytics (D128)', () => {
+  it('records add_to_cart with the product slug when the add lands, and not on later steps', async () => {
+    const user = userEvent.setup();
+    render(<QuickAddToQuote line={handleLine} />);
+    await user.click(screen.getByRole('button', { name: 'Add Gold Bar Handle to your quote list' }));
+    expect(readList()).toHaveLength(1);
+    expect(track).toHaveBeenCalledExactlyOnceWith('add_to_cart', { product_slug: 'gold-bar-handle' });
+    await user.click(
+      screen.getByRole('button', { name: 'Increase quantity of Gold Bar Handle, quantity in your quote list' }),
+    );
+    expect(track).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('QuickAddToQuote, before anything is added', () => {
   it('is a single button carrying an icon and a visible label', () => {

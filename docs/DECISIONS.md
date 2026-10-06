@@ -3019,3 +3019,55 @@ anyone else is given staging access. pgTAP is installed on staging but `supabase
 --linked` cannot see it through the CLI's temporary login role, so the remote test run is open.
 
 *Reverses if:* never. Production stays on `beco-prod`.
+
+## D128, 6 October 2026: the storefront measures, to GA4 and to its own table
+
+**Decision.** The storefront root layout renders four things that draw nothing. `<Analytics />`
+and `<SpeedInsights />` from `@vercel/analytics/next` and `@vercel/speed-insights/next`, which
+load from `/_vercel` on the site's own origin and record only once switched on in the Vercel
+project. `GoogleAnalytics`, a server component that renders gtag.js through `next/script`
+`afterInteractive` only when `VERCEL_ENV` is `production` and `NEXT_PUBLIC_GA4_ID` matches
+`^G-[A-Z0-9]+$`. And `AnalyticsListener`, one capture phase, passive click listener on
+`document` that turns any `data-analytics` element into an event. `track()` in
+`apps/storefront/src/lib/analytics.ts` is the one sender: it calls `gtag('event', ...)` when gtag
+is loaded and posts the row to `analytics_events` with the anon key, keepalive, `return=minimal`.
+It is also called directly for `add_to_cart` after an add to quote (product page and quick add)
+and `quote_submitted` once `submitQuote` returns a reference. The dashboard gets none of this.
+
+The event names are migration 60's policy list, restated as `ANALYTICS_EVENTS`, and a test reads
+the migration so the two cannot drift. The four key events in DEPLOYMENT 9.2 are all on it, so
+nothing needed to change there. Params are `page_path` and, from the path, `product_slug` or
+`category_slug`, each capped at 200 characters; any other key is dropped before sending. No name,
+phone, email, reference or list contents ever leaves in an event. The CSP's `connect-src` names
+each GA4 collection host, `img-src` adds Google Tag Manager, and `script-src` allows Vercel's CDN
+in development only. The privacy page now says the site uses Google Analytics and Vercel's
+analytics, since it had promised to say so before tracking started.
+
+**Why.** The plan has always said GA4 loads from `NEXT_PUBLIC_GA4_ID` and every event is also
+written to Beco's own database, and the controls were tagged for it, but nothing listened. The
+dashboard's lead counters and conversion report were reading an empty table. `VERCEL_ENV` rather
+than `NODE_ENV`, because every Vercel build, previews included, runs with `NODE_ENV=production`,
+so a `NODE_ENV` gate would have sent staging traffic into Beco's real property. A plain `fetch`
+to PostgREST rather than supabase-js, because it is the same request under the same policy
+without putting the client library in every page's bundle for one insert, and `keepalive` lets
+it outlive a click that navigates away. One delegated listener rather than a handler per link,
+so tagging a new control is the whole job, and capture phase so a control that stops propagation
+is still counted.
+
+**Not done, and why.** D108 said a nonce based CSP gets built when a third-party script first
+has to run on the storefront. gtag.js is that script. The nonce is not built here: it forces
+every storefront page dynamic and gives up ISR, which is a decision with a performance cost that
+belongs to Brown, not to this branch. GA4 is production only and loads from one named host, so
+`'unsafe-inline'` stays the accepted risk it was, now with that trigger met and recorded.
+`page_view`, `product_view` and `quote_started` are on the policy list but not sent: GA4 counts
+page views itself, and a row per page view in `analytics_events` needs the retention policy
+SCHEMA.md already asks for first. No consent banner: none is in the plan, and whether Kenyan data
+protection practice needs one before GA4 sets cookies is Beco's call to make.
+
+**Rejected.** `@next/third-parties` GoogleAnalytics: it cannot see `VERCEL_ENV` from the client
+and adds a dependency for two script tags. supabase-js in the browser, above. Gating GA4 in the
+browser: `VERCEL_ENV` is not a public variable, and a preview would still ship the markup.
+
+*Reverses if:* Beco moves to Google Tag Manager, at which point the container replaces
+`GoogleAnalytics` and the listener pushes to `dataLayer`; or a server side writer for
+`analytics_events` lands, at which point the browser insert and its anon policy can go.
