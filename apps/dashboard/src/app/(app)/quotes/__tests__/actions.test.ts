@@ -27,7 +27,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-const { claimQuote, updateQuoteLine, setQuoteStatus, createCounterQuote, addCatalogueLine, addCatalogueLines, updateQuoteLines, reopenQuote } = await import('../actions');
+const { claimQuote, updateQuoteLine, setQuoteStatus, createCounterQuote, addCatalogueLine, addCatalogueLines, updateQuoteLines, reopenQuote, linkQuoteCustomer } = await import('../actions');
 
 afterEach(() => {
   rpc.mockReset();
@@ -79,6 +79,53 @@ describe('quote actions', () => {
     const result = await createCounterQuote({}, form);
     expect(result.error).toBeTruthy();
     expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('passes the picked customer to create_counter_quote, so the database snapshots the record (D130)', async () => {
+    rpc.mockResolvedValue({ data: 'BEC-Q-9', error: null });
+    const form = new FormData();
+    form.set('customerName', 'Achieng');
+    form.set('customerPhone', '0722333730');
+    form.set('customerId', '44444444-4444-4444-8444-444444444444');
+    form.set('source', 'walk_in');
+    form.set('items', JSON.stringify([{ description: 'Slab', quantity: 1, unitPrice: 65000 }]));
+    await expect(createCounterQuote({}, form)).rejects.toThrow('REDIRECT:/quotes/BEC-Q-9');
+    expect(rpc).toHaveBeenCalledWith(
+      'create_counter_quote',
+      expect.objectContaining({ p_customer_id: '44444444-4444-4444-8444-444444444444' }),
+    );
+  });
+
+  it('leaves the customer out when none was picked', async () => {
+    rpc.mockResolvedValue({ data: 'BEC-Q-9', error: null });
+    const form = new FormData();
+    form.set('customerName', 'Achieng');
+    form.set('customerPhone', '0722333730');
+    form.set('source', 'walk_in');
+    form.set('items', JSON.stringify([{ description: 'Slab', quantity: 1, unitPrice: 65000 }]));
+    await expect(createCounterQuote({}, form)).rejects.toThrow('REDIRECT');
+    expect(rpc.mock.calls[0]?.[1]).not.toHaveProperty('p_customer_id');
+  });
+
+  it('links a quote to a customer through link_quote_customer under the lock (D130)', async () => {
+    rpc.mockResolvedValue({ error: null });
+    maybeSingle.mockResolvedValue({ data: { reference_number: 'BEC-Q-1' } });
+    const result = await linkQuoteCustomer({}, lockForm({ customerId: '44444444-4444-4444-8444-444444444444' }));
+    expect(result.ok).toBe('Customer linked.');
+    expect(rpc).toHaveBeenCalledWith('link_quote_customer', {
+      p_quote_id: '11111111-1111-4111-8111-111111111111',
+      p_customer_id: '44444444-4444-4444-8444-444444444444',
+      p_expected_updated_at: '2026-09-17T10:00:00.000Z',
+    });
+  });
+
+  it('refuses a link with no customer before touching the database, and names a refused link plainly', async () => {
+    const missing = await linkQuoteCustomer({}, lockForm());
+    expect(missing.error).toBe('Pick a customer first');
+    expect(rpc).not.toHaveBeenCalled();
+    rpc.mockResolvedValue({ error: { code: '42501', message: 'Not allowed' } });
+    const refused = await linkQuoteCustomer({}, lockForm({ customerId: '44444444-4444-4444-8444-444444444444' }));
+    expect(refused.error).toMatch(/do not have permission/i);
   });
 
   it('adds a catalogue product through add_catalogue_quote_line, not a free-typed name', async () => {

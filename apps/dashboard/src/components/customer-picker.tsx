@@ -1,19 +1,33 @@
 'use client';
 
-import { useEffect, useId, useState, useTransition } from 'react';
-import { Field, Input, cn } from '@beco/ui';
+import { useEffect, useId, useState, useTransition, type RefObject } from 'react';
+import { Button, Field, Input, cn } from '@beco/ui';
 import { searchCustomers } from '@/lib/customers';
 import type { CustomerMatch } from '@/lib/customer-search';
 
 const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', timeZone: 'Africa/Nairobi' });
 
+const quotesLabel = (count: number) => (count === 0 ? 'No quotes yet' : count === 1 ? '1 quote' : `${count} quotes`);
+
 /**
- * Search earlier quotes for the person at the counter. Picking a result
- * fills name, phone and email; nothing is saved until the quote is. A
- * miss is not an error: the fields below take a new customer as they are.
+ * Find a customer record for a quote (D130): the same search as the old
+ * returning-customer finder, now backed by the `customers` table. Name,
+ * phone in any format, company, email or KRA PIN. Picking a result hands
+ * it back; Add new client is the parent's to open, so a quote page can swap
+ * its own dialog's body rather than stack a second dialog.
  */
-export function CustomerFinder({ onPick }: { onPick: (match: CustomerMatch) => void }) {
+export function CustomerPicker({
+  onPick,
+  onAddNew,
+  label = 'Client',
+  inputRef,
+}: {
+  onPick: (match: CustomerMatch) => void;
+  onAddNew: () => void;
+  label?: string | undefined;
+  inputRef?: RefObject<HTMLInputElement | null> | undefined;
+}) {
   const inputId = useId();
   const listId = `${inputId}-results`;
   const [query, setQuery] = useState('');
@@ -38,7 +52,7 @@ export function CustomerFinder({ onPick }: { onPick: (match: CustomerMatch) => v
           setError(null);
         } catch {
           setMatches([]);
-          setError('Customer search is not available right now. Type the details below.');
+          setError('Customer search is not available right now. Add the client instead.');
         }
         setSearched(term);
       });
@@ -55,14 +69,15 @@ export function CustomerFinder({ onPick }: { onPick: (match: CustomerMatch) => v
 
   return (
     <div>
-      <Field label="Returning customer" htmlFor={inputId} hint="Name, phone or company">
+      <Field label={label} htmlFor={inputId} hint="Name, phone, company or KRA PIN">
         <Input
           id={inputId}
+          ref={inputRef}
           type="search"
           autoComplete="off"
           enterKeyHint="search"
           value={query}
-          placeholder="Search earlier quotes"
+          placeholder="Search clients"
           aria-controls={listId}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
@@ -74,17 +89,13 @@ export function CustomerFinder({ onPick }: { onPick: (match: CustomerMatch) => v
         />
       </Field>
       <div id={listId} aria-live="polite">
-        {searching && term.length >= 2 ? (
-          <p className="mt-2 font-ui text-sm text-neutral-500">Searching</p>
-        ) : null}
+        {searching && term.length >= 2 ? <p className="mt-2 font-ui text-sm text-neutral-500">Searching</p> : null}
         {error ? <p className="mt-2 font-ui text-sm text-neutral-500">{error}</p> : null}
-        {showNone ? (
-          <p className="mt-2 font-ui text-sm text-neutral-500">No earlier quotes match. Fill in a new customer below.</p>
-        ) : null}
+        {showNone ? <p className="mt-2 font-ui text-sm text-neutral-500">No client matches. Add them as new.</p> : null}
         {matches.length > 0 && term.length >= 2 ? (
           <ul className="mt-2 divide-y divide-neutral-100 border border-neutral-200">
             {matches.map((match) => (
-              <li key={match.phone}>
+              <li key={match.id}>
                 <button
                   type="button"
                   onClick={() => pick(match)}
@@ -93,12 +104,13 @@ export function CustomerFinder({ onPick }: { onPick: (match: CustomerMatch) => v
                     'hover:bg-neutral-50 focus-visible:bg-neutral-50',
                   )}
                 >
-                  <span className="text-base font-semibold text-charcoal">{match.name}</span>
-                  <span className="text-sm tabular-nums text-neutral-500">
+                  <span className="text-base font-semibold text-charcoal [overflow-wrap:anywhere]">{match.name}</span>
+                  <span className="text-sm tabular-nums text-neutral-500 [overflow-wrap:anywhere]">
                     {[match.phone, match.company].filter(Boolean).join(' · ')}
                   </span>
                   <span className="text-sm text-neutral-500">
-                    {match.quoteCount === 1 ? '1 quote' : `${match.quoteCount} quotes`}, last {shortDate(match.lastQuotedAt)}
+                    {quotesLabel(match.quoteCount)}
+                    {match.lastActivityAt ? `, last ${shortDate(match.lastActivityAt)}` : ''}
                   </span>
                 </button>
               </li>
@@ -106,6 +118,9 @@ export function CustomerFinder({ onPick }: { onPick: (match: CustomerMatch) => v
           </ul>
         ) : null}
       </div>
+      <Button type="button" variant="outline" className="mt-3 h-11 w-full py-0" onClick={onAddNew}>
+        Add new client
+      </Button>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { createServerClient } from '@beco/supabase-client';
 import { fetchQuoteSettings, type QuoteSettings } from './quote-detail';
 
 import { fetchStaffNames, staffName } from './staff-names';
+import { customerFromEmbed, type CustomerSummary } from './customer-search';
 
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
@@ -42,6 +43,8 @@ export interface OrderDetail {
   createdByName: string | null;
   quoteId: string | null;
   quoteReference: string | null;
+  /** The linked customer record, D130. Its KRA PIN prints on the receipt. */
+  customer: CustomerSummary | null;
   lines: OrderLine[];
   totals: QuoteMoney;
 }
@@ -59,7 +62,8 @@ export async function fetchOrder(
        salesperson_id, created_by, quote_id,
        salesperson:users!orders_salesperson_id_fkey(full_name),
        created_user:users!orders_created_by_fkey(full_name),
-       quote:quotes!orders_quote_id_fkey(reference_number)`,
+       quote:quotes!orders_quote_id_fkey(reference_number),
+       customer:customers!orders_customer_id_fkey(id, name, phone, email, company, kra_pin, deleted_at)`,
     )
     .eq('reference_number', reference)
     .is('deleted_at', null)
@@ -133,6 +137,7 @@ export async function fetchOrder(
     createdByName: staffName(order.created_by, oneName(order.created_user), names),
     quoteId: order.quote_id,
     quoteReference: oneRef(order.quote),
+    customer: customerFromEmbed(order.customer),
     lines,
     totals: quoteTotals(
       lines.map((line) => ({ unitPrice: line.unitPrice, quantity: line.quantity })),

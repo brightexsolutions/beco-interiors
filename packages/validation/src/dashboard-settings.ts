@@ -21,8 +21,9 @@ const textList = (maxItems: number, message: string) =>
     .pipe(z.array(z.string().email('Need a real email address').max(120)).max(maxItems, message));
 
 /** KRA PIN: a letter, nine digits, a letter, e.g. P051234567X. Optional, so
- *  documents can go out before Beco supplies it, and uppercased on save. */
-const kraPin = z.preprocess(
+ *  documents can go out before Beco supplies it, and uppercased on save.
+ *  Shared with the customer record (D130), so both PINs keep one shape. */
+export const kraPinSchema = z.preprocess(
   (value) => (value === '' || value == null ? null : String(value).replace(/\s+/g, '').toUpperCase()),
   z.union([z.null(), z.string().regex(/^[A-Z]\d{9}[A-Z]$/, 'A KRA PIN is a letter, nine digits and a letter')]),
 );
@@ -32,7 +33,7 @@ const optionalText = (max: number) =>
 
 export const dashboardSettingsSchema = z.object({
   businessLegalName: z.string().trim().min(2, 'Need the registered business name').max(120),
-  kraPin,
+  kraPin: kraPinSchema,
   vatNumber: z.preprocess(
     (value) => (value === '' || value == null ? null : String(value).trim().toUpperCase()),
     z.union([z.null(), z.string().regex(/^[A-Z0-9-]{4,20}$/, 'A VAT number is letters and digits only')]),

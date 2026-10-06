@@ -14,7 +14,7 @@ const ALL_ROLES: UserRole[] = [
 describe('navItemsFor', () => {
   it('groups the sidebar by job, skipping a group a role cannot reach and Overview for a salesperson', () => {
     expect(navGroupsFor('beco_sales').map((g) => [g.label, g.items.map((i) => i.label)])).toEqual([
-      ['Sales', ['Quotes', 'Orders']],
+      ['Sales', ['Quotes', 'Orders', 'Customers']],
     ]);
     const admin = navGroupsFor('brightex_admin');
     expect(admin.map((g) => g.label)).toEqual(['Home', 'Sales', 'Catalogue', 'Content', 'Insight', 'Admin']);
@@ -25,13 +25,28 @@ describe('navItemsFor', () => {
     expect(navContext('/products/import')).toEqual({ sectionHref: '/products', sectionLabel: 'Catalogue', pageLabel: 'Drive import' });
   });
 
-  it('gives a salesperson just Quotes and Orders', () => {
-    expect(navItemsFor('beco_sales').map((i) => i.href)).toEqual(['/quotes', '/orders']);
+  it('gives a salesperson Quotes, Orders and Customers', () => {
+    expect(navItemsFor('beco_sales').map((i) => i.href)).toEqual(['/quotes', '/orders', '/customers']);
   });
 
-  it('gives the product manager one Catalogue item, not a separate Ranges or Stock item', () => {
-    expect(navItemsFor('beco_product_manager').map((i) => i.href)).toEqual(['/products']);
-    expect(navItemsFor('beco_product_manager').map((i) => i.label)).toEqual(['Catalogue']);
+  it('gives the product manager one Catalogue item, not a separate Ranges or Stock item, and Customers (D130)', () => {
+    expect(navItemsFor('beco_product_manager').map((i) => i.href)).toEqual(['/products', '/customers']);
+    expect(navItemsFor('beco_product_manager').map((i) => i.label)).toEqual(['Catalogue', 'Customers']);
+  });
+
+  it('gives every operations role Customers, and the editor nothing (D130)', () => {
+    for (const role of ['beco_sales', 'beco_product_manager', 'beco_admin', 'brightex_admin'] as const) {
+      expect(navItemsFor(role).map((i) => i.href)).toContain('/customers');
+    }
+    expect(navItemsFor('beco_editor').map((i) => i.href)).not.toContain('/customers');
+  });
+
+  it('names a customer page on the phone breadcrumb', () => {
+    expect(navContext('/customers/6f1c1b2e-3a4d-4e5f-8a9b-0c1d2e3f4a5b')).toEqual({
+      sectionHref: '/customers',
+      sectionLabel: 'Customers',
+      pageLabel: 'Customer',
+    });
   });
 
   it('gives brightex_admin everything, Users included', () => {
@@ -123,9 +138,9 @@ describe('navContext', () => {
 });
 
 describe('bottomNavFor (D111)', () => {
-  it('gives a salesperson Quotes and Orders with New quote raised, and nothing behind More', () => {
+  it('gives a salesperson Quotes, Orders and Customers with New quote raised, and nothing behind More', () => {
     const nav = bottomNavFor('beco_sales');
-    expect(nav.items.map((i) => i.href)).toEqual(['/quotes', '/orders']);
+    expect(nav.items.map((i) => i.href)).toEqual(['/quotes', '/orders', '/customers']);
     expect(nav.newQuote).toBe(true);
     expect(nav.more).toEqual([]);
   });
@@ -133,7 +148,7 @@ describe('bottomNavFor (D111)', () => {
   it('gives an admin Overview, Quotes and Orders on the bar and the rest behind More', () => {
     const nav = bottomNavFor('beco_admin');
     expect(nav.items.map((i) => i.href)).toEqual(['/', '/quotes', '/orders']);
-    expect(nav.more.map((i) => i.href)).toEqual(['/products', '/announcements', '/reports', '/settings']);
+    expect(nav.more.map((i) => i.href)).toEqual(['/products', '/customers', '/announcements', '/reports', '/settings']);
   });
 
   it('gives Brightex the same bar, with Users, Blog and Audit behind More', () => {
@@ -142,9 +157,9 @@ describe('bottomNavFor (D111)', () => {
     expect(nav.more.map((i) => i.href)).toEqual(expect.arrayContaining(['/users', '/settings', '/studio/blog', '/audit']));
   });
 
-  it('gives the product manager Catalogue alone, no Import and no New quote (D115)', () => {
+  it('gives the product manager Catalogue and Customers, no Import and no New quote (D115, D130)', () => {
     const nav = bottomNavFor('beco_product_manager');
-    expect(nav.items.map((i) => i.href)).toEqual(['/products']);
+    expect(nav.items.map((i) => i.href)).toEqual(['/products', '/customers']);
     expect(nav.newQuote).toBe(false);
     expect(nav.more).toEqual([]);
   });

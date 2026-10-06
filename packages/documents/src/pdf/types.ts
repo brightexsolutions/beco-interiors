@@ -15,6 +15,9 @@ export interface QuotePdfInput {
   customerPhone: string;
   customerEmail?: string | null;
   company?: string | null;
+  /** The customer's own KRA PIN, from their record, printed under the
+   *  customer block when there is one. D130. */
+  customerKraPin?: string | null;
   projectDetails?: string | null;
   validUntil: string | null;
   lines: QuotePdfLine[];
@@ -61,6 +64,12 @@ export const lineCodeLabel = (code?: string | null): string | null => {
 };
 
 const DEFAULT_ADDRESS = 'Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi';
+
+/** The customer's KRA PIN as printed under Prepared for, or null. D130. */
+export const customerKraPinLine = (pin?: string | null): string | null => {
+  const trimmed = pin?.trim();
+  return trimmed ? `KRA PIN ${trimmed}` : null;
+};
 
 /** The lines of the From block, in print order, blanks dropped. */
 export function quoteFromLines(quote: QuotePdfInput): { name: string; lines: string[]; tax: string[] } {
