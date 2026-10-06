@@ -24,3 +24,13 @@ export const quoteWhatsAppLink = (
   customerPhone: string,
   becoWhatsApp = DEFAULT_WHATSAPP,
 ): string => whatsAppChatLink(customerPhone, `Beco quote ${reference}`, becoWhatsApp);
+
+/**
+ * Sending a quote or receipt PDF over WhatsApp from the document panels.
+ * Archived on 6 October 2026 at Brown's request: documents go by email or
+ * download. Off, not deleted: `WhatsAppShare`, its actions and its tests stay,
+ * so turning this back on restores the button in both panels. The WhatsApp
+ * chat link on a customer's contact row is a separate feature and stays.
+ */
+export const SHARE_DOCUMENTS_ON_WHATSAPP = false;
+

@@ -399,7 +399,7 @@ real phone** (M5 section D).
 | View | Compact heading action, top right, labelled View with a right arrow. Writes unsaved qty/price first, then opens a dialog. Pages paint onto canvas. Zoom in, zoom out, and pinch | `QuoteDocumentPanel` tested |
 | Download | Real file link `?download=1`, filename includes the quote number and client name | Tested href and Content-Disposition |
 | Email | Form in the preview dialog, prefilled, submits `sendQuoteEmail` | Tested |
-| WhatsApp (28 September) | Beside Download. Phone: the share sheet with the PDF attached. Desktop: saves the PDF and opens a chat prefilled to the customer. Records `sent_channel = whatsapp` on that exact stored copy (`X-Document-Path`). Cancel records nothing | `WhatsAppShare` tested (share sheet, fallback, cancel, failure); action refuses another quote's path. **NOT walked on a phone** |
+| WhatsApp (28 September) | **Archived 6 October 2026**, at Brown's request: not drawn in the quote or receipt panel while `SHARE_DOCUMENTS_ON_WHATSAPP` is false; documents go by Email or Download, and Download takes the row. Turning the flag on restores the behaviour this row described | Test: both panel tests assert no WhatsApp control; `whatsapp-share.test.tsx` still covers the archived component |
 | Customer: Call, WhatsApp, Email | One tap to the customer, WhatsApp prefilled with the reference, Email only when there is an address. Labels never leave their button: nowrap, never narrower than the label, the row wraps instead of squeezing | `CustomerContact` tested on hrefs and the no overflow classes. **Server** measured |
 | Owner and preparer names | A salesperson now sees a colleague's name, not "Unassigned", via `staff_names()` (migration 55) | pgTAP 31, `staff-names` tested. **Server** confirmed as Sam on Ken's quote |
 | Phone layout | Actions and Customer come before the line editor on a phone; the right rail on desktop | **Server** screenshots, both widths |
@@ -484,7 +484,7 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 | Confirm / Fulfil | Forward status only. Writes `set_order_status` | Test: `OrderActions`. RPC pgTAP |
 | Cancel order | ConfirmDialog names the order, confirm verb Cancel order | Test: `OrderActions` |
 | Mark paid | ConfirmDialog names the order, confirm verb Mark paid. Stamps `paid_at`. Stock unchanged. Emails a receipt if an address exists | Test: `OrderActions`, `markOrderPaid`. RPC pgTAP |
-| View receipt | After paid: heading and Actions. Opens the receipt as canvas pages. Zoom in, zoom out, and pinch. Email is a real form, Download is `?download=1`, WhatsApp shares the receipt PDF the same way the quote does | Test: `OrderDocumentPanel`, `WhatsAppShare`, PDF route 409 until paid |
+| View receipt | After paid: heading and Actions. Opens the receipt as canvas pages. Zoom in, zoom out, and pinch. Email is a real form, Download is `?download=1`, WhatsApp sharing of the receipt PDF is archived with the quote's (6 October 2026) | Test: `OrderDocumentPanel`, `WhatsAppShare`, PDF route 409 until paid |
 | Customer: Call, WhatsApp, Email; Collection or Delivery | One tap to the customer; fulfilment reads Collection or Delivery, not the raw value | `CustomerContact` tested |
 | Mark paid, receipt email failed | Says the order is paid AND that the receipt did not send, and alerts Brightex | `markOrderPaid` path; `reportSendFailure` tested |
 | Quote link | Inspector ownership block links to the source quote | Rendered on detail |
