@@ -3110,3 +3110,78 @@ salesperson already knows, and it stays testable in jsdom.
 *Reverses if:* staff report a filter they reach for many times an hour that is slower behind a
 picker than it was as a chip, in which case that one filter returns as a single row of chips
 above the grid, not all of them.
+
+## D130, 6 October 2026: Beco keeps a real record of its clients, reversing REVIEW 2.6
+
+**Decision.** A `customers` table, migration 63, one record per client keyed by the national part
+of the phone number (`phone_key`, so 0722..., +254722... and 254722... are one person), unique
+among records that are not soft deleted. It holds name, phone as entered, email, company, the
+client's KRA PIN (a letter, nine digits, a letter, checked in zod and in a `check`), location,
+client type (homeowner, contractor, designer, developer, business, other) and staff only notes.
+`quotes.customer_id` and `orders.customer_id` point at it. The dashboard gains Customers: a list
+with search, type filter and three sorts, a page per customer with editable details, their
+quotes and orders and totals, and New customer. The new quote form picks a client record or adds
+one in place, and a quote's page links or changes its customer. The client's KRA PIN prints
+under Prepared for on their quote and receipt PDFs, and with the reference in the priced quote
+email.
+
+**Why.** Brown asked for a real client record on 6 October 2026. `docs/REVIEW.md` 2.6 named "no
+customer entity" as a deliberate simplification for the four week build and predicted it would
+be the first Phase 2 request; it was. Inferring a customer from quotes sharing a phone number
+(`customer-search.ts`, 28 September) could find a returning buyer, but could not hold a
+KRA PIN, a note, a type, or a client who has not had a quote yet, and could not say what one
+client had spent.
+
+**How the pieces fit.**
+
+- **One person, one record.** The phone is the one field the counter and the web form both
+  require, so it is the identity. A second record with the same number is refused by the unique
+  index, and every screen that creates one asks first: a number already on file answers with
+  that customer, "Use" on a quote, "Open" anywhere, never a duplicate.
+- **A quote stays a historical document.** The quote still snapshots name, phone and email (and
+  company, from a picked record) at the moment it is raised, read from the record inside
+  `create_counter_quote` rather than trusted from the form. Editing the customer later never
+  rewrites an issued quote, the same principle as D124's code. Linking a quote to a different
+  customer moves `customer_id` and the converted order's, nothing printed. The one live read is
+  the client's KRA PIN on a document generated later: a regenerated PDF carries the record's
+  current PIN, which is what a tax document wants.
+- **The web form links, never edits.** `submit_quote` links to the record with that number or
+  creates one; it never updates an existing record, so a visitor typing a known number cannot
+  rename that client. Its quote still snapshots what the visitor typed. A counter quote typed
+  without picking does the same, through the same helper, `customer_for_phone`.
+- **Backfill.** One record per distinct phone key among live quotes, merged exactly as
+  `customer-search.ts` merged them: the newest quote's name and phone, an older email or company
+  filling a gap. Every quote and order is then linked, orders through their quote first. On the
+  local database: 8 customers from 8 quotes, all 8 linked. The backfill runs with the quotes and
+  orders lock trigger disabled, so linking does not bump `updated_at` on every open quote.
+  `seed.sql` calls it again, because the seed runs after the migrations.
+- **Who.** Brown chose that all staff see the full list: every operations role reads,
+  `beco_sales`, `beco_product_manager`, `beco_admin`, `brightex_admin`. `beco_editor` has no
+  operations screen and reads nothing. The roles that raise quotes create and edit. Only an admin
+  soft deletes; nobody hard deletes, revoked as well as unpolicied. Anon reaches the table only
+  through `submit_quote`. The product manager reads the record but not quotes or orders (D87),
+  so the list overview is `security_invoker` and that role sees no counts or spend, and the
+  screen leaves those columns out rather than showing zeros.
+- **Navigation.** Customers sits in the Sales group of the sidebar. On the phone bar (D111) it
+  falls where the access map puts it: a salesperson's bar is Quotes, Orders, New quote raised in
+  the middle, and Customers; the product manager's is Catalogue and Customers; an admin finds it
+  behind More.
+
+**Spent.** The list's Spent is the VAT inclusive total of the client's orders that are not
+cancelled, from `orders.total_amount`. The client's page shows it as Ordered beside Paid, the
+part marked paid, because payments are offline (D8) and the two are different figures.
+
+**Found on the way.** `orders_insert_anon` (migration 6) still lets any role insert an order row
+directly. It is narrowed here only so a direct insert cannot carry a `customer_id`; the wider
+policy is recorded in `docs/SECURITY.md` as a follow up rather than changed in this migration.
+
+**Rejected.** A customer required before the web form can submit: the site asks for name and
+phone only, on purpose. Matching on email as well as phone: walk ins rarely give one, and two
+keys can disagree. Updating the record from a web submission: it is the one write an anonymous
+caller can make, and a known number is not proof of identity. Snapshotting the client's KRA PIN
+onto the quote: it is not on the quote today, and a reissued document should carry the current
+PIN.
+
+*Reverses if:* Beco wants two people sharing one phone (a couple, a company switchboard) as
+separate clients, at which point the identity moves from the phone to the record and the unique
+index becomes a warning.

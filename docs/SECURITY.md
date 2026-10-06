@@ -82,7 +82,10 @@ has always been, not forgotten.
 | `GET /api/health` (both) | none, anon key, one row | none | none, it is the uptime probe |
 | `submit_quote` (storefront) | public by design | zod, prices recomputed server side | 5 a minute per address (D81) |
 | `loadPickerCatalogue` | `requirePath('/quotes')` | takes no input; published, live products only, through the session client so RLS applies; the picker filters on the phone | by the session |
-| `searchCustomers` | `requirePath('/quotes')` | filter characters stripped, **now capped at 60 characters** | by the session |
+| `searchCustomers` | `requirePath('/quotes')` | filter characters stripped, **now capped at 60 characters**; reads `customer_overview` since D130 | by the session |
+| `createCustomer`, `updateCustomer` (D130) | `requirePath('/customers')`, then sales or admin only | `createCustomerSchema` / `updateCustomerSchema`: name, Kenyan phone, email, KRA PIN shape, client type, length caps | by the session |
+| `deleteCustomer` (D130) | `requirePath('/customers')`, then `isAdminRole` | the id | by the session |
+| `linkQuoteCustomer` (D130) | `requirePath('/quotes')`; the RPC checks owner or admin and the lock | `linkQuoteCustomerSchema` | by the session |
 
 ### Findings fixed
 
@@ -133,6 +136,10 @@ for a role that cannot use it.
 | Function | sales | product manager | beco_admin | brightex_admin |
 |---|---|---|---|---|
 | Raise, price and issue a quote; claim an unassigned one | own | no | yes | yes |
+| **Read the customer list and a customer's record** (D130) | yes | **yes, without quote or order figures** | yes | yes |
+| Add a customer, edit a customer's details | yes | no | yes | yes |
+| Link or change the customer on a quote | own | no | yes | yes |
+| **Soft delete a customer** | **no** | no | yes | yes |
 | Mark a quote quoted, won or lost; reopen | own | no | yes | yes |
 | Reassign a quote to someone else | no | no | yes | yes |
 | Approve a price away from the catalogue | no | no | yes | yes |
@@ -157,3 +164,34 @@ Tested in `21_convert_quote_to_order.test.sql` (cancel), `10_quote_pricing_appro
 (approve), `12_quote_claim_assign.test.sql` (assign) and the action tests named in
 `docs/TEST-COVERAGE.md`.
 
+
+## Customers, 6 October 2026 (D130)
+
+The `customers` table holds names, phone numbers, KRA PINs and staff notes, so it is closed by
+default and opened role by role, each proven in `39_customers.test.sql` (85 assertions):
+
+| Who | Read | Create | Edit | Soft delete | Hard delete |
+|---|---|---|---|---|---|
+| anon | no (no grant, `42501`) | only through `submit_quote` | no | no | no |
+| `beco_sales` | live rows | as themselves | live rows, not `deleted_at`, not `created_by` | no (`42501`) | no |
+| `beco_product_manager` | live rows, the overview without counts or spend | no | no (zero rows) | no | no |
+| `beco_editor` | nothing | no | no | no | no |
+| inactive account | nothing | no | no | no | no |
+| `beco_admin`, `brightex_admin` | live and soft deleted | as themselves | yes, not `created_by` | yes | no |
+
+**Through the public RPC.** `submit_quote` calls `customer_for_phone`, which links to the record
+with that phone key or creates one and never updates an existing record, so an anonymous visitor
+who types a known number cannot rename or re-email that client. The test proves a submission
+from a known number with another name, email and company leaves the record as it was, and
+creates no second record. What an anonymous caller *can* still do is attach a new web quote to
+an existing client's history by using their number, which was already true of the inferred
+history before D130 and is visible on the quote as a web submission.
+
+`customer_for_phone` and `backfill_customers` are granted to nobody; anon is tested to be refused
+both. `link_quote_customer` follows every quote mutation: owner or admin, under the lock.
+
+**Follow up, not changed here.** `orders_insert_anon` (migration 6) is a policy with no role,
+so any role, anon included, may insert an `orders` row directly. Nothing in the product does,
+conversion is security definer, but the policy is wider than anything needs. Migration 63
+narrowed it only so a direct insert cannot carry a `customer_id`; removing it is a separate
+change that wants its own test pass.
