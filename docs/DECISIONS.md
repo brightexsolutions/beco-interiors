@@ -2299,6 +2299,15 @@ the cap moves again and the recursion already handles it; or if item folders tur
 several photographs per item under unrelated names, in which case the item rule tightens to
 require a code prefix rather than loosening into guesswork.
 
+**Amended 6 October 2026: an export filename is never a product name.** A gold handle was
+published as "34D00DD2-442A-4748-BF08-86C2643EE870", its iPhone export filename. In an item
+folder, a phone or export name (`IMG_1234`, `PXL_...`, `DSC...`, a UUID, a bare hex or a long
+bare number) is left out of the item folder decision and becomes a readable placeholder: the
+folder's finish, the range noun from `ITEM_NOUNS` and a short reference, "Gold Handle 34D0",
+slug `gold-handle-34d0`, the way D122 names hinges. Every name Beco typed stays exactly as
+typed: the import is Brightex's tool, and Beco rename items in the dashboard (Brown, 6 October).
+An existing row is never renamed (D54); a fresh environment gets the placeholder on first import.
+
 ## D105, 3 October 2026: the Drive import runs from the dashboard, through GitHub Actions
 
 Brown's instruction: the import had only ever been run by the agent on his own machine, and it

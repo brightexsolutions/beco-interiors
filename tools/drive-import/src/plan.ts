@@ -172,6 +172,66 @@ export const itemKeyOf = (filename: string): string =>
 
 const dirname = (path: string): string => path.split('/').slice(0, -1).join('/');
 
+/** An iPhone export: `34D00DD2-442A-4748-BF08-86C2643EE870.jpg`. */
+const UUID_NAME = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i;
+/** A bare run of hex, eight or more long with a digit in it, as some apps export. */
+const HEX_NAME = /^(?=[0-9A-F]*\d)[0-9A-F]{8,}$/i;
+
+/**
+ * A name a phone, a camera or an export gave the file: `IMG_1234`, `PXL_...`,
+ * `DSC02078`, a UUID, a bare hex or a long bare number. It says nothing about
+ * the item, so it is never used as an item's name.
+ */
+export const isExportName = (filename: string): boolean => {
+  const name = itemNameOf(filename);
+  return isCameraName(name) || UUID_NAME.test(name) || HEX_NAME.test(name);
+};
+
+/**
+ * A short, stable reference for an export named item: the first four
+ * characters of a UUID or a hex name, uppercase ("34D0"), or the number a
+ * camera gave it ("1234"). It goes into the slug, so it must not change.
+ */
+export const exportRef = (filename: string): string => {
+  const name = itemNameOf(filename);
+  if (UUID_NAME.test(name) || HEX_NAME.test(name)) return name.slice(0, 4).toUpperCase();
+  return photoRef(filename).toUpperCase();
+};
+
+/**
+ * What one item in an item folder is called, for the placeholder name an
+ * export named photograph gets there. Keyed by the top folder, with the sub
+ * ranges that hold something else. Only the placeholder uses it: an item
+ * named by its file keeps that name exactly as typed, and Beco rename items
+ * in the dashboard.
+ */
+export const ITEM_NOUNS: ReadonlyMap<string, { noun: string; bySubfolder?: Readonly<Record<string, string>> }> =
+  new Map([['HANDLES', { noun: 'Handle', bySubfolder: { KNOBS: 'Knob' } }]]);
+
+/** Folder words that are the noun, not the finish: "GOLD HANDLES" is Gold. */
+const NOUN_WORD = /^(HANDLES?|KNOBS?|PULLS?)$/i;
+
+/** The noun for an item filed in these folders, or undefined outside ITEM_NOUNS. */
+export const itemNounFor = (dirs: readonly string[]): string | undefined => {
+  const entry = ITEM_NOUNS.get((dirs[0] ?? '').toUpperCase());
+  if (!entry) return undefined;
+  const leaf = (dirs[dirs.length - 1] ?? '').toUpperCase();
+  return entry.bySubfolder?.[leaf] ?? entry.noun;
+};
+
+/**
+ * A readable placeholder for an export named item, never its filename: the
+ * finish its folder names, the noun, the reference. "Gold Handle 34D0" in Gold Handles, "Knob 1234" in
+ * Knobs, which names no finish. The way the hinges are named, D122. Outside
+ * ITEM_NOUNS there is no noun to add, so the folder's own name carries the
+ * reference: "Hinges 1234".
+ */
+export const exportItemName = (folder: string, noun: string | undefined, ref: string): string => {
+  if (!noun) return `${titleise(folder)} ${ref}`;
+  const finish = titleise(folder.split(/\s+/).filter((w) => !NOUN_WORD.test(w)).join(' '));
+  return [finish, noun, ref].filter(Boolean).join(' ');
+};
+
 /**
  * Whether every photograph in a folder names its own item: handles uploaded
  * as "B762 BLACK", "HT-8350 BLACK GOLD", one file each. Nothing is guessed.
@@ -182,10 +242,13 @@ const dirname = (path: string): string => path.split('/').slice(0, -1).join('/')
  * stays one product with its unknowns reported, exactly as before.
  */
 export const isItemFolder = (folderName: string, filenames: readonly string[]): boolean => {
-  if (filenames.length < 2) return false;
-  if (filenames.some((name) => isCameraName(name))) return false;
-  if (filenames.some((name) => resolveRole(name, folderName) !== 'unknown')) return false;
-  const subjects = new Set(filenames.map((name) => subjectOf(itemNameOf(name), folderName)).filter(Boolean));
+  // Export named files (IMG_1234, a UUID) say nothing either way, so the
+  // decision is made on the rest; in an item folder each becomes an item of
+  // its own. A folder of nothing but export names is never an item folder.
+  const named = filenames.filter((name) => !isExportName(name));
+  if (named.length < 2) return false;
+  if (named.some((name) => resolveRole(name, folderName) !== 'unknown')) return false;
+  const subjects = new Set(named.map((name) => subjectOf(itemNameOf(name), folderName)).filter(Boolean));
   return subjects.size >= 2;
 };
 
@@ -372,7 +435,15 @@ export const buildPlan = (
       const itemName = itemNameByKey.get(key) ?? itemNameOf(filename);
       itemNameByKey.set(key, itemName);
       const productPath = `${dir}/${itemName}`;
-      const productSlug = claimSlug(slugify(itemName), productPath, dirs[dirs.length - 1]!);
+      const folderName = dirs[dirs.length - 1]!;
+      // A phone or export name (a UUID, IMG_1234) is never a product name.
+      // It gets a placeholder, "Gold Handle 34D0", for Beco to rename in the
+      // dashboard. Every other item keeps the name its file gives it.
+      const exported = isExportName(filename);
+      const productName = exported
+        ? exportItemName(folderName, itemNounFor(dirs), exportRef(filename))
+        : titleiseItem(itemName);
+      const productSlug = claimSlug(slugify(exported ? productName : itemName), productPath, folderName);
       const seen = itemShotCount.get(productPath) ?? 0;
       itemShotCount.set(productPath, seen + 1);
       slabByProduct.set(productSlug, true);
@@ -387,7 +458,7 @@ export const buildPlan = (
         categoryChain: chain,
         productPath,
         productSlug,
-        productName: titleiseItem(itemName),
+        productName,
         role: seen === 0 ? 'slab' : 'application',
       });
       continue;
@@ -529,7 +600,9 @@ export const buildPlan = (
       reason:
         `Every photograph in "${dir.split('/').pop()}" names its own item, so its ${entry.files} ` +
         `file(s) were imported as ${entry.items.size} product(s), each named exactly as the file ` +
-        'is. Prices are entered in the dashboard. A second photograph of the same item joins it ' +
+        'is, except a phone or export name, which gets a placeholder such as "Gold Handle 34D0" to ' +
+        'rename in the dashboard. Prices are entered in the dashboard. A second photograph of the ' +
+        'same item joins it ' +
         'when the filename repeats the name with a 2 after it.',
     });
   }
