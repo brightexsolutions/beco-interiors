@@ -6,7 +6,21 @@ production, and how a release is undone.
 Incident response and data restore live in `docs/RUNBOOK.md`. This document is about getting
 code and infrastructure into place.
 
-**Status: Vercel projects exist, DNS for the site does not.** Checked 30 September 2026
+**Status, 6 October 2026: production runs on `beco-prod`.** Until this date both Vercel
+projects' Production environment pointed at `beco-staging` (`lzsqfsnjijpqnjukqpnu`), so the live
+site and dashboard read and wrote the staging database. Moved the same day, D127: `beco-prod`
+(`fctfpttoinhsncakhirh`) took migrations 1 to 53, a copy of staging's data, then 54 to 62;
+Vercel Production now carries `beco-prod`'s URL and keys, `REVALIDATE_SECRET`,
+`OPS_ALERT_SECRET`, `DASHBOARD_URL`, `GITHUB_REPOSITORY` and `GITHUB_WORKFLOW_REF`. Release
+`f6e69ff` (PR #3) is live on www and dashboard. Still open: `GITHUB_ACTIONS_TOKEN`; GitHub holds
+only the four Vercel secrets, so `deploy-production.yml` cannot migrate anything and its export
+step is a placeholder; the `Production` environment has no required reviewers; Vercel Preview
+for the dashboard lacks its keys, so there is no working staging dashboard yet.
+
+`vercel deploy --prod --skip-domain` did NOT keep the custom domains off: www served the new
+build at once. Do not rely on it as a dry run; deploy to Preview to test before promoting.
+
+**Status, 30 September: Vercel projects exist, DNS for the site does not.** Checked 30 September 2026
 against the signed-in Vercel team `brightex-solutions-projects` and the live `beco.co.ke`
 zone. Nameservers are already Cloudflare. The site hostnames are attached in Vercel and are
 not in DNS yet. Mail and Resend records are already on the zone. Do not recreate them.

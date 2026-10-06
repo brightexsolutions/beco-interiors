@@ -5,6 +5,15 @@
 Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, `BLOCKED`
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
+**6 October 2026: released.** PR #3 merged to `main` at `f6e69ff` and deployed to www and
+dashboard. Production was found running on the staging database and moved onto `beco-prod` the
+same day, D127. Live health: storefront and dashboard `/api/health` 200, database up. Since the
+release, on `dev`: one product per photograph for 15mm stones, dark metal finishes, export
+filenames, hardware wording (D122, D104 amendments), link previews (D126), the shop strip and
+header across widths. **Open:** an end to end quote on production with its email, by Brown;
+`GITHUB_ACTIONS_TOKEN`; GitHub deploy secrets and the approval gate; staging reseed; the R2
+CORS and lifecycle rules; cron-job.org jobs; real phone QA.
+
 **3 October 2026, on `dev`, nothing merged to `main`.** Since the 23 September close, merged
 through descriptive feature branches: the storefront quote page and sales flow polish, ops alerts
 to Brightex, KRA and payment details on quotes (D101, D102); Lighting retired (D103); the three
