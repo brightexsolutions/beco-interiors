@@ -366,13 +366,13 @@ real phone** (M5 section D).
 
 | Control | What it does | Status |
 |---|---|---|
-| Add from catalogue | Opens a dialog of published products across every range. Range select includes empty folders. Search is focused, tick several, then Add | `NewQuoteForm` and `CataloguePicker` tested |
+| Add from catalogue | Opens a dialog of published products across every range. Range select beside the search lists only ranges with products. Search is focused, tick several, then Add | `NewQuoteForm` and `CataloguePicker` tested |
 | Custom item | Adds a named custom line, not an empty catalogue row | Tested |
 | Qty / unit price / Remove | Edit or drop a line before save. Phone: two-row compact card, list scrolls in the panel. Desktop: columns under Item / Qty / Unit / Line | Same controls as quote detail, 44px stepper |
 | Customer fields | Name and phone required, email optional, source Walk in or Phone | Written into `create_counter_quote` |
 | Save quote | Disabled until there is a line, reason shown. Primary in the heading on desktop; on a phone it lives in a sticky action bar with the item count and total, which steps aside while the keyboard is open | Tested: disabled until a line, bar count and total update |
 | Returning customer (28 September) | Searches earlier quotes by name, phone, email or company, merged by phone in any format. Picking one fills name, phone and email; Clear empties them | `CustomerFinder`, `searchCustomers`, `dedupeCustomers` tested. **Server** confirmed against local seed data |
-| Catalogue picker ranges | Chips (`ChipGroup`), stocked ranges first with their counts; tap the active chip to go back to every range. Rows show the product photograph | `CataloguePicker` tested. **Server** screenshot |
+| Catalogue picker ranges | One `Select` beside the search: All ranges, then each range holding products with its count, nested ranges under their parent's optgroup; empty ranges absent. Combines with search. Only the product list scrolls, controls and the Add footer stay put, so the list is reachable at 390, 820 and a laptop 800px tall (D112). Rows show the product photograph | `CataloguePicker` tested. **Server** measured |
 | Keyboard | A focused field scrolls into the visible area once the keyboard settles; the picker dialog fits above the keyboard | `KeyboardAwareFocus` and `Dialog` tested in jsdom. **NOT walked on a real phone**, and it can only be proven on one |
 
 ### `/quotes/[reference]`
@@ -399,7 +399,7 @@ real phone** (M5 section D).
 | Download | Real file link `?download=1`, filename includes the quote number and client name | Tested href and Content-Disposition |
 | Email | Form in the preview dialog, prefilled, submits `sendQuoteEmail` | Tested |
 | WhatsApp (28 September) | Beside Download. Phone: the share sheet with the PDF attached. Desktop: saves the PDF and opens a chat prefilled to the customer. Records `sent_channel = whatsapp` on that exact stored copy (`X-Document-Path`). Cancel records nothing | `WhatsAppShare` tested (share sheet, fallback, cancel, failure); action refuses another quote's path. **NOT walked on a phone** |
-| Customer: Call, WhatsApp, Email | One tap to the customer, WhatsApp prefilled with the reference, Email only when there is an address | `CustomerContact` tested on hrefs |
+| Customer: Call, WhatsApp, Email | One tap to the customer, WhatsApp prefilled with the reference, Email only when there is an address. Labels never leave their button: nowrap, never narrower than the label, the row wraps instead of squeezing | `CustomerContact` tested on hrefs and the no overflow classes. **Server** measured |
 | Owner and preparer names | A salesperson now sees a colleague's name, not "Unassigned", via `staff_names()` (migration 55) | pgTAP 31, `staff-names` tested. **Server** confirmed as Sam on Ken's quote |
 | Phone layout | Actions and Customer come before the line editor on a phone; the right rail on desktop | **Server** screenshots, both widths |
 
