@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
  * horizontal overflow; jsdom cannot lay out, so this holds the source to it.
  */
 describe('About page sections with an oversized glow', () => {
-  const source = readFileSync(new URL('../page.tsx', import.meta.url), 'utf8');
+  const source = readFileSync('apps/storefront/src/app/about/page.tsx', 'utf8');
 
   it('clips sideways overflow on every section that holds a negative inset glow', () => {
     const sections = source.split('<section').slice(1);
