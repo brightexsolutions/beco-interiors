@@ -81,7 +81,8 @@ has always been, not forgotten.
 | `GET /api/img/*` (both) | none, read only, one bucket | key refused on `..`, a leading slash, **now a backslash too** | CDN cache |
 | `GET /api/health` (both) | none, anon key, one row | none | none, it is the uptime probe |
 | `submit_quote` (storefront) | public by design | zod, prices recomputed server side | 5 a minute per address (D81) |
-| `searchCatalogue`, `searchCustomers` | `requirePath('/quotes')` | filter characters stripped, **now capped at 80 and 60 characters** | by the session |
+| `loadPickerCatalogue` | `requirePath('/quotes')` | takes no input; published, live products only, through the session client so RLS applies; the picker filters on the phone | by the session |
+| `searchCustomers` | `requirePath('/quotes')` | filter characters stripped, **now capped at 60 characters** | by the session |
 
 ### Findings fixed
 
