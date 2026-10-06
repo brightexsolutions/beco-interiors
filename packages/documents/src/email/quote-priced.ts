@@ -39,6 +39,7 @@ export interface PricedQuoteEmailInput {
   lines?: readonly EmailLine[] | undefined;
   /** VAT inclusive total and its split. Printed only when `isPriced`. */
   totals?: { gross: number; net: number; vat: number } | undefined;
+  /** A fraction, as settings store it and the PDF reads it: 0.16 prints as 16%. */
   vatRate?: number | undefined;
 }
 
@@ -86,7 +87,7 @@ export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuote
   const totalRows: Array<[string, string]> = showTotal
     ? [
         ['Before VAT', formatKes(input.totals!.net)],
-        [input.vatRate !== undefined ? `VAT at ${input.vatRate}%` : 'VAT', formatKes(input.totals!.vat)],
+        [input.vatRate !== undefined ? `VAT at ${Math.round(input.vatRate * 100)}%` : 'VAT', formatKes(input.totals!.vat)],
         ...(input.validUntil ? [['Valid until', input.validUntil] as [string, string]] : []),
       ]
     : [];
