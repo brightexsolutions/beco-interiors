@@ -61,6 +61,8 @@ beforeAll(async () => {
 afterAll(async () => {
   const sb = service();
   await sb.from('quotes').delete().ilike('customer_name', `${PREFIX}%`);
+  // create_counter_quote links or creates the customer record (D130).
+  await sb.from('customers').delete().ilike('name', `${PREFIX}%`);
   if (productId) await sb.from('products').delete().eq('id', productId);
   for (const id of authUserIds) await sb.auth.admin.deleteUser(id);
 });

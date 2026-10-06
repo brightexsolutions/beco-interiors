@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { quoteTotals } from '@beco/validation';
 import { renderQuotePdf } from '../render';
-import { lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks, type QuotePdfInput } from '../types';
+import { QuoteDocument } from '../quote-document';
+import { customerKraPinLine, lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks, type QuotePdfInput } from '../types';
 
 const line = (n: number, price = 65000): QuotePdfInput['lines'][number] => ({
   description: `Line ${String(n).padStart(2, '0')} sintered stone slab, 12mm polished`,
@@ -169,6 +170,29 @@ describe('quoteFromLines', () => {
     );
     expect(from.name).toBe('Beco Interiors Ltd');
     expect(from.lines).toEqual(['Shop 8', 'Enterprise Road', '+254 722 333 730', 'info@beco.co.ke']);
+  });
+
+  it('prints the customer KRA PIN under Prepared for, and nothing when there is none (D130)', async () => {
+    expect(customerKraPinLine(' A123456789Z ')).toBe('KRA PIN A123456789Z');
+    expect(customerKraPinLine('')).toBeNull();
+    expect(customerKraPinLine(null)).toBeNull();
+    expect(customerKraPinLine(undefined)).toBeNull();
+
+    // The PDF's text is font subset encoded, so read the tree it renders from.
+    const texts = (node: unknown): string[] => {
+      if (node == null || typeof node === 'boolean') return [];
+      if (typeof node === 'string' || typeof node === 'number') return [String(node)];
+      if (Array.isArray(node)) return node.flatMap(texts);
+      const props = (node as { props?: { children?: unknown } }).props;
+      return props ? texts(props.children) : [];
+    };
+    const withPin = texts(QuoteDocument({ quote: base({ customerKraPin: 'A123456789Z' }) })).join('|');
+    expect(withPin).toContain('Prepared for|Achieng Otieno|0722 333 730|achieng@example.com|KRA PIN A123456789Z');
+    const without = texts(QuoteDocument({ quote: base() })).join('|');
+    expect(without).not.toContain('KRA PIN A');
+
+    const pdf = await renderQuotePdf(base({ customerKraPin: 'A123456789Z', kind: 'receipt', paidAt: '2026-09-20T10:00:00Z' }));
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
   it('renders the KRA PIN into the actual PDF', async () => {

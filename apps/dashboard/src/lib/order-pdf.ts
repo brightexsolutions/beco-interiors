@@ -9,6 +9,7 @@ export const toReceiptPdfInput = (order: OrderDetail, settings: QuoteSettings): 
   customerPhone: order.customerPhone,
   customerEmail: order.customerEmail,
   company: null,
+  customerKraPin: order.customer?.kraPin ?? null,
   projectDetails: order.notes,
   validUntil: null,
   lines: order.lines.map((line) => ({

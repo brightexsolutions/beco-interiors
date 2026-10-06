@@ -36,6 +36,10 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export const PAYMENT_STATUSES = ['unpaid', 'paid'] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
+/** The kind of client a customer record is, as Beco describes its trade. D130. */
+export const CLIENT_TYPES = ['homeowner', 'contractor', 'designer', 'developer', 'business', 'other'] as const;
+export type ClientType = (typeof CLIENT_TYPES)[number];
+
 /** Ordered. The product gallery renders in this order. */
 export const IMAGE_ROLES = ['slab', 'on_stand', 'bookmatch', 'application', 'unknown'] as const;
 export type ImageRole = (typeof IMAGE_ROLES)[number];

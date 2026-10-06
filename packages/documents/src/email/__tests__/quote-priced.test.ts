@@ -14,6 +14,28 @@ describe('buildPricedQuoteEmail', () => {
     expect(email.html).toContain('BEC-Q-00042');
   });
 
+  it('prints the customer KRA PIN with the reference when the record has one, and not otherwise (D130)', () => {
+    const withPin = buildPricedQuoteEmail({
+      reference: 'BEC-Q-00042',
+      customerName: 'Achieng Otieno',
+      validUntil: '2026-10-17',
+      isPriced: true,
+      customerKraPin: 'A123456789Z',
+    });
+    expect(withPin.text).toContain('Your KRA PIN on it is A123456789Z.');
+    expect(withPin.html).toContain('Your KRA PIN');
+    expect(withPin.html).toContain('A123456789Z');
+    const without = buildPricedQuoteEmail({
+      reference: 'BEC-Q-00042',
+      customerName: 'Achieng Otieno',
+      validUntil: '2026-10-17',
+      isPriced: true,
+      customerKraPin: '  ',
+    });
+    expect(without.text).not.toContain('KRA PIN');
+    expect(without.html).not.toContain('Your KRA PIN');
+  });
+
   it('mentions the PDF is attached, and the validity date when priced', () => {
     const email = buildPricedQuoteEmail({
       reference: 'BEC-Q-1',

@@ -12,11 +12,11 @@ const { BottomNav } = await import('../bottom-nav');
 afterEach(() => mockPathname.mockReturnValue('/quotes'));
 
 describe('BottomNav (D111)', () => {
-  it('gives a salesperson Quotes, New quote and Orders, and no More', () => {
+  it('gives a salesperson Quotes, Orders, New quote raised in the middle, and Customers, and no More', () => {
     render(<BottomNav nav={bottomNavFor('beco_sales')} name="Sam" />);
     const nav = screen.getByRole('navigation', { name: 'Sections' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/quotes', '/quotes/new', '/orders']);
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/quotes', '/orders', '/quotes/new', '/customers']);
     expect(within(nav).queryByRole('button', { name: 'More' })).toBeNull();
     expect(nav.className).toContain('fixed');
     expect(nav.className).toContain('lg:hidden');
@@ -44,7 +44,7 @@ describe('BottomNav (D111)', () => {
     await user.click(within(nav).getByRole('button', { name: 'More' }));
     const sheet = screen.getByRole('dialog', { name: 'More' });
     const hrefs = within(sheet).getAllByRole('link').map((l) => l.getAttribute('href'));
-    expect(hrefs).toEqual(expect.arrayContaining(['/products', '/announcements', '/reports', '/settings', '/change-password']));
+    expect(hrefs).toEqual(expect.arrayContaining(['/products', '/customers', '/announcements', '/reports', '/settings', '/change-password']));
     expect(hrefs).not.toContain('/users');
     expect(within(sheet).getByRole('button', { name: 'Sign out' }).closest('form')).toHaveAttribute('action', '/sign-out');
   });
@@ -55,11 +55,11 @@ describe('BottomNav (D111)', () => {
     expect(screen.getByRole('button', { name: 'More' }).className).toContain('text-charcoal');
   });
 
-  it('gives the product manager Catalogue alone, with no New quote', () => {
+  it('gives the product manager Catalogue and Customers, with no New quote', () => {
     mockPathname.mockReturnValue('/products');
     render(<BottomNav nav={bottomNavFor('beco_product_manager')} name="Aisha" />);
     const nav = screen.getByRole('navigation', { name: 'Sections' });
-    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/products']);
+    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/products', '/customers']);
     expect(within(nav).queryByRole('link', { name: 'New quote' })).toBeNull();
   });
 

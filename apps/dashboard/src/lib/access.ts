@@ -44,6 +44,9 @@ interface RouteRule {
 export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/quotes', roles: ['beco_sales', ...ADMINS] },
   { prefix: '/orders', roles: ['beco_sales', ...ADMINS] },
+  // Every operations role reads the client list (D130); the editor has no
+  // operations screen. Writes are narrower, decided in the actions and RLS.
+  { prefix: '/customers', roles: ['beco_sales', 'beco_product_manager', ...ADMINS] },
   { prefix: '/products', roles: ['beco_product_manager', ...ADMINS] },
   // The Drive import rewrites the catalogue from a folder. Brightex runs it (D115).
   { prefix: '/products/import', roles: ['brightex_admin'] },

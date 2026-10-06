@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { dedupeCustomers, phoneKey, sanitizeCustomerTerm, type CustomerQuoteRow } from '../customer-search';
-
-const row = (over: Partial<CustomerQuoteRow>): CustomerQuoteRow => ({
-  customer_name: 'Achieng Otieno',
-  customer_phone: '0722333730',
-  customer_email: null,
-  company: null,
-  created_at: '2026-09-20T10:00:00Z',
-  ...over,
-});
+import {
+  CLIENT_TYPE_LABEL,
+  customerFromEmbed,
+  customerSearchFilter,
+  customerSortFrom,
+  phoneKey,
+  sanitizeCustomerTerm,
+  toCustomerMatch,
+} from '../customer-search';
 
 describe('phoneKey', () => {
   it('treats the local, international and bare forms as one number', () => {
@@ -28,31 +27,88 @@ describe('sanitizeCustomerTerm', () => {
   });
 });
 
-describe('dedupeCustomers', () => {
-  it('merges quotes that share a phone number in any format, keeping the newest name', () => {
-    const matches = dedupeCustomers([
-      row({ customer_name: 'Achieng O.', customer_phone: '+254722333730', created_at: '2026-09-25T00:00:00Z' }),
-      row({ customer_name: 'Achieng Otieno', customer_phone: '0722333730' }),
-    ]);
-    expect(matches).toHaveLength(1);
-    expect(matches[0]).toMatchObject({ name: 'Achieng O.', quoteCount: 2, lastQuotedAt: '2026-09-25T00:00:00Z' });
+describe('customerSearchFilter', () => {
+  it('does not search under two characters', () => {
+    expect(customerSearchFilter(' a ')).toBeNull();
+    expect(customerSearchFilter('')).toBeNull();
   });
 
-  it('fills a missing email or company from an older quote', () => {
-    const [match] = dedupeCustomers([
-      row({ created_at: '2026-09-25T00:00:00Z' }),
-      row({ customer_email: 'achieng@example.com', company: 'Karen Kitchens' }),
-    ]);
-    expect(match).toMatchObject({ email: 'achieng@example.com', company: 'Karen Kitchens' });
+  it('searches name, company, email and KRA PIN by text, and not the phone for a word', () => {
+    const filter = customerSearchFilter('Achieng')!;
+    expect(filter).toContain('name.ilike."%Achieng%"');
+    expect(filter).toContain('company.ilike."%Achieng%"');
+    expect(filter).toContain('email.ilike."%Achieng%"');
+    expect(filter).toContain('kra_pin.ilike."%Achieng%"');
+    expect(filter).not.toContain('phone_key');
   });
 
-  it('keeps different people apart and respects the limit', () => {
-    const rows = Array.from({ length: 12 }, (_, i) => row({ customer_phone: `07000000${String(i).padStart(2, '0')}` }));
-    expect(dedupeCustomers(rows)).toHaveLength(8);
-    expect(dedupeCustomers(rows, 3)).toHaveLength(3);
+  it('matches a number on its national digits, whatever prefix was typed', () => {
+    expect(customerSearchFilter('0722 333')).toContain('phone_key.ilike."%722333%"');
+    expect(customerSearchFilter('+254722')).toContain('phone_key.ilike."%722%"');
   });
 
-  it('treats an empty email as none rather than an address', () => {
-    expect(dedupeCustomers([row({ customer_email: '' })])[0]!.email).toBeNull();
+  it('finds a KRA PIN typed with spaces', () => {
+    expect(customerSearchFilter('A123 456')).toContain('kra_pin.ilike."%A123456%"');
+  });
+
+  it('cannot be steered into a different filter by a comma', () => {
+    expect(customerSearchFilter('x,phone.neq.0')!.split(',')).toHaveLength(4);
+  });
+});
+
+describe('customerSortFrom', () => {
+  it('defaults to last activity and accepts only the known sorts', () => {
+    expect(customerSortFrom(undefined)).toBe('recent');
+    expect(customerSortFrom('name')).toBe('name');
+    expect(customerSortFrom('spent')).toBe('spent');
+    expect(customerSortFrom('created_by')).toBe('recent');
+  });
+});
+
+describe('toCustomerMatch', () => {
+  it('maps an overview row and counts as numbers', () => {
+    expect(
+      toCustomerMatch({
+        id: 'c1',
+        name: 'Achieng',
+        phone: '0722333730',
+        email: null,
+        company: 'Otieno Homes',
+        kra_pin: 'A123456789Z',
+        quote_count: 3,
+        last_activity_at: '2026-10-01T00:00:00Z',
+      }),
+    ).toEqual({
+      id: 'c1',
+      name: 'Achieng',
+      phone: '0722333730',
+      email: null,
+      company: 'Otieno Homes',
+      kraPin: 'A123456789Z',
+      quoteCount: 3,
+      lastActivityAt: '2026-10-01T00:00:00Z',
+    });
+  });
+});
+
+describe('customerFromEmbed', () => {
+  const row = { id: 'c1', name: 'Achieng', phone: '0722333730', email: null, company: null, kra_pin: 'A123456789Z', deleted_at: null };
+
+  it('reads an object or a one-row array the same way', () => {
+    const expected = { id: 'c1', name: 'Achieng', phone: '0722333730', email: null, company: null, kraPin: 'A123456789Z' };
+    expect(customerFromEmbed(row)).toEqual(expected);
+    expect(customerFromEmbed([row])).toEqual(expected);
+  });
+
+  it('is null for no customer and for a soft deleted one', () => {
+    expect(customerFromEmbed(null)).toBeNull();
+    expect(customerFromEmbed([])).toBeNull();
+    expect(customerFromEmbed({ ...row, deleted_at: '2026-10-06T00:00:00Z' })).toBeNull();
+  });
+});
+
+describe('CLIENT_TYPE_LABEL', () => {
+  it('names every client type', () => {
+    expect(Object.keys(CLIENT_TYPE_LABEL)).toEqual(['homeowner', 'contractor', 'designer', 'developer', 'business', 'other']);
   });
 });

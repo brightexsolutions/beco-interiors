@@ -22,6 +22,7 @@ const ICONS: Record<string, string> = {
   '/': 'M3 11.5 12 4l9 7.5M5.5 10v9h13v-9',
   '/quotes': 'M7 3h7l4 4v14H7zM14 3v4h4M9.5 12h5M9.5 16h5',
   '/orders': 'M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8',
+  '/customers': 'M4 5h16v14H4zM9 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM5.5 17a3.5 3.5 0 0 1 7 0M14.5 9.5h3.5M14.5 13h3.5',
   '/products': 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   '/products/import': 'M12 4v11m0 0 4-4m-4 4-4-4M5 19h14',
   '/announcements': 'M4 10v4h3l6 4V6l-6 4zM16 9.5a3.5 3.5 0 0 1 0 5',

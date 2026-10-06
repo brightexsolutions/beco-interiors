@@ -46,6 +46,10 @@ afterAll(async () => {
   const sb = service();
   if (created.length > 0) await sb.from('quotes').delete().in('id', created);
   await sb.from('products').delete().in('slug', [PRODUCT_SLUG, SLAB_SLUG]);
+  // submit_quote creates the customer record for a new number (D130). Remove
+  // it once no quote points at it, so a rerun starts from a new number again.
+  const { data: still } = await sb.from('quotes').select('id').eq('customer_phone', '0722000111').limit(1);
+  if (!still?.length) await sb.from('customers').delete().eq('phone_key', '722000111').eq('name', 'Test Buyer');
 });
 
 const productSlug = PRODUCT_SLUG;

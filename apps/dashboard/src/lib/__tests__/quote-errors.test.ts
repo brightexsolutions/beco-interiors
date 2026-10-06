@@ -14,6 +14,13 @@ describe('mutationMessage', () => {
     ).toMatch(/needs approval/i);
   });
 
+  it('says a picked customer has gone, rather than that the quote has (D130)', () => {
+    expect(mutationMessage({ code: 'P0002', message: 'That customer is no longer on file' })).toBe(
+      'That customer is no longer on file. Pick another.',
+    );
+    expect(mutationMessage({ code: 'P0002', message: 'Quote not found' })).toBe('That quote is no longer here.');
+  });
+
   it('does not leak a permission-denied SQLSTATE as the UI copy', () => {
     expect(mutationMessage({ code: '42501', message: 'Not allowed' })).toMatch(/do not have permission/i);
   });

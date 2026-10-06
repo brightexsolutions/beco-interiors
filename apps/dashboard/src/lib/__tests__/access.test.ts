@@ -14,6 +14,7 @@ describe('canAccess: the dashboard route/role matrix', () => {
   const allowed: Record<string, UserRole[]> = {
     '/quotes': ['beco_sales', 'beco_admin', 'brightex_admin'],
     '/orders': ['beco_sales', 'beco_admin', 'brightex_admin'],
+    '/customers': ['beco_sales', 'beco_product_manager', 'beco_admin', 'brightex_admin'],
     '/products': ['beco_product_manager', 'beco_admin', 'brightex_admin'],
     '/products/import': ['brightex_admin'],
     '/announcements': ['beco_admin', 'brightex_admin'],

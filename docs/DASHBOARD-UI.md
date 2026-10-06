@@ -306,3 +306,30 @@ Measured on the local server: at 390 by 844 the first quote row starts at y 417,
 select 44px tall. No horizontal overflow at 390, 820, 1280 or 1440. At 1280 the orders row,
 four filters, is the tightest: search narrows to 112px before anything clips.
 
+
+## 6 October 2026, Customers (D130)
+
+A section like Orders: `ListFilters` (search, Type, Sort) over `ListRows` below xl and
+`DataTable` from xl, inside the page's `Panel`, the whole of it under `QueryNavigationProvider`.
+New customer is a heading button (D112) that opens the shared `Dialog`.
+
+The customer's own page is the quote page's shape: a right rail (Reach them, Totals, Quotes,
+Orders) that comes first on a phone and sits beside the form from xl, and the details form in
+the main column with Save customer and, for an admin, Delete customer through `ConfirmDialog`.
+
+Built once, used in three places:
+
+- `CustomerFields`: the eight fields, uncontrolled, named for the zod schema. New customer, Add
+  new client on a quote, and the customer's page.
+- `CustomerCreate`: the form in a Dialog body. A number already on file answers with the
+  existing customer, Use them where a quote can take them, Open them everywhere.
+- `CustomerPicker`: the search the new quote form and a quote's page share. Add new client is
+  the parent's to open, so a quote's page swaps its dialog's body instead of stacking a second.
+- `CustomerCard`: the picked record on the new quote form and an order's page.
+
+A client form never sits inside another form: the Add new client dialog is rendered after the
+quote form closes, and the delete `ConfirmDialog` after the details form.
+
+Measured on the dev server at 390, 820 and 1280: no element past the right edge on the list,
+a customer's page, the new quote form with the picker open, and the Add new client dialog,
+whose submit stays inside an 844 high screen.

@@ -2,7 +2,7 @@ import { Document, Image, Page, Text, View, StyleSheet } from '@react-pdf/render
 import { quoteTotals } from '@beco/validation';
 import { logoPath } from './fonts';
 import type { QuotePdfInput } from './types';
-import { lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks } from './types';
+import { customerKraPinLine, lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks } from './types';
 
 /**
  * One template for a counter quote and a web quote. Line prices come from
@@ -169,6 +169,9 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
             <Text style={styles.body}>{quote.customerPhone}</Text>
             {quote.customerEmail ? <Text style={styles.body}>{quote.customerEmail}</Text> : null}
             {quote.company ? <Text style={styles.body}>{quote.company}</Text> : null}
+            {customerKraPinLine(quote.customerKraPin) ? (
+              <Text style={styles.body}>{customerKraPinLine(quote.customerKraPin)}</Text>
+            ) : null}
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>From</Text>

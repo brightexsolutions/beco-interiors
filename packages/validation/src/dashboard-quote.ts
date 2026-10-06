@@ -101,6 +101,9 @@ export const createCounterQuoteSchema = z.object({
   customerPhone: phoneSchema,
   customerEmail: z.email('Enter a valid email').optional().or(z.literal('')),
   source: z.enum(['walk_in', 'phone']),
+  /** The picked customer record, D130. The database snapshots its details
+   *  onto the quote; the name and phone above are what the form showed. */
+  customerId: z.preprocess((value) => (value === '' ? undefined : value), z.uuid().optional()),
   items: z
     .array(
       z.object({

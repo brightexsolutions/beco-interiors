@@ -16,15 +16,23 @@ beforeEach(() => {
   vi.clearAllMocks();
   limit.mockResolvedValue({
     data: [
-      { customer_name: 'Achieng O.', customer_phone: '+254722333730', customer_email: null, company: null, created_at: '2026-09-25T00:00:00Z' },
-      { customer_name: 'Achieng Otieno', customer_phone: '0722333730', customer_email: 'a@example.com', company: null, created_at: '2026-09-01T00:00:00Z' },
+      {
+        id: 'c1',
+        name: 'Achieng Otieno',
+        phone: '0722333730',
+        email: 'a@example.com',
+        company: null,
+        kra_pin: null,
+        quote_count: 2,
+        last_activity_at: '2026-09-25T00:00:00Z',
+      },
     ],
     error: null,
   });
 });
 
 describe('searchCustomers', () => {
-  it('gates on the Quotes route, like every quote read', async () => {
+  it('gates on the Quotes route, since only the roles that raise quotes pick a customer', async () => {
     await searchCustomers('Achieng');
     expect(requirePath).toHaveBeenCalledWith('/quotes');
   });
@@ -34,29 +42,13 @@ describe('searchCustomers', () => {
     expect(from).not.toHaveBeenCalled();
   });
 
-  it('searches name, email and company by text, newest first, and merges one phone into one customer', async () => {
+  it('reads the customer records, most recently active first, and maps them', async () => {
     const matches = await searchCustomers('Achieng');
-    expect(from).toHaveBeenCalledWith('quotes');
-    const filter = String((or.mock.calls[0] as unknown as [string])[0]);
-    expect(filter).toContain('customer_name.ilike."%Achieng%"');
-    expect(filter).toContain('company.ilike."%Achieng%"');
-    expect(filter).not.toContain('customer_phone');
-    expect(order).toHaveBeenCalledWith('created_at', { ascending: false });
-    expect(matches).toEqual([
-      expect.objectContaining({ name: 'Achieng O.', quoteCount: 2, email: 'a@example.com' }),
-    ]);
-  });
-
-  it('adds a phone match on the national digits for a number, whatever prefix was typed', async () => {
-    await searchCustomers('0722 333');
-    const filter = String((or.mock.calls[0] as unknown as [string])[0]);
-    expect(filter).toContain('customer_phone.ilike."%722333%"');
-  });
-
-  it('cannot be steered into a different filter by a comma', async () => {
-    await searchCustomers('x,customer_phone.neq.0');
-    const filter = String((or.mock.calls[0] as unknown as [string])[0]);
-    expect(filter.split(',')).toHaveLength(3);
+    expect(from).toHaveBeenCalledWith('customer_overview');
+    expect(String((or.mock.calls[0] as unknown as [string])[0])).toContain('name.ilike."%Achieng%"');
+    expect(order).toHaveBeenCalledWith('last_activity_at', { ascending: false });
+    expect(limit).toHaveBeenCalledWith(8);
+    expect(matches).toEqual([expect.objectContaining({ id: 'c1', name: 'Achieng Otieno', quoteCount: 2 })]);
   });
 
   it('says so plainly when the database refuses', async () => {
