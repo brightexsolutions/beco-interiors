@@ -485,7 +485,7 @@ export default async function AboutPage() {
               footage's own dark tone, bleeding out past the frame's own
               edge the way a real screen throws light in a dim room. --- */}
       {SHOWROOM_FILM ? (
-        <section className="bg-neutral-950 py-16 sm:py-22 lg:py-30">
+        <section className="overflow-x-clip bg-neutral-950 py-16 sm:py-22 lg:py-30">
           <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
             <div className="grid gap-x-16 gap-y-10 lg:grid-cols-[1fr_1.3fr] lg:items-center">
               <div className="beco-clip">
