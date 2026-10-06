@@ -119,7 +119,7 @@ export function AnnouncementResults({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(announcements, requestedPage);
 
@@ -174,8 +174,9 @@ export function AnnouncementResults({
 
   return (
     <>
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} announcements`}
           columns={desktopColumns(editHref)}
           rows={paged.items}
@@ -183,7 +184,7 @@ export function AnnouncementResults({
         />
       </div>
 
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden lg:hidden">
+      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
         {paged.items.map((row) => (
           <AnnouncementCard key={row.id} row={row} href={editHref(row.id)} />
         ))}

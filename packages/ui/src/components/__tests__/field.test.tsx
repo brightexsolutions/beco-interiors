@@ -70,6 +70,16 @@ describe('Input', () => {
     expect(screen.getByLabelText('Email').getAttribute('aria-invalid')).toBe('true');
   });
 
+  it('dresses a file input as one of ours, so the upload button is not the operating system grey', () => {
+    render(<Input id="photo" type="file" aria-label="Photograph" />);
+    const input = screen.getByLabelText('Photograph');
+    expect(input).toHaveAttribute('type', 'file');
+    expect(input.className).toContain('file:bg-charcoal');
+    expect(input.className).toContain('file:text-high-vis-white');
+    render(<Input id="name" aria-label="Name" />);
+    expect(screen.getByLabelText('Name').className).not.toContain('file:bg-charcoal');
+  });
+
   it('forwards a ref, so a form can focus the first field that failed', () => {
     const ref = { current: null as HTMLInputElement | null };
     render(<Input ref={ref} aria-label="Ref target" />);

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import { PageHeader } from '@/components/page-header';
 import { LegalSection } from '@/components/legal-section';
 import { SITE } from '@/lib/site';
@@ -26,11 +27,13 @@ export const revalidate = 3600;
  */
 const LAST_UPDATED = '24 September 2026';
 
-export const metadata: Metadata = {
-  title: 'Privacy policy',
-  description: 'What Beco Interiors collects when you request a quote, and what happens to it.',
-  alternates: { canonical: '/privacy' },
-};
+export const metadata: Metadata = pageMetadata({
+  title: 'Privacy Policy',
+  description:
+    'What Beco Interiors collects when you request a quote, where it goes, what this site keeps in your browser, and how to ask us to delete your details.',
+  path: '/privacy',
+  image: sectionOgImage('legal'),
+});
 
 export default function PrivacyPage() {
   return (

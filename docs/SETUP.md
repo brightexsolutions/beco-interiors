@@ -202,7 +202,9 @@ Signed in as **becointeriorsdev**.
       folder allows editors to re-share. See D5
 - [ ] Create a `BECO BACKUPS` folder, share with the same account as **Editor**
 
-**Verify:** `pnpm drive:import --dry-run` lists the 24 stone folders.
+**Verify:** `pnpm drive:import --dry-run` lists the 24 stone folders. Then put the same JSON in
+the `GOOGLE_SERVICE_ACCOUNT_JSON` secret on the `staging` and `production` GitHub Environments so
+the dashboard's Drive import screen can run it, per `docs/DEPLOYMENT.md` 3.12a.
 
 ### 2.2 Cloudflare R2, for images. Unblocks M2 and M4.
 

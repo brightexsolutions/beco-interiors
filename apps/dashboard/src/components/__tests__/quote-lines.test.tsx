@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
-import { addCatalogueLines, updateQuoteLines } from '@/app/(app)/quotes/actions';
+import { addCatalogueLines, addCustomLine, updateQuoteLines } from '@/app/(app)/quotes/actions';
 import { QuoteLines } from '../quote-lines';
 import type { QuoteLine } from '@/lib/quote-detail';
 
@@ -39,6 +39,7 @@ vi.mock('@/lib/catalogue', () => ({
 const line = (over: Partial<QuoteLine> = {}): QuoteLine => ({
   id: '11111111-1111-4111-8111-111111111111',
   description: 'Amber Jade',
+  code: null,
   quantity: 1,
   unitPrice: 65000,
   listPrice: 65000,
@@ -73,6 +74,20 @@ describe('QuoteLines', () => {
     expect(screen.getByText(/65,000/).className).toContain('line-through');
     expect(screen.queryByRole('button', { name: 'Add from catalogue' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  });
+
+  it('prints the product code under the item, read-only and editable alike (D124)', () => {
+    const { rerender } = render(
+      <QuoteLines lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate={false} />,
+    );
+    expect(screen.getByText('Code H-301')).toBeInTheDocument();
+    rerender(<QuoteLines lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate />);
+    // Editable rows are narrow: the code alone on one line, "Code" for screen readers.
+    const code = screen.getByTitle('Code H-301');
+    expect(code).toHaveTextContent('Code H-301');
+    expect(code.className).toContain('whitespace-nowrap');
+    rerender(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    expect(screen.queryByText(/^Code /)).toBeNull();
   });
 
   it('keeps Save disabled until a line actually changes, and says why', () => {
@@ -152,6 +167,25 @@ describe('QuoteLines', () => {
       />,
     );
     expect(screen.getByText(/removed from catalogue/i)).toBeInTheDocument();
+  });
+
+  it('keeps a refused custom line to fix, and empties the form once one is added', async () => {
+    const user = userEvent.setup();
+    render(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    const description = screen.getByLabelText('What to quote');
+    const add = screen.getByRole('button', { name: 'Add' });
+
+    vi.mocked(addCustomLine).mockResolvedValueOnce({ error: 'This quote changed while you were editing. Reload and try again.' });
+    await user.type(description, 'Delivery to Kilimani');
+    await user.click(add);
+    await waitFor(() => expect(addCustomLine).toHaveBeenCalledTimes(1));
+    await screen.findByRole('button', { name: 'Add' });
+    expect(description).toHaveValue('Delivery to Kilimani');
+
+    vi.mocked(addCustomLine).mockResolvedValueOnce({ ok: 'Item added to the quote.' });
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => expect(description).toHaveValue(''));
+    expect(vi.mocked(addCustomLine).mock.calls.at(-1)?.[1].get('description')).toBe('Delivery to Kilimani');
   });
 
   it('is axe clean in both treatments', async () => {

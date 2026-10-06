@@ -169,7 +169,7 @@ export function CompletedInteriors({
                   the parallax still reads the photograph as a direct
                   descendant. */}
               <div
-                className={`beco-clip relative w-full overflow-hidden bg-neutral-100 ${frame}`}
+                className={`beco-clip relative w-full overflow-hidden rounded-card bg-neutral-100 ${frame}`}
               >
                 <div
                   className={`beco-wipe absolute inset-0 ${depth}`}
@@ -206,7 +206,7 @@ export function CompletedInteriors({
                 </div>
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                  className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                 />
               </div>
               <div className="beco-plate mt-4 flex items-baseline justify-between gap-4">

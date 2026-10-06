@@ -42,4 +42,27 @@ describe('buildReceiptEmail', () => {
     expect(email.html).toContain('Payment received');
     expect(email.html).toContain('Urban Square, Enterprise Road, Industrial Area, Nairobi');
   });
+
+  it('sets the amount paid large with the date and the lines when given (D109)', () => {
+    const email = buildReceiptEmail({
+      reference: 'BEC-O-3',
+      customerName: 'Achieng',
+      amountPaid: 145000,
+      paidOn: '3 October 2026',
+      lines: [{ description: 'Calacatta Gold 12mm', quantity: 2, unit: 'slab', lineTotal: 130000 }],
+    });
+    expect(email.html).toContain('Amount paid, VAT inclusive');
+    expect(email.html).toContain('KES 145,000');
+    expect(email.html).toContain('3 October 2026');
+    expect(email.html).toContain('Calacatta Gold 12mm');
+    expect(email.text).toContain('Amount paid, VAT inclusive: KES 145,000');
+    expect(email.text).toContain('Paid on: 3 October 2026');
+    expect(email.html).toContain('/email/hero-receipt.jpg');
+  });
+
+  it('prints no figure when the amount is unknown', () => {
+    const email = buildReceiptEmail({ reference: 'BEC-O-4', customerName: 'A' });
+    expect(email.html).not.toContain('Amount paid');
+    expect(email.text).not.toMatch(/KES\s*[\d,]/);
+  });
 });

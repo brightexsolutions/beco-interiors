@@ -55,3 +55,83 @@ describe('StatCard', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe('StatCard visuals and link', () => {
+  it('shows a trend chip with its direction and label', () => {
+    const { container } = render(
+      <StatCard label="Won" value="5" delta={{ direction: 'up', label: '+2', sentiment: 'good' }} />,
+    );
+    const chip = screen.getByText('+2');
+    expect(chip.className).toContain('text-success');
+    expect(container.querySelector('path[d="M6 15l6-6 6 6"]')).not.toBeNull();
+  });
+
+  it('renders a meter clamped to 0 to 100 and named for assistive tech', () => {
+    render(<StatCard label="Quote to won" value="140%" meter={{ value: 1.4, label: '5 decided' }} />);
+    const meter = screen.getByRole('meter', { name: '5 decided' });
+    expect(meter).toHaveAttribute('aria-valuenow', '100');
+    expect((meter.firstElementChild as HTMLElement).style.width).toBe('100%');
+  });
+
+  it('splits segments in proportion and lists each with its count', () => {
+    const { container } = render(
+      <StatCard
+        label="Leads"
+        value="4"
+        segments={[
+          { label: 'quoted', value: 1 },
+          { label: 'WhatsApp', value: 3 },
+          { label: 'called', value: 0 },
+        ]}
+      />,
+    );
+    const bars = container.querySelectorAll<HTMLElement>('[aria-hidden] > div');
+    expect([...bars].map((b) => b.style.width)).toEqual(['25%', '75%']);
+    expect(screen.getByText('WhatsApp').parentElement).toHaveTextContent('3 WhatsApp');
+    expect(screen.getByText('called').parentElement).toHaveTextContent('0 called');
+  });
+
+  it('draws an empty track rather than dividing by zero when every segment is zero', () => {
+    const { container } = render(
+      <StatCard label="Leads" value="0" segments={[{ label: 'quoted', value: 0 }]} />,
+    );
+    expect(container.querySelectorAll('[aria-hidden] > div')).toHaveLength(0);
+  });
+
+  it('stretches the supplied link over the card, as the only interactive element', () => {
+    render(<StatCard label="Won" value="5" action={<a href="/quotes?status=won">Won quotes</a>} />);
+    const link = screen.getByRole('link', { name: 'Won quotes' });
+    expect(link).toHaveAttribute('href', '/quotes?status=won');
+    expect(link.parentElement?.className).toContain('[&_a]:after:absolute');
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('is axe clean with every visual at once', async () => {
+    const { container } = render(
+      <StatCard
+        label="Invoiced"
+        value="KES 400,000"
+        delta={{ direction: 'down', label: '-1', sentiment: 'bad' }}
+        meter={{ value: 0.4, label: 'KES 160,000 collected' }}
+        action={<a href="/orders">Unpaid orders</a>}
+      />,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('StatCard figures never wrap', () => {
+  it('never breaks inside a money figure, and steps a long one down a size', () => {
+    render(<StatCard label="Invoiced this month" value="Ksh 96,000" />);
+    const figure = screen.getByText('Ksh 96,000');
+    // break-words is overflow-wrap:anywhere, which split "96,000" after the comma.
+    expect(figure.className).not.toContain('break-words');
+    expect(figure.className).toContain('[overflow-wrap:normal]');
+    expect(figure.className).toContain('text-2xl');
+  });
+
+  it('keeps the full size for a short figure', () => {
+    render(<StatCard label="Products live" value="24" />);
+    expect(screen.getByText('24').className).toContain('text-3xl');
+  });
+});

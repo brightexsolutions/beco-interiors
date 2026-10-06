@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import type { ActiveSession } from '@/lib/session';
 
@@ -33,15 +33,31 @@ describe('AppShell', () => {
     expect(still?.closest('[aria-hidden="true"]')).not.toBeNull();
   });
 
-  it('still exposes the section nav, which the photograph must not cover', () => {
+  it('carries the sections in a bottom bar on the phone and the sidebar on desktop (D111)', () => {
     render(
       <AppShell user={admin}>
         <p>Overview</p>
       </AppShell>,
     );
-    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Quotes' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Use dark appearance' })).toBeInTheDocument();
+    const bar = screen.getByRole('navigation', { name: 'Sections' });
+    expect(bar.className).toContain('fixed');
+    expect(bar.className).toContain('bottom-0');
+    expect(bar.className).toContain('lg:hidden');
+    expect(within(bar).getByRole('link', { name: 'New quote' })).toHaveAttribute('href', '/quotes/new');
+    // Once in the bar, once in the desktop sidebar; CSS shows one at a time.
+    expect(screen.getAllByRole('link', { name: 'Quotes' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Use dark appearance' })).toHaveLength(2);
+  });
+
+  it('leaves room under the screen for the bar, and tells the docked bars how tall it is', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    expect(container.firstElementChild?.className).toContain('[--dock:calc(3.5625rem+env(safe-area-inset-bottom,0px))]');
+    expect(container.firstElementChild?.className).toContain('lg:[--dock:0px]');
+    expect(container.querySelector('main')?.className).toContain('pb-[calc(var(--dock)+1rem)]');
   });
 
   it('keeps the white header in flow. The breadcrumb is not part of that header', () => {
@@ -59,6 +75,52 @@ describe('AppShell', () => {
     expect(header?.parentElement?.className).toContain('relative');
     expect(header?.parentElement?.className).not.toContain('sticky');
     expect(screen.queryByRole('navigation', { name: 'You are here' })).toBeNull();
+    // The header names the screen where the pill strip used to be.
+    expect(within(header as HTMLElement).getByRole('list', { name: 'You are here' })).toHaveTextContent('Overview');
+  });
+
+  it('carries the red square Beco mark in the home link', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    for (const home of screen.getAllByRole('link', { name: 'Beco Operations, home' })) {
+      expect(home).toHaveAttribute('href', '/');
+    }
+    expect(container.querySelector('a[href="/"] img[src="/logo-mark.png"]')).not.toBeNull();
+  });
+
+  it('passes the new-quote count through to Quotes in the bar and the sidebar', () => {
+    render(
+      <AppShell user={admin} newQuotes={5}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    for (const badge of screen.getAllByLabelText('5 new')) expect(badge).toHaveTextContent('5');
+  });
+
+  it('groups the desktop sidebar by job, with Overview first for an admin', () => {
+    render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const main = screen.getByRole('navigation', { name: 'Main' });
+    expect(within(main).getByText('Home')).toBeInTheDocument();
+    expect(within(main).getByText('Sales')).toBeInTheDocument();
+    expect(within(main).getByText('Admin')).toBeInTheDocument();
+    expect(within(main).getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page');
+    expect(within(main).queryByRole('link', { name: 'Users' })).toBeNull();
+  });
+
+  it('names where the reader is in the desktop top bar and the phone header alike', () => {
+    render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    for (const crumb of screen.getAllByRole('list', { name: 'You are here' })) expect(crumb).toHaveTextContent('Overview');
   });
 
   it('has no accessibility violations', async () => {

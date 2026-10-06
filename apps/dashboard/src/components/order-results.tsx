@@ -30,8 +30,8 @@ const formatTime = (iso: string) =>
   });
 
 function ValueCell({ order }: { order: OrderListItem }) {
-  if (!order.isPriced) return <span className="text-neutral-500">Pricing on application</span>;
-  return <span className="tabular-nums">{money(order.value)}</span>;
+  if (!order.isPriced) return <span className="whitespace-nowrap text-neutral-500">Pricing on application</span>;
+  return <span className="whitespace-nowrap tabular-nums">{money(order.value)}</span>;
 }
 
 function BadgeRow({ order }: { order: OrderListItem }) {
@@ -54,7 +54,7 @@ const columns: DataTableColumn<OrderListItem>[] = [
     render: (order) => (
       <Link
         href={`/orders/${order.referenceNumber}`}
-        className="font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
+        className="whitespace-nowrap font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
       >
         {order.referenceNumber}
       </Link>
@@ -66,7 +66,7 @@ const columns: DataTableColumn<OrderListItem>[] = [
     sortable: true,
     sortValue: (order) => order.customerName,
     render: (order) => (
-      <div>
+      <div className="min-w-[11rem]">
         <p className="text-charcoal">{order.customerName}</p>
         <p className="text-neutral-500">{order.customerPhone}</p>
       </div>
@@ -83,11 +83,12 @@ const columns: DataTableColumn<OrderListItem>[] = [
   {
     key: 'owner',
     header: 'Owner',
-    render: (order) => order.salespersonName ?? <span className="text-neutral-500">Unassigned</span>,
+    render: (order) => <span className="whitespace-nowrap">{order.salespersonName ?? <span className="text-neutral-500">Unassigned</span>}</span>,
   },
   {
     key: 'source',
     header: 'Source',
+    showFrom: '2xl',
     sortable: true,
     sortValue: (order) => order.source,
     render: (order) => ORDER_SOURCE_LABEL[order.source],
@@ -115,15 +116,16 @@ const columns: DataTableColumn<OrderListItem>[] = [
   {
     key: 'actions',
     header: 'Actions',
+    headerHidden: true,
     align: 'right',
     render: (order) => (
       <Link
         href={`/orders/${order.referenceNumber}`}
         aria-label={`View ${order.referenceNumber}`}
-        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
+        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 w-11 px-0 py-0')}
       >
         <Icon name="arrow-right" />
-        View
+        <span className="sr-only">View</span>
       </Link>
     ),
   },
@@ -135,32 +137,40 @@ function OrderCard({ order }: { order: OrderListItem }) {
       <Link
         href={`/orders/${order.referenceNumber}`}
         aria-label={`View ${order.referenceNumber}`}
-        className="block rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
+        className="group flex items-stretch gap-3 overflow-hidden rounded-panel border border-neutral-200 py-3 pl-4 pr-3 transition-shadow hover:shadow-panel active:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
       >
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="font-ui text-base font-semibold text-charcoal">{order.referenceNumber}</span>
-          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
-            View
-          </span>
-        </div>
-        <div className="mt-1 flex items-baseline justify-between gap-3">
-          <p className="min-w-0 truncate font-ui text-base text-charcoal">
-            {order.customerName}
-            <span className="ml-2 text-neutral-500">{order.customerPhone}</span>
+        {/* The customer owns a row and wraps; the figure sits with the status
+            on the next, so nothing is cut to make room (D112). */}
+        <div className="min-w-0 flex-1">
+          <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{order.customerName}</p>
+          <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
+            <span className="tabular-nums">{order.referenceNumber}</span> · {order.customerPhone}
           </p>
-          <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
-            <ValueCell order={order} />
-          </p>
-        </div>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <BadgeRow order={order} />
-          <p className="font-ui text-sm text-neutral-500">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <p className="font-ui text-base font-semibold text-charcoal">
+              <ValueCell order={order} />
+            </p>
+            <BadgeRow order={order} />
+          </div>
+          <p className="mt-1.5 font-ui text-sm text-neutral-500">
             {order.salespersonName ?? 'Unassigned'}
             <span className="ml-2 whitespace-nowrap tabular-nums">
               {formatDate(order.createdAt)}, {formatTime(order.createdAt)}
             </span>
           </p>
         </div>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="h-5 w-5 shrink-0 self-center text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal motion-reduce:transition-none"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </Link>
     </li>
   );
@@ -170,7 +180,7 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(orders, requestedPage);
 
@@ -193,8 +203,9 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
 
   return (
     <>
-      <div className="hidden lg:block">
+      <div className="hidden xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} orders`}
           columns={columns}
           rows={paged.items}
@@ -202,14 +213,14 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
         />
       </div>
 
-      <ul className="grid gap-2 lg:hidden">
+      <ul className="grid gap-2 xl:hidden">
         {paged.items.map((order) => (
           <OrderCard key={order.id} order={order} />
         ))}
       </ul>
 
       <Pagination
-        className="mt-4"
+        className="mt-4 xl:px-5 xl:pb-4"
         page={paged.page}
         pageCount={paged.pageCount}
         from={paged.from}

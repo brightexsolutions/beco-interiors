@@ -8,12 +8,15 @@ import {
   sendReceiptEmailSchema,
   setOrderStatusSchema,
 } from '@beco/validation';
+import { isAdminRole } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { orderMutationMessage } from '@/lib/order-errors';
-import { fetchOrder } from '@/lib/order-detail';
+import { fetchOrder, type OrderDetail } from '@/lib/order-detail';
 import { persistReceiptPdf, receiptPdfFilename } from '@/lib/order-pdf';
 import { fetchQuoteSettings } from '@/lib/quote-detail';
+import { reportSendFailure } from '@/lib/ops-alert';
+import { isDocumentPathFor } from '@/lib/document-path';
 
 export interface OrderActionState {
   error?: string;
@@ -49,6 +52,23 @@ async function orderRow(orderId: string): Promise<{
   return { reference: data.reference_number, quoteReference };
 }
 
+/**
+ * What the receipt email says beyond the attachment: the amount, the day it
+ * was paid in Nairobi's calendar, and the lines (D109).
+ */
+const receiptEmailBody = (order: OrderDetail) => ({
+  amountPaid: order.totals.gross,
+  paidOn: order.paidAt
+    ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Nairobi' }).format(new Date(order.paidAt))
+    : null,
+  lines: order.lines.map((line) => ({
+    description: line.description,
+    code: line.code,
+    quantity: line.quantity,
+    lineTotal: line.lineTotal,
+  })),
+});
+
 export async function convertQuoteToOrder(
   _prev: OrderActionState,
   form: FormData,
@@ -78,12 +98,17 @@ export async function convertQuoteToOrder(
 }
 
 export async function setOrderStatus(_prev: OrderActionState, form: FormData): Promise<OrderActionState> {
-  await requirePath('/orders');
+  const user = await requirePath('/orders');
   const parsed = setOrderStatusSchema.safeParse({
     ...lockFrom(form),
     status: String(form.get('status') ?? ''),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Check the status' };
+  // Cancelling reverses a sale the customer agreed to. An admin's call, in
+  // both layers: here and in set_order_status() (D110).
+  if (parsed.data.status === 'cancelled' && !isAdminRole(user.role)) {
+    return { error: 'Only an admin can cancel an order. Ask Irene or Brightex.' };
+  }
 
   const supabase = await getSupabase();
   const { error } = await supabase.rpc('set_order_status', {
@@ -122,26 +147,36 @@ export async function markOrderPaid(_prev: OrderActionState, form: FormData): Pr
   if (order?.customerEmail) {
     const settings = await fetchQuoteSettings(supabase);
     const stored = await persistReceiptPdf(supabase, order, settings, user.userId);
-    if (stored.ok) {
-      const sent = await sendReceipt({
-        to: order.customerEmail,
-        reference: order.reference,
-        customerName: order.customerName,
-        pdf: stored.bytes,
-        filename: receiptPdfFilename(order.reference, order.customerName),
-      });
-      if (sent.sent) {
-        await supabase
-          .from('documents')
-          .update({
-            sent_to: order.customerEmail,
-            sent_at: new Date().toISOString(),
-            sent_channel: 'email',
-          })
-          .eq('storage_path', stored.path)
-          .eq('generated_by', user.userId);
-        return { ok: `${order.reference} is marked paid. Receipt sent to ${order.customerEmail}.` };
-      }
+    if (!stored.ok) {
+      return { ok: `${order.reference} is marked paid. The receipt did not generate, open View receipt to try again.` };
+    }
+    const sent = await sendReceipt({
+      to: order.customerEmail,
+      reference: order.reference,
+      customerName: order.customerName,
+      ...receiptEmailBody(order),
+      pdf: stored.bytes,
+      filename: receiptPdfFilename(order.reference, order.customerName),
+    });
+    if (sent.sent) {
+      await supabase
+        .from('documents')
+        .update({
+          sent_to: order.customerEmail,
+          sent_at: new Date().toISOString(),
+          sent_channel: 'email',
+        })
+        .eq('storage_path', stored.path)
+        .eq('generated_by', user.userId);
+      return { ok: `${order.reference} is marked paid. Receipt sent to ${order.customerEmail}.` };
+    }
+    await reportSendFailure(sent, {
+      area: 'receipt.email',
+      summary: `Receipt email for ${order.reference} did not send after it was marked paid`,
+      context: { order: order.reference },
+    });
+    if (sent.reason === 'error') {
+      return { ok: `${order.reference} is marked paid. The receipt email did not send, send it from View receipt.` };
     }
   }
 
@@ -181,10 +216,16 @@ export async function sendOrderReceipt(
     to: parsed.data.to,
     reference: order.reference,
     customerName: order.customerName,
+    ...receiptEmailBody(order),
     pdf: stored.bytes,
     filename: receiptPdfFilename(order.reference, order.customerName),
   });
   if (!sent.sent) {
+    await reportSendFailure(sent, {
+      area: 'receipt.email',
+      summary: `Receipt email for ${order.reference} did not send`,
+      context: { order: order.reference },
+    });
     return {
       error:
         sent.reason === 'no-api-key'
@@ -205,4 +246,18 @@ export async function sendOrderReceipt(
 
   revalidateOrder(order.reference, order.quoteReference);
   return { ok: `Sent to ${parsed.data.to}.` };
+}
+
+export async function markReceiptSharedWhatsApp(reference: string, path: string): Promise<OrderActionState> {
+  const user = await requirePath('/orders');
+  if (!isDocumentPathFor('receipts', reference, path)) return { error: 'That document does not belong to this order.' };
+  const supabase = await getSupabase();
+  const { error } = await supabase
+    .from('documents')
+    .update({ sent_channel: 'whatsapp', sent_at: new Date().toISOString() })
+    .eq('storage_path', path)
+    .eq('generated_by', user.userId);
+  if (error) return { error: 'Shared, but the send was not recorded.' };
+  revalidatePath(`/orders/${reference}`);
+  return { ok: 'Recorded as sent on WhatsApp.' };
 }

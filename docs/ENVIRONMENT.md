@@ -42,6 +42,7 @@ anything there you would not print on a billboard.
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin, for metadata and OG | You set it. `https://www.beco.co.ke` | storefront |
 | `NEXT_PUBLIC_IMAGE_HOST` | R2 image origin | You set it. `https://img.beco.co.ke` | storefront, dashboard |
 | `NEXT_PUBLIC_GA4_ID` | Measurement ID, `G-XXXXXXXXXX` | GA4, Admin, Data Streams, your web stream | storefront |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Search Console HTML tag content, a fallback for the DNS record. Blank is fine | Search Console, under **Beco's** account, Settings, Ownership verification, HTML tag. See `docs/SEO-MIGRATION.md` | storefront |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Click to chat number, digits only | Beco. `254722333730` | storefront, dashboard |
 | `NEXT_PUBLIC_BUSINESS_PHONE` | `tel:` link number | Beco. `+254722333730` | storefront |
 
@@ -63,6 +64,13 @@ anything there you would not print on a billboard.
 | `GEMINI_MODEL` | Model id, so it changes without a deploy | Google's current model list. Do not hardcode | studio only |
 | `STOREFRONT_URL` | Storefront origin the dashboard POSTs revalidation to | You set it. `https://www.beco.co.ke` in production, `http://localhost:3000` locally | dashboard |
 | `REVALIDATE_SECRET` | Shared token for `POST /api/revalidate`. Busts ISR, cannot read rows | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
+| `OPS_ALERT_EMAIL` | Where operational failure alerts are emailed. Comma separate several | Defaults to `info.brightexsolutions@gmail.com` when unset | dashboard |
+| `OPS_ALERT_FROM_EMAIL` | Sender for those alerts | Optional. Falls back to `QUOTE_FROM_EMAIL` | dashboard |
+| `OPS_ALERT_SECRET` | Bearer token the storefront sends to the dashboard's `POST /api/ops-alert` and `POST /api/quote-confirmation` (D109). Leaking it lets someone send a rate limited, bounded alert or a short branded confirmation to one address, nothing more | Generate a random string, same value on dashboard and storefront | dashboard, storefront |
+| `GITHUB_ACTIONS_TOKEN` | Lets the dashboard's Catalogue, Drive import screen start the import workflow and list its runs | GitHub, Settings, Developer settings, Fine-grained tokens. Resource owner `brightexsolutions`, only this repository, permission Actions: Read and write, nothing else. Expiry one year, noted in `docs/RETAINER.md`. Brightex's, since the repository is | dashboard |
+| `GITHUB_REPOSITORY` | `owner/repo` the workflow lives in | `brightexsolutions/beco-interiors` | dashboard |
+| `GITHUB_WORKFLOW_REF` | The branch whose copy of `drive-import.yml` runs | `main` for production use, `dev` while testing | dashboard |
+| `DASHBOARD_URL` | Dashboard origin the storefront relays its own failures to | You set it. `https://dashboard.beco.co.ke` in production, `http://localhost:3001` locally | storefront |
 | `VERCEL_TOKEN` | **Required.** GitHub Actions owns deployment, per D45 | vercel.com, Settings, Tokens | CI |
 | `VERCEL_ORG_ID` | Vercel team id | `.vercel/project.json` after `vercel link` | CI |
 | `VERCEL_PROJECT_ID_STOREFRONT` | | Same, per project | CI |

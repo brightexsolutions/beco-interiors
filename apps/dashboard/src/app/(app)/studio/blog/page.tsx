@@ -28,14 +28,13 @@ export default async function BlogListPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeading eyebrow="Studio" title="Blog" />
+      <PageHeading eyebrow="Studio" title="Blog" actions={<NewBlogFab />} />
       <div className="mb-4">
         <BlogFilters />
       </div>
       <div className="pb-24">
         <BlogResults posts={posts} />
       </div>
-      <NewBlogFab />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Panel, TableToolbar } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { OrderFilters, type OrderOwnerOption } from '@/components/order-filters';
 import { OrderResults } from '@/components/order-results';
@@ -49,13 +50,15 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     <>
       <PageHeading eyebrow="Sales" title="Orders" />
 
-      <div className="mb-6">
-        <OrderFilters ownerOptions={ownerOptions} />
-      </div>
-
-      <div className="pb-8">
-        <OrderResults orders={orders} />
-      </div>
+      <Panel className="mb-8">
+        <TableToolbar
+          filters={<OrderFilters ownerOptions={ownerOptions} />}
+          count={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'}`}
+        />
+        <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+          <OrderResults orders={orders} />
+        </div>
+      </Panel>
     </>
   );
 }

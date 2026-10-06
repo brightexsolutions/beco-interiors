@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
-import { assignQuote, reopenQuote } from '@/app/(app)/quotes/actions';
+import { assignQuote, reopenQuote, setQuoteStatus } from '@/app/(app)/quotes/actions';
 import { convertQuoteToOrder } from '@/app/(app)/orders/actions';
 import { QuoteActions } from '../quote-actions';
 
@@ -46,6 +46,20 @@ describe('QuoteActions', () => {
     vi.mocked(reopenQuote).mockClear();
     vi.mocked(convertQuoteToOrder).mockClear();
   });
+  it('spins only the status button that was pressed while the action runs (D117)', async () => {
+    let finish: (value: { ok: string }) => void = () => {};
+    vi.mocked(setQuoteStatus).mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    const user = userEvent.setup();
+    render(<QuoteActions {...base} />);
+    await user.click(screen.getByRole('button', { name: 'Quoted' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Quoted' })).toHaveAttribute('aria-busy', 'true'));
+    expect(screen.getByRole('button', { name: 'Quoted' })).toBeDisabled();
+    // Only the pressed button carries aria-busy. Lost opens a dialog rather than submitting, so it is not a status submit here.
+    expect(screen.getAllByRole('button').filter((b) => b.getAttribute('aria-busy') === 'true')).toHaveLength(1);
+    finish({ ok: 'Marked quoted.' });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Quoted' })).not.toHaveAttribute('aria-busy'));
+  });
+
   it('offers Quoted and Lost on a reviewing quote the viewer owns', () => {
     render(<QuoteActions {...base} />);
     expect(screen.getByRole('button', { name: 'Quoted' })).toBeInTheDocument();

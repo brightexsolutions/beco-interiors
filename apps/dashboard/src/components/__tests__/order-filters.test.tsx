@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 
@@ -39,9 +39,17 @@ describe('OrderFilters', () => {
     expect(push).toHaveBeenCalledWith('/orders?source=web');
   });
 
-  it('puts search and the selects on one row from lg', () => {
-    const { container } = render(<OrderFilters ownerOptions={ownerOptions} />);
-    expect(container.firstChild).toHaveClass('lg:flex', 'lg:items-end');
+  it('puts search and the selects on one row from xl, and chips below xl', () => {
+    render(<OrderFilters ownerOptions={ownerOptions} />);
+    expect(screen.getByLabelText('Search orders').closest('div.xl\\:flex-row')).not.toBeNull();
+    expect(screen.getByRole('group', { name: 'Payment' }).parentElement).toHaveClass('xl:hidden');
+  });
+
+  it('filters payment in one tap from the phone chips', async () => {
+    const user = userEvent.setup();
+    render(<OrderFilters ownerOptions={ownerOptions} />);
+    await user.click(within(screen.getByRole('group', { name: 'Payment' })).getByRole('button', { name: 'Unpaid' }));
+    expect(push).toHaveBeenLastCalledWith('/orders?payment=unpaid');
   });
 
   it('has no Search label, only a placeholder and aria-label', () => {

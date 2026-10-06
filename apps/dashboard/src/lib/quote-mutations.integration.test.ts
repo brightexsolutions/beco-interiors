@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import type { Database } from '@beco/types';
+import { ensureTestUser } from './__tests__/ensure-test-user';
 
 config({ path: new URL('../../../../.env.local', import.meta.url).pathname, quiet: true });
 
@@ -33,26 +34,13 @@ beforeAll(async () => {
 
   await sb.from('quotes').delete().ilike('customer_name', `${PREFIX}%`);
   await sb.from('products').delete().eq('slug', 'zz-int-mut-product');
-  const { data: existingUsers } = await sb.from('users').select('id').ilike('email', 'zz-int-mut-%');
-  for (const u of existingUsers ?? []) await sb.auth.admin.deleteUser(u.id);
-
-  const { data: salesAuth, error: salesErr } = await sb.auth.admin.createUser({
+  salesId = await ensureTestUser(sb, {
     email: 'zz-int-mut-sales@beco.co.ke',
     password: PASSWORD,
-    email_confirm: true,
-  });
-  expect(salesErr).toBeNull();
-  salesId = salesAuth!.user!.id;
-  authUserIds.push(salesId);
-
-  const { error: usersErr } = await sb.from('users').insert({
-    id: salesId,
-    email: 'zz-int-mut-sales@beco.co.ke',
-    full_name: 'ZZ Mut Sales',
+    fullName: 'ZZ Mut Sales',
     role: 'beco_sales',
-    must_change_password: false,
   });
-  expect(usersErr).toBeNull();
+  authUserIds.push(salesId);
 
   const { data: product, error: productErr } = await sb
     .from('products')
@@ -134,6 +122,9 @@ describe('create_counter_quote', () => {
       p_expected_updated_at: '1999-01-01T00:00:00.000Z',
     });
     expect(error?.message).toMatch(/changed while you were editing/i);
+    // PT409, not 40001: PostgREST retries a serialization failure, and a
+    // stale timestamp is stale on every retry, so 40001 hung this request.
+    expect(error?.code).toBe('PT409');
   });
 
   it('adds a later catalogue product onto an existing quote', async () => {

@@ -50,3 +50,109 @@ The dashboard's server-side environment carries the Supabase anon key only for M
 The service role key is not needed by the auth flow (the RPCs run `security definer`). The CI
 secret scan and bundle scan must stay green as later M5 sections introduce the Resend key and,
 if unavoidable, the service role key.
+
+## Review, 3 October 2026 (D108)
+
+A pass over both apps against rule 7, on the committed `dev` branch, with the running stack and
+the test suite. What was checked, what was found, what was done.
+
+### Headers
+
+Both apps send an explicit CSP (`default-src 'self'`, `frame-ancestors 'none'`, `object-src
+'none'`, `base-uri 'self'`, `form-action 'self'`, `upgrade-insecure-requests` in production),
+HSTS for a year with subdomains, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin`, a Permissions-Policy that denies camera,
+microphone and location, and the dashboard adds `X-Robots-Tag: noindex, nofollow`. `font-src` is
+`'self'` because the fonts are self hosted. `tools/backup/src/__tests__/csp.test.ts` holds both
+policies to that shape.
+
+**Accepted:** `script-src 'unsafe-inline'`. Next inlines its bootstrap, and a nonce needs every
+page rendered dynamically, which the storefront's ISR pages are not. Recorded as the follow up it
+has always been, not forgotten.
+
+### Routes and actions
+
+| Surface | Gate | Input | Limit |
+|---|---|---|---|
+| Dashboard pages and actions | Proxy (layer 1) plus `requirePath`, `requireRole` or `requireAdmin` in every action (layer 2 is RLS) | zod in every action that takes a form | Sign-in, 10 a minute per address; import dispatch, 1 a minute per user |
+| `POST /api/ops-alert` (dashboard) | `OPS_ALERT_SECRET`, constant time | zod, bounded | 60 a minute |
+| `POST /api/quote-confirmation` (dashboard) | `OPS_ALERT_SECRET`, constant time | zod: a reference shape, a name, one address, a count | 60 a minute |
+| `POST /api/revalidate` (storefront) | `REVALIDATE_SECRET`, **now constant time** | typed, **now capped at 100 tags and 100 paths** | by the secret |
+| `GET /api/img/*` (both) | none, read only, one bucket | key refused on `..`, a leading slash, **now a backslash too** | CDN cache |
+| `GET /api/health` (both) | none, anon key, one row | none | none, it is the uptime probe |
+| `submit_quote` (storefront) | public by design | zod, prices recomputed server side | 5 a minute per address (D81) |
+| `searchCatalogue`, `searchCustomers` | `requirePath('/quotes')` | filter characters stripped, **now capped at 80 and 60 characters** | by the session |
+
+### Findings fixed
+
+1. **Open redirect on sign-in.** The `next` return path was accepted when it began with `/`,
+   which `//evil.example/steal` does. `safeReturnPath` in `@beco/validation` now refuses the
+   protocol-relative and backslash shapes, control characters and anything over 512 characters.
+   Both sign-in actions use it; the test covers the exact payload.
+2. **Timing-unsafe secret compare.** `/api/revalidate` compared the bearer header with `!==`.
+   `bearerMatches` moved from the dashboard into `@beco/validation`, rewritten on Web Crypto so
+   the shared package carries no Node builtin, and both server to server routes use it.
+3. **Unbounded revalidation.** The route accepted any number of tags and paths. Capped.
+4. **Blog cover upload had no size or type guard.** A 400MB file went to sharp before anything
+   looked at it. `photoUploadProblem` (12MB, image types, empty type allowed for HEIC phones)
+   is one function shared by the product photo and blog cover actions.
+5. **Six tables had policies but no test:** `documents`, `testimonials`, `import_runs`,
+   `import_issues`, `import_files`, `import_state`. `36_documents_import_rls.test.sql` proves
+   each role's negative before its positive, the D42 allowlist included.
+6. **Anonymous `analytics_events` insert accepted any row.** Migration 60 bounds it to the
+   documented event types and a 2KB payload. `37_analytics_insert_bounds.test.sql`.
+7. **Secret scan missed the GitHub token** the dashboard now holds for the import dispatch, and
+   the newer Supabase `sb_secret_` key format. Patterns moved into a module with a test and
+   widened; `NEXT_PUBLIC_*TOKEN*` is now a leak too.
+
+### Still accepted, with reasons
+
+- **In-memory rate limiter.** Per instance, resets on deploy (D81). The durable layer is a
+  Cloudflare rate-limit rule at the edge once DNS moves; until then this is a brake, not a wall.
+- **No MFA.** Deferred per D83 and `docs/PLAN.md`. Accounts are created by one admin role, open
+  with a forced password change, and have no self-service reset.
+- **`'unsafe-inline'` styles and scripts**, above.
+- **The storefront `/api/img` route** streams from R2 without auth. It serves only derivatives the
+  storefront publishes anyway, the bucket holds nothing else, and at launch the custom image host
+  replaces it.
+
+### Verified unchanged
+
+Service role key reaches no client bundle (`check:secrets` and the bundle scan). Every public
+table has RLS on (`03_role_separation`). Audit triggers stand on users, categories, products,
+quotes, orders, documents, blog posts, announcements, clients and settings. Soft delete on
+everything with commercial meaning. No `window.confirm`, `alert` or `prompt` anywhere (lint).
+
+## Who may do what, by function (D110, 3 October 2026)
+
+Routes are the coarse gate (`lib/access.ts`). Inside a route, these are the functions that
+differ by role. Every row is enforced in the action and in Postgres, and the control is not drawn
+for a role that cannot use it.
+
+| Function | sales | product manager | beco_admin | brightex_admin |
+|---|---|---|---|---|
+| Raise, price and issue a quote; claim an unassigned one | own | no | yes | yes |
+| Mark a quote quoted, won or lost; reopen | own | no | yes | yes |
+| Reassign a quote to someone else | no | no | yes | yes |
+| Approve a price away from the catalogue | no | no | yes | yes |
+| Convert a won quote; confirm, fulfil, record payment | own | no | yes | yes |
+| **Cancel an order** | **no** | no | yes | yes |
+| Edit products, ranges, photographs | no | yes | yes | yes |
+| Sign a direct photograph upload (D116): products area | no | yes | yes | yes |
+| Sign a direct photograph upload: team photo, blog cover | no | no | team yes, blog if granted | yes |
+| **Open the Drive import, start one on staging or production** | no | **no** | **no** | yes |
+| Announcements, reports, the leaderboard | no | no | yes | yes |
+| Business identity, KRA, payment details, notifications | no | no | yes | yes |
+| **The Brightex allowlist** (D42) | no | no | **no** | yes |
+| Staff accounts: create, role, deactivate, reset | no | no | no | yes |
+| Grant blog or audit access to a Beco user | no | no | no | yes |
+| Audit log | no | no | if granted | yes |
+| Studio blog | no | no | if granted | yes |
+| Anniversary launch switch | no | no | no | yes |
+
+"own" means the quotes and orders assigned to that salesperson; the database functions check
+`assigned_to` or `salesperson_id` against `auth.uid()` and the admin bypass is `is_admin()`.
+Tested in `21_convert_quote_to_order.test.sql` (cancel), `10_quote_pricing_approval.test.sql`
+(approve), `12_quote_claim_assign.test.sql` (assign) and the action tests named in
+`docs/TEST-COVERAGE.md`.
+

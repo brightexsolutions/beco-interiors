@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useEffect } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
@@ -12,8 +13,12 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => params,
 }));
 
+const editorMounts = vi.fn();
 vi.mock('@/components/user-editor', () => ({
-  UserEditor: ({ user }: { user: StaffUser }) => <p>Viewing {user.fullName}</p>,
+  UserEditor: ({ user }: { user: StaffUser }) => {
+    useEffect(() => editorMounts(), []);
+    return <p>Viewing {user.fullName}</p>;
+  },
 }));
 vi.mock('@/components/user-create', () => ({
   UserCreate: () => <p>Creating user</p>,
@@ -44,6 +49,14 @@ beforeEach(() => {
 });
 
 describe('UserResults', () => {
+  it('keeps the open user sheet mounted across an updatedAt change, every action in it bumps that (D117)', () => {
+    editorMounts.mockClear();
+    const { rerender } = render(<UserResults users={[user()]} viewing={user()} creating={false} viewerId="brightex-1" />);
+    const bumped = user({ updatedAt: '2026-10-04T12:00:00.000Z' });
+    rerender(<UserResults users={[bumped]} viewing={bumped} creating={false} viewerId="brightex-1" />);
+    expect(editorMounts).toHaveBeenCalledTimes(1);
+  });
+
   it('gives every person an explicit View action, last column Actions', () => {
     render(
       <UserResults

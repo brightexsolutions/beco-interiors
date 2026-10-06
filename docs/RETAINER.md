@@ -185,7 +185,7 @@ through it once a month and record the result. Brightex Studio exists to make th
 
 **Keeping it alive**
 
-- [ ] Keep alive cron fired every run this month. Check cron-job.org history, do not assume
+- [ ] Keep alive fired every run this month: all three cron-job.org jobs green in its history, `/api/health` answering 200 on both hosts. Do not assume
 - [ ] Nightly backups present for every night. Check the Drive folder and the workflow artifacts
 - [ ] Uptime report reviewed. Any incident understood, not just noted
 - [ ] SSL valid on all live hostnames, with more than 30 days remaining

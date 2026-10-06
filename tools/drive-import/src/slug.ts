@@ -16,6 +16,19 @@ export const slugify = (folderName: string): string =>
     .replace(/^-+|-+$/g, '')
     .toLowerCase();
 
+/**
+ * "HT-8350 GOLD BLACK" becomes "HT-8350 Gold Black". An item named after its
+ * code keeps the code as written: a token carrying a digit, or one or two
+ * capitals on their own ("HT", "B"), is a code and not a word.
+ */
+export const titleiseItem = (name: string): string =>
+  name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (/\d/.test(w) || /^[A-Z]{1,2}$/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+    .join(' ');
+
 /** "AMBER JADE" becomes "Amber Jade". Drive folders are shouted; pages are not. */
 export const titleise = (folderName: string): string =>
   folderName

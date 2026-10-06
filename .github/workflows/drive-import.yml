@@ -1,0 +1,119 @@
+name: Catalogue import
+
+# Runs the Drive importer against staging or production, on demand. The
+# dashboard's Catalogue, Drive import screen dispatches this with the GitHub
+# API, so a product manager runs an import from a phone without a laptop,
+# a service account file or a terminal (D105). Sharp, the service account
+# and the service role key stay here, never on Vercel.
+#
+# The environments carry the secrets. If `production` has required
+# reviewers for deploys, an import to production waits for the same
+# approval; a separate environment holding only the import secrets lifts
+# that. See docs/DEPLOYMENT.md, Catalogue import.
+
+run-name: Catalogue import, ${{ inputs.mode }} to ${{ inputs.target }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'dry-run lists what would change; import writes it; force re-encodes every photograph'
+        required: true
+        default: dry-run
+        type: choice
+        options: [dry-run, import, force]
+      target:
+        description: 'Which database and image bucket'
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-import-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: ${{ inputs.target }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ vars.R2_BUCKET || 'beco-product-images' }}
+      DRIVE_ROOT_FOLDER_ID: ${{ vars.DRIVE_ROOT_FOLDER_ID }}
+      # The key path is set per step below: the `runner` context is not
+      # available in a job level env, and GitHub refused the whole file for
+      # it, recording a failed run named after this file on every push.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Beco's hardware photographs are iPhone HEIC, which Sharp cannot
+      # decode. libheif's heif-convert can, with its HEVC plugin. Without
+      # this every hinge, door lock and furniture leg is skipped, D122.
+      - name: Install the HEIC converter
+        run: sudo apt-get update -q && sudo apt-get install -y -q libheif-examples libheif-plugin-libde265
+
+      - name: Refuse to run without the Drive credential
+        env:
+          KEY_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$KEY_JSON" ]; then
+            echo "::error::GOOGLE_SERVICE_ACCOUNT_JSON is not set on the ${{ inputs.target }} environment, so this would silently run against fixtures. See docs/SETUP.md 2.1."
+            exit 1
+          fi
+          echo "GOOGLE_SERVICE_ACCOUNT_KEY_PATH=$RUNNER_TEMP/service-account.json" >> "$GITHUB_ENV"
+          printf '%s' "$KEY_JSON" > "$RUNNER_TEMP/service-account.json"
+
+      - name: Import, ${{ inputs.mode }}
+        run: |
+          case "${{ inputs.mode }}" in
+            dry-run) flag="--dry-run" ;;
+            force)   flag="--force" ;;
+            *)       flag="" ;;
+          esac
+          pnpm drive:import $flag 2>&1 | tee "${{ runner.temp }}/import-report.txt"
+          test "${PIPESTATUS[0]}" -eq 0
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-report-${{ inputs.target }}-${{ github.run_number }}
+          path: ${{ runner.temp }}/import-report.txt
+          retention-days: 30
+
+      # The storefront caches catalogue pages for an hour. An import that
+      # wrote anything busts the home page and the shop, the two pages that
+      # list the range, so a new product is live on the next request.
+      - name: Refresh the storefront
+        if: inputs.mode != 'dry-run' && success()
+        env:
+          STOREFRONT_URL: ${{ vars.STOREFRONT_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          if [ -z "$STOREFRONT_URL" ] || [ -z "$REVALIDATE_SECRET" ]; then
+            echo "::warning::STOREFRONT_URL or REVALIDATE_SECRET not set, the storefront will refresh on its own within the hour."
+            exit 0
+          fi
+          curl -sS -o /dev/null -w 'revalidate: HTTP %{http_code}\n' --max-time 30 \
+            -X POST "$STOREFRONT_URL/api/revalidate" \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" -H 'content-type: application/json' \
+            -d '{"paths":["/","/shop"]}'
+
+      - name: Remove the credential
+        if: always()
+        run: rm -f "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"

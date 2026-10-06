@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Button, Dialog, Input, Select, buttonClasses } from '@beco/ui';
+import { Busy, Button, Dialog, Input, Select, buttonClasses } from '@beco/ui';
 import { PdfPreview } from '@/components/pdf-preview';
 import { nairobiMonthStart, nairobiYmd, periodDisplayLabel } from '@/lib/reports';
 
@@ -39,7 +39,7 @@ export function ReportFilters({ people = [] }: { people?: readonly ReportPersonO
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const period = searchParams.get('period') ?? 'this_month';
   const from = searchParams.get('from') ?? '';
   const to = searchParams.get('to') ?? '';
@@ -84,9 +84,10 @@ export function ReportFilters({ people = [] }: { people?: readonly ReportPersonO
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
+      <Busy pending={isPending} className="mr-auto" />
       <label className="flex items-center gap-3">
         <span className="sr-only font-ui text-sm font-semibold text-charcoal sm:not-sr-only">Period</span>
-        <span className="block w-28 shrink-0 sm:w-36">
+        <span className="block w-36 shrink-0 sm:w-40">
           <Select
             value={period === 'custom' || period === 'last_month' ? period : 'this_month'}
             onChange={(event) => writeParams({ period: event.target.value })}

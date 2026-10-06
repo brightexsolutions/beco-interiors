@@ -103,7 +103,7 @@ Dollar figures at roughly KES 130, indicative.
 | Product images and CDN | Cloudflare R2 | Free to 10GB, egress free | Beco account, free |
 | DNS, WAF, rate limiting | Cloudflare | Free | Beco account, free |
 | Transactional email | Resend | Free to 3,000 a month | Beco, when it upgrades |
-| Keep alive cron | cron-job.org | Free | n/a |
+| Keep alive cron, three jobs | cron-job.org | Free | n/a |
 | Uptime monitoring | UptimeRobot | Free | n/a |
 | Code hosting and CI | GitHub | Free | Brightex |
 | Business mailboxes | Zoho | Already paying, unchanged | Beco |

@@ -1,5 +1,6 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
+import { bearerMatches } from '@beco/validation';
 
 /**
  * Cross-app cache bust. The dashboard cannot call `revalidateTag` inside
@@ -10,10 +11,10 @@ import { NextResponse } from 'next/server';
  * pages (`revalidate = 3600`) so a price change is live on the next request
  * rather than in up to an hour.
  */
+const MAX_ENTRIES = 100;
+
 export async function POST(request: Request) {
-  const secret = process.env.REVALIDATE_SECRET;
-  const header = request.headers.get('authorization');
-  if (!secret || header !== `Bearer ${secret}`) {
+  if (!(await bearerMatches(request.headers.get('authorization'), process.env.REVALIDATE_SECRET))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -24,9 +25,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 });
   }
 
-  const tags = Array.isArray(body.tags) ? body.tags.filter((tag): tag is string => typeof tag === 'string') : [];
+  // Bounded, so a leaked secret can at most warm a page of cache entries,
+  // not hold the server in a revalidation loop.
+  const tags = Array.isArray(body.tags)
+    ? body.tags.filter((tag): tag is string => typeof tag === 'string' && tag.length <= 200).slice(0, MAX_ENTRIES)
+    : [];
   const paths = Array.isArray(body.paths)
-    ? body.paths.filter((path): path is string => typeof path === 'string' && path.startsWith('/'))
+    ? body.paths
+        .filter((path): path is string => typeof path === 'string' && path.startsWith('/') && path.length <= 500)
+        .slice(0, MAX_ENTRIES)
     : [];
 
   for (const tag of tags) revalidateTag(tag, 'max');

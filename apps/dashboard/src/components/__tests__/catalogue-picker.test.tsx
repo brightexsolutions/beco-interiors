@@ -14,6 +14,7 @@ const amber: CatalogueHit = {
   unit: 'per slab',
   priceDisplayMode: 'fixed',
   categoryName: '12mm Sintered Stones',
+  thumb: 'http://img.test/products/amber-jade/hero-400.webp',
 };
 
 const handle: CatalogueHit = {
@@ -24,6 +25,7 @@ const handle: CatalogueHit = {
   unit: 'each',
   priceDisplayMode: 'fixed',
   categoryName: 'Handles',
+  thumb: null,
 };
 
 const ranges: CatalogueRange[] = [
@@ -66,8 +68,10 @@ describe('CataloguePicker', () => {
     expect(within(dialog).getByRole('checkbox', { name: /537 160 Black/i })).toBeInTheDocument();
     expect(within(dialog).getByRole('heading', { name: '12mm Sintered Stones' })).toBeInTheDocument();
     expect(within(dialog).getByRole('heading', { name: 'Handles' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('option', { name: 'Handles' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('option', { name: 'Lighting' })).toBeInTheDocument();
+    const ranges = within(dialog).getByRole('group', { name: 'Range' });
+    expect(within(ranges).getByRole('button', { name: /Handles/ })).toBeInTheDocument();
+    expect(within(ranges).getByRole('button', { name: /Lighting/ })).toBeInTheDocument();
+    expect(within(ranges).getByRole('button', { name: 'All ranges' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('narrows to Handles when that range is chosen', async () => {
@@ -76,12 +80,48 @@ describe('CataloguePicker', () => {
     await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
     const dialog = await screen.findByRole('dialog');
     await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
-    await user.selectOptions(within(dialog).getByRole('combobox', { name: /range/i }), 'handles');
+    const chip = within(dialog).getByRole('button', { name: /Handles/ });
+    await user.click(chip);
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() => expect(searchCatalogue).toHaveBeenCalledWith('', 'handles'));
     expect(await within(dialog).findByRole('checkbox', { name: /537 160 Black/i })).toBeInTheDocument();
     await waitFor(() => {
       expect(within(dialog).queryByRole('checkbox', { name: /Amber Jade/i })).toBeNull();
     });
+  });
+
+  it('lists stocked ranges before empty ones, with their counts', async () => {
+    const user = userEvent.setup();
+    render(<CataloguePicker onAdd={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
+    const names = within(within(dialog).getByRole('group', { name: 'Range' }))
+      .getAllByRole('button')
+      .map((b) => b.textContent);
+    expect(names).toEqual(['All ranges', '12mm Sintered Stones24', 'Handles12', 'Lighting0']);
+  });
+
+  it('tapping the active range chip again goes back to every range', async () => {
+    const user = userEvent.setup();
+    render(<CataloguePicker onAdd={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
+    const chip = within(dialog).getByRole('button', { name: /Handles/ });
+    await user.click(chip);
+    await user.click(chip);
+    await waitFor(() => expect(searchCatalogue).toHaveBeenLastCalledWith('', null));
+    expect(within(dialog).getByRole('button', { name: 'All ranges' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('shows the product photograph where there is one, a plain tile where there is not', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<CataloguePicker onAdd={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    await screen.findByRole('checkbox', { name: /Amber Jade/i });
+    expect(document.querySelector('img[src="http://img.test/products/amber-jade/hero-400.webp"]')).not.toBeNull();
+    expect(container.ownerDocument.querySelectorAll('[role="dialog"] img')).toHaveLength(1);
   });
 
   it('adds every checked product in one confirm, not one tap each', async () => {

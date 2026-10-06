@@ -72,6 +72,43 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('');
   }
 
+  if (plan.itemFolders.length) {
+    L.push('FOLDERS WHERE EACH PHOTOGRAPH IS ITS OWN ITEM');
+    L.push('--------------------------------------------');
+    L.push('  Every file names an item, so each became a product under that folder as a');
+    L.push('  sub range. Prices are entered in the dashboard.');
+    L.push('');
+    for (const { folder, items, files } of plan.itemFolders) {
+      L.push(`  ${String(items).padStart(4)} item(s) from ${files} file(s)  ${folder}`);
+    }
+    L.push('');
+  }
+
+  if (plan.finishFolders.length) {
+    L.push('RANGES SPLIT ONE PRODUCT PER PHOTOGRAPH, SORTED BY FINISH');
+    L.push('--------------------------------------------------------');
+    L.push('  Phone named photographs, so each became its own product, filed by the finish');
+    L.push('  read from the photograph as it imports. Codes, names and prices are set in the');
+    L.push('  dashboard; the import never undoes those edits.');
+    L.push('');
+    for (const { folder, count } of plan.finishFolders) {
+      L.push(`  ${String(count).padStart(4)} product(s)  ${folder}`);
+    }
+    L.push('');
+  }
+
+  if (plan.photoFolders.length) {
+    L.push('RANGES SPLIT ONE PRODUCT PER PHOTOGRAPH');
+    L.push('---------------------------------------');
+    L.push('  Phone named photographs, so each became its own product in the range itself.');
+    L.push('  Rename each photograph after what it shows, or name it in the dashboard.');
+    L.push('');
+    for (const { folder, count } of plan.photoFolders) {
+      L.push(`  ${String(count).padStart(4)} product(s)  ${folder}`);
+    }
+    L.push('');
+  }
+
   if (plan.galleryFiles) {
     L.push(`  ${plan.galleryFiles} gallery and brand file(s) skipped, which is correct.`);
     L.push('  Site photos, site videos and brand identity are not products.');

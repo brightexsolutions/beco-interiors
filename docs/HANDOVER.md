@@ -104,7 +104,7 @@ attempted.
 | 1 | Beco creates a Vercel account, or nominates a successor agency's | Beco | Account exists, billing set |
 | 2 | Repository transferred or cloned to a Beco owned account | Brightex, or Beco alone using the read only copy | `git clone` from the new location succeeds |
 | 3 | Both Vercel projects created against the new repository | Beco or successor | Both build successfully |
-| 4 | Environment variables recreated from `docs/ENVIRONMENT.md` | Beco or successor | Each surface boots and reaches the database |
+| 4 | Environment variables recreated from `docs/ENVIRONMENT.md`. **`OPS_ALERT_EMAIL` set to the new owner's address**: unset, failure alerts, which can carry a lost customer's name and phone, keep going to Brightex | Beco or successor | Each surface boots and reaches the database; a test alert arrives at the new address |
 | 5 | DNS records repointed on Beco's Cloudflare zone | Beco | All hostnames resolve to the new deployments over HTTPS |
 | 6 | Certificate issuance confirmed, per the ordering in `docs/RUNBOOK.md` | Beco or successor | No redirect loop, padlock present on all hostnames |
 | 7 | Brightex memberships removed: Cloudflare, Supabase, Resend, cron-job.org, UptimeRobot | Beco | Member list shows no Brightex account |
@@ -244,10 +244,13 @@ at the end, which is why it is worth reading rather than skimming.
 
 | Document | For whom |
 |---|---|
-| `docs/ARCHITECTURE.md` | The incoming developer. Fifteen flows, drawn |
+| `docs/SYSTEM.md` | The incoming developer, first. How the system was built, the stack, the layout, how to run, ship and where it stands |
+| `docs/SKETCHES.md` | The incoming developer. The architecture and the user flows in Mermaid, rendered by GitHub |
+| `docs/ARCHITECTURE.md` | The incoming developer. Seventeen flows, drawn in ASCII, a level deeper than the sketches |
 | `docs/SCHEMA.md` | Tables, relationships, RLS intent per table |
 | `docs/RUNBOOK.md` | Deploy, roll back, restore, DNS and certificate ordering, incidents |
 | `docs/ENVIRONMENT.md` | Every variable by name and where its value lives |
+| `docs/SEO-MIGRATION.md` | Beco. Verify the domain in Search Console, submit the sitemap, feed the old WordPress addresses into the redirect map |
 | `docs/OWNERSHIP.md` | The account matrix and monthly costs |
 | `docs/SECURITY.md` | The RLS role matrix and the pre launch test list |
 | `docs/DECISIONS.md` | Why things are the way they are, and what would reverse each |

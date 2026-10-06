@@ -1,4 +1,5 @@
 import { renderQuotePdf, type QuotePdfInput } from '@beco/documents';
+import { reportOpsFailure } from './ops-alert';
 import type { QuoteDetail, QuoteSettings } from './quote-detail';
 
 export const toPdfInput = (quote: QuoteDetail, settings: QuoteSettings): QuotePdfInput => ({
@@ -11,6 +12,7 @@ export const toPdfInput = (quote: QuoteDetail, settings: QuoteSettings): QuotePd
   validUntil: quote.validUntil,
   lines: quote.lines.map((line) => ({
     description: line.description,
+    code: line.code,
     quantity: line.quantity,
     unitPrice: line.unitPrice,
     lineTotal: line.lineTotal,
@@ -24,6 +26,7 @@ export const toPdfInput = (quote: QuoteDetail, settings: QuoteSettings): QuotePd
   paymentTerms: settings.paymentTerms,
   footer: settings.footer,
   phone: settings.phone,
+  business: settings.business,
   issuedAt: quote.createdAt,
 });
 
@@ -54,6 +57,12 @@ export async function renderQuotePdfBytes(
     return { ok: true, bytes, isPriced: quote.totals.isPriced };
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'unknown error';
+    await reportOpsFailure({
+      area: 'pdf.render',
+      summary: `Quote PDF for ${quote.reference} did not render`,
+      detail,
+      context: { quote: quote.reference, lines: quote.lines.length },
+    });
     return { ok: false, error: `Could not render the PDF: ${detail}` };
   }
 }
@@ -89,7 +98,15 @@ export async function persistQuotePdf(
     contentType: 'application/pdf',
     upsert: false,
   });
-  if (uploadError) return { ok: false, error: `Could not store the PDF: ${uploadError.message}` };
+  if (uploadError) {
+    await reportOpsFailure({
+      area: 'pdf.store',
+      summary: `Quote PDF for ${quote.reference} could not be stored`,
+      detail: uploadError.message,
+      context: { quote: quote.reference, bucket: 'documents' },
+    });
+    return { ok: false, error: `Could not store the PDF: ${uploadError.message}` };
+  }
 
   const { error: rowError } = await supabase.from('documents').insert({
     type: 'quote',
@@ -98,7 +115,15 @@ export async function persistQuotePdf(
     storage_path: path,
     generated_by: userId,
   });
-  if (rowError) return { ok: false, error: rowError.message ?? 'Could not record the PDF.' };
+  if (rowError) {
+    await reportOpsFailure({
+      area: 'pdf.record',
+      summary: `Quote PDF for ${quote.reference} was stored but its documents row was not written`,
+      detail: rowError.message,
+      context: { quote: quote.reference, path },
+    });
+    return { ok: false, error: rowError.message ?? 'Could not record the PDF.' };
+  }
 
   return { ok: true, bytes: rendered.bytes, path, isPriced: rendered.isPriced };
 }

@@ -99,11 +99,27 @@ const encodeWithinBudget = async (
   return { ...last!, withinBudget: false };
 };
 
-export const processImage = async (source: Buffer): Promise<ProcessedImage> => {
-  const image = sharp(source, SHARP_OPTS);
-  const meta = await image.metadata();
+/**
+ * Dimensions as the photograph is actually seen. EXIF orientations 5 to 8
+ * store the pixels turned a quarter, so the stored width is the displayed
+ * height. Every derivative is `.rotate()`d upright, so recording the stored
+ * figures would give a portrait phone shot landscape dimensions and a
+ * layout that reserves the wrong box for it.
+ */
+export const orientedSize = (meta: {
+  width?: number | undefined;
+  height?: number | undefined;
+  orientation?: number | undefined;
+}): { width: number; height: number } => {
   const width = meta.width ?? 0;
   const height = meta.height ?? 0;
+  const quarterTurn = meta.orientation !== undefined && meta.orientation >= 5 && meta.orientation <= 8;
+  return quarterTurn ? { width: height, height: width } : { width, height };
+};
+
+export const processImage = async (source: Buffer): Promise<ProcessedImage> => {
+  const image = sharp(source, SHARP_OPTS);
+  const { width, height } = orientedSize(await image.metadata());
 
   const derivatives: Derivative[] = [];
   const warnings: string[] = [];

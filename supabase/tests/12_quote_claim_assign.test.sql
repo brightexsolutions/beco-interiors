@@ -79,7 +79,7 @@ select throws_ok(
 
 select throws_ok(
   $$select claim_quote('f2000000-0000-4000-8000-000000000012'::uuid, '1999-01-01 00:00:00+00'::timestamptz)$$,
-  '40001',
+  'PT409',
   'This quote changed while you were editing',
   'a stale lock token is refused rather than overwriting'
 );

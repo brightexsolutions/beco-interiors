@@ -1,9 +1,11 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Button, Dialog, Field, Input, buttonClasses, Icon, useActionToast } from '@beco/ui';
-import { sendOrderReceipt, type OrderActionState } from '@/app/(app)/orders/actions';
+import { Button, Dialog, Field, Input, buttonClasses, Icon, useActionToast, useKeepValuesSubmit } from '@beco/ui';
+import { markReceiptSharedWhatsApp, sendOrderReceipt, type OrderActionState } from '@/app/(app)/orders/actions';
 import { PdfPreview } from '@/components/pdf-preview';
+import { WhatsAppShare } from '@/components/whatsapp-share';
+import { whatsAppChatLink } from '@/lib/whatsapp';
 
 const INITIAL: OrderActionState = {};
 
@@ -12,6 +14,7 @@ export function OrderDocumentPanel({
   updatedAt,
   reference,
   customerEmail,
+  customerPhone,
   canMutate,
   paid,
   layout = 'compact',
@@ -20,12 +23,14 @@ export function OrderDocumentPanel({
   updatedAt: string;
   reference: string;
   customerEmail: string | null;
+  customerPhone: string;
   canMutate: boolean;
   paid: boolean;
   layout?: 'compact' | 'block';
 }) {
   const [open, setOpen] = useState(false);
   const [mailState, send, sending] = useActionState(sendOrderReceipt, INITIAL);
+  const onSendSubmit = useKeepValuesSubmit(send);
   useActionToast(mailState);
   const previewHref = `/orders/${encodeURIComponent(reference)}/pdf`;
   const downloadHref = `${previewHref}?download=1`;
@@ -55,9 +60,9 @@ export function OrderDocumentPanel({
         </div>
 
         <div className="shrink-0 border-t border-neutral-200 bg-high-vis-white px-5 py-4 sm:px-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
             {canMutate ? (
-              <form action={send} className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <form onSubmit={onSendSubmit} className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                 <input type="hidden" name="orderId" value={orderId} />
                 <input type="hidden" name="updatedAt" value={updatedAt} />
                 <Field label="Email to" htmlFor="order-email">
@@ -71,16 +76,24 @@ export function OrderDocumentPanel({
                     autoComplete="email"
                   />
                 </Field>
-                <Button type="submit" variant="secondary" disabled={sending}>
+                <Button type="submit" variant="secondary" pending={sending}>
                   {sending ? 'Sending' : 'Email'}
                 </Button>
               </form>
             ) : null}
-            <a href={downloadHref} className={buttonClasses({ variant: 'outline' })}>
-              Download
-            </a>
+            <div className="grid grid-cols-2 gap-2 xl:flex">
+              <WhatsAppShare
+                downloadHref={downloadHref}
+                fallbackFilename={`${reference}.pdf`}
+                chatHref={whatsAppChatLink(customerPhone, `Beco receipt ${reference}`)}
+                message={`Beco receipt ${reference}`}
+                onShared={(path) => markReceiptSharedWhatsApp(reference, path)}
+              />
+              <a href={downloadHref} className={buttonClasses({ variant: 'outline' })}>
+                Download
+              </a>
+            </div>
           </div>
-          <p className="mt-3 font-ui text-sm text-neutral-500">Download the file to send it on WhatsApp.</p>
         </div>
       </Dialog>
     </>

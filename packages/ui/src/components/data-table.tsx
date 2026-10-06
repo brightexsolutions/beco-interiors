@@ -7,7 +7,8 @@ import { cn } from '../lib/cn';
  * The desktop table. Per D38 the mobile treatment is per screen, built at
  * the call site (full cards for quotes, orders and products, a reduced-column
  * table plus a detail sheet for users), so this component is
- * wrapped in a `hidden lg:block` there and never asked to be both.
+ * wrapped in a `hidden xl:block` there and never asked to be both (D113:
+ * with the sidebar in place the content pane is tablet width until 1280px).
  *
  * Sorting lives here, because every table needs it and a column is either
  * sortable or it is not. Search and filtering do not: they change the
@@ -27,6 +28,12 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   /** Raw value used to sort. Falls back to `render`'s string form when absent. */
   sortValue?: (row: T) => string | number;
+  /** Shown only from this width up. For the column a reader can live without
+   *  on a laptop, so the table fits instead of scrolling sideways (D113). */
+  showFrom?: '2xl' | undefined;
+  /** Keep the header for assistive tech but do not print it: an icon-only
+   *  action column needs no visible word above it. */
+  headerHidden?: boolean | undefined;
   render: (row: T) => React.ReactNode;
 }
 
@@ -37,6 +44,12 @@ export interface DataTableProps<T> {
   rows: T[];
   getRowKey: (row: T) => string;
   emptyState?: React.ReactNode;
+  /**
+   * The rows on screen are about to be replaced: a filter, sort or page
+   * change is in flight. The body dims and the table says so with aria-busy,
+   * so a slow network reads as "coming" rather than "did nothing". D117.
+   */
+  busy?: boolean | undefined;
   className?: string | undefined;
 }
 
@@ -48,6 +61,7 @@ export function DataTable<T>({
   rows,
   getRowKey,
   emptyState,
+  busy = false,
   className,
 }: DataTableProps<T>) {
   const [sort, setSort] = useState<SortState>(null);
@@ -79,13 +93,19 @@ export function DataTable<T>({
     return <>{emptyState}</>;
   }
 
+  // Header cells read as column names, not as a row of data: small caps in
+  // the muted ink, a sortable one a real button with the sort state in its
+  // icon and in aria-sort. The header stays put while a long table scrolls
+  // inside its panel. Rows take a light ground on hover so the eye can
+  // follow one across eight columns, the first cell carries the row's name,
+  // and numeric columns sit flush right in tabular figures.
   return (
-    <div className={cn('overflow-x-auto', className)}>
+    <div className={cn('overflow-x-auto', className)} aria-busy={busy || undefined}>
       <table className="w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
-        <thead>
+        <thead className="sticky top-0 z-[1] bg-high-vis-white">
           <tr className="border-b border-neutral-200">
-            {columns.map((col) => (
+            {columns.map((col, index) => (
               <th
                 key={col.key}
                 scope="col"
@@ -93,8 +113,11 @@ export function DataTable<T>({
                   sort?.key === col.key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined
                 }
                 className={cn(
-                  'whitespace-nowrap py-3 pr-6 font-ui text-sm font-semibold text-neutral-500',
+                  'whitespace-nowrap py-2.5 pr-5 font-ui text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500',
+                  index === 0 && 'pl-4 sm:pl-5',
+                  index === columns.length - 1 && 'pr-4 sm:pr-5',
                   col.align === 'right' && 'text-right',
+                  col.showFrom === '2xl' && 'hidden 2xl:table-cell',
                 )}
               >
                 {col.sortable ? (
@@ -102,13 +125,16 @@ export function DataTable<T>({
                     type="button"
                     onClick={() => toggleSort(col.key)}
                     className={cn(
-                      'inline-flex items-center gap-1 text-neutral-500 hover:text-charcoal',
+                      'inline-flex min-h-9 items-center gap-1 uppercase tracking-[0.1em] text-neutral-500 hover:text-charcoal',
+                      sort?.key === col.key && 'text-charcoal',
                       col.align === 'right' && 'flex-row-reverse',
                     )}
                   >
                     {col.header}
                     <SortIcon direction={sort?.key === col.key ? sort.direction : null} />
                   </button>
+                ) : col.headerHidden ? (
+                  <span className="sr-only">{col.header}</span>
                 ) : (
                   col.header
                 )}
@@ -116,15 +142,18 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className={cn('transition-opacity duration-200', busy && 'opacity-50')}>
           {sorted.map((row) => (
-            <tr key={getRowKey(row)} className="border-b border-neutral-100 last:border-b-0">
-              {columns.map((col) => (
+            <tr key={getRowKey(row)} className="border-b border-neutral-100 transition-colors last:border-b-0 hover:bg-neutral-50">
+              {columns.map((col, index) => (
                 <td
                   key={col.key}
                   className={cn(
-                    'py-3 pr-6 font-ui text-sm text-charcoal',
-                    col.align === 'right' && 'text-right',
+                    'py-3 pr-5 font-ui text-sm text-charcoal',
+                    index === 0 && 'pl-4 sm:pl-5',
+                    index === columns.length - 1 && 'pr-4 sm:pr-5',
+                    col.align === 'right' && 'text-right tabular-nums',
+                    col.showFrom === '2xl' && 'hidden 2xl:table-cell',
                   )}
                 >
                   {col.render(row)}

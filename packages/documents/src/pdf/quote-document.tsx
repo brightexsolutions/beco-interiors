@@ -2,7 +2,7 @@ import { Document, Image, Page, Text, View, StyleSheet } from '@react-pdf/render
 import { quoteTotals } from '@beco/validation';
 import { logoPath } from './fonts';
 import type { QuotePdfInput } from './types';
-import { quotePaymentBlocks } from './types';
+import { lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks } from './types';
 
 /**
  * One template for a counter quote and a web quote. Line prices come from
@@ -59,6 +59,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   body: { fontSize: 10, lineHeight: 1.5 },
+  /** The product code under a line's description, D124. */
+  code: { fontSize: 9, color: MUTED, marginTop: 1 },
   tableHeader: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -91,6 +93,19 @@ const styles = StyleSheet.create({
   grandLabel: { fontWeight: 600, fontSize: 11 },
   poa: { marginTop: 16, fontFamily: 'Cormorant', fontSize: 14, textAlign: 'right' },
   terms: { marginTop: 28, paddingTop: 12, borderTopWidth: 1, borderTopColor: RULE },
+  tax: { color: MUTED, fontSize: 9 },
+  payBox: {
+    marginTop: 4,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: RULE,
+    borderLeftWidth: 3,
+    borderLeftColor: CHARCOAL,
+    borderRadius: PDF_CARD_RADIUS,
+    backgroundColor: '#f7f8f8',
+  },
+  payGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
+  payCell: { width: '50%', paddingRight: 12, marginBottom: 8 },
   footer: {
     position: 'absolute',
     left: 40,
@@ -120,11 +135,13 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
   const paid = quote.paidAt ? nairobiDay(quote.paidAt) : null;
   const vatPercent = Math.round(quote.vatRate * 100);
   const isReceipt = quote.kind === 'receipt';
+  const from = quoteFromLines(quote);
+  const payments = isReceipt ? [] : quotePaymentBlocks(quote);
 
   return (
     <Document
       title={`${quote.reference} ${isReceipt ? 'Receipt' : 'Beco Interiors'}`}
-      author="Beco Interiors Limited"
+      author={from.name}
     >
       <Page size="A4" style={styles.page} wrap>
         <View style={styles.header} fixed>
@@ -155,10 +172,17 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>From</Text>
-            <Text style={styles.body}>Beco Interiors Limited</Text>
-            <Text style={styles.body}>Urban Square, Shop 8 and 9</Text>
-            <Text style={styles.body}>Enterprise Road, Industrial Area, Nairobi</Text>
-            <Text style={styles.body}>{quote.phone}</Text>
+            <Text style={[styles.body, { fontWeight: 600 }]}>{from.name}</Text>
+            {from.lines.map((line) => (
+              <Text key={line} style={styles.body}>
+                {line}
+              </Text>
+            ))}
+            {from.tax.map((line) => (
+              <Text key={line} style={[styles.body, styles.tax]}>
+                {line}
+              </Text>
+            ))}
           </View>
         </View>
 
@@ -178,7 +202,10 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
 
         {quote.lines.map((line, index) => (
           <View key={`${line.description}-${index}`} style={styles.row} wrap={false}>
-            <Text style={[styles.body, styles.desc]}>{line.description}</Text>
+            <View style={styles.desc}>
+              <Text style={styles.body}>{line.description}</Text>
+              {lineCodeLabel(line.code) ? <Text style={styles.code}>{lineCodeLabel(line.code)}</Text> : null}
+            </View>
             <Text style={[styles.body, styles.qty]}>{line.quantity}</Text>
             <Text style={[styles.body, styles.unit]}>
               {line.unitPrice > 0 ? kes(line.unitPrice) : 'POA'}
@@ -221,20 +248,26 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
               <Text style={styles.body}>{quote.paymentTerms}</Text>
             </View>
           ) : null}
-          {isReceipt ? null : (
-            <>
-              {quotePaymentBlocks(quote).map((block) => (
-                <View key={block.label} style={{ marginBottom: 8 }}>
-                  <Text style={styles.label}>{block.label}</Text>
-                  {block.lines.map((line) => (
-                    <Text key={line} style={styles.body}>
-                      {line}
-                    </Text>
-                  ))}
-                </View>
-              ))}
-            </>
-          )}
+          {payments.length > 0 ? (
+            <View style={styles.payBox}>
+              <Text style={[styles.label, { color: CHARCOAL }]}>How to pay</Text>
+              <View style={styles.payGrid}>
+                {payments.map((block) => (
+                  <View key={block.label} style={styles.payCell}>
+                    <Text style={styles.label}>{block.label}</Text>
+                    {block.lines.map((line) => (
+                      <Text key={line} style={styles.body}>
+                        {line}
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </View>
+              <Text style={[styles.body, { color: MUTED, marginTop: 4 }]}>
+                Use {quote.reference} as the payment reference.
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.footer} fixed>

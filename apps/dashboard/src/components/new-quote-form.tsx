@@ -1,12 +1,25 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { Button, EmptyState, Field, Input, Notice, Panel, QuantityStepper, Select, useActionToast } from '@beco/ui';
+import {
+  Button,
+  EmptyState,
+  Field,
+  Input,
+  Notice,
+  Panel,
+  QuantityStepper,
+  Select,
+  cn,
+  useVisualViewport,
+} from '@beco/ui';
 import { roundMoney } from '@beco/validation';
 import { createCounterQuote, type QuoteActionState } from '@/app/(app)/quotes/actions';
 import { CataloguePicker, catalogueLineDraft } from '@/components/catalogue-picker';
+import { CustomerFinder } from '@/components/customer-finder';
 import { PageHeading } from '@/components/page-heading';
 import type { CatalogueHit } from '@/lib/catalogue';
+import type { CustomerMatch } from '@/lib/customer-search';
 
 const INITIAL: QuoteActionState = {};
 
@@ -37,6 +50,19 @@ export function NewQuoteForm() {
   const addRef = useRef<HTMLButtonElement>(null);
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [state, save, saving] = useActionState(createCounterQuote, INITIAL);
+  const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
+  const [returning, setReturning] = useState<CustomerMatch | null>(null);
+  const viewport = useVisualViewport();
+  const keyboardOpen = viewport?.keyboardOpen ?? false;
+
+  const pickCustomer = (match: CustomerMatch) => {
+    setCustomer({ name: match.name, phone: match.phone, email: match.email ?? '' });
+    setReturning(match);
+  };
+  const clearCustomer = () => {
+    setCustomer({ name: '', phone: '', email: '' });
+    setReturning(null);
+  };
 
   useEffect(() => {
     addRef.current?.focus();
@@ -91,7 +117,7 @@ export function NewQuoteForm() {
   const canSave = lines.length > 0 && !saving;
 
   const saveButton = (className?: string) => (
-    <Button type="submit" disabled={!canSave} className={className}>
+    <Button type="submit" disabled={!canSave} pending={saving} className={className}>
       {saving ? 'Saving' : 'Save quote'}
     </Button>
   );
@@ -118,7 +144,7 @@ export function NewQuoteForm() {
         actions={<div className="hidden sm:block">{saveButton()}</div>}
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <Panel
           title={
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
@@ -135,7 +161,7 @@ export function NewQuoteForm() {
           }
         >
           {lines.length === 0 ? (
-            <div className="min-h-72">
+            <div className="min-h-40 sm:min-h-72">
               <EmptyState
                 fill
                 title="No items yet"
@@ -181,17 +207,56 @@ export function NewQuoteForm() {
               Customer
             </h2>
           }
-          className="lg:sticky lg:top-4"
+          className="xl:sticky xl:top-4"
         >
           <div className="grid gap-4 p-5">
+            <CustomerFinder onPick={pickCustomer} />
+            {returning ? (
+              <div className="flex items-center justify-between gap-3 border-l-4 border-charcoal bg-neutral-50 px-3 py-2">
+                <p className="min-w-0 font-ui text-sm text-neutral-700">
+                  Filled from {returning.quoteCount === 1 ? 'an earlier quote' : `${returning.quoteCount} earlier quotes`}.
+                </p>
+                <Button type="button" variant="ghost" className="h-11 shrink-0 px-2 py-0" onClick={clearCustomer}>
+                  Clear
+                </Button>
+              </div>
+            ) : null}
             <Field label="Name" htmlFor="customerName">
-              <Input id="customerName" name="customerName" required autoComplete="name" />
+              <Input
+                id="customerName"
+                name="customerName"
+                required
+                autoComplete="name"
+                autoCapitalize="words"
+                enterKeyHint="next"
+                value={customer.name}
+                onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))}
+              />
             </Field>
-            <Field label="Phone" htmlFor="customerPhone">
-              <Input id="customerPhone" name="customerPhone" required inputMode="tel" autoComplete="tel" />
+            <Field label="Phone" htmlFor="customerPhone" hint="07.. or +254">
+              <Input
+                id="customerPhone"
+                name="customerPhone"
+                type="tel"
+                required
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
+                value={customer.phone}
+                onChange={(e) => setCustomer((c) => ({ ...c, phone: e.target.value }))}
+              />
             </Field>
             <Field label="Email" htmlFor="customerEmail" hint="Optional">
-              <Input id="customerEmail" name="customerEmail" type="email" autoComplete="email" />
+              <Input
+                id="customerEmail"
+                name="customerEmail"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                enterKeyHint="done"
+                value={customer.email}
+                onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))}
+              />
             </Field>
             <Field label="Source" htmlFor="source">
               <Select id="source" name="source" defaultValue="walk_in">
@@ -211,15 +276,34 @@ export function NewQuoteForm() {
             <p className="font-ui text-sm text-neutral-500">Prices include VAT.</p>
 
             {state.error ? <Notice tone="alert">{state.error}</Notice> : null}
-
-            <div className="sm:hidden">
-              {saveButton('w-full')}
-              {!canSave && !saving ? (
-                <p className="mt-2 font-ui text-sm text-neutral-500">Add an item first.</p>
-              ) : null}
-            </div>
           </div>
         </Panel>
+      </div>
+
+      {/* Phone action bar: the total and Save stay under the thumb however
+          long the list grows. It steps aside while the keyboard is up, so
+          it never sits on top of the field being typed into. */}
+      <div
+        data-testid="quote-action-bar"
+        className={cn(
+          'sticky bottom-[var(--dock,0px)] z-20 -mx-6 mt-6 border-t border-neutral-200 bg-high-vis-white px-6 py-3 shadow-dock sm:hidden',
+          keyboardOpen ? 'hidden' : null,
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="font-ui text-sm text-neutral-500">
+              {lines.length === 0 ? 'No items yet' : `${lines.length} item${lines.length === 1 ? '' : 's'}`}
+            </p>
+            <p className="font-ui text-lg font-semibold tabular-nums text-charcoal">
+              {lines.length === 0 ? '-' : priced ? money(gross) : 'POA'}
+            </p>
+          </div>
+          {saveButton('shrink-0 px-6')}
+        </div>
+        {!canSave && !saving ? (
+          <p className="mt-1 font-ui text-sm text-neutral-500">Add an item first.</p>
+        ) : null}
       </div>
     </form>
   );

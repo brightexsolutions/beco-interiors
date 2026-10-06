@@ -1,27 +1,16 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
-import { Input, Select } from '@beco/ui';
+import { useEffect, useState } from 'react';
+import { Busy, Input, Select } from '@beco/ui';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import { STAFF_ROLE_LABEL, STAFF_ROLES } from '@/lib/users';
 
 export function UserFilters() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const { searchParams, setParam, isPending } = useQueryNavigation();
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
 
   const role = searchParams.get('role') ?? '';
   const status = searchParams.get('status') ?? '';
-
-  const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  };
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -32,8 +21,8 @@ export function UserFilters() {
   }, [search]);
 
   return (
-    <div className="grid min-w-0 grid-cols-2 gap-2 overflow-x-hidden lg:flex lg:items-end">
-      <label className="col-span-full min-w-0 lg:min-w-0 lg:flex-1">
+    <div className="grid min-w-0 grid-cols-2 gap-2 overflow-x-hidden xl:flex xl:items-end">
+      <label className="col-span-full min-w-0 xl:min-w-0 xl:flex-1">
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -42,7 +31,7 @@ export function UserFilters() {
           className="min-w-0"
         />
       </label>
-      <label className="min-w-0 lg:w-48 lg:shrink-0">
+      <label className="min-w-0 xl:w-48 xl:shrink-0">
         <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Role</span>
         <Select
           value={role}
@@ -58,7 +47,7 @@ export function UserFilters() {
           ))}
         </Select>
       </label>
-      <label className="min-w-0 lg:w-40 lg:shrink-0">
+      <label className="min-w-0 xl:w-40 xl:shrink-0">
         <span className="mb-1 block truncate font-ui text-sm font-semibold text-charcoal">Status</span>
         <Select
           value={status}
@@ -71,6 +60,7 @@ export function UserFilters() {
           <option value="inactive">Inactive</option>
         </Select>
       </label>
+      <Busy pending={isPending} className="col-span-full xl:h-11 xl:shrink-0" />
     </div>
   );
 }

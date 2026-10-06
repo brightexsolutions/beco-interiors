@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import imageLoader, { isCatalogueKey } from '../image-loader';
+import { afterEach, vi } from 'vitest';
+import imageLoader, { absoluteCatalogueUrl, isCatalogueKey } from '../image-loader';
 
 /**
  * A custom loader is GLOBAL. Next routes every next/image through it, so it
@@ -36,5 +37,31 @@ describe('imageLoader', () => {
     expect(isCatalogueKey('12mm/amber-jade/slab-0')).toBe(true);
     expect(isCatalogueKey('/logo-mark.png')).toBe(false);
     expect(isCatalogueKey('logo.png')).toBe(false);
+  });
+});
+
+/**
+ * Structured data and the share card route need an absolute derivative URL.
+ * The schema once passed the bare key to `new URL`, which produced a URL
+ * with no width and no extension.
+ */
+describe('absoluteCatalogueUrl', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('resolves the development proxy against the given origin', () => {
+    vi.stubEnv('NEXT_PUBLIC_IMAGE_HOST', '/api/img');
+    expect(absoluteCatalogueUrl('12mm/amber-jade/slab-0', 1600, 'https://www.beco.co.ke'))
+      .toBe('https://www.beco.co.ke/api/img/12mm/amber-jade/slab-0-1600.webp');
+  });
+
+  it('keeps an absolute image host and ignores the origin', () => {
+    vi.stubEnv('NEXT_PUBLIC_IMAGE_HOST', 'https://img.beco.co.ke');
+    expect(absoluteCatalogueUrl('a/b/slab-0', 1600, 'https://elsewhere.test'))
+      .toBe('https://img.beco.co.ke/a/b/slab-0-1600.webp');
+  });
+
+  it('never returns the bare key', () => {
+    vi.stubEnv('NEXT_PUBLIC_IMAGE_HOST', '');
+    expect(absoluteCatalogueUrl('a/b/slab-0', 1600, 'https://www.beco.co.ke')).toMatch(/-1600\.webp$/);
   });
 });

@@ -28,7 +28,7 @@ describe('UserFilters', () => {
 
   it('puts search and the two filters on one row from lg', () => {
     const { container } = render(<UserFilters />);
-    expect(container.firstChild).toHaveClass('lg:flex');
+    expect(container.firstChild).toHaveClass('xl:flex');
   });
 
   it('has no accessibility violations', async () => {

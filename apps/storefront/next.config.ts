@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { LEGACY_REDIRECTS } from './src/lib/legacy-redirects';
 
 
 // React needs eval() in DEVELOPMENT ONLY, for reconstructing callstacks and
@@ -56,6 +57,13 @@ const config: NextConfig = {
     // and its quota is never spent. See D16.
     loader: 'custom',
     loaderFile: './src/lib/image-loader.ts',
+  },
+  // The old WordPress site's routes, each answered with a 301 to the page
+  // that now does its job, so what Google credited to the old URL moves to
+  // the new one. The list lives in src/lib/legacy-redirects.ts, where a
+  // test holds it to that rule. D107.
+  async redirects() {
+    return LEGACY_REDIRECTS.map((rule) => ({ ...rule, permanent: true }));
   },
   async headers() {
     return [

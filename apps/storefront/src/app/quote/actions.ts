@@ -3,6 +3,8 @@
 import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { createRateLimiter, webQuoteSubmissionSchema } from '@beco/validation';
+import { reportOpsFailure } from '../../lib/ops-alert';
+import { relayQuoteConfirmation } from '../../lib/quote-confirmation';
 
 /**
  * The public quote submission.
@@ -85,6 +87,21 @@ export async function submitQuote(input: unknown): Promise<SubmitResult> {
     // safe to show. Anything else is ours, and the customer gets a way to
     // reach a human rather than a database message.
     const invalid = error?.code === '22023';
+    if (!invalid) {
+      // A real customer asked for a quote and it was not saved. The alert
+      // carries enough to call them back, since the lead is otherwise lost.
+      await reportOpsFailure({
+        area: 'quote.submit',
+        summary: 'A website quote request did not save, call the customer back',
+        detail: error?.message ?? 'submit_quote returned no reference',
+        context: {
+          customer: data.customerName,
+          phone: data.customerPhone,
+          items: data.items.length,
+          code: error?.code ?? null,
+        },
+      });
+    }
     return {
       ok: false,
       error: invalid
@@ -93,11 +110,18 @@ export async function submitQuote(input: unknown): Promise<SubmitResult> {
     };
   }
 
-  // The confirmation email is deliberately NOT sent from here. This app must
-  // never hold the Resend key, per the ownership split and the storefront
-  // .env.example: a fully compromised storefront must leak nothing but the
-  // anon key. The send belongs on the database side, triggered by the
-  // quotes insert, using the template in @beco/documents. Deferred with
-  // that reason in docs/milestones/M4-TODO.md.
+  // The confirmation email is not sent from here: this app never holds the
+  // Resend key, so a fully compromised storefront leaks nothing but the anon
+  // key. The dashboard sends it on request, behind the relay secret (D109).
+  // The quote is saved whatever happens next, so a relay failure is logged
+  // and alerted, never shown to the customer as a failed request.
+  if (data.customerEmail) {
+    await relayQuoteConfirmation({
+      reference: reference as string,
+      customerName: data.customerName,
+      to: data.customerEmail,
+      itemCount: data.items.length,
+    });
+  }
   return { ok: true, reference: reference as string };
 }

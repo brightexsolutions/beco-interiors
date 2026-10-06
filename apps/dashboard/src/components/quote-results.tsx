@@ -41,8 +41,8 @@ const formatTime = (iso: string) =>
   });
 
 function ValueCell({ quote }: { quote: QuoteListItem }) {
-  if (!quote.isPriced) return <span className="text-neutral-500">Pricing on application</span>;
-  return <span className="tabular-nums">{money(quote.value)}</span>;
+  if (!quote.isPriced) return <span className="whitespace-nowrap text-neutral-500">Pricing on application</span>;
+  return <span className="whitespace-nowrap tabular-nums">{money(quote.value)}</span>;
 }
 
 function BadgeRow({ quote }: { quote: QuoteListItem }) {
@@ -72,7 +72,7 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     render: (q) => (
       <Link
         href={`/quotes/${q.referenceNumber}`}
-        className="font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
+        className="whitespace-nowrap font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 hover:decoration-charcoal"
       >
         {q.referenceNumber}
       </Link>
@@ -84,17 +84,18 @@ const columns: DataTableColumn<QuoteListItem>[] = [
     sortable: true,
     sortValue: (q) => q.customerName,
     render: (q) => (
-      <div>
+      <div className="min-w-[11rem]">
         <p className="text-charcoal">{q.customerName}</p>
         <p className="text-neutral-500">{q.customerPhone}</p>
       </div>
     ),
   },
   { key: 'status', header: 'Status', render: (q) => <BadgeRow quote={q} /> },
-  { key: 'owner', header: 'Owner', render: (q) => <OwnerLine quote={q} /> },
+  { key: 'owner', header: 'Owner', render: (q) => <span className="whitespace-nowrap"><OwnerLine quote={q} /></span> },
   {
     key: 'source',
     header: 'Source',
+    showFrom: '2xl',
     sortable: true,
     sortValue: (q) => q.source,
     render: (q) => QUOTE_SOURCE_LABEL[q.source],
@@ -122,52 +123,69 @@ const columns: DataTableColumn<QuoteListItem>[] = [
   {
     key: 'actions',
     header: 'Actions',
+    headerHidden: true,
     align: 'right',
     render: (q) => (
       <Link
         href={`/quotes/${q.referenceNumber}`}
         aria-label={`View ${q.referenceNumber}`}
-        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 px-3 py-0')}
+        className={cn(buttonClasses({ variant: 'ghost' }), 'h-11 w-11 px-0 py-0')}
       >
         <Icon name="arrow-right" />
-        View
+        <span className="sr-only">View</span>
       </Link>
     ),
   },
 ];
 
 function QuoteCard({ quote }: { quote: QuoteListItem }) {
+  const fresh = quote.status === 'new';
   return (
-    <li>
+    <li className="min-w-0">
       <Link
         href={`/quotes/${quote.referenceNumber}`}
-        aria-label={`View ${quote.referenceNumber}`}
-        className="block rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
+        aria-label={`View ${quote.referenceNumber}, ${quote.customerName}`}
+        className={cn(
+          'group flex items-stretch gap-3 overflow-hidden rounded-panel border border-neutral-200 bg-high-vis-white py-3 pl-4 pr-3',
+          'transition-shadow hover:shadow-panel active:bg-neutral-50',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal',
+          // A new, untouched quote carries a charcoal edge: the queue reads
+          // at a glance without spending Warm Red on every arrival.
+          fresh ? 'border-l-4 border-l-charcoal' : null,
+        )}
       >
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="font-ui text-base font-semibold text-charcoal">{quote.referenceNumber}</span>
-          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
-            View
-          </span>
-        </div>
-        <div className="mt-1 flex items-baseline justify-between gap-3">
-          <p className="min-w-0 truncate font-ui text-base text-charcoal">
-            {quote.customerName}
-            <span className="ml-2 text-neutral-500">{quote.customerPhone}</span>
+        {/* The name owns its row and wraps; the figure sits on the next row
+            with the status, so neither is ever cut to make room (D112). */}
+        <div className="min-w-0 flex-1">
+          <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{quote.customerName}</p>
+          <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
+            <span className="tabular-nums">{quote.referenceNumber}</span> · {quote.customerPhone}
           </p>
-          <p className="shrink-0 font-ui text-base font-semibold text-charcoal">
-            <ValueCell quote={quote} />
-          </p>
-        </div>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <BadgeRow quote={quote} />
-          <p className="font-ui text-sm text-neutral-500">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <p className="font-ui text-base font-semibold text-charcoal">
+              {quote.isPriced ? <span className="tabular-nums">{money(quote.value)}</span> : <span className="text-neutral-500">Pricing on application</span>}
+            </p>
+            <BadgeRow quote={quote} />
+          </div>
+          <p className="mt-1.5 font-ui text-sm text-neutral-500">
             <OwnerLine quote={quote} />
             <span className="ml-2 whitespace-nowrap tabular-nums">
               {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
             </span>
           </p>
         </div>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="h-5 w-5 shrink-0 self-center text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal motion-reduce:transition-none"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </Link>
     </li>
   );
@@ -177,7 +195,7 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(quotes, requestedPage);
 
@@ -202,8 +220,9 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
     <>
       {/* Desktop: the sortable table. Per D38, quotes are a decision per
           row, so mobile gets full cards instead, not a squeezed table. */}
-      <div className="hidden lg:block">
+      <div className="hidden xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} quotes`}
           columns={columns}
           rows={paged.items}
@@ -211,14 +230,14 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
         />
       </div>
 
-      <ul className="grid gap-2 lg:hidden">
+      <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 xl:hidden">
         {paged.items.map((q) => (
           <QuoteCard key={q.id} quote={q} />
         ))}
       </ul>
 
       <Pagination
-        className="mt-4"
+        className="mt-4 xl:px-5 xl:pb-4"
         page={paged.page}
         pageCount={paged.pageCount}
         from={paged.from}

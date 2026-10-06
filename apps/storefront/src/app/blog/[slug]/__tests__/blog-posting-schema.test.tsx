@@ -40,6 +40,23 @@ describe('BlogPostingSchema', () => {
     for (const s of schemas) expect(s['@context']).toBe('https://schema.org');
   });
 
+  it('turns a catalogue cover key into an absolute derivative, not a bare key', () => {
+    const { container } = render(
+      <BlogPostingSchema post={post({ cover_image: { path: '12mm/sandstone-beige/slab-0', width: 1600, height: 900 } })} />,
+    );
+    const [image] = blogPostingFrom(container).image as string[];
+    expect(image).toMatch(/^https?:\/\/.+\/12mm\/sandstone-beige\/slab-0-1600\.webp$/);
+  });
+
+  it('names the publisher with its real, absolute logo', () => {
+    const { container } = render(<BlogPostingSchema post={post()} />);
+    expect(blogPostingFrom(container).publisher).toMatchObject({
+      '@type': 'Organization',
+      name: 'Beco Interiors',
+      logo: { '@type': 'ImageObject', url: 'https://www.beco.co.ke/logo-mark.png', width: 400, height: 390 },
+    });
+  });
+
   it('carries the headline, description, absolute image URL and publish date', () => {
     const { container } = render(<BlogPostingSchema post={post()} />);
     const blogPosting = blogPostingFrom(container);

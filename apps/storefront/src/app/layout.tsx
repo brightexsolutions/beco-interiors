@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import '@beco/ui/src/tokens/tokens.css';
-import { ScrollMotion } from '@beco/ui';
+import { KeyboardAwareFocus, ScrollMotion } from '@beco/ui';
 import { AnnouncementBar } from '@/components/announcement-bar';
 import { LaunchBanner } from '@/components/launch-banner';
 import { SiteSplash } from '@/components/site-splash';
@@ -9,23 +9,9 @@ import { SiteFooter } from '@/components/site-footer';
 import { WhatsAppFab } from '@/components/whatsapp-fab';
 import { getLiveAnnouncements, buildAnnouncementItems } from '@/lib/announcements';
 import { getLaunchState } from '@/lib/launch';
-import { SITE } from '@/lib/site';
+import { buildRootMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://www.beco.co.ke'),
-  title: {
-    default: 'Beco Interiors | Sintered stone and interior materials in Nairobi',
-    // Every page states the brand without each page having to remember to.
-    template: '%s | Beco Interiors',
-  },
-  description:
-    'Sintered stone slabs, wall panels, lighting and interior accessories, stocked in Nairobi. Request a quote for the whole list at once.',
-  openGraph: {
-    type: 'website',
-    locale: 'en_KE',
-    siteName: SITE.name,
-  },
-};
+export const metadata: Metadata = buildRootMetadata();
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Fetched here rather than inside the bars themselves, per D79: the home
@@ -71,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       >
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[2px] focus:bg-charcoal focus:px-4 focus:py-3 focus:text-high-vis-white"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-control focus:bg-charcoal focus:px-4 focus:py-3 focus:text-high-vis-white"
         >
           Skip to content
         </a>
@@ -90,6 +76,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <WhatsAppFab />
         {/* Drives the entrance animations. Renders nothing. */}
         <ScrollMotion />
+        {/* Keeps a focused quote form field above the phone keyboard. */}
+        <KeyboardAwareFocus />
       </body>
     </html>
   );

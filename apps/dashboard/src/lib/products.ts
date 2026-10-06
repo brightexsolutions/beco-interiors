@@ -12,11 +12,10 @@ export interface ProductListFilters {
   published?: 'published' | 'draft' | undefined;
   stock?: 'low' | 'out' | undefined;
   /** One or more category ids to match `category_id` against. Plural
-   *  because filtering the catalogue by a GROUP (Sintered Stone) has to
-   *  match every range filed under it, not just products assigned to the
-   *  group row itself, which per `groupCategoryOptions` only happens for a
-   *  childless group like Lighting. The caller (the catalogue page) expands
-   *  a group id to itself plus its children before this is called. */
+   *  because filtering the catalogue by a major category (Sintered Stone)
+   *  has to match every range and sub range filed under it as well as any
+   *  product on the row itself. The caller (the catalogue page) expands the
+   *  selected id to its whole subtree before this is called. */
   categoryIds?: string[] | undefined;
 }
 
@@ -76,29 +75,40 @@ export interface ProductCategoryOption {
   id: string;
   name: string;
   slug: string;
-  /** Null on a top level group (Lighting) and on a group that has children
-   *  (Sintered Stone itself is never assigned to a product). */
+  /** Null on a major category. */
   parentId: string | null;
 }
 
 export interface GroupedCategoryOptions {
   group: ProductCategoryOption;
-  /** Empty when the group itself is the assignable option, e.g. Lighting. */
+  /** Every range and sub range under the major category, a sub range named
+   *  after its range ("12mm Sintered Stones › Heixin 12mm"). Empty when the
+   *  major category itself is the only option. */
   children: ProductCategoryOption[];
 }
 
-/** Ranges nested under their group, for a Select that reads the way the
- *  shop's own taxonomy does: Sintered Stone > Limestone Ivory, not one flat
- *  alphabetical list a product manager has to already know by heart. */
+/**
+ * Ranges nested under their major category, for a Select that reads the
+ * way the shop's own taxonomy does: Sintered Stone > Limestone Ivory, not
+ * one flat alphabetical list a product manager has to already know by
+ * heart. A product can be filed at any level (D104): a range that has sub
+ * ranges of its own stays selectable, since 12mm Sintered Stones holds
+ * stones of its own beside Heixin's.
+ */
 export const groupCategoryOptions = (categories: ProductCategoryOption[]): GroupedCategoryOptions[] => {
   const childrenOf = new Map<string, ProductCategoryOption[]>();
   for (const category of categories) {
     if (!category.parentId) continue;
     childrenOf.set(category.parentId, [...(childrenOf.get(category.parentId) ?? []), category]);
   }
+  const descendants = (parent: ProductCategoryOption, depth: number): ProductCategoryOption[] =>
+    (childrenOf.get(parent.id) ?? []).flatMap((child) => {
+      const named = depth === 1 ? child : { ...child, name: `${parent.name} › ${child.name}` };
+      return depth >= 2 ? [named] : [named, ...descendants(child, depth + 1)];
+    });
   return categories
     .filter((c) => !c.parentId)
-    .map((group) => ({ group, children: childrenOf.get(group.id) ?? [] }));
+    .map((group) => ({ group, children: descendants(group, 1) }));
 };
 
 export const parseProductImages = (value: unknown): ProductImage[] => {

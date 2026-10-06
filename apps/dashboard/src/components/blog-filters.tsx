@@ -1,24 +1,13 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
-import { Input, Select } from '@beco/ui';
+import { useEffect, useState } from 'react';
+import { Busy, Input, Select } from '@beco/ui';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 
 export function BlogFilters() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const { searchParams, setParam, isPending } = useQueryNavigation();
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const status = searchParams.get('status') ?? '';
-
-  const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    params.delete('page');
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
-  };
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -30,7 +19,7 @@ export function BlogFilters() {
 
   return (
     <form
-      className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem]"
+      className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_12rem]"
       onSubmit={(event) => event.preventDefault()}
     >
       <Input
@@ -48,6 +37,7 @@ export function BlogFilters() {
         <option value="draft">Draft</option>
         <option value="published">Published</option>
       </Select>
+      <Busy pending={isPending} className="xl:col-span-full" />
     </form>
   );
 }

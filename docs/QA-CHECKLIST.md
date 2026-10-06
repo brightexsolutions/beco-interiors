@@ -19,6 +19,11 @@ thought it looked fine.
 | Changes state | The change survived a refresh |
 | Opens an external channel | WhatsApp opened prefilled, the dialler had the right number |
 
+**Feedback, on every control that writes (D117):** while it runs the button spins and says
+"Saving" or the like, when it lands a Done or Failed toast names the result, and a sheet that
+saved closes. While a list reloads the filter row reads "Updating" and the rows dim. A control
+that does none of this is a defect, log it against the screen's row.
+
 ## Status key
 
 - **Test** proven by an automated test, named in `docs/TEST-COVERAGE.md`
@@ -65,36 +70,62 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Category rail cards | Navigate to the category | Server |
 | Range grid cards | Navigate to the product | Server, 29 product links present |
 | Room stack | Auto dealing, decorative, not interactive | n/a |
-| "Beyond stone" tiles (D92) | Lighting, wall panels, SPC flooring and accessories, each a real link to `/shop/<range>` or a plain non-interactive block if the range has no stock, matching the hero chip rail's own rule. Added on direct feedback that scrolling past the hero still read as a stone catalogue, hardware's own cutout section and stone's three other sections aside | Server, anchors confirmed in the rendered HTML for every range with stock. Same coverage level as Range grid cards and Category rail cards above, this page's existing convention for derived display data |
+| "Beyond stone" tiles (D92) | Wall panels, SPC flooring and accessories (Lighting retired, D103), each a real link to `/shop/<range>` or a plain non-interactive block if the range has no stock, matching the hero chip rail's own rule. Added on direct feedback that scrolling past the hero still read as a stone catalogue, hardware's own cutout section and stone's three other sections aside | Server, anchors confirmed in the rendered HTML for every range with stock. Same coverage level as Range grid cards and Category rail cards above, this page's existing convention for derived display data |
 | Process list | Static | n/a |
 | Services grid, "Book a consultation" per card (D95) | Opens WhatsApp with that specific service named in the prefilled message, `ServiceCardGrid`, shared with `/about` | Test: `service-card-grid.test.tsx`, per-card href, new tab, axe clean. Server: 4 distinct `wa.me` hrefs present, each naming its own service |
 | Cutout section, "Shop handles" | Navigates to `/shop/handles` | Server: anchor confirmed in the rendered HTML |
+| Showroom film | Autoplays muted once half the frame is on screen, pauses on leaving. A phone that refuses autoplay gets a Play control on the frame, which starts the film. No autoplay under reduced motion: native controls instead | Test: `showroom-film.test.tsx`. **Not walked on a device** |
+
+| `/?p=42`, `/?page_id=7`, `/?s=handles` (D107) | Old WordPress permalink and search shapes 301 to `/` and to `/shop?q=handles`. Campaign parameters pass through untouched | Test: `__tests__/proxy.test.ts` |
+| `/product-category/handles`, `/about-us`, `/cart`, `/2024/05/post-slug` and the rest of `LEGACY_REDIRECTS` | 301 to the page that does the job now | Test: `lib/__tests__/legacy-redirects.test.ts` holds every destination to a real route. **Not yet curled against a deploy** |
+| `/wp-login.php`, `/feed/`, `/wp-sitemap.xml` | 410 Gone, plain text, cached a day | Test: `__tests__/proxy.test.ts` |
+
+`<LocalBusinessSchema />` is one component on `/`, `/about` and `/contact`, with `@id`, logo,
+image and the confirmed hours. The root layout carries the Search Console tag when
+`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` is set, a share image and `summary_large_image`.
+**Server confirmed by parsing. NOT validated in Google's Rich Results Test.**
 
 LCP image is never animated on entry, per the motion rules. **Lighthouse NOT RUN.**
 
 ---
 
-## `/shop`
+## `/shop`, the range index (D119)
 
 | Control | What it does | Status |
 |---|---|---|
-| Search box | Rewrites `?q=`, debounced at 250ms, server re-filters | Server: `?q=calc` narrows the grid |
-| "Filters" button (mobile, D82) | Opens and closes the facet panel; a red badge shows how many of range, finish, sort are active | Test: `aria-expanded` and the panel toggle. Server: closed bar ~100px, panel opens with full-width controls and a "Show N results" close |
-| Range select | Rewrites `?range=` for a group or `?category=` for a range, clearing the other so the two cannot disagree | Server: `?range=hardware` 6 of 30, `?category=handles` 6, `?range=sintered-stone` 24, `?range=wall-panels` 0. Test: shares the desktop row rather than wrapping onto its own line, see the real bug fixed below |
-| Finish select | Rewrites `?finish=` | Server: `?finish=Polished` 4 of 30. Test: same row-sharing coverage as Range |
-| Sort select | Rewrites `?sort=` | Server: `price-desc` orders 95,000 then 85,000 then 75,000. Test: same row-sharing coverage as Range |
-| "Show N results" (mobile, D82) | Closes the facet panel, count matches the grid | Test |
-| Filter chips | Each removes its own filter | Test: clearing a chip rewrites the URL without that filter |
-| Clear all | Returns to bare `/shop`, including the search box | Test: rewrites to `/shop` with no query string, search input value cleared |
-| Range browse tiles | Navigate to the group page | Server, each 200 |
-| Range browse child links | Navigate to the range page | Server, each 200 |
-| Quick add to quote, on each card | Writes the product to the localStorage list | Test, asserts the list changed |
-| Empty state "Show everything" | Returns to `/shop` | **NOT CONFIRMED** |
+| Range tiles | One per range in `RANGE_GROUPS`, each links to `/shop/<range>`; states stock and the ranges beneath, or "Being photographed" | Test: `RangeTiles` (order, hrefs, loose folders excluded, sublines, axe). Server: each tile 200 |
+| Search form | Plain GET form, no script needed, lands on `/shop/all?q=` | Server: submitting lands on the flat list with the term |
+| "See everything" | Links to `/shop/all` | Server: 200 |
+| Featured rail "See everything" | Links to `/shop/all` | Server: 200 |
 | "Being photographed" links | Navigate to the empty category page | Server |
-| Featured rail "See everything" (D94, was "View all") | Jumps to the `#the-whole-catalogue` anchor below rather than linking to `/shop`, the page already open, which read as not clickable since nothing visibly happened | Server: anchor and matching `id` both present in the rendered HTML |
-| Filter bar sticks under the header while scrolling, on top of the content passing beneath it (D94) | Stays pinned at `top-20`, the header's own height, through Featured and the whole catalogue grid, not just for the first few pixels, and stays visually above the cards scrolling past rather than showing their title, price or Add button through it | Server: DOM nesting confirmed (`ShopControls` wraps Featured and the catalogue grid as children so its sticky layer has a containing block tall enough to hold). Bar is `z-30`, confirmed clear of every z-index actually used inside `/shop`'s own content, `ProductCard`'s own internal `z-10` on its title, price and action slot chief among them (its card root does not isolate a stacking context, so those values were never actually contained), and `RailTrack`'s arrow buttons at `z-20`. **Not walked on a device** |
+| Old addresses | `/shop?range=x` and `/shop?category=y` redirect to `/shop/x`, `/shop?q=` `?finish=` `?sort=` to `/shop/all` with the same query, bare `/shop` renders | Test: `legacyShopRedirect`. Server: 307 observed for each |
 
-Every filtered view carries `noindex` with canonical `/shop`, per D29. **Server confirmed.**
+## `/shop/all`, the flat list (D119)
+
+| Control | What it does | Status |
+|---|---|---|
+| Range chips | "All" current, each top level range a link to its page | Test: `RangeToolbar` (links, aria-current). Server |
+| Search | Debounced `?q=` on this page, scroll held | Test. Server |
+| Sort | `?sort=`, default dropped from the URL | Test. Server |
+| Count and Clear | "N of total", Clear only once something is set, resets to the bare page | Test |
+| Empty state "Show everything" | Returns to `/shop/all` | Server |
+
+Unfiltered `/shop/all` is indexable and in the sitemap; a searched or sorted view carries
+`noindex` with canonical `/shop/all`, per D29.
+
+## `/shop/[category]`, the strip (D119)
+
+| Control | What it does | Status |
+|---|---|---|
+| Range chips | On a group: "All" is this page, each child a link. On a child: siblings under the parent, "All" links to the parent, this page marked current | Test: `rangeChips`, `RangeToolbar`. Server |
+| Finish chips | Only when the range has more than one finish; toggles `?finish=` on this page | Test. Server: `?finish=Polished` narrows the grid |
+| Search, Sort, Count, Clear | As on `/shop/all`, scoped to this range | Test. Server |
+| Empty filtered state "Show the whole range" | Returns to the bare range page | Server |
+
+A searched, finish filtered or sorted range view carries `noindex` with canonical
+`/shop/<range>`, per D29; an empty range stays `noindex` per D27. **Server confirmed on the
+dev server, 4 October.**
+
 
 **Featured rail coverage (D94).** Rebuilt from `RANGE_GROUPS` rather than the raw category tree,
 which let two loose Drive folders ("Fluted Wall Panels", "Drawer Rails") crowd out genuinely
@@ -161,6 +192,7 @@ Index gating asked of the subtree: `/shop/wall-panels` noindex, `/shop/hardware`
 | WhatsApp | Opens `wa.me` prefilled with the product name | Server: confirmed on two products. **The SKU half of the message has never rendered**, because no product carries a SKU, 0 of 31 |
 | Call | Opens the dialler | Server on href |
 | Related product cards | Navigate | Server |
+| An unknown slug (D107) | 301 to `/shop?q=<words from the slug>` rather than a 404, because WooCommerce lived at `/product/<slug>` too. A former slug from `product_slugs` still 301s to the current product first | Test: `shopSearchFor` in `legacy-redirects.test.ts`; the order of the two lookups is `loadProduct` in `page.tsx` |
 
 `Product` with a real `Offer` and `InStock`, plus `BreadcrumbList`. **Server confirmed by
 parsing. NOT validated in Google's Rich Results Test.**
@@ -183,10 +215,15 @@ than the viewport. Every input carries a placeholder now, not just phone number.
 | Control | What it does | Status |
 |---|---|---|
 | Quantity steppers per line | Change the line quantity, persisted | Test |
-| Remove line | Removes it immediately, no `ConfirmDialog`: a single line is recoverable by adding the product again, unlike clearing the whole list | Test |
+| Remove line | A plain Remove on each row. Removes it immediately, no `ConfirmDialog`: a single line is recoverable by adding the product again, unlike clearing the whole list | Test |
+| Stepper floor (28 September) | Minus stops at one step, half a slab for slabs, one otherwise. Before, one tap too many took the line to 0 and the list dropped it silently | Test: minus disabled at the floor, Remove still deletes |
+| List placement (28 September) | Desktop: the list is an order summary on the right, sticky, form on the left. Phone: the list stays first, as step one | Server: screenshots at 1440px and iPhone 13 emulation. **NOT walked on a device** |
+| Three step guide | Your list, Your details, We price it. Orientation only, not a control | Test: `aria-current="step"` on Your details |
+| Rejected send | Focus moves to the first field the server named, so on a phone it is scrolled into view rather than left off screen | Test: phone field focused after a mocked rejection |
 | Clear list | Empties the list, behind a `ConfirmDialog` naming what will happen | Test |
 | Add more materials, on the list panel | Navigates to `/shop`. New: the list previously had no way back to the catalogue except the header nav | Test, on the href |
 | Name, phone, email, company, project fields | Carry their values to the server action | Test, on the labels and the `name` attributes |
+| Confirmation email, when an address was given (D109) | After the quote is saved, the storefront asks the dashboard's `/api/quote-confirmation` to send it; the customer gets the branded confirmation with the reference and the item count. A relay or provider failure raises an ops alert and never changes the customer's result | Test: `lib/__tests__/quote-confirmation.test.ts`, the route test on the dashboard side, the template tests. **Not yet observed arriving in a real inbox: needs `RESEND_API_KEY` and the relay secret on a deploy** |
 | Collection or delivery, now a two-card toggle rather than bare radios | Reveals the delivery address field and the delivery charge note | Test: card click reveals both, and switching back to collection hides them again |
 | Installation and samples, now bordered selectable cards rather than a bare checkbox row | Reach `submit_quote` as `p_wants_installation` and `p_wants_samples` | Integration test on the action. Card selected-state itself (`border-charcoal bg-neutral-50` on check) is **NOT walked on a device** |
 | Send my request | Calls `submitQuote`, mints a reference, writes the rows | Integration test against the real database, 9 tests |
@@ -221,7 +258,7 @@ Motion: frame drawn first, photograph wipes up into it, caption plate rises afte
 | Contact channel cards: quote, WhatsApp, call | Navigate and open external channels | Server on hrefs |
 | Directions | Opens Google Maps at the showroom | Server on href |
 | Email link | Opens the mail client | Server on href |
-| Showroom film | Autoplays muted at 50% visibility, pauses on leaving, no autoplay under reduced motion | **NOT CONFIRMED** by test or by hand |
+| Showroom film | Autoplays muted once half the frame is on screen, pauses on leaving. A phone that refuses autoplay gets a Play control on the frame, which starts the film. No autoplay under reduced motion: native controls instead | Test: `showroom-film.test.tsx`. **Not walked on a device** |
 | Services grid, "Book a consultation" per card, `/about` only (D95) | Opens WhatsApp with that specific service named in the prefilled message, same `ServiceCardGrid` `/` uses | Test: `service-card-grid.test.tsx`. Server: 4 distinct `wa.me` hrefs present |
 | Rotating statement, SHOWROOMS frame (D95) | Now Beco's own real showroom, `/video/showroom-poster.jpg`, in place of a stock photo of a home decor shelf that had nothing to do with an interior materials showroom | Server: path present in the rendered HTML. **Not walked on a device** |
 
@@ -282,13 +319,23 @@ real phone** (M5 section D).
 
 | Control | What it does | Status |
 |---|---|---|
-| Section nav | Text links, role-scoped via `navItemsFor`. The current section is charcoal with a Warm Red underline; a nested path keeps its section highlighted | **Server** confirmed: signed in as each role, the nav listed exactly that role's sections, `/quotes` and `/quotes/...` both underlined Quotes. `TopNav` tested, 6 tests |
+| Section nav | Desktop: the sidebar (`SideNav`). Phone: the bottom bar (`BottomNav`, D111), role-scoped via the same access map. The current section is charcoal; a nested path keeps its section highlighted | Test: `bottom-nav.test.tsx` 9 tests, `nav-items.test.ts`. Seen at iPhone 13 size as admin, sales and product manager, 3 October |
 | Docked chrome | The pill header scrolls away. A breadcrumb then docks at the top on a phone and on desktop, and names the screen. Nested screens: section / page, section is a link back to the list | Tested: `ShellContext` hidden while the header intersects, docks after, no `lg:hidden`. **Walk on a phone and desktop** |
 | Mobile section strip | Horizontal scroll, no hamburger, right-edge fade | **Server** confirmed at 390px: the strip scrolls, Quotes stays first. **Real-device swipe still to walk** |
-| New-quote count | Warm Red badge on Quotes when positive | Styled and tested; **wired to 0** until realtime (section L / M) |
+| New-quote count | Warm Red badge on Quotes: undeleted quotes in status new, under RLS. Read on each server render of the layout; live push is still section L | `fetchNewQuoteCount` unit and integration tested. **Server** confirmed: 1 on the seed |
+| Error and not-found screens | Inside the shell: "This screen did not load" with Try again and Go to home; "Nothing here" with links to Quotes and Home | Tested, both screens |
 | Account menu | Name opens a flat panel: Change password (link) and Sign out (POST to `/sign-out`). Closes on Escape, outside click, navigation | **Server** confirmed: opened, "Sign out" returned to `/login` with the session gone. `AccountMenu` tested, 5 tests |
 | Appearance | Moon / sun in the chrome. Toggles `html.dark` and stores `beco-dashboard-theme`. First visit follows the OS if nothing is stored | Test: `ThemeToggle`, `dashboard-theme` |
 | `PageHeading` | Every screen opens with a Warm Red rule, eyebrow, Cormorant title, lede | **Server** confirmed on `/`, `/quotes`, `/products`. Tested, 4 tests |
+
+### `/` home, admins (28 September)
+
+| Control | What it does | Status |
+|---|---|---|
+| Focus panel | Quotes waiting on a response; Past target only when the SLA is breached. Open queue and New quote | `HomeFocus` tested; `toFocus` tested |
+| Also on your plate | Needs approval, Still owed, Low stock, Unpublished products, each linking to the filtered list that clears it; rows with nothing to do are absent | `HomeFocus` tested on hrefs |
+| Month tiles | Won, Quote to won (meter), Invoiced (paid share meter), Leads today (split by source), Products live. Each tile is one link to its list | `StatCard`, `toStatCards` tested. **Server** screenshots desktop and phone |
+| Latest quotes | Six newest, each row opens the quote | `RecentQuotes` tested |
 
 ### Proxy and role landing
 
@@ -302,9 +349,10 @@ real phone** (M5 section D).
 
 | Control | What it does | Status |
 |---|---|---|
-| New quote (FAB) | Fixed charcoal pill, bottom right. Navigates to `/quotes/new`. Stays on screen while the list scrolls | `NewQuoteFab` tested, 3 tests. `Fab` in `@beco/ui`, 5 tests |
+| New quote | Phone: the raised tile in the bottom bar. Desktop: the charcoal button in the heading (D113). Both navigate to `/quotes/new`; the pill that floated over the table's Actions column is retired | Test: `bottom-nav.test.tsx`; the heading link is a plain anchor |
 | Search | Debounced, narrows to a matching name, phone or reference | **Server** confirmed: `?search=Mutua` returned exactly that quote |
-| Status / source filters | Narrow the row set via the URL. The `web` source is labelled Website | **Server** confirmed: `?status=quoted`, `?owner=unassigned` each returned the right subset and count. `QuoteFilters` tested |
+| Status / source filters | Narrow the row set via the URL. The `web` source is labelled Website. Below lg they are chip rows (owner, status, source), tap the active chip to clear | **Server** confirmed: `?status=quoted`, `?owner=unassigned` each returned the right subset and count. `QuoteFilters` tested, chips included |
+| Needs approval chip | `?approval=pending`, linked from home. A removable chip says the filter is on | **Server** confirmed |
 | Owner filter, per role | `beco_sales` gets Mine / I'm preparing / Unassigned; admins additionally get Everyone | **Server** confirmed for both a sales and an admin session |
 | Row / card "View" | Navigates to the real quote detail. Desktop: underlined quote number plus a View control in the last column. Phone: the card itself is the View link | `QuoteResults` tested |
 | Pagination | Previous / Next. Eight quotes a page. Page lives in `?page=`. Hidden when everything fits on one page. Changing a filter returns to page 1 | `QuoteResults` and `QuoteFilters` tested |
@@ -319,13 +367,17 @@ real phone** (M5 section D).
 | Custom item | Adds a named custom line, not an empty catalogue row | Tested |
 | Qty / unit price / Remove | Edit or drop a line before save. Phone: two-row compact card, list scrolls in the panel. Desktop: columns under Item / Qty / Unit / Line | Same controls as quote detail, 44px stepper |
 | Customer fields | Name and phone required, email optional, source Walk in or Phone | Written into `create_counter_quote` |
-| Save quote | Disabled until there is a line, reason shown. Primary in the heading on desktop, in the customer panel on a phone | Tested disabled-until-line |
+| Save quote | Disabled until there is a line, reason shown. Primary in the heading on desktop; on a phone it lives in a sticky action bar with the item count and total, which steps aside while the keyboard is open | Tested: disabled until a line, bar count and total update |
+| Returning customer (28 September) | Searches earlier quotes by name, phone, email or company, merged by phone in any format. Picking one fills name, phone and email; Clear empties them | `CustomerFinder`, `searchCustomers`, `dedupeCustomers` tested. **Server** confirmed against local seed data |
+| Catalogue picker ranges | Chips (`ChipGroup`), stocked ranges first with their counts; tap the active chip to go back to every range. Rows show the product photograph | `CataloguePicker` tested. **Server** screenshot |
+| Keyboard | A focused field scrolls into the visible area once the keyboard settles; the picker dialog fits above the keyboard | `KeyboardAwareFocus` and `Dialog` tested in jsdom. **NOT walked on a real phone**, and it can only be proven on one |
 
 ### `/quotes/[reference]`
 
 | Control | What it does | Status |
 |---|---|---|
 | Line items | Lists every line, a discount struck through against the catalogue price | **Server** confirmed on the discounted seed quote |
+| Line code (D124) | A line for a coded product shows its code under the name: "Code H-301" read only, the code alone on one line beside the steppers. None for a custom line | Test: `QuoteLines`. **Server** 5 Oct: a coded hinge line showed H-301 on `/quotes/BEC-Q-00006`, the delivery line none; the PDF from View printed "Code H-301" under the item (read from the PDF text and rendered to an image) |
 | Requested (D101) | Delivery, Installation and Samples flags, captured on submission and previously fetched but never rendered anywhere. Delivery and Installation carry the `attention` tone (Warm Red) since each is a real pricing gap; Samples is `muted`, informational rather than a pricing gap. Delivery address shown beneath when set. Priced by adding a custom line, `add_custom_quote_line`, the existing "Not in the catalogue" control; no new pricing mechanism was built | Data layer only: `wants_installation`/`wants_samples` added to `fetchQuote`'s select and `QuoteDetail`. **NOT WALKED**: the panel itself has no test, matching this page's own established pattern (only its interactive children are unit tested, the page is walked manually) |
 | Save | One control on the Line items heading. Disabled until a qty or price changes, reason shown. Writes every dirty line through `update_quote_lines`. Unsaved + Changed mark the dirty state | `QuoteLines` tested |
 | Totals / Pricing on application | Shows a real total once every line is priced, the 0.3 line otherwise | **Server** confirmed both states |
@@ -343,7 +395,10 @@ real phone** (M5 section D).
 | View | Compact heading action, top right, labelled View with a right arrow. Writes unsaved qty/price first, then opens a dialog. Pages paint onto canvas. Zoom in, zoom out, and pinch | `QuoteDocumentPanel` tested |
 | Download | Real file link `?download=1`, filename includes the quote number and client name | Tested href and Content-Disposition |
 | Email | Form in the preview dialog, prefilled, submits `sendQuoteEmail` | Tested |
-| WhatsApp | Copy in the preview: download the file to send it. `quoteWhatsAppLink` is tested but not on this panel | Helper unit tested |
+| WhatsApp (28 September) | Beside Download. Phone: the share sheet with the PDF attached. Desktop: saves the PDF and opens a chat prefilled to the customer. Records `sent_channel = whatsapp` on that exact stored copy (`X-Document-Path`). Cancel records nothing | `WhatsAppShare` tested (share sheet, fallback, cancel, failure); action refuses another quote's path. **NOT walked on a phone** |
+| Customer: Call, WhatsApp, Email | One tap to the customer, WhatsApp prefilled with the reference, Email only when there is an address | `CustomerContact` tested on hrefs |
+| Owner and preparer names | A salesperson now sees a colleague's name, not "Unassigned", via `staff_names()` (migration 55) | pgTAP 31, `staff-names` tested. **Server** confirmed as Sam on Ken's quote |
+| Phone layout | Actions and Customer come before the line editor on a phone; the right rail on desktop | **Server** screenshots, both widths |
 
 ### `/products`
 
@@ -356,19 +411,23 @@ every range is now the identical pill, same height and form, in one flat wrappin
 directly followed by its own ranges so adjacency carries the taxonomy (there is no longer a box
 or a heading weight to do it instead). Each pill's own edit pencil is a small segment sharing the
 pill's own border rather than a separate button beside it. The whole panel collapses from the
-"Ranges" heading:
+"Ranges" heading. **28 September:** on a phone it starts folded (about twenty chips filled the
+whole first screen) and the heading names the active range; every product row now leads with
+its first photograph, or its initials when there is none or it fails to load (`ProductThumb`,
+tested):
 
 | Control | What it does | Status |
 |---|---|---|
 | Ranges heading (disclosure) | Collapses or re-expands the whole panel, `aria-expanded` | Test: `CatalogueRanges` |
-| Range or group pill | Sets `?category=`, filters the product list below it. A group pill shows the SUM of its ranges' product counts, not its own (a group with children is never itself assignable, so its own count is always 0), and matches every range filed under it when clicked | Test: `CatalogueRanges`. `categoryIds` filter: integration against local Postgres |
+| Range browser (D114) | First row: the major categories, each counting its whole subtree. Open one and its ranges appear on a second row; open a range with sub ranges and a third. Every pill sets `?category=` and filters the list below. The line under the rows names the path and count, with Edit and Add range for the selection only; New category in the heading. Add range opens the sheet with the parent preselected | Test: `catalogue-ranges.test.tsx`, 11 tests; `category-create.test.tsx` for the preselected parent. Seen at three widths, 3 October |
 | "All products" | Clears `?category=`. No edit segment, unlike every other pill | Test: `CatalogueRanges` |
 | Draft mark | Shown on a group or range pill when it is not published | Test: `CatalogueRanges` |
 | Edit (small pencil, inside the pill) | Opens a detail sheet at `?range=id`, a separate control from the pill's own click-to-filter even though it shares the pill's outline | Test: `CatalogueRanges` plus `CategoryEditor` |
-| New range | Ghost button beside the "Ranges" heading. Opens `?newRange=1`, picks Top level group or an existing group | Test: `CategoryCreate`, `createCategory` action |
+| New range | Ghost button beside the "Ranges" heading. Opens `?newRange=1`. File under: Major category, or any major category or range (a range is named after its major category). Three levels is the cap, the trigger refuses a fourth | Test: `CategoryCreate`, `createCategory` action, pgTAP 34 |
+| File under (editor) | Offers only homes that fit: never the range's own sub ranges, never a parent that would push its existing levels past three. Disabled, with the reason, when nothing fits | Test: `categoryParentOptions`, `CategoryEditor` |
 | File under | Select of top level groups. Locked, with the reason stated, when the row already has children | Test: `CategoryEditor` |
 | Save (range) | Writes name, slug, parent, description, SEO overrides, published, sort order. Busts the storefront `/shop` pages for the range, its former slug and its parent. Closes the sheet on success | Test: `updateCategory` action, integration against local Postgres. Sheet close: `category-editor.test.tsx` |
-| Delete range | `ConfirmDialog` names the range. Disabled, with the blocking count in its own label, when products or child ranges are still filed under it. Refused server side too if reached anyway. Closes the sheet | Test: `CategoryEditor` plus `deleteCategory` action |
+| Delete range | `ConfirmDialog` names the range. Disabled when products or child ranges are still filed under it, with the reason on its own line beneath ("Empty it first: 2 ranges filed under it.") and wired by `aria-describedby`, so the label stays two words and fits a phone. Refused server side too if reached anyway. Closes the sheet | Test: `CategoryEditor` plus `deleteCategory` action |
 
 Page URL fields (both products and ranges) carry the hint "Old links still work", not a
 "redirect" mention: the person using this screen is a product manager, not a developer.
@@ -386,9 +445,9 @@ Page URL fields (both products and ranges) carry the hint "Old links still work"
 | Edit | Opens a detail sheet at `?edit=slug`. One column, Save and Delete stay pinned, no sideways scroll | Test: `ProductResults` plus `ProductEditor` |
 | New product | Charcoal labelled FAB, desktop and phone. Opens `?new=1` as an unpublished draft | Test: `NewProductFab`, `ProductCreate`, `createProduct` action |
 | SKU | Optional supplier code on create and edit. Search already matches it. Shown on the storefront product page | Test: `createProductSchema`, `updateProduct`, `ProductCreate`, `ProductEditor`, `ProductResults` |
-| Add photograph | Upload JPEG/PNG/WebP, role, alt. Writes R2 derivatives and `products.images` | Test: `ProductImages`, `addProductImage`, `processProductPhoto` |
+| Add photograph | JPEG/PNG/WebP up to 12MB, role, alt. The file goes straight to R2 under a presigned PUT with a percentage on the button, then the action reads it back, writes 400/800/1600 webp and `products.images` (D116). A failed PUT falls back to the form post under 4MB | Test: `ProductImages` (staged key sent, fallback keeps the file, error toast), `stagePhoto`, `putFile`, `createPhotoUpload`, `takeStagedUpload`, `readPhotoUpload`, `addProductImage`, `processProductPhoto`. **Server** still to confirm against a real bucket with the CORS rule |
 | Remove photograph | `ConfirmDialog` names the product. Deletes the shot from storage | Test: `ProductImages` |
-| Save (product) | Writes name, SKU, price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache. Closes the sheet on success | Test: `updateProduct` action, integration against local Postgres. Sheet close: `product-editor.test.tsx` |
+| Save (product) | Writes name, SKU, price, specs, SEO, availability, badge, published, sort, range, unit, stock and threshold. Busts storefront cache. Button spins and reads Saving, then a Done toast and the sheet closes (D117) | Test: `updateProduct` action, integration against local Postgres. Sheet close: `product-editor.test.tsx`, remount guard in `product-results.test.tsx`. **Server** confirmed 4 October: Saving state, "Done, Saved." toast and the close all observed on the running dev server, after fixing the `updatedAt` key that had swallowed them |
 | Delete product | `ConfirmDialog` names the product. Soft delete. Quotes keep their line and price. Closes the sheet | Test: `ProductEditor` plus integration |
 | `/stock` | Redirects to `/products` | Test |
 | `/categories` | Redirects to `/products` | Test |
@@ -401,22 +460,28 @@ both still unconfirmed.
 
 ### `/orders`
 
+D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cancel order; as an admin, Cancel order opens the ConfirmDialog. Test: `order-actions.test.tsx`. **Not walked on a device.**
+
+
 `beco_sales` and admins. No blank New order FAB: conversion is from a won quote. Stock does not auto-decrement (D89).
 
 | Control | What it does | Status |
 |---|---|---|
 | Search | Debounced, rewrites `?search=`, list re-filters by name, phone or reference | Test: `OrderFilters` |
-| Status / Payment / Source | Narrow the row set via the URL. `web` is labelled Website | Test: `OrderFilters` |
+| Status / Payment / Source | Narrow the row set via the URL. `web` is labelled Website. Below lg: owner, payment and status as chip rows | Test: `OrderFilters`, chips included |
 | Owner filter, per role | Sales defaults to Assigned to me. Admins default to Everyone | Test: `OrderFilters`. Page wires the options |
 | Desktop table | Order, Customer, Status, Payment, Owner, Source, Raised, Value, Actions. Actions is icon plus View | Test: `OrderResults` |
 | Order cards | Phone only. The card itself is View. No horizontal scroll | Test: `OrderResults` |
 | Pagination | Previous / Next. Page lives in `?page=` | Test: `OrderResults` |
 | Empty state | Convert a won quote, or clear the search. No New order control | Test: `OrderResults` |
 | Line items | Item / Qty / Unit / Line on desktop. Phone: name, then qty × unit and line. Catalogue strike under the name. Totals sit under Line | Test: `OrderLines` |
+| Line code (D124) | "Code H-301" under the item, the code that was quoted, carried across on conversion | Test: `OrderLines`; pgTAP `38_line_codes` proves the copy. **Not walked on a converted order on a server** |
 | Confirm / Fulfil | Forward status only. Writes `set_order_status` | Test: `OrderActions`. RPC pgTAP |
 | Cancel order | ConfirmDialog names the order, confirm verb Cancel order | Test: `OrderActions` |
 | Mark paid | ConfirmDialog names the order, confirm verb Mark paid. Stamps `paid_at`. Stock unchanged. Emails a receipt if an address exists | Test: `OrderActions`, `markOrderPaid`. RPC pgTAP |
-| View receipt | After paid: heading and Actions. Opens the receipt as canvas pages. Zoom in, zoom out, and pinch. Email is a real form, Download is `?download=1`. Copy says to download to send on WhatsApp | Test: `OrderDocumentPanel`, PDF route 409 until paid |
+| View receipt | After paid: heading and Actions. Opens the receipt as canvas pages. Zoom in, zoom out, and pinch. Email is a real form, Download is `?download=1`, WhatsApp shares the receipt PDF the same way the quote does | Test: `OrderDocumentPanel`, `WhatsAppShare`, PDF route 409 until paid |
+| Customer: Call, WhatsApp, Email; Collection or Delivery | One tap to the customer; fulfilment reads Collection or Delivery, not the raw value | `CustomerContact` tested |
+| Mark paid, receipt email failed | Says the order is paid AND that the receipt did not send, and alerts Brightex | `markOrderPaid` path; `reportSendFailure` tested |
 | Quote link | Inspector ownership block links to the source quote | Rendered on detail |
 
 ### `/reports`
@@ -451,7 +516,7 @@ both still unconfirmed.
 | Deactivate / Reactivate | ConfirmDialog names the person. Sessions end. Quotes keep attribution. Nothing is deleted | Test: `UserEditor`, `setStaffActive` |
 | Reset password | ConfirmDialog. Shows a new secret once. Re-arms `must_change_password` | Test: `resetStaffPassword` |
 | Show on /team | Sales only. Writes `is_public`. Directors cannot be listed | Test: `UserEditor`, `saveStaffPublicProfile`. Constraint `users_only_sales_are_public` |
-| Upload / replace photograph | JPEG, PNG or WebP. 400/800/1600 webp on R2. Preview loads from dashboard `/api/img`. Busts storefront `/team` | Test: `UserEditor`, `uploadStaffPhoto`, img route |
+| Upload / replace photograph | JPEG, PNG or WebP up to 12MB, direct to R2 with a percentage on the button (D116). 400/800/1600 webp on R2. Preview loads from dashboard `/api/img`. Busts storefront `/team` | Test: `UserEditor`, `uploadStaffPhoto`, `readPhotoUpload`, img route |
 | Remove photograph | ConfirmDialog names the person. Deletes the R2 objects | Test: `UserEditor`, `removeStaffPhoto` |
 | Product manager at `/users` | Proxy bounces to `/products` | `access.test.ts`. **Server** still to walk as Aisha |
 
@@ -461,6 +526,7 @@ both still unconfirmed.
 
 | Control | What it does | Status |
 |---|---|---|
+| On the site now | The live bar as a visitor sees it, highest priority first, or "Nothing is live" | `AnnouncementPreview` tested. **Server** screenshot |
 | Search / Type / Window | URL filters. One row from `lg` | Test: `AnnouncementFilters` |
 | Desktop table | Title, Type, Dates, Priority, Status, Actions. Actions is icon plus Edit | Test: `AnnouncementResults` |
 | Cards | Phone only. The card is Edit | Test: `AnnouncementResults` |
@@ -468,13 +534,55 @@ both still unconfirmed.
 | Editor | FormSections for copy, schedule (Nairobi), CTA, preview. Save writes the row and busts the storefront layout | Test: `AnnouncementEditor`, create/update actions |
 | Live window | A row that starts tomorrow is absent from anon today, present once the window includes now | pgTAP `27_announcements_admin`. Integration against local Postgres |
 
+### Dashboard shell, 3 October (D106)
+
+| Control | What it does | Status |
+|---|---|---|
+| Sidebar (desktop) | Sections grouped by job; the current one filled charcoal with a red tick; Quotes carries the new count; Overview first for admins, absent for sales. Hidden under `lg` | Test: `AppShell`, `SideNav` via shell tests, `navGroupsFor`. Seen at 1440px |
+| Top bar crumb (desktop) | Section, then page, the section a link back to its list | Test: `AppShell`. Seen on Overview, Quotes, Catalogue, Reports |
+| Phone header | The D85 card over the showroom still, now naming the screen; the docked breadcrumb is phone only | Test: `ShellContext`, `app-shell.test.tsx`. Seen at iPhone 13 size |
+| Bottom bar, New quote (D111) | Navigates to `/quotes/new` | Test: `bottom-nav.test.tsx`. Seen |
+| Bottom bar, More (D111) | Opens the sheet with the remaining sections, Change password and Sign out (a POST); closes on navigation | Test: `bottom-nav.test.tsx`. Seen |
+| Phone overflow audit (D112) | Every screen at 390px, every role: no element's right edge leaves the viewport | Script, `overflow.cjs` against the dev server: 0 offenders on 15 screens, 3 October. Re-run after any list, filter or heading change |
+| Docked save bars and floating pills above the bar (D111) | `--dock` lifts the new quote and settings save bars and every `fabClasses()` pill above the bar | Test: `app-shell.test.tsx` on the variable; `new-quote-form` and `settings-form` bar classes. **Not walked on a device** |
+| Home: Quotes, week by week | Raised against won, last eight weeks, from `activity_series()`. Legend, labels on the won bars, tooltip, hidden table. "Reports" link | Test: `HomeActivity`, `TrendBars`. Seen with eight weeks of local demo rows |
+| Home: Where quotes stand | One bar from new to lost with counts under it; New in Warm Red only when the response target is breached. "Open the list" link | Test: `StageBar`, `toStages`. Seen |
+| Reports: Money, week by week | Invoiced against collected, last eight weeks | Test: `ReportCharts`. Seen |
+| Reports: ranked bars | Won value by salesperson, funnel, most viewed, as Recharts horizontal bars with the value at the end | Test: `RankedBars`, `ReportResults`. Seen |
+| List toolbars | Quotes, Orders, Catalogue: search and filters in one row above the table, the count beside them announced on change | Test: `TableToolbar` via page render. Seen |
+
+### `/products/import`
+
+D115: the screen, the Drive import button on the catalogue heading and the POST admit `brightex_admin` only; a product manager or Beco admin opening `/products/import` is sent to their landing. Test: `access.test.ts`, `import/__tests__/actions.test.ts`. **Not walked on a device.**
+
+
+Product manager, Beco admin, Brightex admin, the same roles as `/products`. Reached from the
+Catalogue heading's "Drive import" button and by URL.
+
+| Control | What it does | Status |
+|---|---|---|
+| What (chips: Check only, Import, Re-encode everything) | Picks the workflow mode; the hint under the row changes with it | Test: `ImportRunner` |
+| Where (chips: Staging, Production) | Picks the target database and bucket | Test: `ImportRunner` |
+| Check Drive / Start import | Dispatches `drive-import.yml` through the GitHub API with exactly `mode` and `target`. A check run or anything on staging starts at once; an import or re-encode on production asks first in a `ConfirmDialog` that names the live site. One start a minute per person. The run appears under Recent runs | Test: `ImportRunner`, `startImport`, `dispatchImport`. **Dispatch against the real repository NOT YET RUN: needs `GITHUB_ACTIONS_TOKEN` on the dashboard** |
+| Not connected notice | Shown with the missing variable names when the token or repository is unset; the button is disabled with the reason | Test: `ImportRunner` |
+| Recent runs | Every run GitHub lists, status in words (Queued, Running, Done, Failed, Cancelled, Waiting for approval), who started it, when. "Open log" is a real link to the run on github.com, only when GitHub gave a github.com URL | Test: `ImportWorkflowRuns`, `toWorkflowRun`, `describeRun` |
+| Last import | Counts from `import_runs.summary` and every `import_issues` row for that run, grouped by top Drive folder, biggest group first, each with the path and the reason the importer wrote | Test: `ImportReport`, `groupImportIssues`. RLS: pgTAP migration 8 policies |
+| How Drive is read | Static guide to the four folder shapes and the price list rule | Test: `DriveShapeGuide` axe |
+| Catalogue (back link) | Returns to `/products` | Component test on `BackLink` |
+
 ### `/settings`
+
+D110: as `beco_admin` the Studio tab and the Brightex allowlist are absent and a save leaves the stored list untouched. Test: `settings/__tests__/actions.test.ts`.
+
 
 `beco_admin` (`irene.kariuki@beco.co.ke`) and `brightex_admin`. No FAB. Launch date stays on `/launch`.
 
 | Control | What it does | Status |
 |---|---|---|
-| Quotes / Payments / Contact / Notifications / Studio | Switches the panel immediately. URL `?tab=`. Inactive fields stay in the save form but stay hidden | Test: `SettingsForm`. VAT is not visible on Payments |
+| Quotes / Payments / Business / Contact / Notifications / Studio | Switches the panel immediately. URL `?tab=`. Inactive fields stay in the save form but stay hidden | Test: `SettingsForm`. VAT is not visible on Payments |
+| Business (28 September) | Registered name, KRA PIN (letter, nine digits, letter, uppercased), VAT number, address, business email. Printed in the From block of quotes and receipts; KRA lines only once filled | Test: form, action, schema, `quoteFromLines`; pgTAP 30. **The printed PDF has not been checked by eye with a real PIN** |
+| As printed on a quote (28 September) | Payments and Business tabs. Beside the fields on desktop, below them on a phone. Redraws the From block and the How to pay box as each field is typed, from the same functions the PDF uses. Says when no PIN or no channel will print | Test: `SettingsDocumentPreview`, `SettingsForm` (typing updates it). Seen in the running dashboard, desktop and phone |
+| Phone save bar (28 September) | Phone only, docked at the bottom on every tab but Permissions. "Unsaved changes" once a field changes, "All saved" after a save goes through; a refused save keeps both the note and every typed value. Steps aside while the keyboard is open. The title row Save is desktop only | Test: `SettingsForm`. Seen at iPhone 13 size. **Keyboard behaviour NOT WALKED on a real phone** |
 | Save settings | Title row, right. Writes VAT, validity, SLA, bank, till, paybill, send money, terms, footer, WhatsApp, phone, recipients, Brightex allowlist | Test: `SettingsForm`, `saveDashboardSettings`. Integration against local Postgres |
 | Anniversary launch | Title row, right. Brightex only. Navigates to `/launch` | Test: `SettingsForm`. Irene does not see it |
 | Allow audit / Remove audit | Brightex only. ConfirmDialog names the person. Sets `can_read_audit` | Test: `SettingsGrants`. pgTAP `28` |

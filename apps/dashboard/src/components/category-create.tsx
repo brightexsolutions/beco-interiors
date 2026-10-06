@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Field, FormSection, Input, Select, useActionToast } from '@beco/ui';
+import { Button, Field, FormSection, Input, Select, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { slugifyCategoryName } from '@beco/validation';
 import { createCategory, type CategoryActionState } from '@/app/(app)/categories/actions';
 import type { CategoryParentOption } from '@/lib/categories';
@@ -12,12 +12,16 @@ const INITIAL: CategoryActionState = {};
 export function CategoryCreate({
   groupOptions,
   returnTo,
+  defaultParentId = null,
 }: {
   groupOptions: CategoryParentOption[];
   returnTo: string;
+  /** Preselected home, from the browser's "Add range under" (D114). */
+  defaultParentId?: string | null;
 }) {
   const router = useRouter();
   const [state, create, pending] = useActionState(createCategory, INITIAL);
+  const onCreateSubmit = useKeepValuesSubmit(create);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugTouched, setSlugTouched] = useState(false);
@@ -28,11 +32,11 @@ export function CategoryCreate({
   }, [state.slug, router]);
 
   return (
-    <form action={create} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <form onSubmit={onCreateSubmit} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
         <FormSection
           title="Name"
-          hint="A top level group sits above the shop, like Sintered Stone. A range sits under one, like Limestone under Sintered Stone."
+          hint="A major category sits at the top of the shop, like Sintered Stone or Handles. A range sits under one, like 12mm Sintered Stones. A sub range sits under a range, like Black Handles under Handles, and each level can hold priced products."
         >
           <Field label="Name" htmlFor="new-cat-name">
             <Input
@@ -59,9 +63,9 @@ export function CategoryCreate({
               }}
             />
           </Field>
-          <Field label="File under" htmlFor="new-cat-parent" hint="Leave as Top level group to create a new group instead of a range">
-            <Select id="new-cat-parent" name="parentId" defaultValue="">
-              <option value="">Top level group</option>
+          <Field label="File under" htmlFor="new-cat-parent" hint="Leave as Major category to create one, or pick the category or range this sits under">
+            <Select id="new-cat-parent" name="parentId" defaultValue={defaultParentId ?? ''}>
+              <option value="">Major category</option>
               {groupOptions.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
@@ -75,8 +79,8 @@ export function CategoryCreate({
         <Button type="button" variant="ghost" onClick={() => router.push(returnTo)}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? 'Creating…' : 'Create'}
+        <Button type="submit" variant="primary" pending={pending}>
+          {pending ? 'Creating' : 'Create'}
         </Button>
       </div>
     </form>

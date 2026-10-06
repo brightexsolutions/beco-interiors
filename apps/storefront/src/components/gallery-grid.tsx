@@ -63,7 +63,7 @@ export function GalleryGrid({ projects }: { projects: GalleryShot[] }) {
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {lead.siblings.slice(0, 3).map((shot) => (
-              <div key={shot.path} className="beco-clip relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
+              <div key={shot.path} className="beco-clip relative aspect-[4/3] w-full overflow-hidden rounded-card bg-neutral-100">
                 <Image
                   src={shot.path}
                   alt={shot.alt}
@@ -74,7 +74,7 @@ export function GalleryGrid({ projects }: { projects: GalleryShot[] }) {
                 />
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                  className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                 />
               </div>
             ))}
@@ -89,7 +89,7 @@ export function GalleryGrid({ projects }: { projects: GalleryShot[] }) {
               {/* The frame is drawn first and never moves, so nothing here
                   can shift layout. beco-clip is what the wipe rises from
                   behind. */}
-              <div className={`beco-clip relative w-full bg-neutral-100 ${FRAME[i % FRAME.length]}`}>
+              <div className={`beco-clip relative w-full rounded-card bg-neutral-100 ${FRAME[i % FRAME.length]}`}>
                 <div
                   className={`beco-wipe absolute inset-0 ${DEPTH[i % DEPTH.length]}`}
                   style={{ animationDelay: `${(i % 2) * 110}ms` }}
@@ -122,7 +122,7 @@ export function GalleryGrid({ projects }: { projects: GalleryShot[] }) {
                 </div>
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                  className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                 />
               </div>
               <p className="beco-plate mt-4 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-charcoal">

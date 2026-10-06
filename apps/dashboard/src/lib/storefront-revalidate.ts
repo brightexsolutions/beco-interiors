@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache';
+import { environmentName, reportOpsFailure } from './ops-alert';
 
 /**
  * Bust the storefront after a catalogue write.
@@ -8,7 +9,58 @@ import { revalidatePath } from 'next/cache';
  * dashboard POSTs to the storefront `/api/revalidate` with a shared secret.
  * Dashboard `/products` still revalidates in this process so the editor
  * list refreshes even if the storefront is down.
+ *
+ * A failure never rolls back the write, but it is reported: a price change
+ * saved here and not shown on www.beco.co.ke looks to staff like the
+ * dashboard is broken. `fetch` only throws on a network error, so a 401 from
+ * a mismatched secret or a 500 has to be checked for explicitly.
  */
+async function postRevalidate(body: { tags: string[]; paths: string[] }, what: string): Promise<void> {
+  const origin = process.env.STOREFRONT_URL;
+  const secret = process.env.REVALIDATE_SECRET;
+  if (!origin || !secret) {
+    if (environmentName() === 'production') {
+      await reportOpsFailure({
+        area: 'storefront.revalidate',
+        summary: 'Storefront refresh is not configured, catalogue edits will not reach the live site',
+        detail: `${!origin ? 'STOREFRONT_URL' : 'REVALIDATE_SECRET'} is not set`,
+        dedupeKey: 'storefront.revalidate:config',
+      });
+    }
+    return;
+  }
+
+  const context = { what, paths: body.paths.join(' ') };
+  try {
+    const response = await fetch(`${origin.replace(/\/$/, '')}/api/revalidate`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${secret}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) {
+      await reportOpsFailure({
+        area: 'storefront.revalidate',
+        summary: `Storefront refused a refresh after ${what} (HTTP ${response.status})`,
+        detail: response.status === 401 ? 'REVALIDATE_SECRET does not match the storefront' : response.statusText,
+        context,
+        dedupeKey: `storefront.revalidate:${response.status}`,
+      });
+    }
+  } catch (error) {
+    await reportOpsFailure({
+      area: 'storefront.revalidate',
+      summary: `Storefront could not be reached to refresh after ${what}`,
+      error,
+      context,
+      dedupeKey: 'storefront.revalidate:unreachable',
+    });
+  }
+}
+
 export async function revalidateStorefront(input: {
   productSlug: string;
   categorySlug?: string | null;
@@ -27,22 +79,7 @@ export async function revalidateStorefront(input: {
     paths.push(`/shop/${input.categorySlug}`);
   }
 
-  const origin = process.env.STOREFRONT_URL;
-  const secret = process.env.REVALIDATE_SECRET;
-  if (!origin || !secret) return;
-
-  try {
-    await fetch(`${origin.replace(/\/$/, '')}/api/revalidate`, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${secret}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({ tags, paths }),
-    });
-  } catch {
-    // A storefront outage must not roll back the catalogue write.
-  }
+  await postRevalidate({ tags, paths }, `a product edit (${input.productSlug})`);
 }
 
 /** Bust the storefront after a category write: a rename, a publish toggle,
@@ -67,23 +104,8 @@ export async function revalidateStorefrontPaths(
 ): Promise<void> {
   revalidatePath(dashboardPath);
 
-  const origin = process.env.STOREFRONT_URL;
-  const secret = process.env.REVALIDATE_SECRET;
-  if (!origin || !secret) return;
-
   const safe = paths.filter((path) => path.startsWith('/'));
   if (safe.length === 0) return;
 
-  try {
-    await fetch(`${origin.replace(/\/$/, '')}/api/revalidate`, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${secret}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({ tags: [], paths: safe }),
-    });
-  } catch {
-    // A storefront outage must not roll back the announcement write.
-  }
+  await postRevalidate({ tags: [], paths: safe }, `an edit on ${dashboardPath}`);
 }

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useEffect } from 'react';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import type { CatalogueProduct } from '@/lib/products';
@@ -11,8 +12,12 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => params,
 }));
 
+const editorMounts = vi.fn();
 vi.mock('@/components/product-editor', () => ({
-  ProductEditor: ({ product }: { product: CatalogueProduct }) => <p>Editing {product.name}</p>,
+  ProductEditor: ({ product }: { product: CatalogueProduct }) => {
+    useEffect(() => editorMounts(), []);
+    return <p>Editing {product.name}</p>;
+  },
 }));
 
 vi.mock('@/components/product-create', () => ({
@@ -55,6 +60,16 @@ beforeEach(() => {
 });
 
 describe('ProductResults', () => {
+  it('keeps the open editor mounted when the row it edits gets a new updatedAt, which is what a save does (D117)', () => {
+    editorMounts.mockClear();
+    const first = product();
+    const { rerender } = render(<ProductResults products={[first]} editing={first} creating={false} categories={[]} />);
+    const saved = product({ updatedAt: '2026-10-04T12:00:00.000Z' });
+    rerender(<ProductResults products={[saved]} editing={saved} creating={false} categories={[]} />);
+    expect(screen.getByText('Editing Limestone Ivory')).toBeInTheDocument();
+    expect(editorMounts).toHaveBeenCalledTimes(1);
+  });
+
   it('gives every product an explicit Edit action, not a click-anywhere row', () => {
     render(
       <ProductResults

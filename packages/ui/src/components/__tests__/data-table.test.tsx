@@ -77,6 +77,16 @@ describe('DataTable', () => {
     expect(totals).toEqual(['KES 40,000', 'KES 92,400', 'KES 148,000']);
   });
 
+  it('steps a showFrom column aside below 2xl, header and cells alike (D113)', () => {
+    const cols = columns.map((c) => (c.key === columns[1]!.key ? { ...c, showFrom: '2xl' as const } : c));
+    render(<DataTable caption="Quotes" columns={cols} rows={rows} getRowKey={(r) => r.id} />);
+    const header = screen.getAllByRole('columnheader')[1];
+    expect(header?.className).toContain('hidden');
+    expect(header?.className).toContain('2xl:table-cell');
+    const firstRowCells = screen.getAllByRole('row')[1]!.querySelectorAll('td');
+    expect(firstRowCells[1]?.className).toContain('2xl:table-cell');
+  });
+
   it('a non-sortable column renders plain text, not a button', () => {
     render(<DataTable caption="Quotes" columns={columns} rows={rows} getRowKey={(r) => r.id} />);
     const header = screen.getByRole('columnheader', { name: 'Actions' });
@@ -100,5 +110,15 @@ describe('DataTable', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<DataTable caption="Quotes" columns={columns} rows={rows} getRowKey={(r) => r.id} />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+  it('dims the body and says busy while the rows are being replaced', () => {
+    const { container, rerender } = render(
+      <DataTable caption="Quotes" columns={columns} rows={rows} getRowKey={(r) => r.id} busy />,
+    );
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
+    expect(container.querySelector('tbody')).toHaveClass('opacity-50');
+    rerender(<DataTable caption="Quotes" columns={columns} rows={rows} getRowKey={(r) => r.id} />);
+    expect(container.querySelector('[aria-busy="true"]')).toBeNull();
+    expect(container.querySelector('tbody')).not.toHaveClass('opacity-50');
   });
 });

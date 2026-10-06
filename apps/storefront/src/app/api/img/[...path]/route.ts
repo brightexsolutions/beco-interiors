@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ path: stri
 
   // Path traversal guard. The key is user controllable via the URL, so it is
   // constrained rather than trusted, even though R2 would reject most of it.
-  if (key.includes('..') || key.startsWith('/')) {
+  if (key.length === 0 || key.includes('..') || key.startsWith('/') || key.includes('\\')) {
     return new Response('Bad request', { status: 400 });
   }
 

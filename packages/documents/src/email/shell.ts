@@ -1,46 +1,44 @@
 /**
  * The branded shell every transactional email renders inside, so a
- * confirmation, a priced quote and a receipt read as the same company
- * rather than three ad hoc messages.
+ * confirmation, a priced quote and a receipt read as the same company.
  *
- * Hand built table markup, not a component library. `@react-email/components`
- * was tried first and dropped: its published versions, including the latest,
- * carry npm's own "no longer supported" deprecation notice with no
- * replacement named, not something to pin a live client-facing send path to
- * without a clearer reason than convenience. Table based layout with inline
- * styles is the actual cross-client requirement underneath that library
- * anyway (Outlook's Word rendering engine understands neither flexbox nor a
- * `<div>` grid), and three short templates do not need a dependency to get
- * there by hand.
+ * Layout: a quiet grey canvas, one 600px white card. A charcoal band carries
+ * the red square mark and the wordmark as real text, then a single Warm Red
+ * rule, the only red in the message besides the eyebrow. Under the rule a
+ * photograph of a finished Beco interior, one per template, so the message
+ * opens the way the site does: on the material, not on a logo (D109). The
+ * body leads with an eyebrow and a serif heading, the reference sits in its
+ * own card, a priced quote and a receipt carry their lines and a charcoal
+ * total block with the figure set large in the serif, and the two ways to
+ * reach a person (call, WhatsApp) are real buttons. The footer is the
+ * showroom: address, directions, hours, phone, site, the two social
+ * accounts.
  *
- * Colours are the same four constants `pdf/quote-document.tsx` already
- * hardcodes for the same reason: this is the document-safe subset of the
- * full site palette, not the whole `@beco/ui` token set, which this package
- * has no reason to depend on. Fonts are a fallback stack, not the real
- * Titillium and Cormorant files the PDF embeds: those are self hosted via
- * `next/font/local` with a content hashed filename that changes on every
- * build, so there is no stable URL an email's own `@font-face` could point
- * at without a second, dedicated hosting path nobody has built. Most inboxes
- * ignore `@font-face` in HTML mail regardless, Outlook desktop entirely, so
- * the fallback stack is not a workaround for a missing asset, it is the
- * actual state of the art for branded email.
+ * Hand built table markup with inline styles, because that is what Gmail,
+ * Apple Mail and Outlook's Word engine all agree on; `@react-email` was
+ * tried first and dropped for its deprecation notice. Sharp corners
+ * throughout, the brand's corner rule (D2, D92). Every size is 14px or more,
+ * the project's small print floor, with body copy at 16px.
  */
+
+import { lineCodeLabel } from '../pdf/types';
 
 export const CHARCOAL = '#101820';
 /** The text safe variant, same reason button.tsx uses it: pure Warm Red
  *  carries white text at 4.38:1, under the 4.5 AA floor. */
 export const WARM_RED = '#c81419';
-export const MUTED = '#6b757f';
-export const RULE = '#d7dce0';
+export const MUTED = '#5c6670';
+export const RULE = '#e2e6e9';
 export const PAPER = '#ffffff';
+export const CANVAS = '#f2f3f4';
+export const PANEL = '#f7f8f8';
 
 /** Titillium is a humanist grotesque; this stack is the closest a system
  *  font gets without embedding it. */
 export const SANS =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 /** Cormorant is a display garamond; Georgia is the nearest safe serif every
- *  mail client already has, used only for the one display moment per
- *  template, never for body copy. */
+ *  mail client already has, used only for display moments. */
 export const SERIF = "Georgia,'Times New Roman',serif";
 
 export const escapeHtml = (value: string): string =>
@@ -50,73 +48,287 @@ export const escapeHtml = (value: string): string =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-/** The storefront's own origin, so the header logo resolves to a real,
- *  publicly reachable image: an email client can never load a relative or
- *  a build time local path. Falls back to the live domain rather than
- *  localhost, so a misconfigured environment still sends a working image
- *  in the one place that matters, production. */
+/** The storefront's own origin, so images resolve to a real, publicly
+ *  reachable URL: an email client can never load a relative path. Falls back
+ *  to the live domain rather than localhost. */
 export const siteUrl = (): string => (process.env.STOREFRONT_URL || 'https://www.beco.co.ke').replace(/\/$/, '');
 
 export const PHONE_DISPLAY = '+254 722 333 730';
 export const PHONE_HREF = 'tel:+254722333730';
+export const WHATSAPP_HREF = 'https://wa.me/254722333730';
 export const ADDRESS_LINE = 'Urban Square, Enterprise Road, Industrial Area, Nairobi';
+export const HOURS_LINE = 'Mon to Fri 8am to 4pm, Sat 8am to 2pm';
+export const DIRECTIONS_HREF =
+  'https://www.google.com/maps/search/?api=1&query=Urban%20Square%2C%20Enterprise%20Road%2C%20Industrial%20Area%2C%20Nairobi';
+export const INSTAGRAM_HREF = 'https://www.instagram.com/becointeriorskenya';
+export const TIKTOK_HREF = 'https://www.tiktok.com/@beco.interiors';
+
+export interface EmailHero {
+  /** Absolute URL. JPEG, because Outlook's engine does not render WebP. */
+  src: string;
+  alt: string;
+}
 
 /**
- * The uppercase, letterspaced red label above a heading, the same rhythm
- * `PageHeader` uses on the storefront: eyebrow, then the actual line. Kept
- * to one appearance per email, the only Warm Red in the whole document
- * besides the logo mark, so the rationing the brand guideline asks for on
- * every other surface holds here too.
+ * The photograph each template opens on. JPEG crops of the site's own
+ * photography, 1200 by 440, under 35KB each, in `apps/storefront/public/email`.
+ * Absolute, from the storefront's origin, because an email client cannot
+ * resolve a relative path.
  */
-export function eyebrow(text: string): string {
+export const emailHero = (kind: 'request' | 'quote' | 'receipt'): EmailHero => {
+  const site = siteUrl();
+  const alts = {
+    request: 'A slatted wall panel behind a living room, finished by Beco',
+    quote: 'A charcoal sintered stone island in a Nairobi kitchen',
+    receipt: 'A floating vanity in bronze toned stone',
+  };
+  return { src: `${site}/email/hero-${kind}.jpg`, alt: alts[kind] };
+};
+
+/**
+ * Corners, D125: the site's two values, so an email reads as the same
+ * company. 6px on the card and on boxed blocks, 4px on buttons and small
+ * marks. Outlook on Windows ignores border-radius and draws them square,
+ * which is the old look, not a broken one.
+ */
+const RADIUS_CARD = '6px';
+const RADIUS_CONTROL = '4px';
+
+const text = (size: number, color: string, extra = '') =>
+  `font-family:${SANS};font-size:${size}px;line-height:1.6;color:${color};${extra}`;
+
+/** The uppercase, letterspaced red label above a heading. One per email. */
+export function eyebrow(label: string): string {
   return (
-    `<p style="margin:0 0 8px;font-family:${SANS};font-size:12px;font-weight:600;` +
-    `letter-spacing:0.14em;text-transform:uppercase;color:${WARM_RED}">${escapeHtml(text)}</p>`
+    `<p style="margin:0 0 12px;${text(14, WARM_RED, 'font-weight:600;letter-spacing:0.16em;text-transform:uppercase')}">` +
+    `${escapeHtml(label)}</p>`
   );
 }
 
-/** The one display moment per template: the serif fallback, set large,
- *  standing in for Cormorant the way the storefront's own Cormorant
- *  headings open a section. */
+/** The one display moment per template, the serif standing in for Cormorant. */
 export function heading(html: string): string {
   return (
-    `<p style="margin:0 0 16px;font-family:${SERIF};font-size:24px;line-height:1.3;` +
-    `font-weight:500;color:${CHARCOAL}">${html}</p>`
+    `<h1 style="margin:0 0 20px;font-family:${SERIF};font-size:34px;line-height:1.15;letter-spacing:-0.01em;` +
+    `font-weight:400;color:${CHARCOAL}">${html}</h1>`
   );
 }
 
 export function paragraph(html: string): string {
+  return `<p style="margin:0 0 16px;${text(16, CHARCOAL)}">${html}</p>`;
+}
+
+/**
+ * The reference card. A charcoal bar on the left edge marks it as the one
+ * thing to keep; optional rows beneath carry what goes with it (validity, a
+ * payment date).
+ */
+export function referenceBox(label: string, value: string, rows: Array<[string, string]> = []): string {
+  const detail = rows
+    .map(
+      ([key, val]) =>
+        `<tr><td style="padding:8px 0 0;${text(14, MUTED)}">${escapeHtml(key)}</td>` +
+        `<td align="right" style="padding:8px 0 0;${text(14, CHARCOAL, 'font-weight:600')}">${escapeHtml(val)}</td></tr>`,
+    )
+    .join('');
   return (
-    `<p style="margin:0 0 16px;font-family:${SANS};font-size:16px;line-height:1.6;` +
-    `color:${CHARCOAL}">${html}</p>`
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ` +
+    `style="margin:8px 0 24px;border-collapse:separate;border:1px solid ${RULE};border-left:4px solid ${CHARCOAL};border-radius:${RADIUS_CARD};background:${PANEL}">` +
+    '<tr><td style="padding:18px 20px">' +
+    `<p style="margin:0 0 4px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">` +
+    `${escapeHtml(label)}</p>` +
+    `<p style="margin:0;font-family:${SANS};font-size:24px;line-height:1.3;font-weight:700;letter-spacing:0.02em;color:${CHARCOAL}">` +
+    `${escapeHtml(value)}</p>` +
+    (detail
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ` +
+        `style="margin-top:10px;border-top:1px solid ${RULE}">${detail}</table>`
+      : '') +
+    '</td></tr></table>'
+  );
+}
+
+/** A small uppercase label that opens a block inside the body. */
+export function sectionLabel(label: string): string {
+  return (
+    `<p style="margin:0 0 12px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">` +
+    `${escapeHtml(label)}</p>`
+  );
+}
+
+/** A named attachment, so the reader knows to look for the file. */
+export function attachmentNote(filename: string, caption: string): string {
+  return (
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">` +
+    '<tr>' +
+    `<td width="44" valign="top" style="padding:2px 12px 0 0">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
+    `<td align="center" style="width:32px;height:40px;border:1px solid ${CHARCOAL};border-radius:${RADIUS_CONTROL};${text(14, CHARCOAL, 'font-weight:700;line-height:40px')}">PDF</td>` +
+    '</tr></table></td>' +
+    `<td valign="top"><p style="margin:0;${text(16, CHARCOAL, 'font-weight:600;word-break:break-word')}">${escapeHtml(filename)}</p>` +
+    `<p style="margin:0;${text(14, MUTED)}">${escapeHtml(caption)}</p></td>` +
+    '</tr></table>'
+  );
+}
+
+/** Numbered next steps, so a reader knows what happens without a paragraph. */
+export function steps(items: string[]): string {
+  return (
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">` +
+    items
+      .map(
+        (item, i) =>
+          '<tr>' +
+          `<td width="36" valign="top" style="padding:0 0 12px">` +
+          `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
+          `<td align="center" style="width:26px;height:26px;background:${CHARCOAL};border-radius:${RADIUS_CONTROL};${text(14, PAPER, 'font-weight:700;line-height:26px')}">${i + 1}</td>` +
+          '</tr></table></td>' +
+          `<td valign="top" style="padding:1px 0 12px;${text(16, CHARCOAL)}">${escapeHtml(item)}</td>` +
+          '</tr>',
+      )
+      .join('') +
+    '</table>'
   );
 }
 
 /**
- * A bordered, sharp cornered box naming the one thing every one of these
- * emails exists to hand over: the reference. Sharp, not rounded, the same
- * corner rule the storefront and the PDF both hold to, D2's own "a sharp
- * edge reads more deliberate than a blur", so the document does not
- * introduce a shape the rest of the brand refuses.
+ * Bulletproof buttons: a table cell with padding, not a styled link alone,
+ * so Outlook keeps the shape. Primary is charcoal, secondary is outlined.
  */
-export function referenceBox(label: string, value: string): string {
+export function buttons(items: Array<{ label: string; href: string; primary?: boolean }>): string {
+  const cells = items
+    .map(({ label, href, primary }) => {
+      const bg = primary ? CHARCOAL : PAPER;
+      const fg = primary ? PAPER : CHARCOAL;
+      return (
+        `<td class="beco-stack" style="padding:0 8px 8px 0">` +
+        `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
+        `<td style="background:${bg};border:1px solid ${CHARCOAL};border-radius:${RADIUS_CONTROL}">` +
+        `<a href="${escapeHtml(href)}" style="display:inline-block;border-radius:${RADIUS_CONTROL};padding:13px 22px;${text(16, fg, 'font-weight:600;line-height:1.2;text-decoration:none;letter-spacing:0.02em;white-space:nowrap')}">` +
+        `${escapeHtml(label)}</a></td></tr></table></td>`
+      );
+    })
+    .join('');
   return (
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ` +
-    `style="margin:0 0 20px;border:1px solid ${RULE}"><tr><td style="padding:16px 20px">` +
-    `<p style="margin:0 0 4px;font-family:${SANS};font-size:11px;font-weight:600;` +
-    `letter-spacing:0.12em;text-transform:uppercase;color:${MUTED}">${escapeHtml(label)}</p>` +
-    `<p style="margin:0;font-family:${SANS};font-size:20px;font-weight:600;color:${CHARCOAL}">` +
-    `${escapeHtml(value)}</p></td></tr></table>`
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 16px"><tr>${cells}<td style="width:100%"></td></tr></table>`
   );
 }
+
+export interface EmailLine {
+  description: string;
+  /** The product code, D124. */
+  code?: string | null;
+  quantity: number;
+  /** "slab", "pc", "m2". Null for a custom line. */
+  unit?: string | null;
+  /** Null or 0 means priced on application. */
+  lineTotal: number | null;
+}
+
+/** How many lines an email shows before it points at the PDF for the rest. */
+export const MAX_EMAIL_LINES = 8;
+
+const quantityOf = (line: EmailLine): string => {
+  const qty = Number.isInteger(line.quantity) ? String(line.quantity) : line.quantity.toFixed(1);
+  const amount = line.unit ? `${qty} ${line.unit}` : qty;
+  // The code first, so a hinge reads "Code H-301, 10 pc" under its name.
+  const code = lineCodeLabel(line.code);
+  return code ? `${code}, ${amount}` : amount;
+};
+
+/**
+ * The lines of a quote or an order, as a quiet table: description, quantity,
+ * line total right aligned in tabular figures. Capped, with the remainder
+ * named, because an email is a summary and the PDF is the document.
+ */
+export function lineTable(lines: readonly EmailLine[], formatMoney: (n: number) => string): string {
+  if (lines.length === 0) return '';
+  const shown = lines.slice(0, MAX_EMAIL_LINES);
+  const rest = lines.length - shown.length;
+  const rows = shown
+    .map(
+      (line, i) =>
+        `<tr>` +
+        `<td style="padding:10px 12px 10px 0;border-top:1px solid ${i === 0 ? CHARCOAL : RULE};${text(16, CHARCOAL)}">${escapeHtml(line.description)}` +
+        `<span style="display:block;${text(14, MUTED)}">${escapeHtml(quantityOf(line))}</span></td>` +
+        `<td align="right" valign="top" style="padding:10px 0 10px 12px;border-top:1px solid ${i === 0 ? CHARCOAL : RULE};white-space:nowrap;${text(16, CHARCOAL, 'font-weight:600;font-variant-numeric:tabular-nums')}">` +
+        `${line.lineTotal && line.lineTotal > 0 ? escapeHtml(formatMoney(line.lineTotal)) : 'On application'}</td>` +
+        `</tr>`,
+    )
+    .join('');
+  const more = rest > 0
+    ? `<tr><td colspan="2" style="padding:10px 0 0;border-top:1px solid ${RULE};${text(14, MUTED)}">` +
+      `and ${rest} more ${rest === 1 ? 'line' : 'lines'} in the attached PDF</td></tr>`
+    : '';
+  return (
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px">` +
+    `<tr><td style="padding:0 0 8px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">Item</td>` +
+    `<td align="right" style="padding:0 0 8px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">Amount</td></tr>` +
+    rows +
+    more +
+    '</table>'
+  );
+}
+
+/**
+ * The figure that matters, set large in the serif on charcoal: a quote's
+ * total, a receipt's amount paid. Rows beneath carry what qualifies it (net,
+ * VAT, validity, the date paid). The one dark block in the body, so the eye
+ * lands on it before anything else.
+ */
+export function totalBlock(label: string, amount: string, rows: Array<[string, string]> = []): string {
+  const detail = rows
+    .map(
+      ([key, val]) =>
+        `<tr><td style="padding:6px 0 0;${text(14, '#b6bec6')}">${escapeHtml(key)}</td>` +
+        `<td align="right" style="padding:6px 0 0;${text(14, PAPER, 'font-weight:600;font-variant-numeric:tabular-nums')}">${escapeHtml(val)}</td></tr>`,
+    )
+    .join('');
+  return (
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;border-collapse:separate;border-radius:${RADIUS_CARD};background:${CHARCOAL}">` +
+    `<tr><td style="padding:22px 24px 20px">` +
+    `<p style="margin:0 0 6px;${text(14, '#b6bec6', 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">${escapeHtml(label)}</p>` +
+    `<p style="margin:0;font-family:${SERIF};font-size:40px;line-height:1.1;letter-spacing:-0.01em;color:${PAPER}">${escapeHtml(amount)}</p>` +
+    (detail
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;border-top:1px solid #2b333b">${detail}</table>`
+      : '') +
+    '</td></tr></table>'
+  );
+}
+
+/** A thin rule between the message and its sign off. */
+export const divider = (): string =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px">` +
+  `<tr><td style="border-top:1px solid ${RULE};font-size:0;line-height:0">&nbsp;</td></tr></table>`;
+
+/** The sign off every message ends on: a person, not a no-reply. */
+export const signOff = (): string =>
+  `<p style="margin:0;${text(16, CHARCOAL)}">Talk soon,</p>` +
+  `<p style="margin:0;${text(16, CHARCOAL, 'font-weight:600')}">The Beco Interiors team</p>`;
+
+/** The two ways to reach a person, used by every template. */
+export const contactButtons = (whatsappText: string): string =>
+  buttons([
+    { label: 'Call the showroom', href: PHONE_HREF, primary: true },
+    { label: 'WhatsApp us', href: `${WHATSAPP_HREF}?text=${encodeURIComponent(whatsappText)}` },
+  ]);
 
 /**
  * The full document: doctype, head, the branded header and footer around
- * whatever body content a template supplies. One shell, so a change to how
- * Beco's mark or footer reads happens once, not three times.
+ * whatever body content a template supplies.
  */
-export function renderEmailShell({ preview, bodyHtml }: { preview: string; bodyHtml: string }): string {
-  const logo = `${siteUrl()}/logo-mark.png`;
+export function renderEmailShell({
+  preview,
+  bodyHtml,
+  hero,
+}: {
+  preview: string;
+  bodyHtml: string;
+  /** The photograph under the header. Omitted, the message opens on the body. */
+  hero?: EmailHero | undefined;
+}): string {
+  const site = siteUrl();
+  // The brand mark: white letters on the Warm Red square, the same file
+  // the PDF header and the site favicon use.
+  const logo = `${site}/logo-mark.png`;
 
   return (
     '<!doctype html>' +
@@ -132,39 +344,71 @@ export function renderEmailShell({ preview, bodyHtml }: { preview: string; bodyH
     'body,table,td{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}' +
     'table,td{mso-table-lspace:0pt;mso-table-rspace:0pt}' +
     'img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none}' +
-    'body{margin:0;padding:0;width:100%!important;background:' + PAPER + '}' +
+    `body{margin:0;padding:0;width:100%!important;background:${CANVAS}}` +
+    'a{color:inherit}' +
+    '@media only screen and (max-width:620px){' +
+    '.beco-pad{padding-left:24px!important;padding-right:24px!important}' +
+    '.beco-stack{display:block!important;width:100%!important;padding-right:0!important}' +
+    '.beco-stack table,.beco-stack a{width:100%!important;box-sizing:border-box;text-align:center}' +
+    '.beco-hide{display:none!important}' +
+    '}' +
     '</style>' +
     '</head>' +
-    `<body style="margin:0;padding:0;background:${PAPER}">` +
-    // The preheader: the line an inbox list shows beside the subject,
-    // before the message opens. Hidden from the rendered message itself,
-    // and padded with zero width joiners so a client cannot fall through
-    // to pulling in the first real line of body copy instead.
+    `<body style="margin:0;padding:0;background:${CANVAS}">` +
+    // The preheader: the line an inbox list shows beside the subject.
     `<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">` +
     `${escapeHtml(preview)}${'&zwnj;&nbsp;'.repeat(40)}</div>` +
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER}">` +
-    '<tr><td align="center" style="padding:32px 16px">' +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CANVAS}">` +
+    '<tr><td align="center" style="padding:32px 12px">' +
+    '<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->' +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ` +
-    'style="max-width:520px;width:100%">' +
-    // Header: the mark, then the wordmark as real text, never baked into
-    // the image, so it survives a client that blocks images.
-    `<tr><td style="padding:0 8px 24px;border-bottom:1px solid ${RULE}">` +
-    '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
-    `<td style="padding-right:10px"><img src="${logo}" width="28" height="27" alt="Beco" ` +
-    'style="display:block;width:28px;height:27px"></td>' +
-    `<td style="font-family:${SANS};font-size:16px;line-height:27px;color:${CHARCOAL}">` +
-    `<span style="font-weight:700">BECO</span> <span style="font-weight:400;letter-spacing:0.06em">INTERIORS</span>` +
-    '</td></tr></table></td></tr>' +
+    `style="max-width:600px;width:100%;border-collapse:separate;border-radius:${RADIUS_CARD};overflow:hidden;background:${PAPER}">` +
+    // Header band: the white mark and the wordmark as real text, so it
+    // survives a client that blocks images.
+    `<tr><td class="beco-pad" style="background:${CHARCOAL};border-radius:${RADIUS_CARD} ${RADIUS_CARD} 0 0;padding:24px 40px">` +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
+    '<td valign="middle"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+    `<td style="padding-right:14px"><img src="${logo}" width="40" height="39" alt="Beco" ` +
+    'style="display:block;width:40px;height:39px"></td>' +
+    `<td style="font-family:${SANS};font-size:16px;line-height:39px;color:${PAPER};letter-spacing:0.08em">` +
+    '<span style="font-weight:700">BECO</span> <span style="font-weight:400">INTERIORS</span>' +
+    '</td></tr></table></td>' +
+    `<td class="beco-hide" align="right" valign="middle" style="${text(14, '#c4cad0')}">` +
+    `<a href="${site}" style="color:#c4cad0;text-decoration:none">beco.co.ke</a></td>` +
+    '</tr></table></td></tr>' +
+    `<tr><td style="background:${WARM_RED};height:3px;font-size:0;line-height:0">&nbsp;</td></tr>` +
+    // The photograph. On charcoal so a client that blocks images shows a
+    // calm dark band rather than a broken icon on white.
+    (hero
+      ? `<tr><td style="background:${CHARCOAL};padding:0;font-size:0;line-height:0">` +
+        `<img src="${escapeHtml(hero.src)}" width="600" height="220" alt="${escapeHtml(hero.alt)}" ` +
+        'style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>'
+      : '') +
     // Body
-    `<tr><td style="padding:32px 8px">${bodyHtml}</td></tr>` +
-    // Footer
-    `<tr><td style="padding:20px 8px 0;border-top:1px solid ${RULE}">` +
-    `<p style="margin:0 0 4px;font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTED}">Beco Interiors</p>` +
-    `<p style="margin:0 0 4px;font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTED}">${escapeHtml(ADDRESS_LINE)}</p>` +
-    `<p style="margin:0;font-family:${SANS};font-size:13px;line-height:1.6"><a href="${PHONE_HREF}" ` +
-    `style="color:${WARM_RED};text-decoration:none">${PHONE_DISPLAY}</a></p>` +
+    `<tr><td class="beco-pad" style="padding:40px 40px 32px">${bodyHtml}</td></tr>` +
+    // Footer: the showroom
+    `<tr><td class="beco-pad" style="background:${PANEL};border-top:1px solid ${RULE};border-radius:0 0 ${RADIUS_CARD} ${RADIUS_CARD};padding:28px 40px">` +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
+    '<td class="beco-stack" valign="top" style="padding:0 16px 12px 0">' +
+    `<p style="margin:0 0 4px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">Showroom</p>` +
+    `<p style="margin:0;${text(14, CHARCOAL)}">${escapeHtml(ADDRESS_LINE)}</p>` +
+    `<p style="margin:0;${text(14, MUTED)}">${escapeHtml(HOURS_LINE)}</p>` +
+    `<p style="margin:6px 0 0;${text(14, CHARCOAL)}"><a href="${DIRECTIONS_HREF}" style="color:${CHARCOAL};text-decoration:underline">Get directions</a></p>` +
+    '</td>' +
+    '<td class="beco-stack" valign="top" style="padding:0 0 12px">' +
+    `<p style="margin:0 0 4px;${text(14, MUTED, 'font-weight:600;letter-spacing:0.12em;text-transform:uppercase')}">Talk to us</p>` +
+    `<p style="margin:0;${text(14, CHARCOAL)}"><a href="${PHONE_HREF}" style="color:${CHARCOAL};text-decoration:none;font-weight:600">${PHONE_DISPLAY}</a></p>` +
+    `<p style="margin:0;${text(14, CHARCOAL)}"><a href="${site}" style="color:${CHARCOAL};text-decoration:underline">www.beco.co.ke</a></p>` +
+    `<p style="margin:6px 0 0;${text(14, MUTED)}">` +
+    `<a href="${INSTAGRAM_HREF}" style="color:${MUTED};text-decoration:underline">Instagram</a>` +
+    `<span style="padding:0 6px">&middot;</span>` +
+    `<a href="${TIKTOK_HREF}" style="color:${MUTED};text-decoration:underline">TikTok</a></p>` +
+    '</td>' +
+    '</tr></table>' +
+    `<p style="margin:12px 0 0;${text(14, MUTED)}">Beco Interiors Limited. You are receiving this because you asked us for a quote or an order.</p>` +
     '</td></tr>' +
     '</table>' +
+    '<!--[if mso]></td></tr></table><![endif]-->' +
     '</td></tr></table>' +
     '</body></html>'
   );

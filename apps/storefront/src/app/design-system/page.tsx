@@ -19,7 +19,7 @@ export const metadata = {
 
 const Swatch = ({ name, hex, note }: { name: string; hex: string; note?: string }) => (
   <div>
-    <div className="h-20 w-full border border-neutral-200" style={{ background: hex }} />
+    <div className="h-20 w-full rounded-control border border-neutral-200" style={{ background: hex }} />
     <p className="mt-2 font-ui text-sm font-semibold text-charcoal">{name}</p>
     <p className="font-ui text-xs text-neutral-500">{hex}</p>
     {note ? <p className="mt-1 font-ui text-xs text-neutral-500">{note}</p> : null}

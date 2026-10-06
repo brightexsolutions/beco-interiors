@@ -2,6 +2,8 @@ import type { QuoteMoney } from '@beco/validation';
 
 export interface QuotePdfLine {
   description: string;
+  /** The product code, printed under the description, D124. */
+  code?: string | null;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -26,12 +28,55 @@ export interface QuotePdfInput {
   footer: string;
   phone: string;
   issuedAt: string;
+  /** The From block. Optional so an older caller still renders the
+   *  defaults; KRA lines print only once they are filled in. */
+  business?: {
+    legalName?: string;
+    kraPin?: string;
+    vatNumber?: string;
+    address?: string;
+    email?: string;
+  };
   /** Quote is the default. A receipt is the same layout after payment. */
   kind?: 'quote' | 'receipt';
   paidAt?: string | null;
 }
 
 export interface QuotePdfTotals extends QuoteMoney {}
+
+/**
+ * The card corner, D125, in PDF points: the site's 6px at 0.75pt per CSS
+ * pixel, so the printed quote matches the screen. The document's one boxed
+ * element, the How to pay box, carries it; everything else is a rule.
+ */
+export const PDF_CARD_RADIUS = 6 * 0.75;
+
+/**
+ * How a line's product code is printed, on the PDF and in the email alike,
+ * D124: "Code H-301". Null when there is no code to print.
+ */
+export const lineCodeLabel = (code?: string | null): string | null => {
+  const trimmed = code?.trim();
+  return trimmed ? `Code ${trimmed}` : null;
+};
+
+const DEFAULT_ADDRESS = 'Urban Square, Shop 8 and 9, Enterprise Road, Industrial Area, Nairobi';
+
+/** The lines of the From block, in print order, blanks dropped. */
+export function quoteFromLines(quote: QuotePdfInput): { name: string; lines: string[]; tax: string[] } {
+  const b = quote.business ?? {};
+  const address = (b.address?.trim() || DEFAULT_ADDRESS)
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const lines = [...address, quote.phone, b.email?.trim() ?? ''].filter(Boolean);
+  const tax: string[] = [];
+  const pin = b.kraPin?.trim() ?? '';
+  const vat = b.vatNumber?.trim() ?? '';
+  if (pin) tax.push(`KRA PIN ${pin}`);
+  if (vat && vat !== pin) tax.push(`VAT No. ${vat}`);
+  return { name: b.legalName?.trim() || 'Beco Interiors Limited', lines, tax };
+}
 
 export function quotePaymentBlocks(quote: QuotePdfInput): { label: string; lines: string[] }[] {
   const blocks: { label: string; lines: string[] }[] = [];

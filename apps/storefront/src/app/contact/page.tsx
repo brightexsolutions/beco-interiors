@@ -1,19 +1,22 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal, buttonClasses } from '@beco/ui';
 import { ShowroomFilm } from '@/components/showroom-film';
+import { LocalBusinessSchema } from '@/components/local-business-schema';
 import { getPublishedProducts, blurProps } from '@/lib/products';
 import { SITE, whatsappLink } from '@/lib/site';
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: 'Contact and showroom',
+export const metadata: Metadata = pageMetadata({
+  title: 'Showroom and Contact, Nairobi',
   description:
-    'Beco Interiors, Urban Square, Enterprise Road, Industrial Area, Nairobi. Call +254 722 333 730, message us on WhatsApp, or request a quote.',
-  alternates: { canonical: '/contact' },
-};
+    'Visit our showroom at Urban Square, Enterprise Road, Industrial Area, Nairobi. Call +254 722 333 730, message us on WhatsApp, or request a quote online.',
+  path: '/contact',
+  image: sectionOgImage('contact'),
+});
 
 /**
  * Everything here is CONFIRMED, per docs/CONTENT-AUDIT.md. The prototype
@@ -44,6 +47,7 @@ export default async function ContactPage() {
 
   return (
     <main>
+      <LocalBusinessSchema />
       {/* --- A real opening, against a real installation. Pulled up under the
               header, which is transparent over this dark section and settles
               to solid on scroll, the same as the home hero. --- */}
@@ -149,7 +153,7 @@ export default async function ContactPage() {
               {SITE.address.city}
             </address>
 
-            <dl className="mt-10 flex max-w-[34rem] flex-col gap-3 rounded-[2px] bg-neutral-50 p-6 font-ui text-base">
+            <dl className="mt-10 flex max-w-[34rem] flex-col gap-3 rounded-card bg-neutral-50 p-6 font-ui text-base">
               {HOURS.map(([day, time]) => (
                 <div key={day} className="flex items-baseline justify-between gap-6">
                   <dt className="text-neutral-500">{day}</dt>
@@ -178,7 +182,7 @@ export default async function ContactPage() {
                 was a leftover from the old portrait footage this replaced,
                 forcing a landscape clip into a tall portrait frame rather
                 than genuinely widening it. Corrected to the real 16:9. */}
-            <div className="mx-auto w-full overflow-hidden bg-charcoal">
+            <div className="mx-auto w-full overflow-hidden rounded-card bg-charcoal">
               <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
             </div>
           </Reveal>

@@ -58,7 +58,7 @@ function MarkdownBody({ source }: { source: string }) {
         if (line.startsWith('- ')) {
           const items = line.split('\n').filter((row) => row.startsWith('- '));
           return (
-            <ul key={index} className="mt-4 list-disc space-y-2 pl-5 text-base leading-[1.65] text-neutral-700 lg:text-lg">
+            <ul key={index} className="mt-4 list-disc space-y-2 pl-5 text-base leading-[1.65] text-neutral-700 xl:text-lg">
               {items.map((item) => (
                 <li key={item}>{renderInline(item.slice(2))}</li>
               ))}
@@ -66,7 +66,7 @@ function MarkdownBody({ source }: { source: string }) {
           );
         }
         return (
-          <p key={index} className="mt-4 text-base leading-[1.65] text-neutral-700 lg:text-lg">
+          <p key={index} className="mt-4 text-base leading-[1.65] text-neutral-700 xl:text-lg">
             {renderInline(line.replace(/\n/g, ' '))}
           </p>
         );
@@ -106,11 +106,11 @@ export function BlogLivePreview({
         {readingTime ? <> &middot; {readingTime} min read</> : null}
       </p>
       {coverSrc ? (
-        <div className="relative mt-8 aspect-[16/9] overflow-hidden bg-neutral-100">
+        <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-card bg-neutral-100">
           <img src={coverSrc} alt={coverAlt} className="h-full w-full object-cover" />
         </div>
       ) : null}
-      {excerpt ? <p className="mt-8 text-base text-neutral-700 lg:text-lg">{excerpt}</p> : null}
+      {excerpt ? <p className="mt-8 text-base text-neutral-700 xl:text-lg">{excerpt}</p> : null}
       <div className="mt-2">
         <MarkdownBody source={body || 'The article body will appear here.'} />
       </div>

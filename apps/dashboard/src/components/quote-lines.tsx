@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { Button, Field, Input, QuantityStepper, StatusPill, useActionToast } from '@beco/ui';
+import { Button, Field, Input, QuantityStepper, StatusPill, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { addCatalogueLines, addCustomLine, updateQuoteLines, type QuoteActionState } from '@/app/(app)/quotes/actions';
 import { CataloguePicker, catalogueLineDraft } from '@/components/catalogue-picker';
 import { useQuoteDraftFlush } from '@/components/quote-draft-flush';
@@ -61,13 +61,14 @@ function LineEditor({
             </span>
           ) : null}
         </p>
+        {line.code ? <p className="font-ui text-sm tabular-nums text-neutral-500">Code {line.code}</p> : null}
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <span className="font-ui text-sm tabular-nums text-neutral-500">
             {line.quantity} × {line.unitPrice > 0 ? money(line.unitPrice) : 'price on application'}
             {discounted ? <span className="ml-2 line-through">{money(line.listPrice!)}</span> : null}
           </span>
           <span className="font-ui text-base font-semibold tabular-nums text-charcoal">
-            {line.unitPrice > 0 ? money(line.lineTotal) : '—'}
+            {line.unitPrice > 0 ? money(line.lineTotal) : 'POA'}
           </span>
         </div>
       </div>
@@ -93,6 +94,15 @@ function LineEditor({
             ) : null}
             {dirty ? <span className="ml-2 font-ui text-sm font-semibold text-neutral-700">Changed</span> : null}
           </p>
+          {/* The item column is narrow beside the steppers, and "Code H-301"
+              broke across two lines at the hyphen. One line, the word
+              "Code" kept for screen readers and the hover title. */}
+          {line.code ? (
+            <p className="mt-0.5 truncate whitespace-nowrap font-ui text-sm tabular-nums text-neutral-500" title={`Code ${line.code}`}>
+              <span className="sr-only">Code </span>
+              {line.code}
+            </p>
+          ) : null}
           {line.listPrice != null && Number(unitPrice) !== line.listPrice ? (
             <p className="mt-0.5 font-ui text-sm text-neutral-500">
               Catalogue <span className="line-through">{money(line.listPrice)}</span>
@@ -195,9 +205,16 @@ export function QuoteLines({
   canMutate: boolean;
 }) {
   const [customState, addCustom, adding] = useActionState(addCustomLine, INITIAL);
+  const onAddCustomSubmit = useKeepValuesSubmit(addCustom);
   const [saveState, saveLines, saving] = useActionState(updateQuoteLines, INITIAL);
   const { register } = useQuoteDraftFlush();
   useActionToast(customState);
+  // An added custom line empties the form for the next one; a refused add
+  // keeps what was typed, see useKeepValuesSubmit.
+  const customFormRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (customState.ok) customFormRef.current?.reset();
+  }, [customState]);
   useActionToast(saveState);
   const defaults = useMemo(() => ({ description: '', quantity: 1, unitPrice: '0' }), []);
   const [drafts, setDrafts] = useState<Record<string, { quantity: number; unitPrice: string }>>(() =>
@@ -256,7 +273,8 @@ export function QuoteLines({
             <Button
               type="submit"
               form="quote-lines-save"
-              disabled={!dirty || saving}
+              disabled={!dirty}
+              pending={saving}
               title={!dirty ? 'No changes to save.' : 'Save changed items'}
             >
               {saving ? 'Saving' : 'Save'}
@@ -312,7 +330,7 @@ export function QuoteLines({
       {canMutate ? (
         <>
           <CatalogueAdd quoteId={quoteId} updatedAt={updatedAt} disabled={dirty} />
-          <form action={addCustom} className="mt-6 space-y-3 border-t border-neutral-200 pt-6">
+          <form ref={customFormRef} onSubmit={onAddCustomSubmit} className="mt-6 space-y-3 border-t border-neutral-200 pt-6">
             <div>
               <h3 className="font-ui text-sm font-semibold text-charcoal">Not in the catalogue</h3>
               <p className="mt-1 max-w-[68ch] font-ui text-sm text-neutral-500">
@@ -360,7 +378,7 @@ export function QuoteLines({
                   disabled={dirty}
                 />
               </Field>
-              <Button type="submit" variant="outline" disabled={adding || dirty} className="shrink-0">
+              <Button type="submit" variant="outline" disabled={dirty} pending={adding} className="shrink-0">
                 {adding ? 'Adding' : 'Add'}
               </Button>
             </div>

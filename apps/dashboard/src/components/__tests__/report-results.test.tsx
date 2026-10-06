@@ -226,8 +226,8 @@ describe('ReportFilters', () => {
     const { container } = render(<PageHeading title="Reports" actions={<ReportFilters />} />);
     const row = container.querySelector('h1')?.parentElement;
     expect(row).toContainElement(screen.getByLabelText('Filter by period'));
-    expect(row?.className).toContain('justify-between');
-    expect(row?.className).toContain('items-center');
+    expect(row?.className).toContain('sm:grid-cols-[minmax(0,1fr)_auto]');
+    expect(row?.className).toContain('sm:items-center');
   });
 
   it('has no accessibility violations', async () => {
@@ -245,7 +245,7 @@ describe('ReportResults', () => {
     expect(screen.getByText(/40,000/)).toBeInTheDocument();
     const grid = container.querySelector('.grid-cols-2');
     expect(grid).not.toBeNull();
-    expect(grid?.className).toContain('lg:grid-cols-4');
+    expect(grid?.className).toContain('xl:grid-cols-4');
   });
 
   it('opens on Sales, with the leaderboard and a won-value chart', () => {
@@ -262,7 +262,7 @@ describe('ReportResults', () => {
     await user.click(screen.getByRole('tab', { name: 'Products' }));
     expect(push).toHaveBeenCalledWith('/reports?view=products');
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Calacatta Gold');
-    expect(screen.getByText('Funnel')).toBeInTheDocument();
+    expect(screen.getAllByText('Funnel').length).toBeGreaterThan(0);
   });
 
   it('empty states belong to the active view, not the whole page', async () => {

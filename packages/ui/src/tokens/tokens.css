@@ -115,8 +115,15 @@
      py-14 is 56px. --- */
   --spacing: 0.25rem;
 
-  --radius-card: 4px;
-  --radius-button: 2px;
+  /* Corners, D125. A slight radius, on the Beco team's request, 5 October:
+     the edge still reads deliberate, it just stops reading as a cut.
+     `rounded-control` for buttons, fields, steppers, menu rows and small
+     tags; `rounded-card` for cards, image frames, dialogs, sheets and boxed
+     notes. Nothing full bleed is rounded: a hero, a section band, the
+     header and footer meet the edge of the screen square. Both stay under
+     the 8px that D92 tried and Brown called "not right". */
+  --radius-control: 4px;
+  --radius-card: 6px;
   /* The dashboard shell only. Its chrome and content sit on floating panels
      with a softer corner than the storefront's near-square 4px card, on
      Brown's direction (see docs/DECISIONS.md D85). Storefront components keep
@@ -126,6 +133,9 @@
      reads as floating against the off-white ground. The storefront has no
      floating chrome and uses no shadow. */
   --shadow-panel: 0 1px 2px rgba(16, 24, 32, 0.04), 0 12px 32px -16px rgba(16, 24, 32, 0.12);
+  /* A phone action bar docked to the bottom edge: the lift points up, so the
+     bar reads as sitting over the list that scrolls beneath it. */
+  --shadow-dock: 0 -8px 24px -12px rgba(16, 24, 32, 0.18);
 
   /* --- Motion. Long expo out, settled rather than snappy. --- */
   --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
@@ -148,6 +158,7 @@ html.dark {
   --color-neutral-100: #1c242e;
   --color-neutral-50: #0b1119;
   --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px -16px rgba(0, 0, 0, 0.55);
+  --shadow-dock: 0 -8px 24px -12px rgba(0, 0, 0, 0.6);
 }
 
 /* ============================================================
@@ -334,6 +345,13 @@ body[data-announcement] .beco-hero-content-top {
      typed. Body Cormorant is rare on this site, so the floor is safe. */
   .font-display {
     letter-spacing: -0.015em;
+    /* Lining figures. Cormorant defaults to old-style numerals, whose 1
+       reads as a capital I and whose 3, 4, 5 drop below the line: a count
+       of "1 item" or "3 waiting" set in display type misread. */
+    font-variant-numeric: lining-nums;
+    /* Tailwind's tabular-nums and friends rebuild font-variant-numeric from
+       these variables, which would drop the lining figures set above. */
+    --tw-numeric-figure: lining-nums;
   }
 }
 

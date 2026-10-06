@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 
@@ -24,12 +24,52 @@ beforeEach(() => {
   params = new URLSearchParams();
 });
 
+describe('QuoteFilters on a phone: chips', () => {
+  it('filters status in one tap, and tapping the active chip clears it', async () => {
+    const user = userEvent.setup();
+    render(<QuoteFilters ownerOptions={ownerOptions} />);
+    const status = screen.getByRole('group', { name: 'Status' });
+    await user.click(within(status).getByRole('button', { name: 'Quoted' }));
+    expect(push).toHaveBeenLastCalledWith('/quotes?status=quoted');
+  });
+
+  it('clears status when the pressed chip is tapped again', async () => {
+    params = new URLSearchParams('status=won');
+    const user = userEvent.setup();
+    render(<QuoteFilters ownerOptions={ownerOptions} />);
+    const status = screen.getByRole('group', { name: 'Status' });
+    expect(within(status).getByRole('button', { name: 'Won' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(within(status).getByRole('button', { name: 'Won' }));
+    expect(push).toHaveBeenLastCalledWith('/quotes');
+  });
+
+  it('switches owner from a chip and source from the phone select (D112)', async () => {
+    const user = userEvent.setup();
+    render(<QuoteFilters ownerOptions={ownerOptions} />);
+    await user.click(within(screen.getByRole('group', { name: 'Owner' })).getByRole('button', { name: 'Unassigned' }));
+    expect(push).toHaveBeenLastCalledWith('/quotes?owner=unassigned');
+    await user.selectOptions(screen.getByLabelText('Filter by source, phone'), 'web');
+    expect(push).toHaveBeenLastCalledWith('/quotes?source=web');
+    // Source is not a chip row any more: five options is a select's job.
+    expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
+  });
+
+  it('falls back to the first owner when the URL carries an empty owner', () => {
+    params = new URLSearchParams('owner=');
+    render(<QuoteFilters ownerOptions={ownerOptions} />);
+    expect(
+      within(screen.getByRole('group', { name: 'Owner' })).getByRole('button', { name: 'Assigned to me' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
 describe('QuoteFilters', () => {
   it('offers Website as the source label, still filtering on the stored web value', async () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
-    const source = screen.getByLabelText(/filter by source/i);
-    expect(screen.getByRole('option', { name: 'Website' })).toHaveValue('web');
+    // Two selects, one for desktop and one for the phone; either filters the same way.
+    const source = screen.getByLabelText('Filter by source');
+    for (const option of screen.getAllByRole('option', { name: 'Website' })) expect(option).toHaveValue('web');
     expect(screen.queryByRole('option', { name: 'Web' })).toBeNull();
     await user.selectOptions(source, 'web');
     expect(push).toHaveBeenCalledWith('/quotes?source=web');
@@ -54,7 +94,7 @@ describe('QuoteFilters', () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
     await user.selectOptions(screen.getByLabelText(/filter by status/i), '');
-    expect(push).toHaveBeenCalledWith('/quotes?');
+    expect(push).toHaveBeenCalledWith('/quotes');
   });
 
   it('hides the owner control when the caller offers only one option', () => {

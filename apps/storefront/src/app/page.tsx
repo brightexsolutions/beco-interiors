@@ -1,3 +1,6 @@
+import type { Metadata } from 'next';
+import { desktopColumns } from '@/lib/layout';
+import { HOME_DESCRIPTION, HOME_TITLE, pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -13,6 +16,7 @@ import { CompletedInteriors } from '@/components/completed-interiors';
 import { ShowroomFilm } from '@/components/showroom-film';
 import { ClientShowcase } from '@/components/client-showcase';
 import { ServiceCardGrid } from '@/components/service-card-grid';
+import { LocalBusinessSchema } from '@/components/local-business-schema';
 import {
   getPublishedProducts, getCategoriesWithProducts, getCategoryTree, primaryImage, imagesForGroup,
   type CatalogueProduct, blurProps,
@@ -37,6 +41,19 @@ import { SERVICES } from '@/lib/services';
  * docs/CONTENT-AUDIT.md.
  */
 export const revalidate = 3600;
+
+/**
+ * The root layout carries the title, description and share image. The home
+ * page adds only its canonical, so `/?utm_source=` and the old WordPress
+ * `/?p=` shapes resolve to one indexed address (D107).
+ */
+export const metadata: Metadata = pageMetadata({
+  title: HOME_TITLE,
+  absoluteTitle: true,
+  description: HOME_DESCRIPTION,
+  path: '/',
+  image: sectionOgImage('home'),
+});
 
 const imageFor = (p: CatalogueProduct, role?: string) => {
   const img = role ? p.images?.find((i) => i.role === role) : primaryImage(p);
@@ -186,7 +203,7 @@ export default async function HomePage() {
               <div className="beco-wipe flex items-center gap-4">
                 <span aria-hidden className="h-px w-8 bg-warm-red" />
                 <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  About Beco
+                  About us
                 </p>
               </div>
             </Reveal>
@@ -198,9 +215,9 @@ export default async function HomePage() {
             </Reveal>
             <Reveal delay={100}>
               <p className="mt-6 max-w-[54ch] text-base leading-[1.65] text-neutral-700 lg:text-lg">
-                A Kenyan interior solutions company, bringing quality products, practical solutions
-                and a seamless client experience together, from the first conversation to the day a
-                project is finished.
+                We are a Kenyan interior solutions company. We bring quality products, practical
+                solutions and a seamless experience together, from our first conversation with you
+                to the day your project is finished.
               </p>
             </Reveal>
             <Reveal delay={140}>
@@ -208,7 +225,7 @@ export default async function HomePage() {
                 href="/about"
                 className="mt-7 inline-flex min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-warm-red-deep underline-offset-8 hover:underline"
               >
-                More about Beco
+                More about us
               </Link>
             </Reveal>
           </div>
@@ -220,7 +237,7 @@ export default async function HomePage() {
               since this section is about Beco, not a material. */}
           {aboutPhotoPrimary ? (
             <Reveal delay={120} className="relative mx-auto w-full max-w-[26rem] pb-10 pl-10 lg:mx-0 lg:max-w-none">
-              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden bg-neutral-100">
+              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100">
                 <div className="beco-wipe absolute inset-0">
                   <Image
                     src={aboutPhotoPrimary.path}
@@ -231,10 +248,10 @@ export default async function HomePage() {
                     className="object-cover"
                   />
                 </div>
-                <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
               </div>
               {aboutPhotoAccent ? (
-                <div className="beco-clip absolute bottom-0 left-0 aspect-[4/3] w-2/3 overflow-hidden bg-neutral-100 shadow-[0_20px_48px_rgba(16,24,32,0.18)]">
+                <div className="beco-clip absolute bottom-0 left-0 aspect-[4/3] w-2/3 overflow-hidden rounded-card bg-neutral-100 shadow-[0_20px_48px_rgba(16,24,32,0.18)]">
                   <div className="beco-wipe absolute inset-0" style={{ animationDelay: '160ms' }}>
                     <Image
                       src={aboutPhotoAccent.path}
@@ -245,7 +262,7 @@ export default async function HomePage() {
                       className="object-cover"
                     />
                   </div>
-                  <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                  <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
                 </div>
               ) : null}
             </Reveal>
@@ -467,10 +484,10 @@ export default async function HomePage() {
               stat band, "What we deal in", the featured stone grid and the
               signature moment above, and every one of those except the
               overview grid was about sintered stone specifically. Hardware
-              gets its own cutout section further down; lighting, wall
+              gets its own cutout section further down; wall
               panels, SPC flooring and accessories did not get a section of
               their own anywhere on the page. This is that section, for the
-              four ranges with no other spotlight, so scrolling the page
+              ranges with no other spotlight, so scrolling the page
               stops reading as a stone catalogue with everything else
               mentioned once in a grid. Reuses the same photography the
               hero already carries, `HERO_RANGE_IMAGES`, rather than
@@ -492,23 +509,23 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={`mt-10 grid gap-6 sm:grid-cols-2 ${desktopColumns(beyondStoneRanges.length)}`}>
           {beyondStoneRanges.map((range, i) => {
             const tile = (
               <>
-                <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card bg-neutral-100">
                   <Image
                     src={range.image.path}
                     alt={range.image.alt}
                     fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover transition-transform duration-700 ease-brand group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                   />
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/75 via-charcoal/5 to-transparent"
                   />
-                  <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+                  <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
                   <p className="absolute inset-x-0 bottom-0 p-5 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white">
                     {range.title}
                   </p>
@@ -690,7 +707,7 @@ export default async function HomePage() {
               corners the way a real film frame reads rather than a flat
               rectangle of video. --- */}
       <section aria-label="The showroom" className="bg-charcoal text-high-vis-white">
-        <div className="relative w-full overflow-hidden bg-neutral-950">
+        <div className="relative w-full overflow-hidden rounded-card bg-neutral-950">
           <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
           {/* The vignette: a radial darkening toward the corners, the
               cinematic cue itself, over the video everywhere. The gradient
@@ -769,7 +786,7 @@ export default async function HomePage() {
               a visible ring so its edges never depend on the map content
               inside it, and a lighter invert that actually differentiates
               from the panel behind it instead of disappearing into it. */}
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-900 ring-1 ring-inset ring-high-vis-white/10 sm:aspect-[21/9]">
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-card bg-neutral-900 ring-1 ring-inset ring-high-vis-white/10 sm:aspect-[21/9]">
             <iframe
               title="Beco Interiors on Google Maps"
               src={`https://www.google.com/maps?q=${encodeURIComponent(
@@ -790,7 +807,7 @@ export default async function HomePage() {
 
 function Stat({ value, label, suffix }: { value: number; label: string; suffix: string }) {
   return (
-    <div className="bg-charcoal p-6 sm:p-8">
+    <div className="rounded-card bg-charcoal p-6 sm:p-8">
       <span aria-hidden className="block h-px w-8 bg-warm-red" />
       {/* No tabular-nums: Cormorant gives '1' a full width advance under it,
           and "12mm" was reading as "1 2mm" at display size. The figures here
@@ -803,48 +820,5 @@ function Stat({ value, label, suffix }: { value: number; label: string; suffix: 
         {label}
       </dt>
     </div>
-  );
-}
-
-/**
- * LocalBusiness, not Organization, because Beco sells to people who can drive
- * to Urban Square. The NAP here must match the footer and the Google Business
- * Profile character for character, or the mismatch is a ranking drag.
- */
-function LocalBusinessSchema() {
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'HomeGoodsStore',
-    name: SITE.name,
-    url: 'https://www.beco.co.ke',
-    telephone: SITE.phone,
-    email: SITE.email,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: `${SITE.address.line1}, ${SITE.address.line2}`,
-      addressLocality: SITE.address.city,
-      addressCountry: 'KE',
-    },
-    openingHoursSpecification: [
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        opens: '08:00',
-        closes: '16:00',
-      },
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: 'Saturday',
-        opens: '08:00',
-        closes: '14:00',
-      },
-    ],
-    areaServed: { '@type': 'City', name: 'Nairobi' },
-  };
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
   );
 }

@@ -77,4 +77,50 @@ describe('buildPricedQuoteEmail', () => {
     expect(email.html).toContain('Your quote');
     expect(email.html).toContain('Urban Square, Enterprise Road, Industrial Area, Nairobi');
   });
+
+  it('carries the lines and the VAT inclusive total in both bodies when priced (D109)', () => {
+    const email = buildPricedQuoteEmail({
+      reference: 'BEC-Q-7',
+      customerName: 'Achieng Otieno',
+      validUntil: '17 Oct 2026',
+      isPriced: true,
+      lines: [
+        { description: 'Calacatta Gold 12mm', quantity: 2, unit: 'slab', lineTotal: 130000 },
+        { description: 'Black handle B100', quantity: 10, unit: 'pc', lineTotal: 15000 },
+      ],
+      totals: { gross: 145000, net: 125000, vat: 20000 },
+      vatRate: 16,
+    });
+    expect(email.html).toContain('Calacatta Gold 12mm');
+    expect(email.html).toContain('KES 130,000');
+    expect(email.html).toContain('Total, VAT inclusive');
+    expect(email.html).toContain('KES 145,000');
+    expect(email.html).toContain('VAT at 16%');
+    expect(email.text).toContain('Calacatta Gold 12mm, 2 slab: KES 130,000');
+    expect(email.text).toContain('Total, VAT inclusive: KES 145,000');
+    // The preheader leads with the figure, so the inbox list shows it.
+    expect(email.html).toMatch(/mso-hide:all">KES 145,000, VAT inclusive/);
+  });
+
+  it('shows the lines but never a total when any line is on application', () => {
+    const email = buildPricedQuoteEmail({
+      reference: 'BEC-Q-8',
+      customerName: 'Wanjiku',
+      validUntil: null,
+      isPriced: false,
+      lines: [
+        { description: 'Calacatta Gold 12mm', quantity: 2, unit: 'slab', lineTotal: 130000 },
+        { description: 'Bespoke worktop', quantity: 1, unit: null, lineTotal: null },
+      ],
+      totals: { gross: 0, net: 0, vat: 0 },
+    });
+    expect(email.html).toContain('On application');
+    expect(email.html).not.toContain('Total, VAT inclusive');
+    expect(email.text).not.toMatch(/Total, VAT inclusive: KES/);
+  });
+
+  it('opens on the quote photograph', () => {
+    const email = buildPricedQuoteEmail({ reference: 'r', customerName: 'A', validUntil: null, isPriced: true });
+    expect(email.html).toContain('/email/hero-quote.jpg');
+  });
 });

@@ -8,13 +8,13 @@ import { ChangePasswordForm } from '../change-password-form';
 vi.mock('../actions', () => ({ changePassword: vi.fn(async () => ({})) }));
 
 const newPassword = () => screen.getByLabelText(/^new password/i);
-const confirm = () => screen.getByLabelText(/confirm new password/i);
+const confirmField = () => screen.getByLabelText(/confirm new password/i);
 
 describe('ChangePasswordForm', () => {
   it('labels both password fields', () => {
     render(<ChangePasswordForm email="sam@beco.co.ke" />);
     expect(newPassword()).toHaveAttribute('type', 'password');
-    expect(confirm()).toHaveAttribute('name', 'confirm');
+    expect(confirmField()).toHaveAttribute('name', 'confirm');
   });
 
   it('carries a hidden username field so a password manager can file the new password', () => {

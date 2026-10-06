@@ -41,7 +41,7 @@ export function StoneSlider({
   return (
     <div
       aria-hidden
-      className={cn('relative aspect-[4/5] w-full overflow-hidden bg-neutral-100', className)}
+      className={cn('relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100', className)}
     >
       {slides.map((slide, i) => (
         <Image

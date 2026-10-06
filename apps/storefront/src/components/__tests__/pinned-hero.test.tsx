@@ -23,7 +23,7 @@ describe('PinnedHero, the lede', () => {
             slug: 'sintered-stone', title: 'Sintered stone',
             body: 'Large format slabs for worktops and vanities. Available in 12mm and 15mm.',
           }),
-          slide({ slug: 'lighting', title: 'Lighting', body: 'Decorative and architectural fittings.' }),
+          slide({ slug: 'flooring', title: 'SPC flooring', body: 'A rigid core plank that clicks together without adhesive.' }),
         ]}
       />,
     );
@@ -164,7 +164,7 @@ describe('PinnedHero, the full bleed photograph', () => {
 describe('PinnedHero, the right side range chips', () => {
   const SLIDES = [
     slide({ slug: 'sintered-stone', title: 'Sintered stone' }),
-    slide({ slug: 'lighting', title: 'Lighting' }),
+    slide({ slug: 'flooring', title: 'SPC flooring' }),
     slide({ slug: 'wall-panels', title: 'Wall panels' }),
   ];
 
@@ -178,7 +178,7 @@ describe('PinnedHero, the right side range chips', () => {
   it('is a real link to each range, not a decorative control', () => {
     render(<PinnedHero slides={SLIDES} />);
     expect(chip('Sintered stone, showing now')).toHaveAttribute('href', '/shop/sintered-stone');
-    expect(chip('Lighting')).toHaveAttribute('href', '/shop/lighting');
+    expect(chip('SPC flooring')).toHaveAttribute('href', '/shop/flooring');
     expect(chip('Wall panels')).toHaveAttribute('href', '/shop/wall-panels');
   });
 
@@ -200,7 +200,7 @@ describe('PinnedHero, the right side range chips', () => {
     // Active stays at index 0 in jsdom, per this file's own top note: there
     // is no IntersectionObserver here to move it.
     expect(chip('Sintered stone, showing now')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Lighting, showing now' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'SPC flooring, showing now' })).toBeNull();
   });
 
   it('rings only the active chip, on its own overlay rather than the link', () => {
@@ -209,7 +209,7 @@ describe('PinnedHero, the right side range chips', () => {
     // transition on the same element.
     render(<PinnedHero slides={SLIDES} />);
     expect(chip('Sintered stone, showing now').querySelector('.ring-high-vis-white')).not.toBeNull();
-    expect(chip('Lighting').querySelector('.ring-high-vis-white')).toBeNull();
+    expect(chip('SPC flooring').querySelector('.ring-high-vis-white')).toBeNull();
   });
 
   it('scales up only the active chip, via transform rather than a width change', () => {
@@ -217,12 +217,12 @@ describe('PinnedHero, the right side range chips', () => {
     // does not, per the site's own transform-and-opacity-only motion rule.
     render(<PinnedHero slides={SLIDES} />);
     expect(chip('Sintered stone, showing now').className.split(' ')).toContain('scale-110');
-    expect(chip('Lighting').className.split(' ')).not.toContain('scale-110');
+    expect(chip('SPC flooring').className.split(' ')).not.toContain('scale-110');
   });
 
   it('labels the active chip with a floating name, replayed on change', () => {
     render(<PinnedHero slides={SLIDES} />);
     expect(screen.getByText('Sintered stone', { selector: '.beco-chip-label' })).toBeInTheDocument();
-    expect(screen.queryByText('Lighting', { selector: '.beco-chip-label' })).toBeNull();
+    expect(screen.queryByText('SPC flooring', { selector: '.beco-chip-label' })).toBeNull();
   });
 });

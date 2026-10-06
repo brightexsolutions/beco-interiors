@@ -2149,3 +2149,850 @@ with delivery and installation both set.
 which case both drop to `neutral` rather than being removed outright, since the underlying gap,
 staff not knowing at all, is the one this decision actually closes.
 
+
+## D102, 28 September 2026: the polish and hardening pass, operational alerts, and a stale edit that never returned
+
+Brown asked for the storefront and dashboard to be made more usable, especially for a
+salesperson working from a phone, for the edge cases to be found and fixed, and for key
+operational failures to be logged and emailed to Brightex. The individual screen changes are in
+`docs/QA-CHECKLIST.md` and `docs/TEST-COVERAGE.md`; this records the choices someone would
+otherwise wonder about.
+
+**Operational alerts go to Brightex, logged first, emailed second.** `reportOpsFailure`
+(`apps/dashboard/src/lib/ops-alert.ts`) writes one structured `{"event":"ops_alert"}` line to
+the server log, then emails a summary to `OPS_ALERT_EMAIL`, default
+`info.brightexsolutions@gmail.com`, per Brown's instruction. It never throws, so a failed alert
+cannot turn a handled failure into a crash. Throttled to one email per failure key per fifteen
+minutes and thirty an hour, so an outage produces a handful of emails, not hundreds. Wired to
+the places a failure would otherwise pass silently: PDF render, store and record, quote and
+receipt email sends, storefront revalidation, a public quote submission that did not save, and
+`onRequestError` in both apps. The storefront holds no Resend key (ownership split), so it
+relays to the dashboard's `POST /api/ops-alert` with a shared bearer secret, rate limited and
+schema validated. A lost website lead carries the customer's name and phone in the alert on
+purpose: it is the only way that lead gets called back. That is personal data in an email to
+Brightex, so step 4 of the `docs/HANDOVER.md` procedure now sets `OPS_ALERT_EMAIL` to the new
+owner's address.
+
+**Stale edit conflicts raise `PT409`, not `40001`.** Found by the HTTP integration suite, not
+by a person: the stale line edit test hung. `40001` is serialization failure, PostgREST retries
+it, and a stale timestamp is stale on every retry, so the request spun a backend at full CPU and
+never returned. In production the salesperson would have seen a spinner that never ended at
+exactly the moment two people edited one quote. Migration 56 rewrites all fourteen functions in
+place from their current definitions rather than copying fourteen bodies by hand; pgTAP file 32
+fails if any public function raises `40001` again. The dashboard's mappers match `PT409` and
+the message text.
+
+**Staff names through a function, not a wider policy.** Sales could not read a colleague's
+`users` row, so every quote owned by someone else read "Unassigned". Widening
+`users_read` would have exposed email, role and activity; `staff_names()` returns only display
+names for the ids asked, to sales and admins. Migration 55.
+
+**Business identity lives in `settings`, not a new table.** KRA PIN, VAT number, legal name,
+address and email are five scalar values with one writer, which is what `settings` is for.
+Migration 54.
+
+**The dashboard shows the red square mark.** D85 kept the dashboard wordmark text only, to hold
+Warm Red back. Brown asked directly for the logo on the red square, on the dashboard header, the
+sign in screen and the emails. It is one small, fixed element per screen, which the three or
+four uses of Warm Red per page can carry. Reverses that part of D85.
+
+**Emails are one shell, not three templates.** `packages/documents/src/email/shell.ts` owns the
+charcoal header band, the Warm Red rule, the reference box, buttons, contact row and showroom
+footer; each email only supplies its words. Nothing below 14px, bulletproof table buttons,
+buttons stack on a phone.
+
+**Phone filters are pills, desktop filters stay selects.** `ChipGroup` in `@beco/ui` puts every
+option one tap away with its count, which a native select hides behind a sheet; on desktop the
+selects stay because the row has room and a keyboard user can type into them. The dashboard's
+pill convention for status already existed, so this does not break the sharp corner rule, which
+governs cards, frames, buttons and form controls.
+
+**The keyboard never covers the field being typed into.** `KeyboardAwareFocus` watches the
+visual viewport and scrolls a focused field into the part of the screen the on screen keyboard
+leaves; `Dialog` pins itself to that same area. Mounted once in each root layout rather than per
+form, so no form can forget it.
+
+**A refused save keeps what was typed.** React 19 resets every uncontrolled field of a
+`<form action={fn}>` once the action settles, success or not. On `/settings` that meant a
+refused save, one mistyped KRA PIN, blanked every field on every tab, and the product,
+category, announcement, blog, user, launch, sign in and custom line forms had the same
+behaviour. Found while testing the Settings save bar, not reported. `useKeepValuesSubmit` in
+`@beco/ui` hands the same FormData to the dispatcher from `onSubmit`, so nothing resets; the
+custom quote line form resets itself after a successful add, the one place the old clearing was
+wanted. Status buttons (claim, approve, status changes) keep `action`, since they carry no typed
+text to lose.
+
+**Settings shows what it prints.** The Payments and Business tabs carry a live preview of the
+quote's From block and How to pay box, drawn by the same functions as the PDF, so an admin sees
+the KRA PIN and the till number where a customer will. A `./layout` export on
+`@beco/documents` lets a client component import those functions without pulling react-pdf or
+Resend into the browser bundle.
+
+*Reverses if:* the alert volume proves noisy in practice, in which case the throttle window
+widens before any alert is removed; a silent failure is the problem this closes.
+
+## D103, 3 October 2026: Lighting is retired, on Beco's own word
+
+Beco's team told Brown they no longer sell lighting. D47 seeded a Lighting category with no
+Drive folder behind it because the brand guideline named it as a pillar and its strapline
+carried it on every page; D52 kept it top level with no children. Both were the right call
+against the guideline. The guideline has now been overtaken by the business, and a site that
+offers a range the showroom cannot supply costs more credibility than a strapline that differs
+from the artwork.
+
+Migration 57 unpublishes the Lighting category and soft deletes anything filed under it. The
+row stays: `categories` has no `deleted_at`, the row is the importer's identity for its
+`source_path`, and keeping it is what stops the "Lights" folder still sitting in Drive from
+recreating the range. Anonymous readers only see published categories, so the shop, the footer
+and the sitemap drop it without a code path. The importer now skips `LIGHTING` and `LIGHTS`
+outright and reports the skip once per run, so nobody wonders where the photographs went.
+
+On the storefront, `RANGE_GROUPS` loses its lighting entry and its licensed Pexels hero image is
+deleted. The strapline reads "Sintered Stone · Panels · Hardware · Accessories": Hardware is a
+range Beco holds on the floor, and four pillars keeps the splash sequence and the About page's
+grid at the shape they were designed for. `docs/BRAND-GUIDELINE-NOTES.md` section on lighting
+is kept as history with a note pointing here.
+
+*Reverses if:* Beco starts stocking lighting again, in which case the category is republished
+from the dashboard, the folder names leave `RETIRED_FOLDERS`, and the strapline is revisited.
+
+## D104, 3 October 2026: the taxonomy browses three levels, and a photograph can be an item
+
+Beco's team reported the catalogue as "all mixed up": sintered stone should read as a major
+category with 12mm and 15mm under it and the stones under those, handles as a major category
+with colours under it and each handle, with its code and price, under those. Checked against
+the live Drive rather than assumed: `HANDLES/` now holds `BLACK HANDLES`, `GOLD HANDLES`,
+`GREY HANDLES`, `WHITE HANDLES`, `KNOBS`, `LEATHER HANDLES` and a `HANDLE SIZES AND PRICES`
+folder of spreadsheets, and inside each colour folder every photograph is named for the handle
+it shows, `B762 BLACK`, `HT-8350 BLACK GOLD`. `12MM SINTERED STONES/` holds a `HEIXIN 12MM`
+folder of stone folders beside the stones themselves. The two level cap from D52 made the
+importer collapse each colour into one product with thirty photographs and skip Heixin's
+stones as misnests. So the data was right and the model was one level short.
+
+**Three levels.** Migration 58 raises the trigger's cap to three and measures the whole chain,
+so moving a category with sub ranges under something else is refused when the result would be
+four deep. The storefront tree, the sitemap, the index gate, the category page's breadcrumb and
+the dashboard's ranges panel, selects and filters all walk the tree recursively now instead of
+assuming two levels; every count is a subtree count, since a range can hold products beside its
+sub ranges (12mm holds stones and Heixin). Handles moves to the top level beside Sintered Stone,
+which is where Beco place it; Hardware keeps hinges, locks, legs and drawer rails.
+
+**The importer reads what Beco actually do.** A folder is a product when it holds photographs
+and a category when it holds only folders, which is what tells a sub range from a misnest. In a
+folder where every file names its own item (no role word, no camera name, at least two distinct
+subjects), each file becomes a product named exactly as the file is, its first photograph as its
+own shot, a trailing "2" folding into the same item, and the folder becomes a sub range. This is
+not a guess: the product name is what Beco typed. A stone folder of supplier codes names one
+thing and stays one product; a folder of `IMG_` files stays one umbrella product. Price lists are
+reported and never decoded: prices are entered where they are checked, in the dashboard.
+Anything more than two folders below a range is reported and skipped. Each of these is a fixture.
+
+**The admin does not need Drive.** Brown's own line: with or without the import, the admin must
+be able to create major categories, sub categories and priced products at any level. New range
+files under a major category or a range; the editor offers only homes that fit; the product
+range select lists every level, a sub range named after its range; prices, codes, names and
+photographs are the product editor's, which the importer never overwrites once a row exists
+(D54). The handles price list will be keyed in there, not parsed.
+
+*Reverses if:* Beco's folders settle into a shape the three levels cannot carry, in which case
+the cap moves again and the recursion already handles it; or if item folders turn out to hold
+several photographs per item under unrelated names, in which case the item rule tightens to
+require a code prefix rather than loosening into guesswork.
+
+**Amended 6 October 2026: an export filename is never a product name.** A gold handle was
+published as "34D00DD2-442A-4748-BF08-86C2643EE870", its iPhone export filename. In an item
+folder, a phone or export name (`IMG_1234`, `PXL_...`, `DSC...`, a UUID, a bare hex or a long
+bare number) is left out of the item folder decision and becomes a readable placeholder: the
+folder's finish, the range noun from `ITEM_NOUNS` and a short reference, "Gold Handle 34D0",
+slug `gold-handle-34d0`, the way D122 names hinges. Every name Beco typed stays exactly as
+typed: the import is Brightex's tool, and Beco rename items in the dashboard (Brown, 6 October).
+An existing row is never renamed (D54); a fresh environment gets the placeholder on first import.
+
+## D105, 3 October 2026: the Drive import runs from the dashboard, through GitHub Actions
+
+Brown's instruction: the import had only ever been run by the agent on his own machine, and it
+has to be something Beco manage from the admin panel. The importer itself cannot live on Vercel:
+it decodes 44MB HEIC files with Sharp for twenty minutes on a cold cache, it holds the Drive
+service account, and it writes with the service role key, none of which belong in a request
+handler. So the import runs where it already could, in GitHub Actions, and the dashboard becomes
+the hand on the lever. `drive-import.yml` takes two inputs, mode and target; the Catalogue, Drive
+import screen dispatches it through the GitHub API with a fine grained token scoped to Actions on
+this one repository, lists the runs GitHub knows about, and shows what the importer itself
+recorded in `import_runs` and `import_issues`, grouped by the Drive folder a person would open to
+fix it. A production write asks first; a check run never does, it writes nothing. One start a
+minute per person, and the workflow's own concurrency group serialises the rest.
+
+Considered and set aside: a Supabase edge function (no Sharp), a long running Vercel function
+(no twenty minutes), and the dashboard shelling out (no Vercel shell). GitHub Actions already
+holds the repository, the secrets per environment and the approval gate, so the import inherits
+all three. The screen also carries the folder shapes the importer reads, because the person who
+needs that is the one looking at a skipped folder in the report and deciding what to rename.
+
+*Reverses if:* GitHub's dispatch latency or the token's annual expiry proves to be a recurring
+support cost, in which case the same screen fronts a small worker on Beco's own account instead
+and nothing above the `dispatchImport` boundary changes.
+
+## D106, 3 October 2026: the dashboard's design constraints are lifted, and what was built with the room
+
+Brown's words: "I am giving you the permission to go off the design standards we had established
+at the start so you can achieve polishing the designs." The admin had been described twice as
+basic, skeleton-like, and in need of shadcn, charts, filters and search. The constraints that had
+produced the plain look were deliberate at the time (D85's text-only top nav, the ban on charts
+unless a figure demanded one, Warm Red rationed to three marks, sharp corners everywhere), and
+they stay in force on the storefront. On the dashboard they are relaxed as follows.
+
+**A sidebar.** Desktop gets a white sidebar with the sections grouped by job and a Warm Red tick on
+the current one, a top bar that names the page, and the screen on a floating panel. The ban on a
+dark sidebar dashboard holds: this one is white, and the charcoal is the active state, not the
+wall. The phone keeps the D85 card and pill strip, since nothing else fits a 390px screen. The
+docked breadcrumb becomes phone only.
+
+**Charts, under a method.** Recharts, inside `@beco/ui`, built against the dataviz skill. The brand
+is near monochrome, so the validator's hue checks cannot pass and were not forced: every chart is
+the emphasis form, one hue in two shades, with identity carried by a legend, direct labels and a
+hidden table rather than by colour alone, and Warm Red kept for a single attention stage. Each
+chart answers a question the tiles could not: is the week by week flow healthy, where does
+everything open stand, is money arriving as fast as it is billed. `activity_series()` and
+`quote_pipeline()` are security invoker, so the chart a salesperson would see is the chart RLS
+allows. Plots render after mount, since Recharts measures the client and a server guess at the
+width logged a hydration mismatch.
+
+**Tables and toolbars.** A `TableToolbar` above Quotes, Orders and the Catalogue puts search, the
+filters and the live count in one row; `DataTable` gets small-caps sortable headers, a sticky
+header, hover rows and right-aligned figures. `StatCard` lets its trend chip drop under a narrow
+label instead of breaking the label letter by letter, which the two column phone grid exposed.
+
+**Still in force.** The 16px floor, 44px targets, no browser dialogs, no icons in the nav, no
+charts for decoration, and every interactive element proven to do what it says. Shadcn remains a
+starting point to overwrite, per D88: nothing here ships in its default look.
+
+*Reverses if:* staff on phones report the admin as heavier to use than before, in which case the
+charts fold behind a disclosure on small screens before anything structural moves.
+
+## D107, 3 October 2026: the old WordPress addresses are taken over, not left to 404
+
+**Decision.** Every address the WordPress and WooCommerce site at www.beco.co.ke is likely to have
+had answers with a 301 to the page that does its job here, from a static map in
+`apps/storefront/src/lib/legacy-redirects.ts` served by `next.config.ts`. Paths that only existed
+because the site was WordPress answer 410 Gone from `proxy.ts`. An unknown `/product/<slug>`
+301s to the shop searched for the words in the slug, since WooCommerce used that path too. The
+sitemap carries `lastModified` from product and post rows. `LocalBusiness` is one component on
+the home, about and contact pages. The Search Console verification tag is read from
+`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, so it belongs to whoever sets the deployment variable,
+which is Beco's account per `docs/OWNERSHIP.md`. `docs/SEO-MIGRATION.md` is the procedure Beco
+follow to verify the domain, submit the sitemap and feed the exact old URLs back into the map.
+
+**Why.** The developer who submitted the old site left no record of the account or the URLs, and
+Google still lists them. Nothing in Google's process needs that account: a 301 moves a page's
+standing wherever the new owner points it, and a fresh Domain property under Beco's own account
+reads the new sitemap. Without the map, every old result is a 404 that Google retries for months
+while the new pages start from nothing. The map covers the shapes WordPress gives every site;
+the exact tail comes from Search Console's own 404 report once Beco can see it, which is why the
+procedure document exists and why the map is plain data with a test rather than code.
+
+**Rejected.** A redirects table in the database with a dashboard screen: a list that changes
+twice and then never does not earn a screen, a cache and a test for the cache. Recovering the old
+sitemap: the old site is gone and the host is not reachable from here. A 404 page with a search
+box for unknown products: it keeps the visitor but passes nothing to Google.
+
+*Reverses if:* Search Console's 404 report shows a shape the map cannot express statically, in
+which case the table comes back as a migration with RLS and a test, not before.
+
+## D108, 3 October 2026: the security pass, and what it changed
+
+**Decision.** A review of both apps against rule 7, recorded in `docs/SECURITY.md` under the same
+date. Seven findings fixed in one branch: the sign-in return path refused protocol-relative
+redirects through a shared `safeReturnPath`; the storefront's revalidate secret compared in
+constant time through `bearerMatches`, moved into `@beco/validation` on Web Crypto; that route's
+tag and path lists capped; one photo upload guard for product photos and blog covers, before
+sharp; RLS tests for the six tables that had none; anonymous analytics inserts bounded to the
+documented events and 2KB (migration 60); the secret scanner's patterns in a tested module,
+widened to GitHub tokens and the new Supabase key format. Accepted and written down: inline
+scripts in the CSP, the in-memory limiter, no MFA, the open image route.
+
+**Why.** None of the seven would have failed a visual review or a happy-path test, which is the
+class of bug rule 7 exists for. The open redirect is the kind a phishing mail uses against staff:
+a real sign-in page, a real session, then a hop to a copy. The others are bounds that were simply
+never written because nothing had yet pushed on them.
+
+**Rejected.** A nonce-based CSP now: it forces every storefront page dynamic and gives up ISR
+for a hardening the self-hosted, first-party script set does not need yet. Dropping the
+anonymous analytics insert policy outright: the lead counters and a future writer need it, and a
+bounded policy is the same safety without a second migration later.
+
+*Reverses if:* a third-party script ever has to run on the storefront, at which point the nonce
+is built and the ISR cost paid.
+
+## D109, 3 October 2026: the emails carry the figure, and the confirmation finally sends
+
+**Decision.** Three changes to the transactional email, together. Each template opens on a
+photograph of a finished Beco interior, a JPEG crop of the site's own photography served from the
+storefront, on charcoal so a client that blocks images shows a calm band. The priced quote and the
+receipt carry their lines and the figure that matters, the VAT inclusive total or the amount paid,
+set large in the serif on a charcoal block, with the total also leading the preheader so the inbox
+list on a phone shows it before the message is opened. And the web confirmation, whose template has
+existed since M4 with no sender, now sends: the storefront asks the dashboard's new
+`POST /api/quote-confirmation`, behind the existing relay secret, and the dashboard holds the Resend
+key as it always has.
+
+**Why.** An email that says "your quote is attached" and nothing else makes the customer open a
+PDF on a phone to learn the one number they care about. The figure in the body, and in the
+preheader, is the difference between a message that is read and one that is filed. The photograph
+is the brand doing in email what the storefront does on every page: leading with the material. The
+confirmation had been deferred to an edge function nobody had built, while the ops alert relay,
+built since, was exactly the mechanism it needed; a customer who gave an address and heard nothing
+was the one gap left in the web path.
+
+**Rejected.** The storefront holding the Resend key: the ownership rule stands, a compromised
+storefront leaks the anon key and nothing else. A database trigger calling Resend through
+`pg_net`: a second place that sends email, with its own secret, its own failure path and no shared
+template. WebP for the heroes: Outlook's engine does not render it. Every line in the email: eight,
+then the PDF, since the email is a summary and the document is the record.
+
+*Reverses if:* Resend's deliverability reports show image heavy messages landing in promotions
+tabs for Gmail recipients, in which case the hero goes and the total block stays.
+
+## D110, 3 October 2026: what a salesperson cannot do, and what only Brightex can
+
+**Decision.** Three functions move up a level, each in both layers and with the control gone from
+the screen for the role that cannot use it. Cancelling an order is an admin's call:
+`set_order_status()` refuses `cancelled` from `beco_sales` before it looks at the order, the action
+refuses it before the database is asked, and the button is not drawn. A catalogue import to
+production is an admin's call: the product manager runs dry runs and imports on staging, the page
+offers no production target, and the action refuses one. The Brightex allowlist in settings is
+Brightex's alone: the field is not in a Beco admin's form and the save drops the key whatever the
+form posted, so the second condition of the Studio gate (D42) cannot be edited by the role it
+gates. `docs/SECURITY.md` carries the full function matrix; the rest of it was already so.
+
+**Why.** Beco asked for it plainly: some functions are Brightex's, and a sales account must not
+reach everything an admin reaches. The audit found the routes right and three functions inside
+them looser than the business wanted. A cancellation reverses a sale the customer agreed to; a
+production import rewrites the live catalogue from a folder; the allowlist is the one setting
+that decides who Brightex is. None of the three belongs under the thumb of the account that does
+them most often.
+
+**Rejected.** Hiding the controls alone: rule 7 says hiding UI is not access control, so each
+change lands in the action and, where the database decides, in the function. A separate
+`beco_manager` role between sales and admin: nothing yet needs a fourth Beco role, and a role is
+cheap to add later and expensive to retire.
+
+*Reverses if:* Beco put a counter manager in charge of refunds, at which point cancellation
+becomes a grant like audit read rather than a role.
+
+## D111, 3 October 2026: the phone dashboard navigates from the bottom
+
+**Decision.** On phones and tablets the dashboard's sections live in a fixed bar along the bottom
+of the screen, replacing the D85 pill strip in the header card. The bar holds the three or four
+screens a role lives in, from the same access map as the sidebar, with New quote raised in the
+middle for anyone who raises quotes and the remaining sections, Change password and Sign out behind
+More, a sheet on the shared `Dialog`. The header card keeps its place and now names the screen. The
+shell publishes the bar's height as `--dock`, which the docked save bars and the floating action
+pills add to their offsets, so nothing the thumb needs is ever under the bar. The desktop sidebar
+is unchanged.
+
+**Why.** Beco asked for an intuitive phone experience with a bottom nav, and the strip had the
+weakness every scroll strip has: the sections past the fold did not exist until you swiped, and the
+strip sat at the top of a tall phone, where a thumb does not reach. A bottom bar is where every app
+staff already use puts its sections, it is reachable one handed, and it makes the role's shape
+legible at a glance: a salesperson's phone shows Quotes, New quote, Orders and nothing else.
+
+**Rejected.** A hamburger: it hides the sections a salesperson needs ten times an hour behind a
+tap. Five text-only items: at 390px a word alone is not findable by thumb, so the bar carries one
+icon per section, the one place in the dashboard that does. A round plus FAB for New quote: that is
+the Material default the dashboard is not allowed to resemble, so it is a charcoal tile with a
+label. Keeping the strip as well: two navigations on one phone screen is one too many.
+
+*Reverses if:* staff report missing the sections behind More, in which case the bar grows to five
+with the most-used section promoted per role, before anything structural moves.
+
+## D112, 3 October 2026: the phone is measured, not eyeballed
+
+**Decision.** Every dashboard screen is checked at 390px by a script that lists each element
+whose right edge leaves the viewport, and the pass that fixed what it found changed the shape of
+the phone screens: list cards give the customer a row of their own and put the figure with the
+status beneath; chips wrap instead of scrolling with one cut at the edge, and a group of five or
+more options is a select; the heading places actions after the lede at full width; the four
+"New" controls are heading buttons rather than pills floating over the list; the home plate rows,
+pipeline legend, report cards, ranked bars and settings tabs each stop truncating or crushing
+their text. `docs/DASHBOARD-UI.md` lists the changes screen by screen.
+
+**Why.** Beco looked at the phone and saw items overflowing and wrapping poorly, and they were
+right: two screens were wider than the viewport and most of the rest had a row somewhere that
+truncated a name to fit a number beside it. Each had passed a desktop review and a jsdom test,
+neither of which lays anything out at 390px. The script is the check those two cannot make, and
+it runs in a minute against the dev server.
+
+**Rejected.** Scrolling strips with an edge fade: the fade says "more here" but still shows half
+a chip, which reads as broken. Truncation with an ellipsis for names: a salesperson matching a
+customer by name cannot act on "Demo custo...". Keeping the floating pills on phones: a second
+floating layer over a bottom bar covered the filters and the first rows on every list.
+
+*Reverses if:* the audit script becomes a CI step, at which point this record moves into
+`docs/TEST-COVERAGE.md` as a layer rather than a decision.
+
+## D113, 3 October 2026: the sidebar breakpoint is tablet width
+
+**Decision.** Dashboard screens go to their wide layout, two columns or the full table, at
+1280px, not at 1024px where the sidebar appears. Between those widths the content pane beside the
+sidebar is about 776px, and every screen now lays itself out there the way it does on a tablet.
+Tables hide their lowest value column below 1536px through `DataTable`'s `showFrom`, keep
+references, owners and figures on one line, and carry the row action as an arrow. The phone
+header names the page alone. New quote lives in the heading on desktop and in the bar on a phone.
+
+**Why.** Beco asked for every page to be laid out well at every size and named poor wrapping and
+overflow. A side by side capture at three widths showed the worst screens were not phones but
+small laptops: the one breakpoint was doing two jobs, showing the sidebar and widening the
+screen, and the second job had 248px less room than it assumed. Separating them is one rule
+applied everywhere rather than a fix per screen.
+
+**Rejected.** A collapsible sidebar at 1024px: it hides the navigation to make room for a
+layout the content does not need at that width. Horizontal scroll on the tables: a table that
+scrolls sideways hides its action column, which is the one column a reader needs.
+
+*Reverses if:* staff work on 1024px laptops and report the single column detail pages as too
+long, in which case the detail pages alone move back to two columns with a narrower side pane.
+
+## D114, 3 October 2026: the catalogue browses one level at a time
+
+**Decision.** The catalogue's range panel is a browser, not a strip. The first row shows the
+major categories alone; opening one reveals its ranges on a second row, and opening a range with
+sub ranges reveals a third. Every pill filters the product list to its whole subtree and carries
+that count. Editing moves off the pills and onto the selection: a line under the rows names the
+path and count and offers Edit and Add range for that node, with New category in the heading.
+Add range opens the create sheet with the parent already chosen.
+
+**Why.** Beco looked at the catalogue and found the categorisation confusing, and the earlier
+strip earned that: it put every level on one row and asked the reader to infer the tree from
+which pill followed which, then hung a pencil on each. The three level taxonomy (D104) is simple
+when seen one level at a time, which is how a folder opens and how staff already think about
+"Sintered Stone, then 12mm, then the stone". Showing the tree whole was the confusion.
+
+**Rejected.** A tree view with expand arrows in a side pane: right on a desktop, a second column
+the phone does not have. A select per level: three dropdowns hide the counts and the drafts, and
+a tap per level is the same cost as a pill with none of the orientation. Keeping the pencil per
+pill: nine pencils in a row is nine controls nobody wanted until they had chosen a range.
+
+*Reverses if:* the catalogue grows past a dozen major categories, at which point the first row
+itself needs a search and the browser becomes a tree.
+
+## D115, 3 October 2026: the Drive import is Brightex's to run
+
+**Decision.** `/products/import` admits `brightex_admin` only, as a route rule narrower than
+`/products` (longest prefix wins), re-checked by the page and the action. The Drive import button
+on the catalogue heading is drawn for that role alone, and the product manager's phone bar no
+longer carries an Import tile. This tightens D110, which had left staging imports to the product
+manager and production to any admin.
+
+**Why.** Beco asked for it directly. The import rewrites ranges and products from a Drive folder
+in one run, and a folder arranged wrongly rewrites them wrongly; the person who reads the report
+and fixes the folder is Brightex, so the button belongs to Brightex. Staff add and edit products
+and ranges by hand in the same screen, which was always theirs.
+
+*Reverses if:* Beco take over the Drive folder's upkeep, at which point the rule widens to
+`beco_admin` with the production confirm dialog as the gate.
+
+## D116, 4 October 2026: photographs upload straight to R2, Vercel never carries the file
+
+**Decision.** A photograph added from the dashboard (product shot, team photo, blog cover) is
+PUT by the browser directly into the R2 bucket under a presigned URL, then the finishing action
+is handed the staging key instead of the file. The URL is signed by a server action that holds
+the same route gate as the finishing action, puts exactly one object under `uploads/` with a
+random 32 hex name, and expires in five minutes. The finishing action re-checks the object's
+size and type against what R2 holds, reads it, makes the derivatives and deletes the staging
+copy whatever happens. A bucket lifecycle rule sweeps anything a browser abandoned.
+
+**Why.** Vercel caps a function's request body at 4.5MB on every plan, and nothing in the Next
+config lifts it. The code allowed 12MB, so a phone JPEG of 5MB would have been refused at the
+edge with a generic error, before our size message could run. Most phone photographs are 3 to
+6MB. Sending the bytes to Cloudflare directly removes the cap and also removes Vercel from the
+slow part of the upload.
+
+**What was considered.** Raising the client cap to 4MB and compressing in the browser: loses
+detail on the one asset the storefront sells with, and still fails on the many phones that
+produce a 4MB file. An S3 POST policy that signs the size: R2 does not support POST policies.
+Signing Content-Length on the PUT: a browser will not let script set that header, so the size
+is enforced where it can be, when the server takes the object.
+
+**Fallback.** If the PUT fails, most likely because the bucket CORS rule is missing, a file
+under 4MB goes the old way inside the form post and a larger one is refused with a message
+that names the size. Nothing is silently lost.
+
+**Reverses if:** the dashboard moves off Vercel to a host without a body cap. Then the direct
+path is still faster and stays.
+
+## D117, 4 October 2026: every action is seen to start, run and finish
+
+**Decision.** Three signals, always: the control that started the work shows it running
+(`Button pending`: disabled, spinner, `aria-busy`, present participle label), the result is
+stated when it lands (toast via `useActionToast`, or the field error for a form whose error
+belongs to one input, plus the sheet closing on success), and a reloading list says so
+(`Busy` beside the filters, the table dimmed with `aria-busy`). The transition behind every
+filter and sort lives in one hook, `useQueryNavigation`, which is where `isPending` comes
+from. Status buttons that share one action track which one was pressed so only that one
+spins. Pending labels drop the ellipsis; the spinner carries that meaning. Section in
+`docs/DASHBOARD-UI.md`.
+
+**Why.** Beco asked for it in those words: a user must know when something is happening and
+when it has happened. The audit found the shape was there but uneven. Toasts covered every
+action, but "running" was a word swap on some buttons, nothing at all on the quote and order
+status buttons, the document email buttons and the photograph controls, and no list gave any
+sign between a filter change and the new rows arriving, which on Nairobi 4G is one to three
+seconds of apparently dead controls. Consistency is the point: one mark, one place it comes
+from, so nobody hand rolls a different loading word next quarter.
+
+**What was considered.** A global progress bar across the top of the page: Next has no
+router level pending signal for `router.push`, only `useLinkStatus` for links, so it would
+have needed a wrapper around every navigation anyway, and a bar at the top of the page is
+far from the control that was pressed on a phone. Spinning every status button at once when
+any is pressed: wrong, it says all three are happening.
+
+**The defect this surfaced.** Driving the real dev server to capture the states found that a
+product Save produced no toast and left the sheet open, although the action returned
+`{ ok: 'Saved.' }`. `ProductResults` keyed the editor by `id` plus `updatedAt`. A server
+action's response carries the re-rendered tree, so the fresh row arrived in the same commit as
+the result, the key changed, React remounted the editor with its initial state, and the
+effects that toast and close never saw `ok`. The same key was on the range editor and the
+user editor, where every action bumps `updatedAt`, so every toast in that sheet was lost too.
+The jsdom tests passed because a mocked action does not re-render the parent. All three are
+keyed by `id` now, the editors already sync their fields from props, and each results test
+holds the editor to one mount across an `updatedAt` change. This is the case for walking the
+QA checklist against a running server rather than trusting the suite.
+
+**Reverses if:** Next ships a router pending hook, when the top bar becomes a cheap addition
+on top of this, not a replacement for it.
+
+## D118, 4 October 2026: CI runs on pull requests and main, not on every dev push
+
+**Decision.** `ci.yml` triggers on `pull_request`, on a push to `main`, and on
+`workflow_dispatch`. A push to `dev` starts nothing. The Supabase CLI in CI is `latest`, not the
+action's default 2.20.3. The preview deploy and import workflows are valid again. The pgTAP
+activity test asserts deltas against a baseline, so it holds on the seeded database CI uses as
+well as on the bare one the local runner uses.
+
+**Why.** Beco was being emailed a failure for every push, and every one was red. Not one run
+had passed since 12 September: the pinned CLI could not parse `config.toml`, so `supabase
+start` died in both jobs before any test ran; since 3 October the browser dialog grep matched
+a `javascript:alert(1)` string in a validation test; and two workflow files were rejected by
+GitHub at push time (a flow mapping holding `${{ }}`, a `runner` context in a job level
+`env`), each recorded as a failed run named after the file. The fixes are small. The trigger
+change is the part Beco asked for in words: no runs, no emails, on the working branch. The
+rule that nothing deploys unless CI passed stands, because the deploy path starts from a pull
+request to `main` and that is still gated.
+
+**The fifth cause, found by the first green-ish run.** With the four above fixed, the component
+suite still timed out on one DropdownMenu test under CI load, the same test that had been
+flaky locally. Profiling the gap after the test body showed Floating UI, under every Radix
+popper, asking each ancestor whether it matches `:modal` and `:popover-open` on every position
+pass, and jsdom's selector engine answering `:modal` by re-matching `:fullscreen` up the whole
+tree, recursively: 11,720 `:modal` checks and 12.6 million `:fullscreen` checks for one open
+menu, twenty seconds of CPU per test. `vitest.setup.ts` now answers those three top layer
+pseudo classes with `false`, since none of those states exist in jsdom; the file went from
+124 seconds to 1.3. A longer timeout would have hidden it.
+
+**Outcome.** Run 37202363371 on `dev`, dispatched by hand after the fifth fix, passed both
+jobs: the first green run since 12 September.
+
+**Reverses if:** the team wants the record on `dev` again, one line in `ci.yml`.
+
+## D119, 4 October 2026: the shop browses by range first, and the controls live inside a range
+
+**Decision.** `/shop` is an index: the hero, then one photographic tile per range Beco deals
+in (RANGE_GROUPS order, each a link to its page), a plain search form that lands on the flat
+list, a line stating how many products across how many ranges, the featured rail, and the
+"being photographed" list. The grid and its controls live on each range's own page,
+`/shop/<range>`, under a strip: chips to the ranges beneath (on a group) or beside (on a child,
+with "All" back to the parent), each chip a link to a real page; then finish chips, a search
+box and a sort select that are query parameters on that page. `/shop/all` is the one flat list
+of everything, with the top level ranges as its chips. An old `/shop?range=`, `?category=` or
+`?q=` address redirects to where that view now lives. The docked filter card, its native
+range select with three levels in one dropdown, the phone "Filters" panel and "Show N results"
+button are gone with `ShopControls`.
+
+**Why.** Brown chose this of three directions put forward with mockups on 4 October (A, a
+category rail on `/shop`; B, sidebar facets with a phone bottom sheet; C, this). A material
+supplier is shopped by range, not by scrolling a flat grid of everything, and the previous bar
+hid the ranges inside a select while giving finish and sort the same visual weight. Making
+every range chip a link rather than a parameter is also the search win: sub ranges become
+pages that can rank, breadcrumbs and the back button walk the tree, and a filtered view still
+canonicalises to its page with noindex per D29. The cost is one more tap from `/shop` to a
+product, which the search form and the flat list both shortcut.
+
+**What was considered.** Keeping the whole grid on `/shop` under the tiles: two ways to the
+same products on one page, and the tiles would have read as decoration above the real thing.
+Finish as its own pages: a finish is a spec that crosses ranges, thin as a page, so it stays a
+parameter.
+
+**Reverses if:** the catalogue grows past a few hundred products, when option B's sidebar
+facets become the right answer inside a range, on top of this index.
+
+## D120, 4 October 2026: the home hero shows our finished rooms, and we speak as we
+
+**Status, 5 October.** The hero half of this decision is held off `dev` on Brown's instruction and
+lives on branch `storefront/home-hero-cinematic-finished-rooms`, with D121. `dev` keeps `PinnedHero`. The first person
+About copy, the other half, is in `dev`.
+
+**Decision.** The home hero is `CinematicHero`: five of our own finished installations, full
+screen and one at a time, a kitchen, a bathroom, a living room, a reception and a bar, each
+captioned with the room and the material we supplied in it, the caption linking to that
+material's range while it has stock. One line of type, "The room starts with the surface.",
+and two actions, "View products" to `/shop` and "Plan a visit" to `/contact`. Each photograph
+pushes in slowly for as long as it is on screen and crossfades to the next every 6.5s; room
+buttons (no longer with a filling bar, D121) jump to any room, and a Pause control stops the sequence. The
+rooms are a static manifest, `HERO_ROOMS`, cut twice from `public/site-photos/` into a 16:9
+desktop frame and a 3:4 phone frame, every file under the 150KB hero budget. `PinnedHero`,
+its range chips and `RotatingRoomWord` with its typing caret are retired. The About page and
+the home About section speak in the first person: "we" stock, advise, measure, install and
+deliver, rather than Beco being described from outside.
+
+**Why.** Brown chose the third of three directions put forward with mockups on 4 October, and
+asked for it cinematic, minimal in wording, with those two actions, and showing different
+rooms as finished work rather than ranges or product shots. The previous hero veiled one
+photograph so heavily the material barely read, paired a typed room word with photographs
+that did not match it, and hung the ranges on unlabelled round thumbnails. A finished room
+answers the buyer's real question, whether it works in a space like theirs, which a slab
+cannot. The first person voice was asked for in the same message: the About copy described
+Beco as a third party, which reads as a directory listing, not as the people you would be
+dealing with.
+
+**Motion, inside D31.** Transform and opacity only. The first photograph, the LCP element,
+holds still for 1.6s before its push starts. The outgoing room keeps its push while it fades
+so nothing snaps. No pinning, no scroll coupling. Under reduced motion nothing advances or
+moves and Play is offered instead, and a hidden tab does not advance. Only the room on screen
+and the next are mounted as images, so first paint fetches two photographs, the right frame
+for the screen.
+
+**What was considered.** The showroom film behind the hero, as the Direction 3 mockup showed:
+15MB, and Brown asked for rooms rather than the showroom. A video of rooms would be the next
+step if Beco shoots one; the component takes images today. Pexels photography for flooring,
+hardware and accessories, as `HERO_RANGE_IMAGES` uses: not our finished work, which is the
+whole point of this hero, so those ranges are not in it until Beco has real installations to
+show.
+
+**Reverses if:** Beco shoots landscape footage of finished rooms, when a film slot replaces the
+photographs with the same caption and controls.
+
+
+## D121, 4 October 2026: the hero carries no rules or bars
+
+**Status, 5 October.** Held off `dev` with D120, on branch `storefront/home-hero-cinematic-finished-rooms`, together
+with `pnpm hero:frames`.
+
+**Decision.** The home hero draws no lines. The Warm Red rule before the eyebrow is gone, and
+the room buttons lose their filling progress bars: on desktop each room is its number and name,
+"01 Kitchen", bright when it is showing and grey otherwise; on a phone each is an 8px square in
+a 44px target. `HeroStatic` drops its rule and its bottom hairline to match. The
+`beco-hero-progress` keyframes are deleted from `motion.css`.
+
+**Why.** Brown asked directly, after seeing D120 live, for no line separators on the hero. Over
+a full bleed photograph the thin rules read as interface chrome laid across the room, and the
+room names already say which slide is showing and that there are more.
+
+**What was considered.** Keeping the bars as a timer and hiding them only on desktop: still a
+line, on the screen size most people see first.
+
+**Reverses if:** testing on a real device shows people do not realise the hero advances on its
+own, when a timer that is not a rule, for example the number counting, is the next thing to try.
+
+## D122, 5 October 2026: hinges import one product per photograph, sorted by finish
+
+**Decision.** `HINGES` in Drive is about sixty phone photographs, `IMG_1163.HEIC` to
+`IMG_1331.HEIC` and three random names, with nothing in any filename to say which hinge is
+which. The importer used to make them one umbrella product, "Hinges", holding every photograph.
+Each photograph is now its own product. The plan names it after its photo number, "Hinge
+1193", slug `hinge-1193`, stable from run to run. As it imports, `readFinish` reads the finish
+from the pixels and files it under a sub range: "Black Hinge 1193" under Hinges, then Black
+Hinges, whose identity is `HINGES/BLACK HINGES`, the path Beco would give that folder in Drive.
+Finishes are black, white, silver, gold, bronze and copper. A photograph with no clear finish
+stays in Hinges itself as "Hinge 1193" rather than being guessed into a sub range. The old
+"Hinges" product is unpublished, never deleted, with an issue recorded. `SPLIT_BY_FINISH` in
+`plan.ts` names the ranges this applies to: Hinges, and since the same day, on Brown's go ahead,
+Door Locks and Furniture Legs, both in the same state in Drive (about 11 and 55 phone
+photographs, no subfolders). Products read "Gold Furniture Leg 4517" under Furniture Legs, then
+Gold Furniture Legs.
+
+**Why.** Brown's instruction, 5 October: each hinge is a separate item with its own code and
+price, and quoting one bundled product with thirty photographs made it impossible to tell which
+hinge was being priced. Where the codes are unclear, sort by colour, and the Beco team sets
+each code, name and price in the dashboard. Names still win when they exist: a hinge folder
+whose files name each item splits by name under D104, and never reaches the finish reader.
+
+**How the finish is read.** The photograph is shrunk to 96px, the backdrop is the median of its
+border ring, and every pixel more than 16 CIELAB units from the backdrop is the piece. Each piece
+pixel votes by lightness and hue; neutral pixels split into black, silver and white, coloured
+ones into gold, bronze and copper, and blue or green abstain. The winner needs 45% of the
+piece's votes, and the piece must fill 3% of the frame, or there is no finish. A majority rather
+than an average because a polished hinge averages to a muddy grey: its highlights read white
+and its shadows black, and only a vote over the whole piece reads it as silver.
+
+**The dashboard owns the result.** Name, category, code and price are set on the first import
+only (D54). Proven against the local stack on synthetic photographs: a hinge renamed, coded,
+priced, moved and given a new slug in the dashboard came through a second run untouched, and a
+second run changed no row. That last part needed two fixes to `executePlan`. An unchanged file
+whose product has no row yet is now processed (`needsProcessing`): the hinge photographs were
+already imported into the umbrella product, so without it none would ever become its own
+product, and a database reset left unchanged products missing. And an existing product is
+found by its Drive path when its slug no longer matches, so a slug edited in the dashboard does
+not read as a missing product and import twice.
+
+**What it costs.** Two photographs of the same hinge become two products, since nothing says
+they match. The team deletes the repeat. Every hinge photograph is HEIC, which only macOS
+decoded when this was written; D123 lets the dashboard's button decode it too.
+
+**Reverses if:** Beco renames the photographs after their codes, when D104's item rule takes
+over and this path is never reached; or the finish reading proves wrong often enough on the real
+photographs that sorting by hand is quicker, when Hinges comes out of `SPLIT_BY_FINISH` and its
+products all land in Hinges unsorted.
+
+**Amended 6 October 2026: dark metal is judged against the backdrop.** Brown found matte black
+and dark gunmetal hinges filed as Silver Hinges: IMG_1187, IMG_1307 and IMG_1308, all shot on a
+white sheet. The camera exposes for the sheet and a satin face mirrors it, so those pieces sat at
+L 34 to 52, above the black cut at 30, and their pixels voted silver. Now, before the vote, a
+piece that is at least 80% neutral and whose median neutral lightness is under 0.545 of the
+backdrop's reads black. Measured over all 124 cached Hinges, Door Locks and Furniture Legs
+photographs: the black hinges sit at 0.38 to 0.52 of the backdrop, every silver hinge at 0.57 or
+more. Thirteen readings changed, all silver to black: the three hinges, a black leg on white
+(IMG_4482), and nine gunmetal or black nickel locks and legs, filed under black because Brown
+asked for gunmetal to read black. No gold, bronze, copper or none reading changed. Real photographs,
+downscaled to a few KB, are committed as fixtures for black, silver on white, silver on grey and
+gold. Still wrong and not addressed: mirror polished gold legs that reflect a grey room read
+silver or none (IMG_4474, 4479, 4514, 4516 and others); a mid grey brushed hinge finish
+(IMG_1165, 1166, 1178 to 1181, 1317 to 1319, 1322, 1323) stays silver, being lighter than the
+cut, and would need a finish of its own if Beco calls it gunmetal.
+
+**Amended 6 October 2026: 15mm stones split per photograph, unsorted.** Brown found "15mm
+Sintered Stones" imported as one product whose photographs show different stones: the Drive
+folder holds five loose phone photographs, `IMG_4197` to `IMG_4202`, and no product folders.
+`SPLIT_PER_PHOTO` in `plan.ts`, beside `SPLIT_BY_FINISH`, names ranges split the same way but
+with no finish reading, since a colour sub range means nothing for stone. Each photograph is
+now "15mm Sintered Stone 4197", slug `15mm-sintered-stone-4197`, filed directly in 15mm
+Sintered Stones. The umbrella product is unpublished, never deleted, by the same step that
+retires the hinge umbrella, and the issue asks Beco to name each stone in the dashboard
+catalogue, where Beco manage their catalogue; the Drive import is Brightex's development tool.
+If a photograph is renamed in Drive after its stone, D104's item rule names the product after
+it and this path is not reached; a test holds that hand over. Name and category are set on first import only (D54).
+
+## D123, 5 October 2026: HEIC decodes on Linux, so the import button handles hardware
+
+**Decision.** `toDecodable` converts HEIC with `heif-convert` from libheif everywhere but macOS,
+which keeps `sips`. The import workflow and CI both install `libheif-examples` and
+`libheif-plugin-libde265` (the HEVC decoder libheif needs) from Ubuntu's own archive. A missing
+converter now fails with what to install rather than "spawn ENOENT", and the import records the
+same advice against the file.
+
+**Why.** Every hardware photograph in Drive is iPhone HEIC, and the dashboard's import button
+runs on GitHub's Ubuntu runners, where nothing could decode it: the button skipped every hinge,
+door lock and furniture leg, and D122's split only worked from the Mac. Brown asked for the
+button to handle them.
+
+**Proof.** A real 927 byte HEIC is committed as a fixture. The decode test turns it into a PNG
+through `heif-convert`, and the finish test reads it as gold, on Ubuntu 24.04 with libheif
+1.17.6, the version GitHub's `ubuntu-latest` installs. Not yet run against Beco's own
+photographs on a runner: the first dispatch from the dashboard is that test.
+
+**What was considered.** A Sharp build with libheif compiled in: a custom native build to keep
+working across Sharp upgrades, for one decoder. Running the import on a macOS runner: ten times
+the Actions minutes. Asking Beco to set their iPhones to Most Compatible: right for new photos,
+does nothing for the hundreds already in Drive.
+
+**Reverses if:** Sharp's prebuilt binary starts shipping an HEVC decoder, when the converter
+step can go.
+
+## D124, 5 October 2026: quote and order lines carry the product code
+
+**Decision.** `quote_items` and `order_items` gain `code`, the product's code when the line was
+written. A `before insert` trigger fills it from `products.sku` unless a code is given, so the web
+form, the counter form and adding catalogue lines all carry it without any of those functions
+being rewritten. `convert_quote_to_order` copies the quoted code onto the order. The dashboard
+shows it under each line's name, the PDF prints "Code H-301" under the description, and the
+priced quote and receipt emails put it before the quantity. One function, `lineCodeLabel`,
+writes it for the PDF and the email alike.
+
+**Why.** Brown asked that an item chosen by its code, a hinge or a handle, reach the quote as a
+single line with that code. A line said only the product's name, so a hinge named "Soft close
+hinge" with H-301 in its code field could not be told from its neighbours on the document the
+customer takes away. With D122 sorting hinges by finish and the Beco team keying codes into the
+dashboard, the code is now the thing that identifies the item.
+
+**A snapshot, like the price.** The code is copied, never read live: an issued quote does not
+change because a product's code was corrected afterwards, and an order carries what was quoted.
+Lines written before migration 62 carry no code. Backfilling would rewrite quotes already issued,
+and would fire the money and approval triggers on every old line for nothing.
+
+**What was considered.** Folding the code into `description`: it would survive, but a
+salesperson editing the description could delete it, and the PDF could not set it apart.
+Joining `products.sku` when rendering: live, so a corrected code would silently change an
+issued document.
+
+**Reverses if:** codes move to a variants table, one product with several coded variants, when
+the line would snapshot the variant's code instead.
+
+## D125, 5 October 2026: a slight corner radius, in two values
+
+**Decision.** Corners are slightly rounded, from two tokens in `tokens.css`: `--radius-control`,
+4px, for buttons, fields, quantity steppers, menu rows, small tags and image thumbnails, and
+`--radius-card`, 6px, for product and range cards, image frames, dialogs, the phone sheet's top
+edge, the nav dropdown and boxed notes such as the spec lists and the quote summary. An inset
+outline drawn over a rounded frame is rounded with it, or its square corners show inside the
+curve. Nothing full bleed is rounded: the hero, section bands, the header and the footer meet the
+edge of the screen square, so the page itself keeps its hard frame. The dashboard's floating
+panels keep their 14px `rounded-panel` (D85) and its bottom navigation its own 10px. The old
+`--radius-button` (2px) is gone and every `rounded-[2px]`, `[3px]` and `[4px]` became one of the
+two tokens. The WhatsApp card's speech nub and chat bubbles, drawn to look like WhatsApp's own, and the
+chart legend swatches stay as they are. `radius.test.ts` fails on any other arbitrary pixel radius.
+
+**Why.** The Beco team asked, through Brown on 5 October, for a subtle radius on the components
+that carry an edge: the sharp corners read harsher than the materials they sell. This reverses
+the "sharp, no exceptions" rule CLAUDE.md held since D92, on the fresh, explicit instruction that
+rule asked for. It does not reverse D92's finding: 8px and 16px on cards were both reported "not
+right", so the card value stops at 6px and the control value at 4px, small enough to soften the
+edge without turning the site into rounded tiles.
+
+**What was considered.** One value everywhere: 4px reads as square on a large image frame and 6px
+looks soft on a 44px button. Rounding full bleed media: a rounded hero floats in white margin and
+stops reading as the room.
+
+**The documents too, the same day, on Brown's go ahead.** The emails use the same two values:
+6px on the white card (its charcoal band rounds at the top, its footer at the foot), the reference
+box and the total block; 4px on the buttons, the PDF mark and the step numbers. Outlook on Windows
+ignores `border-radius` and draws them square, the old look rather than a broken one. The quote
+and receipt PDF has one boxed element, How to pay, which takes the card corner as
+`PDF_CARD_RADIUS`, 4.5pt, the same 6px at 0.75pt per CSS pixel; everything else on it is a rule.
+
+**Reverses if:** the team or Brown sees it live and wants it tighter or gone, when both values
+change in `tokens.css` alone, plus the two constants in `@beco/documents`.
+
+## D126, 5 October 2026: every page draws its own link preview, and the dashboard has none
+
+**Decision.** Every storefront page states a complete share card through one function,
+`pageMetadata` in `apps/storefront/src/lib/seo.ts`: title, description, canonical, og:url, site
+name, a 1200 by 630 JPEG og:image with its alt, and a large Twitter card. The images come from
+routes under `/og/`: `/og/<section>` for pages with no photograph of their own, drawn at build from
+one of Beco's own site photographs, and `/og/product/<slug>`, `/og/range/<slug>` and
+`/og/blog/<slug>`, drawn on first request from the record's own photograph and cached for the
+hour its page is. Each card is the photograph with a charcoal band carrying the real logo mark, an
+eyebrow and the page's name, set in the self hosted Titillium and Cormorant through `next/og`, then
+encoded by sharp as a baseline JPEG under 300KB. A card whose photograph will not load falls back
+to the section photograph, still named for the page. The image origin is the canonical one on
+production and the preview's own host on a Vercel preview (`ogOrigin`). Product titles name the
+product's own range rather than "sintered stone" on every item. The JSON-LD logo is an absolute
+`ImageObject`, and the product and post schema images are absolute derivatives rather than bare
+R2 keys. `/quote` is no longer disallowed in robots.txt, so its noindex is read, and `/og/` is
+allowed explicitly. The dashboard sets noindex, nofollow at its root layout, drops the shop copy
+from its description, and states no Open Graph tags, on top of its robots.txt and X-Robots-Tag.
+
+**Why.** Shared links showed the wrong picture or none. Four causes, all fixed: the default image
+was a portrait WebP declared as landscape, and WhatsApp does not render WebP; the product and post
+pages passed a bare R2 key as og:image, which resolved to a 404 on the canonical host; a page that
+set `openGraph` at all replaced the layout's whole object, so the product page lost its site name
+and type; and every image pointed at www.beco.co.ke, which is not yet on DNS. The dashboard
+described itself as "Premium interior materials in Nairobi", so a pasted dashboard link previewed
+as the shop, and three of its pages never set noindex themselves.
+
+**Rejected.** Handing scrapers the WebP derivatives: WhatsApp and some LinkedIn paths drop them.
+The `opengraph-image` file convention: its alt is fixed per file, and the metadata could not be
+unit tested as one object per page. A text rendering endpoint taking the title from the query
+string: anyone could draw any words under Beco's logo. A JPEG derivative per photograph in the
+import: a second set of files for one use, and no logo on it.
+
+*Reverses if:* a scraper Beco cares about is seen rejecting the generated JPEGs, or the image host
+moves to img.beco.co.ke and a ready made JPEG derivative becomes cheaper than drawing one.

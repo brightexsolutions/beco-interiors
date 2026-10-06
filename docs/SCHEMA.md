@@ -67,22 +67,26 @@ and writes all. Nobody may change their own `role`, enforced by policy not by UI
 
 Self referential, so subcategories need no second table.
 
-**Exactly two levels, enforced by a trigger** rather than by convention, because the
-storefront's browse tree assumes it and a third level would render as a group with neither
-products nor children. `enforce_category_depth` refuses a grandchild on insert and on update, a
-category made its own parent, and a category with children being given a parent. See migration
-19 and D52.
+**Three levels at most, enforced by a trigger** rather than by convention: a major category,
+the ranges under it, and their sub ranges. Products may sit at any level. `enforce_category_depth`
+measures the whole chain, the depth of the new parent plus the height of the subtree being moved,
+and refuses a fourth level, a cycle and a self reference, on insert and on update. Migration 19
+set two levels (D52); migration 58 raised it to three (D104) once Beco's Drive carried
+`HANDLES/BLACK HANDLES/<one photo per handle>` and `12MM SINTERED STONES/HEIXIN 12MM/<stones>`.
+`category_subtree_ids(id)`, `category_depth(id)` and `category_height(id)` are security invoker
+helpers for the same questions.
 
-Five GROUPS sit above the Drive folders: Sintered Stone, Wall Panels, Flooring, Hardware and
-Accessories. Lighting stays top level with no children by design. A group is an editorial row,
-so `source_path` is null on it, which is what keeps the importer, which upserts on
-`source_path`, from ever colliding with one.
+Major categories: Sintered Stone, Handles (since D104, where Beco place it), Wall Panels,
+Flooring, Hardware and Accessories. Lighting, once top level with no children, is retired and
+unpublished since D103. An editorial group carries `source_path` null, which is what keeps the
+importer, which upserts on `source_path`, from ever colliding with one. A range the importer
+creates under a Drive folder carries the folder path, `HANDLES/BLACK HANDLES`, as its identity.
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid PK | |
 | `name`, `slug` | text, slug unique | Slug derives from the Drive folder name |
-| `parent_id` | uuid FK categories | Null on a group and on Lighting. Depth capped at two by trigger |
+| `parent_id` | uuid FK categories | Null on a major category. Depth capped at three by trigger, migration 58 |
 | `description` | text | 150 to 400 words. **A grid alone does not rank** |
 | `meta_title`, `meta_description` | text | SEO overrides, editable without a deploy |
 | `hero_image` | jsonb | |
@@ -214,6 +218,7 @@ the UI. See D86.
 | `quote_id` | uuid FK quotes on delete cascade | |
 | `product_id` | uuid FK products **null** | **Nullable on purpose.** A salesperson can add an item not yet in the catalog rather than being blocked at the counter |
 | `description` | text | Snapshot, so the line survives the product changing |
+| `code` | text null, 1 to 80 chars | The product's code (`products.sku`) when the line was written, filled by the `quote_items_code` trigger on every insert path unless a code is given. A snapshot like the price: editing the product's code later never changes an issued line. Null for a custom line or an uncoded product. Migration 62, D124 |
 | `quantity` | numeric(12,2) | |
 | `list_price` | numeric(12,2) null | What it should have cost |
 | `unit_price` | numeric(12,2) | What it did cost. **Stored on the line, never read live from products**, so a quote issued last week does not silently reprice |
@@ -278,6 +283,8 @@ Answers "did we send them the quote, and when" from the dashboard rather than fr
 | `sent_to` | text null |
 | `sent_at` | timestamptz null |
 | `sent_channel` | text null |
+
+`order_items.code` (migration 62, D124): copied from the quote line by `convert_quote_to_order`, so an order carries the code that was quoted; a line inserted any other way takes the product's code through the `order_items_code` trigger.
 
 `sent_to` and `sent_at` are nullable because a counter customer may take only a printed copy,
 which makes "was this sent" a three state question rather than two. The `/reports` sales
@@ -348,6 +355,12 @@ anniversary countdown and reveal, set from `apps/dashboard`'s `/launch` control.
 the `settings_read_public` allowlist because the storefront renders them server side for
 anonymous visitors. See migration 25 and D80.
 
+`business_legal_name`, `kra_pin`, `vat_number`, `business_address` and `business_email` are
+the business identity printed in the From block of every quote PDF, beside the payment
+channels under "How to pay". Authored on the Business tab of `/settings`. The KRA PIN is
+validated as one letter, nine digits, one letter. Readable by the roles that raise quotes,
+writable by admins only. Migration 54, D102.
+
 ### analytics_events
 
 `event_type`: `page_view`, `product_view`, `add_to_cart`, `quote_started`, `quote_submitted`,
@@ -356,6 +369,11 @@ anonymous visitors. See migration 25 and D80.
 `whatsapp_click` and `call_click` carry the originating product or category in `metadata`,
 because those two leads leave the site into channels analytics cannot follow and that is the
 only signal we get.
+
+Anonymous inserts are bounded (migration 60, D108): `event_type` must be one of the values above
+and `metadata` at most 2KB, or the row is refused. Nothing writes here yet; GA4 carries the
+storefront's events, and the lead counters in `dashboard_summary()` read an empty table until a
+server-side writer lands.
 
 **Needs a retention policy.** A row per page view will outgrow a 500MB free tier eventually.
 
@@ -415,9 +433,18 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `conversion_report(p_period, p_from, p_to)` | Admin reports. Views, add to cart, quotes, WhatsApp and call clicks per product and category. SECURITY INVOKER so a role that cannot read `analytics_events` sees empty rows. Migration 41, 43 |
 | `refresh_quote_money(p_quote_id)` | Sums priced lines into the quote header (VAT inclusive, D50). Triggered from `quote_items`. Migration 33, 44 |
 | `refresh_order_money(p_order_id)` | Same for an order. Triggered from `order_items`. Leaves a header-only order alone when it has no lines. Migration 44 |
+| `activity_series(p_weeks)` | Dashboard charts. One row per Nairobi week, newest last, capped at 52: quotes raised, won, lost, won value, orders invoiced and collected. SECURITY INVOKER, so RLS decides what each role counts. Migration 59, D106 |
+| `quote_pipeline()` | Dashboard home. Open quotes by status plus this month's won and lost, one jsonb. SECURITY INVOKER. Migration 59 |
 | `record_sign_in()` | `security definer`. Stamps `users.last_login_at` with `clock_timestamp()` and writes the `login` `audit_log` row, which the trigger cannot. Called by the dashboard sign-in action. No-op for an inactive account. `execute` to `authenticated` only. Migration 26, D83 |
 | `complete_first_login()` | `security definer`. Clears `users.must_change_password` once, for `auth.uid()`. Called by the change-password action after Supabase Auth accepts the new password. `execute` to `authenticated` only. Migration 26, D83 |
+| `staff_names(p_ids uuid[])` | `security definer`. Display names for the given staff ids, so a salesperson sees who owns or prepared a quote without reading the colleague's `users` row. Sales and admins only; nothing for a product manager or anon. A deactivated colleague keeps their name on history. Migration 55, D102 |
 | `end_user_sessions(p_user_id)` | `security definer`. Deletes that user's GoTrue sessions and refresh tokens. `is_brightex_user()` gated. Called after deactivation and password reset. `execute` to `authenticated` only. Migration 45 |
+
+**Stale edit conflicts raise SQLSTATE `PT409`, never `40001`.** Every function above that
+takes `p_expected_updated_at` refuses a stale timestamp with "This quote changed while you were
+editing". `40001` is `serialization_failure`, which PostgREST retries; a stale timestamp is
+stale on every retry, so the request hung. `PT409` returns 409 Conflict once. Migration 56,
+guarded by pgTAP file 32, D102.
 
 Migration 45 adds `guard_users_staff`: even an allowlisted `brightex_admin` cannot change their own `role`, `is_active` or `email`, and cannot deactivate or demote the last active `beco_admin` or `brightex_admin`.
 

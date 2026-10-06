@@ -69,7 +69,7 @@ export function BlogSidebar({
       ) : null}
 
       {/* The advert: small, real stock, one action. Not a second hero. */}
-      <div className="bg-charcoal p-6 text-high-vis-white">
+      <div className="overflow-hidden rounded-card bg-charcoal p-6 text-high-vis-white">
         {promoImage ? (
           <div className="relative -mx-6 -mt-6 mb-5 aspect-[4/3] overflow-hidden">
             <Image

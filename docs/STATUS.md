@@ -5,6 +5,22 @@
 Legend: `DONE` verified against reality, `WIP` in progress, `TODO` not started, `BLOCKED`
 waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 
+**3 October 2026, on `dev`, nothing merged to `main`.** Since the 23 September close, merged
+through descriptive feature branches: the storefront quote page and sales flow polish, ops alerts
+to Brightex, KRA and payment details on quotes (D101, D102); Lighting retired (D103); the three
+level taxonomy with Handles a major category (D104); the Drive import run from the dashboard
+through GitHub Actions (D105); the dashboard redesigned on shadcn with charts, table toolbars and
+the sidebar shell (D106); the old WordPress addresses taken over and SEO tightened per page, with
+`docs/SEO-MIGRATION.md` for Beco's own Search Console (D107); the security review closed (D108);
+the emails opening on a photograph, carrying the figure, and the web confirmation finally sending
+(D109); `docs/SYSTEM.md` and `docs/SKETCHES.md` for the handover. **Headline numbers, 3 October:**
+60 migrations replaying clean, **37 pgTAP files, 393 assertions**, unit 359, storefront 627,
+dashboard 734, integration 37, 9 packages typechecking clean, both apps building. **Still open:**
+`main` untouched until Beco verify; `GITHUB_ACTIONS_TOKEN` not yet set so no real dispatch has run;
+the cron-job.org jobs not yet created; Search Console not yet verified under Beco's account; the
+next real `drive:import` creates the sub ranges; real phone QA of the redesigned dashboard; the
+confirmation email not yet observed in a real inbox.
+
 Last updated: 23 September 2026. M0 through M4 done. M5 (operations dashboard)
 is **WIP** on branch `dev`, approaching close. `dev` is now the primary
 developer branch, forked from `m5-dashboard` and always kept ahead of `main`;
@@ -173,12 +189,21 @@ assembled entrance, all landed as M4 work rather than as a returned-to M3 phase.
 
 ## Waiting on Beco
 
+**3 October 2026.** D103 retires Lighting. D104 raises the taxonomy to three levels and
+teaches the importer Beco's real Drive shape: `HANDLES/<colour>/<one photo per handle>` becomes a
+Handles major category, colour sub ranges and one product per handle; `12MM SINTERED
+STONES/HEIXIN 12MM/<stones>` becomes a sub range under 12mm. The next `drive:import` against the
+real Drive will create those rows; until then the catalogue still shows the old umbrella
+products. Prices and codes for handles come from the `HANDLE SIZES AND PRICES` spreadsheet and
+are keyed in through the product editor, never parsed. `FLUTED WALL PANELS` and `Drawer rails`
+file under Wall Panels and Hardware by migration 58 where they already exist.
+
 **Resynced 23 September against the actual `drive:import` report, not memory or an older
 run.** `docs/milestones/M4-HANDOVER.md` section 3 predates this resync and is now stale; this
 table is the current short form.
 
 Resolved since 3 September, removed from the table below: product prices and descriptions,
-"10+ years" vs "new entrant", does Lighting stay a category (yes, confirmed top level with no
+"10+ years" vs "new entrant", does Lighting stay a category (it did until 3 October 2026, when Beco confirmed they no longer sell it: retired by migration 57, D103; it had been top level with no
 Drive folder, see D47 and D52). **Changed by the 23 September import, not resolved**: the six
 categories once stuck at literally zero products (Door Locks, Furniture Legs, Kitchen
 Accessories, Hinges, Floating Shelf Accessories, Office Accessories) now each hold one umbrella
@@ -203,7 +228,7 @@ below, unchanged: one product per folder, not one per real item.
 
 ## Decisions
 
-Recorded through D91. D1 to roughly D45 are architectural, made before the build started, and
+Recorded through D104. D1 to roughly D45 are architectural, made before the build started, and
 live in `files/BUILD-PLAN.md`, gitignored internal Brightex material. From D46 on, every decision
 discovered or made DURING the build is recorded in the committed `docs/DECISIONS.md`: D50 is the
 VAT arithmetic every quote document depends on, D52 through D65 are the M4 storefront's taxonomy
@@ -214,6 +239,11 @@ front of the Cloudflare edge rule, D82 the post-M4 storefront modernisation pass
 D89 the M5 dashboard's authorization model, shell, quote approval gate, an RLS gap closed, the
 shadcn construction standard and where stock lives, and D90 and D91 (23 September) the Drive
 importer's ownership fix and the `/categories` range editor.
+D92 to D101 are the storefront and dashboard refinements of 24 September. D102 (28 September)
+is the polish and hardening pass: operational alerts to Brightex, the `PT409` stale edit fix,
+staff names for sales, business identity on quotes, and the red square mark on the dashboard.
+D103 and D104 (3 October) retire Lighting and take the taxonomy to three levels with the
+importer reading Beco's real Drive shape.
 
 ## Known weaknesses
 

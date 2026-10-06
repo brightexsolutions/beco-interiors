@@ -12,6 +12,7 @@ import {
   StatusPill,
   Textarea,
   useActionToast,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import { deleteCategory, updateCategory, type CategoryActionState } from '@/app/(app)/categories/actions';
 import type { CategoryParentOption, CategoryRow } from '@/lib/categories';
@@ -32,6 +33,7 @@ export function CategoryEditor({
   onDeleted?: () => void;
 }) {
   const [saveState, save, saving] = useActionState(updateCategory, INITIAL);
+  const onSaveSubmit = useKeepValuesSubmit(save);
   const [deleteState, remove, removing] = useActionState(deleteCategory, INITIAL);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [name, setName] = useState(category.name);
@@ -70,7 +72,7 @@ export function CategoryEditor({
         <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
           <div className="min-w-0 border border-neutral-200 px-4 py-4">
             <p className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
-              {isGroup ? 'Top level group' : 'Range'}
+              {category.depth === 1 ? 'Major category' : category.depth === 2 ? 'Range' : 'Sub range'}
             </p>
             <p className="mt-2 font-ui text-lg font-semibold text-charcoal">{name.trim() || 'Unnamed range'}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -95,7 +97,7 @@ export function CategoryEditor({
             </p>
           </div>
 
-          <form id="category-editor" action={save} className="grid min-w-0 gap-8">
+          <form id="category-editor" onSubmit={onSaveSubmit} className="grid min-w-0 gap-8">
             <input type="hidden" name="categoryId" value={category.id} />
             <input type="hidden" name="updatedAt" value={category.updatedAt} />
 
@@ -117,18 +119,18 @@ export function CategoryEditor({
                 label="File under"
                 htmlFor="cat-parent"
                 hint={
-                  category.childCount > 0
-                    ? 'This group has ranges under it, so it has to stay a top level group'
-                    : 'Leave as Top level group to keep it above the shop'
+                  groupOptions.length === 0
+                    ? 'This category has two levels under it, so it stays a major category'
+                    : 'Leave as Major category to keep it at the top of the shop. A sub range files under a range'
                 }
               >
                 <Select
                   id="cat-parent"
                   name="parentId"
                   defaultValue={category.parentId ?? ''}
-                  disabled={category.childCount > 0}
+                  disabled={groupOptions.length === 0}
                 >
-                  <option value="">Top level group</option>
+                  <option value="">Major category</option>
                   {groupOptions.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
@@ -157,7 +159,7 @@ export function CategoryEditor({
                   name="isPublished"
                   checked={published}
                   onChange={(event) => setPublished(event.target.checked)}
-                  className="h-5 w-5 rounded-[2px] border-neutral-300 text-charcoal"
+                  className="h-5 w-5 rounded-control border-neutral-300 text-charcoal"
                 />
                 Published on the website
               </label>
@@ -199,18 +201,25 @@ export function CategoryEditor({
         </div>
 
         <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-neutral-200 bg-high-vis-white px-5 py-3 sm:flex-row sm:justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setConfirmOpen(true)}
-            disabled={busy || blockedBy != null}
-            title={blockedBy ? `Cannot delete: ${blockedBy}` : undefined}
-          >
-            <Icon name="trash" />
-            {blockedBy ? `Delete range (${blockedBy})` : 'Delete range'}
-          </Button>
-          <Button type="submit" form="category-editor" variant="primary" disabled={busy}>
-            {saving ? 'Saving…' : 'Save'}
+          <div className="flex min-w-0 flex-col items-start gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmOpen(true)}
+              disabled={busy || blockedBy != null}
+              aria-describedby={blockedBy ? 'category-delete-blocked' : undefined}
+            >
+              <Icon name="trash" />
+              Delete range
+            </Button>
+            {blockedBy ? (
+              <p id="category-delete-blocked" className="font-ui text-sm text-neutral-500">
+                Empty it first: {blockedBy}.
+              </p>
+            ) : null}
+          </div>
+          <Button type="submit" form="category-editor" variant="primary" disabled={busy} pending={saving}>
+            {saving ? 'Saving' : 'Save'}
           </Button>
         </div>
       </div>

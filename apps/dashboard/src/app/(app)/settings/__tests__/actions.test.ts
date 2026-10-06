@@ -51,6 +51,11 @@ afterEach(() => {
 
 const formFrom = () => {
   const form = new FormData();
+  form.set('businessLegalName', 'Beco Interiors Limited');
+  form.set('kraPin', 'p051234567x');
+  form.set('vatNumber', '');
+  form.set('businessAddress', 'Urban Square, Enterprise Road, Nairobi');
+  form.set('businessEmail', 'info@beco.co.ke');
   form.set('vatPercent', '16');
   form.set('quoteValidityDays', '30');
   form.set('quoteResponseSlaHours', '2');
@@ -69,6 +74,61 @@ const formFrom = () => {
 };
 
 describe('saveDashboardSettings', () => {
+  it('never writes the Brightex allowlist from a Beco admin, whatever the form carried (D110)', async () => {
+    maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
+    const result = await saveDashboardSettings({}, formFrom());
+    expect(result.ok).toBeDefined();
+    const wroteAllowlist = update.mock.calls.some(
+      ([payload]) => Array.isArray((payload as { value: unknown }).value) && ((payload as { value: string[] }).value).includes('beco.brightex.dev@gmail.com'),
+    );
+    expect(wroteAllowlist).toBe(false);
+  });
+
+  it('writes the Brightex allowlist for a Brightex admin', async () => {
+    requirePath.mockResolvedValueOnce({
+      userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      email: 'beco.brightex.dev@gmail.com',
+      fullName: 'Brightex',
+      role: 'brightex_admin',
+      isActive: true,
+      mustChangePassword: false,
+      canWriteBlog: true,
+      canReadAudit: true,
+    });
+    maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
+    await saveDashboardSettings({}, formFrom());
+    const wroteAllowlist = update.mock.calls.some(
+      ([payload]) => Array.isArray((payload as { value: unknown }).value) && ((payload as { value: string[] }).value).includes('beco.brightex.dev@gmail.com'),
+    );
+    expect(wroteAllowlist).toBe(true);
+  });
+
+  it('stores the KRA PIN uppercased and the business identity alongside the rest', async () => {
+    maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
+    const result = await saveDashboardSettings({}, formFrom());
+    expect(result.ok).toBe('Settings saved.');
+    const values = update.mock.calls.map((c) => (c[0] as { value: unknown }).value);
+    expect(values).toContain('P051234567X');
+    expect(values).toContain('Beco Interiors Limited');
+    expect(values).toContain('info@beco.co.ke');
+  });
+
+  it('refuses a malformed KRA PIN with a clear message and writes nothing', async () => {
+    const form = formFrom();
+    form.set('kraPin', '12345');
+    const result = await saveDashboardSettings({}, form);
+    expect(result.error).toBe('A KRA PIN is a letter, nine digits and a letter');
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('lets the KRA PIN and VAT number stay blank until Beco has them', async () => {
+    maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
+    const form = formFrom();
+    form.set('kraPin', '');
+    form.set('businessEmail', '');
+    expect((await saveDashboardSettings({}, form)).ok).toBe('Settings saved.');
+  });
+
   it('re-checks the session, stores VAT as a fraction, and busts the storefront', async () => {
     maybeSingle.mockResolvedValue({ data: { key: 'vat_rate' }, error: null });
     const result = await saveDashboardSettings({}, formFrom());

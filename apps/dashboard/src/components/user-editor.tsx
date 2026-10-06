@@ -12,6 +12,7 @@ import {
   Select,
   StatusPill,
   useActionToast,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import {
   removeStaffPhoto,
@@ -22,6 +23,7 @@ import {
   uploadStaffPhoto,
   type UserActionState,
 } from '@/app/(app)/users/actions';
+import { usePhotoUpload } from '@/components/use-photo-upload';
 import { IssuedSecret } from '@/components/user-create';
 import {
   STAFF_ROLE_LABEL,
@@ -41,7 +43,9 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
   const [activeState, changeActive, activePending] = useActionState(setStaffActive, INITIAL);
   const [resetState, resetPassword, resetPending] = useActionState(resetStaffPassword, INITIAL);
   const [publicState, savePublic, publicPending] = useActionState(saveStaffPublicProfile, INITIAL);
+  const onSavePublicSubmit = useKeepValuesSubmit(savePublic);
   const [photoState, uploadPhoto, photoPending] = useActionState(uploadStaffPhoto, INITIAL);
+  const upload = usePhotoUpload({ area: 'users', field: 'photo', dispatch: uploadPhoto });
   const [removeState, removePhoto, removePending] = useActionState(removeStaffPhoto, INITIAL);
   const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
   const [confirmActive, setConfirmActive] = useState(false);
@@ -52,6 +56,9 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
   useActionToast(resetState);
   useActionToast(publicState);
   useActionToast(photoState);
+  useEffect(() => {
+    if (photoState.ok || photoState.error) upload.settle();
+  }, [photoState, upload.settle]);
   useActionToast(removeState);
 
   useEffect(() => {
@@ -60,7 +67,8 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
     }
   }, [roleState.ok, activeState.ok, publicState.ok, photoState.ok, removeState.ok, router]);
 
-  const busy = rolePending || activePending || resetPending || publicPending || photoPending || removePending;
+  const busy =
+    rolePending || activePending || resetPending || publicPending || photoPending || removePending || upload.phase !== 'idle';
   const defaultAlt = `${user.fullName} at Beco Interiors`;
 
   return (
@@ -125,7 +133,7 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
               : 'Only sales accounts can appear on /team. The photograph can still be stored.'
           }
         >
-          <form action={savePublic} className="space-y-4">
+          <form onSubmit={onSavePublicSubmit} className="space-y-4">
             <input type="hidden" name="userId" value={user.id} />
             <input type="hidden" name="updatedAt" value={user.updatedAt} />
             {user.role === 'beco_sales' ? (
@@ -134,7 +142,7 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
                   type="checkbox"
                   name="isPublic"
                   defaultChecked={user.isPublic}
-                  className="h-5 w-5 rounded-[2px] border-neutral-300"
+                  className="h-5 w-5 rounded-control border-neutral-300"
                 />
                 Show on /team
               </label>
@@ -158,8 +166,8 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
                 disabled={busy}
               />
             </Field>
-            <Button type="submit" variant="secondary" disabled={busy}>
-              {publicPending ? 'Saving…' : 'Save website listing'}
+            <Button type="submit" variant="secondary" disabled={busy} pending={publicPending}>
+              {publicPending ? 'Saving' : 'Save website listing'}
             </Button>
           </form>
 
@@ -183,7 +191,7 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
             <p className="font-ui text-base text-neutral-500">No photograph yet. /team shows a name plate until you add one.</p>
           )}
 
-          <form action={uploadPhoto} className="min-w-0 space-y-3 border border-dashed border-neutral-300 p-4">
+          <form onSubmit={upload.onSubmit} className="min-w-0 space-y-3 border border-dashed border-neutral-300 p-4">
             <input type="hidden" name="userId" value={user.id} />
             <input type="hidden" name="updatedAt" value={user.updatedAt} />
             <div className="flex items-center gap-2 text-charcoal">
@@ -212,9 +220,9 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
                 defaultValue={user.publicPhoto?.alt || defaultAlt}
               />
             </Field>
-            <Button type="submit" variant="secondary" disabled={busy}>
+            <Button type="submit" variant="secondary" disabled={busy} pending={photoPending || upload.phase !== 'idle'}>
               <Icon name="upload" />
-              {photoPending ? 'Uploading…' : user.publicPhoto ? 'Replace photograph' : 'Upload photograph'}
+              {upload.label ?? (user.publicPhoto ? 'Replace photograph' : 'Upload photograph')}
             </Button>
           </form>
         </FormSection>

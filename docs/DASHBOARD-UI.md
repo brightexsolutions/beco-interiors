@@ -125,6 +125,33 @@ stamps exist. Lost and Reopened stay after a reopen.
 - Disabled controls state why
 - No `window.confirm` / `alert` / `prompt`
 
+## Feedback: every action is seen to start, run and finish (D117)
+
+A tap on a phone over a slow connection is the case to design for. The rule has three parts
+and no exceptions:
+
+1. **While it runs, the control says so.** The button that started the work gets
+   `pending`: it disables itself, shows the spinner before its label, carries `aria-busy`,
+   and its label turns to the present participle ("Saving", "Creating", "Sending",
+   "Uploading 43%"). No ellipsis, the spinner is the ellipsis. When several buttons share
+   one action (the status buttons on a quote or an order) only the pressed one spins, the
+   others disable. A `ConfirmDialog` keeps its verb on the confirm button and spins beside it
+2. **When it finishes, the result is stated.** Success and failure both arrive as a toast,
+   "Done" or "Failed" in words plus the message the action returned, via `useActionToast`.
+   A sheet that created or saved something also closes, which is the second signal. A form
+   whose error belongs to one field shows it on that field instead (sign in, change
+   password, the quote editor's notice), never silently
+3. **While a list reloads, the list says so.** Filters, search, sort and paging are
+   navigations. The filter row renders `Busy`, a live status line reading "Updating" with
+   the spinner, and the table dims to half with `aria-busy` until the new rows land. Both
+   come from one place: `useQueryNavigation` owns the transition and its `isPending`
+
+Page to page navigation shows the route's `loading.tsx`, a settled layout with the heading
+in place, never a spinner page.
+
+Pieces: `Spinner` (one mark, holds still under reduced motion), `Busy`, `Button pending`,
+`DataTable busy`, `useQueryNavigation`. Build on these; do not hand roll a loading word.
+
 ## shadcn
 
 **Dashboard only, never the storefront.** Construction may start from shadcn
@@ -134,8 +161,8 @@ the look. `apps/storefront` does not import these widgets.
 - Land every new widget in `@beco/ui`. Never paste shadcn into `apps/dashboard`
   or `apps/storefront`.
 - Restyle against Beco tokens before it ships: Titillium, 16px floor, 44px
-  targets, charcoal and High-Vis White, Warm Red rationed, `rounded-[2px]` like
-  `Button`. If it looks like default shadcn, it is not finished.
+  targets, charcoal and High-Vis White, Warm Red rationed, `rounded-control` like
+  `Button` and `rounded-card` for anything boxed (D125). If it looks like default shadcn, it is not finished.
 - Do not run the shadcn CLI against either app. No `components.json` in
   `apps/dashboard` or `apps/storefront`.
 - `packages/ui/components.json` is the only shadcn config. Never in an app.
@@ -155,4 +182,96 @@ the look. `apps/storefront` does not import these widgets.
 - Put Inter, Geist, or a serif on UI labels
 - Center the page heading
 - Use shadcn, Radix menus, or the shadcn CLI on the storefront
+
+
+## 3 October 2026: the sidebar shell, charts and toolbars (D106)
+
+Brown lifted the dashboard's original design constraints on 3 October so the admin could be
+polished properly. What changed, and what did not:
+
+- **Desktop gets a sidebar.** White, 248px, the mark at the top, sections grouped by job, the
+  current one filled charcoal with a Warm Red tick. A slim top bar names where the reader is and
+  holds appearance, settings and the account. The screen sits on a floating white panel over the
+  off-white ground. The phone kept the D85 header card and pill strip until D111 below: a sidebar has no room on
+  a 390px screen.
+- **Charts, where they carry a figure the tiles cannot.** Home: quotes raised against won by
+  week, and the pipeline from new to lost. Reports: invoiced against collected by week, and the
+  ranked bars redrawn in Recharts. Every chart is the emphasis form from the dataviz method
+  (charcoal for the series that matters, a light neutral for context, Warm Red for one attention
+  stage), with a legend, direct labels, a tooltip in text tokens and a hidden table. No chart was
+  added because a dashboard is expected to have one; each answers a question someone asked.
+- **Tables open the same way.** A toolbar above every list: search, filters, the count. Headers in
+  small caps with the sort state visible, a sticky header, row hover, numbers flush right.
+- **Unchanged.** Type floor, touch targets, the no browser dialog rule, the ban on a dark sidebar
+  (this one is white), text over icons, and the storefront, whose own rules were not lifted.
+
+## 3 October 2026, later: the phone gets a bottom bar (D111)
+
+The pill strip in the header card is gone. On a phone the sections sit in a fixed bar along the
+bottom, under the thumb: Quotes, New quote, Orders for a salesperson; Overview, Quotes, New quote,
+Orders and More for an admin; Catalogue and Import for the product manager. Each is an icon over a
+word at 14px, the current one charcoal with a short tick above it. New quote is a raised charcoal
+tile in the middle, since raising a quote is what the phone is for. More opens the shared `Dialog`
+as a sheet with the remaining sections, Change password and Sign out. The header card now names the
+screen where the strip used to be.
+
+The shell sets `--dock` to the bar's height on phones and tablets and to zero from `lg` up. The
+docked save bars on the new quote and settings screens sit at `bottom-[var(--dock)]`, and the
+floating action pills add it to their offset, so nothing is ever under the bar. The New quote pill
+on `/quotes` shows from `lg` up only; the bar carries it below that.
+
+The bar reads the same access map as everything else (`bottomNavFor` over `navItemsFor`), so it
+cannot offer a screen the proxy would refuse, and a role with no sections gets no bar.
+
+## 3 October 2026, the phone layout pass (D112)
+
+Measured with a script that walks every screen at 390px and lists each element whose right edge
+leaves the viewport. Two screens overflowed outright (the orders list and the Drive import), and
+the rest wrapped badly in ways a desktop never shows. What changed:
+
+- **List cards** (quotes, orders): the customer owns a row and wraps; the figure sits on the
+  next row with the status chips; nothing is truncated to make room. A chevron marks the card as
+  the link, no "View" word
+- **Chips wrap.** `ChipGroup` no longer scrolls sideways with a chip cut at the edge; every
+  option is on screen. A group with five or more options is a select on the phone: source on
+  quotes, status on orders
+- **Headings**: title, lede, then the actions at full width; from `sm` the actions sit beside
+  the title. The four "New" controls (product, user, announcement, article) are heading buttons,
+  charcoal, not pills floating over the list under the bottom bar
+- **Home**: the plate rows size the figure at xl on a phone so the label stays whole; the pipeline
+  legend wraps rather than truncating "Reviewing"
+- **Reports**: the person cards stack label and value in one column; the ranked bars size the
+  label column to the longest name, so the bars have room
+- **Settings** tabs wrap into two rows; the new quote's empty list is shorter so the customer
+  card is reached sooner; `--dock` matches the bar's real height so the docked save bars sit on it
+
+The audit script is the proof: zero offenders on every screen, every role, after the pass.
+
+## 3 October 2026, the three width review (D113)
+
+Every screen captured at 390, 820 and 1440 side by side, then at 1024, and read as a reader
+would. The finding that mattered: the sidebar appears at 1024px and takes 248px, so the content
+pane is about 776px wide, tablet width, yet every screen switched to its two column and full
+table layout at that same breakpoint. The quote detail squashed into two narrow columns, the line
+item headers overlapped, and the quotes and orders tables clipped their Actions column.
+
+The rule now: **screens treat the sidebar breakpoint like a tablet and go wide at 1280px.**
+Two column detail pages, the new quote form, the settings layout, the home plate and charts,
+the report charts, and every desktop table switch at `xl`, not `lg`. The shell's own `lg:` rules
+(sidebar, bottom bar, `--dock`) are unchanged. On the tables, Source steps aside below 1536px so
+the laptop table fits, references, owners and figures never break across lines, and the row
+action is an arrow with a screen reader label rather than a second word. The phone header names
+the page alone; the screen's own back link names the section. New quote is a heading button on
+desktop and the bar's tile on a phone; the pill that floated over the table is retired.
+
+## 3 October 2026, the range browser (D114)
+
+The flat strip of every category and range in one wrapping row, with a pencil on each, read as
+a wall: nine groups and their ranges and sub ranges all at once, with nothing but adjacency to
+say which belonged to which. It now opens one level at a time. The first row is the major
+categories. Choose one and its ranges appear on a second row beneath it; choose a range with sub
+ranges and a third row appears. The rows a reader is not inside are not drawn. A line under the
+rows names the path, "Sintered Stone / 12mm Sintered Stones, 24 products", and carries Edit and
+Add range for that selection alone; New category sits in the heading. Drafts are dashed and say
+so. The collapse toggle is gone because there is nothing left to collapse.
 

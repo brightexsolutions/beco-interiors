@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { dashboardSettingsSchema, setStaffGrantSchema } from '../dashboard-settings';
 
 const valid = {
+  businessLegalName: 'Beco Interiors Limited',
+  kraPin: '',
+  vatNumber: '',
+  businessAddress: 'Urban Square, Enterprise Road, Nairobi',
+  businessEmail: '',
   vatPercent: '16',
   quoteValidityDays: '30',
   quoteResponseSlaHours: '2',
@@ -19,6 +24,26 @@ const valid = {
 };
 
 describe('dashboardSettingsSchema', () => {
+  it('uppercases and de-spaces a KRA PIN, and leaves a blank one null', () => {
+    const parsed = dashboardSettingsSchema.safeParse({ ...valid, kraPin: ' p051 234 567x ' });
+    expect(parsed.success && parsed.data.kraPin).toBe('P051234567X');
+    const blank = dashboardSettingsSchema.safeParse(valid);
+    expect(blank.success && blank.data.kraPin).toBeNull();
+  });
+
+  it('refuses a KRA PIN that is not a letter, nine digits and a letter', () => {
+    for (const kraPin of ['P05123456X', '1051234567X', 'P0512345678', 'PP51234567X']) {
+      expect(dashboardSettingsSchema.safeParse({ ...valid, kraPin }).success).toBe(false);
+    }
+  });
+
+  it('needs a legal name and address, and a real email only when one is given', () => {
+    expect(dashboardSettingsSchema.safeParse({ ...valid, businessLegalName: ' ' }).success).toBe(false);
+    expect(dashboardSettingsSchema.safeParse({ ...valid, businessAddress: '' }).success).toBe(false);
+    expect(dashboardSettingsSchema.safeParse({ ...valid, businessEmail: 'not-an-email' }).success).toBe(false);
+    expect(dashboardSettingsSchema.safeParse({ ...valid, vatNumber: 'bad number!' }).success).toBe(false);
+  });
+
   it('stores WhatsApp as digits and splits email lists', () => {
     const parsed = dashboardSettingsSchema.safeParse(valid);
     expect(parsed.success).toBe(true);

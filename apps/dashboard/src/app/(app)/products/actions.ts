@@ -15,6 +15,7 @@ import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { productMutationMessage } from '@/lib/product-errors';
 import { processProductPhoto } from '@/lib/product-photo';
+import { readPhotoUpload } from '@/lib/photo-source';
 import { deleteProductDerivatives, isProductStorageConfigured, uploadProductDerivatives } from '@/lib/product-storage';
 import { parseProductImages } from '@/lib/products';
 import { revalidateStorefront } from '@/lib/storefront-revalidate';
@@ -24,9 +25,6 @@ export interface ProductActionState {
   ok?: string;
   slug?: string;
 }
-
-const MAX_PHOTO_BYTES = 12 * 1024 * 1024;
-const ALLOWED_PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
 
 const formString = (form: FormData, key: string): string => String(form.get(key) ?? '');
 
@@ -270,16 +268,8 @@ export async function addProductImage(_prev: ProductActionState, form: FormData)
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Check the photograph, then try again.' };
 
-  const file = form.get('photo');
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: 'Choose a photograph first.' };
-  }
-  if (file.size > MAX_PHOTO_BYTES) {
-    return { error: 'That photograph is larger than 12MB. Compress it and try again.' };
-  }
-  if (file.type && !ALLOWED_PHOTO_TYPES.has(file.type)) {
-    return { error: 'Use a JPEG, PNG or WebP photograph.' };
-  }
+  const photo = await readPhotoUpload(form);
+  if (photo.error !== undefined) return { error: photo.error };
   if (!isProductStorageConfigured()) {
     return { error: 'Photograph storage is not configured. Add the R2 keys, then try again.' };
   }
@@ -301,7 +291,7 @@ export async function addProductImage(_prev: ProductActionState, form: FormData)
 
   let processed;
   try {
-    processed = await processProductPhoto(Buffer.from(await file.arrayBuffer()));
+    processed = await processProductPhoto(photo.buffer);
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'That file is not a photograph we can read.' };
   }

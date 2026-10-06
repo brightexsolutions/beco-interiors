@@ -1,10 +1,35 @@
 import type { Metadata } from 'next';
-import { Toaster } from '@beco/ui';
+import { KeyboardAwareFocus, Toaster } from '@beco/ui';
 import '@beco/ui/src/tokens/tokens.css';
 
+/**
+ * Every dashboard route is out of search and out of link previews, from the
+ * root, so a new page cannot forget: noindex, nofollow here, the
+ * X-Robots-Tag header in next.config.ts, and a robots.txt that disallows
+ * everything. Several pages (stock, categories, leaderboard) never set it
+ * on their own.
+ *
+ * No description of the catalogue and no Open Graph tags either. This app
+ * used to describe itself as "Premium interior materials in Nairobi", so a
+ * pasted dashboard link previewed like the shop. A preview now says what the
+ * page is, an internal tool, and nothing about the content behind sign in.
+ */
 export const metadata: Metadata = {
-  title: 'Beco Interiors',
-  description: 'Premium interior materials in Nairobi.',
+  title: 'Beco dashboard',
+  description: 'Beco Interiors staff tools. Sign in required.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false, noimageindex: true },
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -27,6 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           trees below this agree. */}
       <body suppressHydrationWarning>
         {children}
+        {/* Keeps a focused field above the phone keyboard. Renders nothing. */}
+        <KeyboardAwareFocus />
         <Toaster
           position="top-center"
           offset={{ top: '8.5rem' }}

@@ -129,6 +129,11 @@ mismatch worth a decision rather than a default.** Options: keep a Lighting cate
 designed empty state until photography arrives, or confirm the range has genuinely changed
 since April 2025 and update the strapline usage accordingly.
 
+**Resolved 3 October 2026.** Beco confirmed, through Brown, that they no longer sell lighting.
+The range is retired (migration 57, D103) and the site's strapline reads "Sintered Stone ·
+Panels · Hardware · Accessories". The guideline's artwork still says Lighting; that is now a
+brand asset for Beco to refresh, not a mismatch for the site to carry.
+
 ---
 
 ## Still not seen

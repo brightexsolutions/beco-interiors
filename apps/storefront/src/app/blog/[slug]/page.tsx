@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { catalogueOgImage, LOGO_SIZE, LOGO_URL, pageMetadata, SITE_URL, snippet } from '@/lib/seo';
+import { absoluteCatalogueUrl } from '@/lib/image-loader';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -24,24 +26,20 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const post = await getBlogPostBySlug(slug);
   if (!post) return {};
 
-  return {
+  return pageMetadata({
     // The override columns win, so a post can be tuned without a deploy,
     // the same rule product pages already follow.
     title: post.meta_title ?? post.title,
-    description: post.meta_description ?? post.excerpt ?? undefined,
-    alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: post.cover_image
-      ? {
-          images: [
-            {
-              url: post.cover_image.path,
-              width: post.cover_image.width,
-              height: post.cover_image.height,
-            },
-          ],
-        }
-      : undefined,
-  };
+    description: snippet(
+      post.meta_description ?? post.excerpt ??
+        `${post.title}. A buying guide from Beco Interiors, the sintered stone, wall panel and hardware supplier at Urban Square, Nairobi.`,
+    ),
+    path: `/blog/${post.slug}`,
+    // Drawn from the post's cover; the blog photograph when it has none.
+    image: catalogueOgImage('blog', post.slug, post.cover_image_alt?.trim() || post.title),
+    type: 'article',
+    ...(post.published_at ? { publishedTime: post.published_at } : {}),
+  });
 }
 
 /** `text-base leading-[1.65] text-neutral-700 lg:text-lg`, the same body copy
@@ -124,7 +122,7 @@ export default async function BlogPostPage({ params }: Params) {
           </p>
 
           {post.cover_image ? (
-            <div className="relative mt-8 aspect-[16/9] overflow-hidden bg-neutral-100">
+            <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-card bg-neutral-100">
               <Image
                 src={post.cover_image.path}
                 alt={post.cover_image_alt ?? ''}
@@ -161,10 +159,15 @@ export function BlogPostingSchema({ post }: { post: BlogPost }) {
     headline: post.title,
     ...(post.excerpt ? { description: post.excerpt } : {}),
     ...(post.cover_image
-      ? { image: [new URL(post.cover_image.path, 'https://www.beco.co.ke').toString()] }
+      ? { image: [absoluteCatalogueUrl(post.cover_image.path, 1600, SITE_URL)] }
       : {}),
     author: { '@type': 'Organization', name: post.author },
-    publisher: { '@type': 'Organization', name: SITE.name },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE.name,
+      url: SITE_URL,
+      logo: { '@type': 'ImageObject', url: LOGO_URL, ...LOGO_SIZE },
+    },
     ...(post.published_at ? { datePublished: post.published_at } : {}),
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
   };

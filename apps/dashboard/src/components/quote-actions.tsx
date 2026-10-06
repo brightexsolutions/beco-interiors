@@ -71,6 +71,8 @@ export function QuoteActions({
   const [reopenOpen, setReopenOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [lostReason, setLostReason] = useState('');
+  // Which status button was pressed, so only that one shows the spinner.
+  const [pendingStatus, setPendingStatus] = useState<QuoteStatus | null>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
   useActionToast(claimState);
@@ -98,7 +100,7 @@ export function QuoteActions({
       {canClaim ? (
         <form action={claim}>
           <Lock quoteId={quoteId} updatedAt={updatedAt} />
-          <Button type="submit" variant="secondary" disabled={claiming} className="h-11 w-full py-0">
+          <Button type="submit" variant="secondary" pending={claiming} className="h-11 w-full py-0">
             {claiming ? 'Claiming' : 'Claim quote'}
           </Button>
         </form>
@@ -141,7 +143,7 @@ export function QuoteActions({
       {canApprove ? (
         <form action={approve}>
           <Lock quoteId={quoteId} updatedAt={updatedAt} />
-          <Button type="submit" disabled={approving} className="h-11 w-full py-0">
+          <Button type="submit" pending={approving} className="h-11 w-full py-0">
             {approving ? 'Approving' : 'Approve'}
           </Button>
         </form>
@@ -167,10 +169,16 @@ export function QuoteActions({
                 Mark lost
               </Button>
             ) : (
-              <form key={item.status} action={setStatus} className="min-w-0">
+              <form key={item.status} action={setStatus} onSubmit={() => setPendingStatus(item.status)} className="min-w-0">
                 <Lock quoteId={quoteId} updatedAt={updatedAt} />
                 <input type="hidden" name="status" value={item.status} />
-                <Button type="submit" variant="outline" disabled={setting} className="w-full px-3">
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={setting}
+                  pending={setting && pendingStatus === item.status}
+                  className="w-full px-3"
+                >
                   {item.label}
                 </Button>
               </form>
@@ -215,7 +223,7 @@ export function QuoteActions({
       {expired && canMutate && status !== 'won' && status !== 'lost' ? (
         <form action={reissue}>
           <Lock quoteId={quoteId} updatedAt={updatedAt} />
-          <Button type="submit" variant="ghost" disabled={reissuing}>
+          <Button type="submit" variant="ghost" pending={reissuing}>
             {reissuing ? 'Updating' : 'Re-issue'}
           </Button>
         </form>

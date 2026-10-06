@@ -6,8 +6,10 @@ production, and how a release is undone.
 Incident response and data restore live in `docs/RUNBOOK.md`. This document is about getting
 code and infrastructure into place.
 
-**Status: not yet provisioned.** This is the procedure M1 executes. Steps are written to be
-followed and verified, not read.
+**Status: Vercel projects exist, DNS for the site does not.** Checked 30 September 2026
+against the signed-in Vercel team `brightex-solutions-projects` and the live `beco.co.ke`
+zone. Nameservers are already Cloudflare. The site hostnames are attached in Vercel and are
+not in DNS yet. Mail and Resend records are already on the zone. Do not recreate them.
 
 ---
 
@@ -19,8 +21,8 @@ followed and verified, not read.
 | pnpm | 11 or later | 11.24.0, via corepack |
 | Docker | Any recent | Installed, **not currently running.** Needed for local Supabase |
 | Supabase CLI | Latest | **Not installed.** `brew install supabase/tap/supabase` |
-| Vercel CLI | Latest | 54.7.1, present |
-| gh | Latest | 2.96.0, present but **not authenticated** |
+| Vercel CLI | Latest | 59.16.0, present, signed in as `brightexsolutions` |
+| gh | Latest | 2.96.0, present, signed in as `brightexsolutions` |
 | git | 2.4 or later | 2.50.1, present |
 
 ```sh
@@ -140,19 +142,67 @@ Create bucket `beco-product-images` in the same Cloudflare account. Connect a cu
 `img.beco.co.ke`. Generate an S3 compatible access key for the import pipeline, stored server
 side only.
 
+**Direct uploads need two bucket settings, D116.** A photograph added from the dashboard goes
+from the browser straight into the bucket under a presigned PUT, so Vercel never carries the
+file and its 4.5MB request body cap does not apply. Without the CORS rule the browser's PUT is
+refused and the dashboard falls back to posting files under 4MB through Vercel, with a toast
+for anything larger.
+
+CORS policy, Bucket settings, CORS policy, one rule:
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "https://dashboard.beco.co.ke",
+      "https://staging-dashboard.beco.co.ke",
+      "http://localhost:3001"
+    ],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["content-type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Object lifecycle, Bucket settings, Object lifecycle rules: prefix `uploads/`, delete objects
+one day after upload. The finishing action deletes a staged object as soon as it has read it,
+this rule only sweeps the ones a browser signed and never finished.
+
+The access key the dashboard holds must have Object Read and Write on this bucket: it signs the
+PUT, reads the staged object back, writes the derivatives and deletes the staging copy.
+
 ### 3.7 Vercel projects
 
 **Two separate projects from one repository.** This is the security boundary in Section 10, and
 it is about the public site not reaching admin tools. Studio is routes inside the dashboard per
 D9, not a third project.
 
-| Project | Root Directory | Domain |
-|---|---|---|
-| `beco-storefront` | `apps/storefront` | `www.beco.co.ke`, apex redirects to it |
-| `beco-dashboard` | `apps/dashboard` | `dashboard.beco.co.ke` |
+| Project | ID | Root Directory | Domain |
+|---|---|---|---|
+| `beco-interiors` (the storefront) | `prj_T2pPefNqtwy9KpMTK1PAN6fkOqJi` | `apps/storefront` | `beco.co.ke`, `www.beco.co.ke` |
+| `beco-dashboard` | `prj_bGXMoh6CcsEgbkGinhlVEanqRmDs` | `apps/dashboard` | `dashboard.beco.co.ke` |
 
-For each: connect the repository, set the Root Directory, and set the Ignored Build Step to
-Turborepo's, so a storefront change does not rebuild the dashboard and burn build minutes.
+Both sit on the `brightex-solutions-projects` team (`team_2Xm7dgXNaVgIBXGvL7iM6X7u`), the
+account the Vercel CLI is signed into as `brightexsolutions`. The storefront keeps its original
+name. Node is 22.x. Install command is `pnpm install --frozen-lockfile`. The storefront has a
+production deployment. The dashboard has the domain attached and has never been deployed.
+
+There is no third project. `staging.beco.co.ke` is a hostname on these two, not a new project.
+`img.beco.co.ke` is the R2 bucket, not a Vercel project. Studio stays inside the dashboard.
+
+GitHub Actions already has `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and
+`VERCEL_PROJECT_ID_STOREFRONT`. `VERCEL_PROJECT_ID_DASHBOARD` is set to the dashboard id above.
+The `Production` GitHub environment exists and has no required reviewers yet, so the approval
+gate in section 11 is not armed. A `staging` environment does not exist yet.
+
+Do not point the domain's nameservers at Vercel. They are already `ezra.ns.cloudflare.com` and
+`kristin.ns.cloudflare.com`. Vercel's "not configured" warning is the missing A records below,
+not a request to leave Cloudflare.
+
+The storefront project is already receiving Git preview builds. Section 11 still says GitHub
+Actions owns deployment, so that connection stays a known exception until the Actions workflow
+is the one doing the deploy. The dashboard is not building from Git. It has no deployments.
 
 **Environment variables, and the boundary that matters:**
 
@@ -194,19 +244,48 @@ backwards produces a redirect loop that looks like a Vercel bug and is not one.
   5  Set Cloudflare SSL/TLS to Full (Strict)
 ```
 
-Records:
+Vercel, checked 30 September, wants an A record for each hostname it already owns. Add these
+in Cloudflare as **DNS only** (grey cloud). Switch to proxied only after Vercel reports the
+certificate.
 
 ```
-  beco.co.ke          A or CNAME -> Vercel      proxied    redirects to www
-  www                 CNAME      -> Vercel      proxied
-  dashboard           CNAME      -> Vercel      proxied    noindex, robots blocked
-  staging             CNAME      -> Vercel      proxied    noindex, password protected
-  img                 CNAME      -> R2          proxied    product image CDN
-  MX                  -> Zoho                   DNS only   untouched, human mail
-  send                MX + TXT (SPF)            DNS only   Resend
-  resend._domainkey   TXT                       DNS only   DKIM
-  _dmarc              TXT p=none, later quarantine         DNS only
+  beco.co.ke          A    76.76.21.21     grey, then proxied     storefront
+  www                 A    76.76.21.21     grey, then proxied     storefront
+  dashboard           A    76.76.21.21     grey, then proxied     dashboard, noindex
 ```
+
+Not created yet, and not new Vercel projects:
+
+```
+  staging             A    76.76.21.21     grey, then proxied     add the hostname
+                                           to the existing projects first, see below
+  img                 CNAME to the R2      proxied                bucket beco-product-images
+                      custom domain target                        Cloudflare fills the target
+```
+
+Already on the zone. Leave them.
+
+```
+  MX                  workplaceproemail.com (10) and .net (20)     DNS only
+  TXT apex SPF        include:_spf.olodoan.com                     DNS only
+  send                CNAME send.forge.rmta.net                    existing mail, not Resend
+  rsend               CNAME rsend.forge.rmta.net                   Resend bounce host
+                      resolves to feedback-smtp.us-east-1.amazonses.com
+  resend._domainkey   TXT                                          Resend DKIM, present
+  _dmarc              TXT p=quarantine                             already stricter than p=none
+```
+
+### Staging and images, without a new Vercel project
+
+`staging.beco.co.ke` is the storefront's staging hostname. In the `beco-interiors` project,
+Settings, Domains, add `staging.beco.co.ke` and assign it to the Preview environment, not
+Production. Then add the A record above, grey cloud first. Protect the hostname with Vercel
+deployment protection and `noindex`. It must use the `beco-staging` Supabase project, never
+production. The dashboard does not get its own staging hostname in this plan.
+
+`img.beco.co.ke` is not added in Vercel. In the same Cloudflare account, R2, bucket
+`beco-product-images`, Custom Domains, connect `img.beco.co.ke`. Cloudflare writes the CNAME.
+Do not point that name at `76.76.21.21`.
 
 Cloudflare configuration:
 
@@ -225,10 +304,13 @@ cache.
 
 ### 3.11 Resend
 
-Add `beco.co.ke` as a sending domain under the becointeriorsdev Resend account. Add the DKIM
-and SPF records as **DNS only**. **Do not touch the Zoho MX records**, which carry human mail.
+`beco.co.ke` is already the sending domain. DKIM is at `resend._domainkey`. The bounce host is
+`rsend`, not `send`. `send` belongs to the existing mail host and must stay a CNAME to
+`send.forge.rmta.net`. Human mail is Workplace Pro Email (`workplaceproemail.com` and `.net`),
+not Zoho. DMARC is already `p=quarantine`.
 
-Start DMARC at `p=none`, move to `p=quarantine` once reports are clean.
+The `RESEND_API_KEY` in local `.env.local` was rejected by Resend. Create a new key with
+Sending access only, on the becointeriorsdev account, and put that on the dashboard project.
 
 **Verify:** Resend reports the domain verified, and a test send arrives in Gmail and Outlook
 without a spam flag.
@@ -236,10 +318,53 @@ without a spam flag.
 ### 3.12 Keep alive
 
 Supabase free projects pause after roughly a week without API activity, which takes the site
-down. A cron-job.org job under becointeriorsdev pings a health endpoint **every 3 days**.
+down. Each project pauses on its own, so each needs its own job. The scheduler is
+**cron-job.org under becointeriorsdev**, Beco's own account, so the thing that keeps Beco's
+database awake is Beco's and survives any handover. Three jobs, each **every 2 days** (GitHub
+or Supabase being late by a few hours must never reach the seven day line), each expecting
+HTTP 200, with failure notifications to Beco's address and `info.brightexsolutions@gmail.com`:
 
-**Verify:** the endpoint returns 200, and cron-job.org shows successful runs. Check the history
-monthly rather than assuming, per `docs/RETAINER.md` section 8.
+| Job | URL | Headers | Keeps awake |
+|---|---|---|---|
+| Production site | `https://www.beco.co.ke/api/health` | none | `beco-prod`, and proves the storefront serves |
+| Dashboard | `https://dashboard.beco.co.ke/api/health` | none | `beco-prod` by a second path, and proves the dashboard serves |
+| Staging database | `https://<staging-ref>.supabase.co/rest/v1/settings?select=key&limit=1` | `apikey: <staging anon key>` and `Authorization: Bearer <staging anon key>` | `beco-staging`, which has no permanent public site to call |
+
+`GET /api/health` makes one anon read of the public settings allowlist, the same path a
+visitor's page load takes, and answers `200 {ok:true}` or `503`. It carries no host, version
+or key, and the dashboard's copy sits outside the session proxy. UptimeRobot points at the same
+two URLs, so the health probe and the keep alive are one mechanism checked two ways.
+
+A GitHub Actions schedule was considered and rejected: it belongs to Brightex's repository, not
+to Beco, and GitHub silently disables a schedule after 60 days without a commit, which is
+exactly the quiet period in which a database would pause.
+
+**Verify:** cron-job.org shows a green run for all three jobs within the last 2 days, and
+`curl -i https://www.beco.co.ke/api/health` returns 200. Check monthly rather than assuming, per
+`docs/RETAINER.md` section 8.
+
+### 3.12a Catalogue import from the dashboard
+
+`.github/workflows/drive-import.yml` runs `pnpm drive:import` against staging or production on
+`workflow_dispatch`. The dashboard's Catalogue, Drive import screen dispatches it with
+`GITHUB_ACTIONS_TOKEN` and reads its runs, so a product manager imports from a phone, D105.
+Sharp, the Drive service account and the service role key stay in Actions, never on Vercel.
+
+Each GitHub Environment (`staging`, `production`) carries the import's secrets:
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+`R2_SECRET_ACCESS_KEY`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `REVALIDATE_SECRET`, and the variables
+`DRIVE_ROOT_FOLDER_ID`, `R2_BUCKET` and `STOREFRONT_URL`. The run refuses to start without the
+Drive credential rather than silently running against fixtures. After an import that wrote
+anything it POSTs `/api/revalidate` for `/` and `/shop`, so the new range is live on the next
+request rather than within the hour. The report is kept as a run artifact for 30 days, and the
+importer's own `import_runs` and `import_issues` rows are what the screen shows.
+
+If `production` carries required reviewers for deploys, an import to production waits for the
+same approval. To let Beco import without a Brightex approval, create an environment named
+`production-import` holding only the secrets above and point the workflow's `environment` at it.
+
+**Verify:** a dry-run from the screen appears under Recent runs within a minute and finishes
+green; the Last import panel shows its counts.
 
 ### 3.13 Backups
 
@@ -323,7 +448,8 @@ The one sequence where order genuinely matters. Budget half a day, not an aftern
 - [ ] Backup restore drill completed successfully
 - [ ] **Pre migration baseline captured:** current traffic, indexed page count, and positions
       for the five target terms. This stops existing the moment DNS moves
-- [ ] 301 redirect map complete and every old URL tested
+- [ ] 301 redirect map complete and every old URL tested. `docs/SEO-MIGRATION.md` is the
+      procedure, `apps/storefront/src/lib/legacy-redirects.ts` the map
 - [ ] Search Console and GA4 verified under **Beco's own** Google account
 - [ ] Lower the DNS TTL to 300 seconds, at least an hour before cutover
 - [ ] Cut DNS over
@@ -394,6 +520,18 @@ Reasons it is worth the extra setup:
 - Production deserves an approval gate, and Git integration has none
 
 Instead, **GitHub Actions owns deployment** through the Vercel CLI.
+
+**When CI runs (D118).** On every pull request, on a push to `main`, and by hand from the
+Actions tab (`workflow_dispatch`). A push to `dev` does not start a run. From 12 September to
+4 October every run on `dev` failed for reasons that had nothing to do with the commit under
+test: `supabase/setup-cli@v1` pinned CLI 2.20.3, which predates `[local_smtp]` and
+`[db.migrations].enabled` in `supabase/config.toml` and refused to parse it, so both jobs died
+at `supabase start`; from 3 October a test string, `javascript:alert(1)`, tripped the browser
+dialog grep; and two workflow files were invalid (a flow mapping holding `${{ }}` in the
+preview deploy, a `runner` context in a job level `env` in the import), so GitHub recorded a
+failed run named after each file on every push. All four are fixed. The gate is the pull
+request from `dev` to `main`, which is where green is required; the local machine runs the same
+checks before a deploy and can dispatch CI on `dev` when it wants the record.
 
 ```
   pull request
@@ -609,6 +747,7 @@ rather than forgetting it.
 | Staging | Same, plus deployment protection |
 | Empty categories | `noindex` automatically while `published_product_count` is 0, per D27 |
 | Filtered category URLs | Canonical to the base category, `noindex`, per D29 |
+| Old WordPress addresses | 301 to the page that now does the job, from `LEGACY_REDIRECTS`; 410 for WordPress-only paths, from `proxy.ts`. D107, `docs/SEO-MIGRATION.md` |
 
 ### 8.7 Post setup verification
 
@@ -651,7 +790,8 @@ is one of the few decisions here that is genuinely hard to reverse.
 4. Settings, Users and permissions, add Brightex as **Full** user
 
 **Do before cutover**, so the pre migration baseline is capturable. After cutover, submit
-`https://www.beco.co.ke/sitemap.xml`.
+`https://www.beco.co.ke/sitemap.xml`. The full procedure for taking over the old WordPress
+addresses, including finding the exact URLs Google still holds, is `docs/SEO-MIGRATION.md`.
 
 Also capture, before DNS moves: total indexed pages, top queries, top pages, and positions for
 the five target terms. **That data stops existing once the old site is gone**, and without it

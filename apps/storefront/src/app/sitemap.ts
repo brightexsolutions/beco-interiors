@@ -1,8 +1,7 @@
 import type { MetadataRoute } from 'next';
-import { getBlogPostSlugs } from '@/lib/blog';
-import { getIndexableCategories, getProductSlugs, getPublicTeam } from '@/lib/products';
-
-const BASE = 'https://www.beco.co.ke';
+import { getBlogSitemapEntries } from '@/lib/blog';
+import { getIndexableCategories, getProductSitemapEntries, getPublicTeam } from '@/lib/products';
+import { SITE_URL } from '@/lib/seo';
 
 /**
  * Generated from the database, so it lists what is actually published rather
@@ -15,6 +14,11 @@ const BASE = 'https://www.beco.co.ke';
  * sitemap until the import lands products in it, and that flip is automatic
  * because most Drive folders are still empty.
  *
+ * Products and posts carry `lastModified` from their own rows, so Google
+ * recrawls a repriced slab without being asked and leaves the rest alone
+ * (D107). Pages whose change date nothing records carry none: a made-up date
+ * is worse than no date, since Google stops trusting the field.
+ *
  * /team is here only once an agent is actually published, for the same reason
  * and by the same rule as an empty category.
  *
@@ -23,21 +27,41 @@ const BASE = 'https://www.beco.co.ke';
  */
 export const revalidate = 3600;
 
+const BASE = SITE_URL;
+
+const dateOf = (value: string | null | undefined): Date | undefined => {
+  if (!value) return undefined;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+};
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [categories, slugs, team, blogSlugs] = await Promise.all([
+  const [categories, products, team, posts] = await Promise.all([
     getIndexableCategories(),
-    getProductSlugs(),
+    getProductSitemapEntries(),
     getPublicTeam(),
-    getBlogPostSlugs(),
+    getBlogSitemapEntries(),
   ]);
+
+  const newestProduct = products
+    .map((p) => dateOf(p.updated_at))
+    .filter((d): d is Date => d !== undefined)
+    .sort((a, b) => b.getTime() - a.getTime())[0];
 
   return [
     { url: `${BASE}/`, changeFrequency: 'weekly', priority: 1 },
-    { url: `${BASE}/shop`, changeFrequency: 'weekly', priority: 0.9 },
+    {
+      url: `${BASE}/shop`,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+      ...(newestProduct ? { lastModified: newestProduct } : {}),
+    },
+    // The flat list of everything, D119. Indexable unfiltered, noindex with a search or sort.
+    { url: `${BASE}/shop/all`, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE}/about`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/contact`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/gallery`, changeFrequency: 'monthly', priority: 0.7 },
-    ...(blogSlugs.length > 0
+    ...(posts.length > 0
       ? [{ url: `${BASE}/blog`, changeFrequency: 'monthly' as const, priority: 0.6 }]
       : []),
     ...(team.length > 0
@@ -48,15 +72,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     })),
-    ...slugs.map((slug) => ({
-      url: `${BASE}/product/${slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
-    ...blogSlugs.map((slug) => ({
-      url: `${BASE}/blog/${slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    })),
+    ...products.map((p) => {
+      const lastModified = dateOf(p.updated_at);
+      return {
+        url: `${BASE}/product/${p.slug}`,
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+        ...(lastModified ? { lastModified } : {}),
+      };
+    }),
+    ...posts.map((p) => {
+      const lastModified = dateOf(p.published_at);
+      return {
+        url: `${BASE}/blog/${p.slug}`,
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+        ...(lastModified ? { lastModified } : {}),
+      };
+    }),
   ];
 }

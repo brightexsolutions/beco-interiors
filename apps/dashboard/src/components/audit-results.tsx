@@ -88,7 +88,7 @@ export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: Aud
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(rows, requestedPage);
 
@@ -137,15 +137,16 @@ export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: Aud
 
   return (
     <>
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} events`}
           columns={columns((id) => withParam('row', id))}
           rows={paged.items}
           getRowKey={(row) => row.id}
         />
       </div>
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden lg:hidden">
+      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
         {paged.items.map((row) => (
           <li key={row.id}>
             <Link

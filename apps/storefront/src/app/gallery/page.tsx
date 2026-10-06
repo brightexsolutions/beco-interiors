@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HoverGallery } from '@beco/ui';
@@ -22,15 +23,16 @@ export async function generateMetadata(
   const params = await searchParams;
   const filtered = Boolean(one(params.type));
 
-  return {
-    title: 'Project gallery',
+  return pageMetadata({
+    title: 'Project Gallery, Interiors in Nairobi',
     description:
-      'Real interiors finished with Beco materials in Nairobi. Sintered stone worktops, feature walls, vanities and flooring, photographed on site.',
+      'Real interiors finished with Beco materials in Nairobi: sintered stone worktops, feature walls, vanities and flooring, photographed on site after fitting.',
     // D29 again: a type filtered view canonicalises to /gallery and carries
     // noindex, the same reasoning as the shop's facets.
-    alternates: { canonical: '/gallery' },
+    path: '/gallery',
+    image: sectionOgImage('gallery'),
     ...(filtered ? { robots: { index: false, follow: true } } : {}),
-  };
+  });
 }
 
 /**
@@ -266,7 +268,7 @@ function RoomShots() {
           const productSlug = shots.find((s) => s.productSlug)?.productSlug;
           const frame = (
             <>
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card bg-neutral-100">
                 {shots.length > 1 ? (
                   <HoverGallery
                     className="absolute inset-0"
@@ -292,7 +294,7 @@ function RoomShots() {
                 )}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                  className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                 />
               </div>
               <div className="mt-3 flex items-baseline justify-between gap-3">

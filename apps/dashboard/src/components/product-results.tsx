@@ -18,6 +18,7 @@ import {
 } from '@beco/ui';
 import { ProductEditor } from '@/components/product-editor';
 import { ProductCreate } from '@/components/product-create';
+import { ProductThumb } from '@/components/product-thumb';
 import {
   isLowStock,
   productAvailabilityLabel,
@@ -65,11 +66,14 @@ const desktopColumns = (editHref: (slug: string) => string): DataTableColumn<Cat
     sortable: true,
     sortValue: (product) => product.name,
     render: (product) => (
-      <div>
-        <p className="font-semibold text-charcoal">{product.name}</p>
-        {product.sku || product.categoryName ? (
-          <p className="text-neutral-500">{[product.sku, product.categoryName].filter(Boolean).join(' · ')}</p>
-        ) : null}
+      <div className="flex items-center gap-3">
+        <ProductThumb name={product.name} path={product.images[0]?.path} size="sm" />
+        <div className="min-w-0">
+          <p className="font-semibold text-charcoal">{product.name}</p>
+          {product.sku || product.categoryName ? (
+            <p className="text-neutral-500">{[product.sku, product.categoryName].filter(Boolean).join(' · ')}</p>
+          ) : null}
+        </div>
       </div>
     ),
   },
@@ -117,8 +121,10 @@ function ProductCard({ product, href }: { product: CatalogueProduct; href: strin
       <Link
         href={href}
         aria-label={`Edit ${product.name}`}
-        className="block min-w-0 overflow-hidden rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
+        className="flex min-w-0 gap-3 overflow-hidden rounded-panel border border-neutral-200 bg-high-vis-white p-3 transition-shadow hover:shadow-panel active:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
       >
+        <ProductThumb name={product.name} path={product.images[0]?.path} />
+        <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 break-words font-ui text-base font-semibold text-charcoal">{product.name}</p>
           <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
@@ -126,7 +132,7 @@ function ProductCard({ product, href }: { product: CatalogueProduct; href: strin
             Edit
           </span>
         </div>
-        {meta ? <p className="mt-1 min-w-0 truncate font-ui text-base text-neutral-500">{meta}</p> : null}
+        {meta ? <p className="mt-0.5 min-w-0 truncate font-ui text-sm text-neutral-500">{meta}</p> : null}
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <p className="min-w-0 font-ui text-base text-charcoal">
             {productAvailabilityLabel(product)}
@@ -143,6 +149,7 @@ function ProductCard({ product, href }: { product: CatalogueProduct; href: strin
             <FlagRow product={product} />
           </div>
         ) : null}
+        </div>
       </Link>
     </li>
   );
@@ -162,7 +169,7 @@ export function ProductResults({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(products, requestedPage);
 
@@ -212,7 +219,10 @@ export function ProductResults({
         <ProductCreate categories={categories} returnTo={withParam('new', null)} />
       ) : editing ? (
         <ProductEditor
-          key={`${editing.id}-${editing.updatedAt}`}
+          // Keyed by id only. The action's response carries the fresh row, and
+          // a key on updatedAt remounted the editor on that commit, before its
+          // effects saw `ok`: no toast, sheet left open. D117.
+          key={editing.id}
           product={editing}
           categories={categories}
           onSaved={closeSheet}
@@ -239,8 +249,9 @@ export function ProductResults({
     <>
       {/* Desktop keeps the sortable table. Phone gets cards so the list
           cannot scroll sideways. Do not collapse desktop to cards. */}
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} products`}
           columns={desktopColumns(editHref)}
           rows={paged.items}
@@ -248,14 +259,14 @@ export function ProductResults({
         />
       </div>
 
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden lg:hidden">
+      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
         {paged.items.map((product) => (
           <ProductCard key={product.id} product={product} href={editHref(product.slug)} />
         ))}
       </ul>
 
       <Pagination
-        className="mt-4"
+        className="mt-4 xl:px-5 xl:pb-4"
         page={paged.page}
         pageCount={paged.pageCount}
         from={paged.from}

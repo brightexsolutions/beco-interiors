@@ -3,11 +3,15 @@ import type { OrderStatus, PaymentStatus, QuoteSource } from '@beco/types';
 import type { createServerClient } from '@beco/supabase-client';
 import { fetchQuoteSettings, type QuoteSettings } from './quote-detail';
 
+import { fetchStaffNames, staffName } from './staff-names';
+
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
 export interface OrderLine {
   id: string;
   description: string;
+  /** Copied from the quote line, D124. */
+  code: string | null;
   quantity: number;
   unitPrice: number;
   listPrice: number | null;
@@ -52,7 +56,7 @@ export async function fetchOrder(
       `id, reference_number, customer_name, customer_phone, customer_email,
        fulfilment, delivery_address, notes, source, status, payment_status,
        created_at, updated_at, paid_at, confirmed_at, fulfilled_at, cancelled_at,
-       salesperson_id, quote_id,
+       salesperson_id, created_by, quote_id,
        salesperson:users!orders_salesperson_id_fkey(full_name),
        created_user:users!orders_created_by_fkey(full_name),
        quote:quotes!orders_quote_id_fkey(reference_number)`,
@@ -66,7 +70,7 @@ export async function fetchOrder(
   const [{ data: items }, settings] = await Promise.all([
     supabase
       .from('order_items')
-      .select('id, description, quantity, unit_price, list_price, line_total, product_id')
+      .select('id, description, code, quantity, unit_price, list_price, line_total, product_id')
       .eq('order_id', order.id)
       .order('sort_order', { ascending: true }),
     fetchQuoteSettings(supabase),
@@ -90,9 +94,15 @@ export async function fetchOrder(
     return (v as { reference_number?: string }).reference_number ?? null;
   };
 
+  const names = await fetchStaffNames(supabase, [
+    oneName(order.salesperson) ? null : order.salesperson_id,
+    oneName(order.created_user) ? null : order.created_by,
+  ]);
+
   const lines: OrderLine[] = (items ?? []).map((row) => ({
     id: row.id,
     description: row.description,
+    code: row.code ?? null,
     quantity: Number(row.quantity),
     unitPrice: Number(row.unit_price),
     listPrice: row.list_price == null ? null : Number(row.list_price),
@@ -119,8 +129,8 @@ export async function fetchOrder(
     fulfilledAt: order.fulfilled_at,
     cancelledAt: order.cancelled_at,
     salespersonId: order.salesperson_id,
-    salespersonName: oneName(order.salesperson),
-    createdByName: oneName(order.created_user),
+    salespersonName: staffName(order.salesperson_id, oneName(order.salesperson), names),
+    createdByName: staffName(order.created_by, oneName(order.created_user), names),
     quoteId: order.quote_id,
     quoteReference: oneRef(order.quote),
     lines,

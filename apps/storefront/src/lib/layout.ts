@@ -23,3 +23,14 @@
  * way this one did.
  */
 export const HERO_GRID_INSET = 'pl-8 sm:pl-24 lg:pl-[calc(max(0px,(100vw-1380px)/2)+10rem)]';
+
+/**
+ * Desktop columns for a row of tiles, matched to how many there are. A fixed
+ * four left the Beyond stone row a column short whenever a range had no
+ * photograph to show, three tiles over three quarters of the width and dead
+ * space at the right. Literal class names, so Tailwind sees each one.
+ */
+const DESKTOP_COLUMNS = ['lg:grid-cols-1', 'lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 'lg:grid-cols-4'] as const;
+
+export const desktopColumns = (count: number): string =>
+  DESKTOP_COLUMNS[Math.min(Math.max(count, 0), DESKTOP_COLUMNS.length - 1)] ?? 'lg:grid-cols-4';

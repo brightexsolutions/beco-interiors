@@ -37,6 +37,7 @@ export function OrderLines({
               <div className={`grid grid-cols-1 gap-2 md:items-start md:gap-x-4 ${LINE_COLS}`}>
                 <div className="min-w-0">
                   <p className="font-ui text-base text-charcoal">{line.description}</p>
+                  {line.code ? <p className="mt-0.5 font-ui text-sm tabular-nums text-neutral-500">Code {line.code}</p> : null}
                   {discounted ? (
                     <p className="mt-0.5 font-ui text-sm text-neutral-500">
                       Catalogue <span className="line-through">{money(line.listPrice ?? 0)}</span>

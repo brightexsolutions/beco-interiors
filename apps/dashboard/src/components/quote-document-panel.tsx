@@ -2,9 +2,11 @@
 
 import { startTransition, useActionState, useEffect, useState } from 'react';
 import { Button, Dialog, Field, Input, buttonClasses, toast, useActionToast } from '@beco/ui';
-import { sendQuoteEmail, type QuoteActionState } from '@/app/(app)/quotes/actions';
+import { markQuoteSharedWhatsApp, sendQuoteEmail, type QuoteActionState } from '@/app/(app)/quotes/actions';
 import { PdfPreview } from '@/components/pdf-preview';
 import { useQuoteDraftFlush } from '@/components/quote-draft-flush';
+import { WhatsAppShare } from '@/components/whatsapp-share';
+import { quoteWhatsAppLink } from '@/lib/whatsapp';
 
 const INITIAL: QuoteActionState = {};
 
@@ -22,12 +24,14 @@ export function QuoteDocumentPanel({
   updatedAt,
   reference,
   customerEmail,
+  customerPhone,
   canMutate,
 }: {
   quoteId: string;
   updatedAt: string;
   reference: string;
   customerEmail: string | null;
+  customerPhone: string;
   canMutate: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -89,7 +93,7 @@ export function QuoteDocumentPanel({
         </div>
 
         <div className="shrink-0 border-t border-neutral-200 bg-high-vis-white px-5 py-4 sm:px-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
             {canMutate ? (
               <form
                 action={async (formData) => {
@@ -123,11 +127,20 @@ export function QuoteDocumentPanel({
                     autoComplete="email"
                   />
                 </Field>
-                <Button type="submit" variant="secondary" disabled={sending}>
+                <Button type="submit" variant="secondary" pending={sending}>
                   {sending ? 'Sending' : 'Email'}
                 </Button>
               </form>
             ) : null}
+            <div className="grid grid-cols-2 gap-2 xl:flex">
+            <WhatsAppShare
+              downloadHref={downloadHref}
+              fallbackFilename={`${reference}.pdf`}
+              chatHref={quoteWhatsAppLink(reference, customerPhone)}
+              message={`Beco quote ${reference}`}
+              beforeShare={ensureStoredLines}
+              onShared={(path) => markQuoteSharedWhatsApp(reference, path)}
+            />
             <a
               href={downloadHref}
               className={buttonClasses({ variant: 'outline' })}
@@ -141,8 +154,8 @@ export function QuoteDocumentPanel({
             >
               Download
             </a>
+            </div>
           </div>
-          <p className="mt-3 font-ui text-sm text-neutral-500">Download the file to send it on WhatsApp.</p>
         </div>
       </Dialog>
     </>

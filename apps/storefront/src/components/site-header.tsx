@@ -131,8 +131,11 @@ export function SiteHeader() {
         {/* The real mark from the brand pack, not a typeset approximation.
             The supplied lockup stacks INTERIORS beneath the square, which at
             this header height would be about four pixels tall, so the mark
-            carries the header and the word is set beside it. */}
-        <Link href="/" className="flex items-center gap-3" aria-label="Beco Interiors, home">
+            carries the header and the word is set beside it. Between lg and
+            xl the five links take that room, and the squeezed wordmark ran
+            into Shop ("INTERIORSSHOP" at 1024), so the mark stands alone
+            there and the link never shrinks. */}
+        <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Beco Interiors, home">
           <Image
             src={light ? '/logo-mark-white.png' : '/logo-mark.png'}
             alt=""
@@ -143,7 +146,7 @@ export function SiteHeader() {
           />
           <span
             className={cn(
-              'hidden font-ui text-sm font-semibold uppercase tracking-[0.26em] sm:block',
+              'hidden font-ui text-sm font-semibold uppercase tracking-[0.26em] sm:block lg:hidden xl:block',
               light ? 'text-high-vis-white' : 'text-charcoal',
             )}
           >
@@ -151,7 +154,11 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav aria-label="Main" className="hidden md:block">
+        {/* From lg, not md: at 820px the five links, the mark and wordmark,
+            the phone and the Quote button needed 36px more than the bar has,
+            and every page scrolled sideways on a tablet. Tablets take the
+            menu, as phones do. */}
+        <nav aria-label="Main" className="hidden lg:block">
           <ul className="flex items-center gap-1">
             <li>
               <NavLink href="/shop" light={light}>Shop</NavLink>
@@ -168,7 +175,7 @@ export function SiteHeader() {
             <li>
               {/* About's own active state is /about alone, not derived from
                   every item it links to: Sintered stone and The showroom are
-                  each already Shop's and Contact's own page, and lighting
+                  each already Shop's and Contact's own page, and lighting up
                   About too would put two "you are here" claims on the bar
                   for the same route. */}
               <NavDropdown

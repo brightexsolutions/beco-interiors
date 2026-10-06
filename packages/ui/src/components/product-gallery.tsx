@@ -58,15 +58,26 @@ const ROLE_LABEL: Record<GalleryRole, string> = {
   unknown: 'Product photo',
 };
 
+/**
+ * The badge for a photograph. A hardware photograph comes through the import
+ * with the `slab` role, because it is the item's own shot, and a hinge
+ * labelled "Full slab" tells the reader the site does not know what it sells.
+ * Off a slab product, that shot is just the product photo.
+ */
+export const roleLabel = (role: GalleryRole, slab = true): string =>
+  role === 'slab' && !slab ? ROLE_LABEL.unknown : ROLE_LABEL[role];
+
 export const orderImages = (images: readonly GalleryImage[]): GalleryImage[] =>
   [...images].sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
 
 export interface ProductGalleryProps {
   images: readonly GalleryImage[];
+  /** False for anything that is not sold as a slab: hinges, handles, legs. */
+  slab?: boolean | undefined;
   className?: string | undefined;
 }
 
-export function ProductGallery({ images, className }: ProductGalleryProps) {
+export function ProductGallery({ images, slab = true, className }: ProductGalleryProps) {
   const ordered = orderImages(images);
   const [active, setActive] = useState(0);
   const current = ordered[active];
@@ -80,7 +91,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
     // A product with no usable photographs still renders a page rather than
     // a hole. Pure White very nearly hit this.
     return (
-      <div className={cn('aspect-[4/5] w-full bg-neutral-100', className)} role="img"
+      <div className={cn('aspect-[4/5] w-full rounded-card bg-neutral-100', className)} role="img"
            aria-label="No photograph available yet" />
     );
   }
@@ -89,7 +100,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
     <div className={cn('relative min-w-0', className)}>
       {/* --- The frame. Every image stays mounted and crossfades, so pressing
               a card never leaves an empty frame while a file decodes. --- */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100 sm:aspect-[5/4]">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100 sm:aspect-[5/4]">
         {ordered.map((img, i) => (
           <div
             key={`${img.role}-${i}`}
@@ -105,12 +116,12 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
 
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+          className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
         />
 
         {/* What is being looked at, named on the photograph itself. */}
         <p className="absolute left-0 top-0 bg-charcoal px-4 py-2 font-ui text-sm font-semibold uppercase tracking-[0.14em] text-high-vis-white">
-          {ROLE_LABEL[current.role]}
+          {roleLabel(current.role, slab)}
         </p>
       </div>
 
@@ -140,7 +151,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
                   type="button"
                   role="tab"
                   aria-selected={i === active}
-                  aria-label={`${ROLE_LABEL[img.role]}, photograph ${i + 1} of ${ordered.length}`}
+                  aria-label={`${roleLabel(img.role, slab)}, photograph ${i + 1} of ${ordered.length}`}
                   onClick={() => setActive(i)}
                   style={
                     fan
@@ -165,7 +176,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
                     // enormous, wrongly cropped photograph under a handful of
                     // pixels of visible thumbnail. Never rely on transform
                     // alone for this again.
-                    'relative block h-20 w-16 shrink-0 overflow-hidden bg-neutral-100 sm:h-24 sm:w-20',
+                    'relative block h-20 w-16 shrink-0 overflow-hidden rounded-control bg-neutral-100 sm:h-24 sm:w-20',
                     'shadow-[0_12px_30px_rgba(16,24,32,0.28)] ring-1 ring-inset',
                     'transition-transform duration-500 ease-brand hover:-translate-y-2',
                     'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
@@ -194,7 +205,7 @@ export function ProductGallery({ images, className }: ProductGalleryProps) {
       ) : null}
 
       <p aria-live="polite" className="sr-only">
-        {ROLE_LABEL[current.role]}, photograph {active + 1} of {ordered.length}
+        {roleLabel(current.role, slab)}, photograph {active + 1} of {ordered.length}
       </p>
     </div>
   );

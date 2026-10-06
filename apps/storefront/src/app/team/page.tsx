@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal, buttonClasses } from '@beco/ui';
@@ -28,15 +29,16 @@ export const revalidate = 3600;
 export async function generateMetadata(): Promise<Metadata> {
   const team = await getPublicTeam();
 
-  return {
-    title: 'Our sales team',
+  return pageMetadata({
+    title: 'Our Sales Team in Nairobi',
     description:
-      'The Beco Interiors sales team in Nairobi. Check that the person you are dealing with is genuinely ours before you pay anyone.',
-    alternates: { canonical: '/team' },
+      'The Beco Interiors sales team at Urban Square, Nairobi. Check that the person you are dealing with is genuinely ours before you pay anyone a deposit.',
+    path: '/team',
+    image: sectionOgImage('team'),
     // A page listing nobody is thin content. Same gate as an empty category,
     // and the same reason: it should be reachable and designed, not indexed.
     ...(team.length === 0 ? { robots: { index: false, follow: true } } : {}),
-  };
+  });
 }
 
 export default async function TeamPage() {
@@ -79,7 +81,7 @@ export default async function TeamPage() {
           {team.map((member, i) => (
             <Reveal key={member.id} delay={(i % 3) * 60}>
               <article className="flex h-full flex-col">
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-100">
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100">
                   {member.public_photo ? (
                     <Image
                       src={member.public_photo.path}
@@ -101,7 +103,7 @@ export default async function TeamPage() {
                   )}
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15"
+                    className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15"
                   />
                 </div>
 

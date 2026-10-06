@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Field, FormSection, Input, Select, Textarea, useActionToast } from '@beco/ui';
+import { Button, Field, FormSection, Input, Select, Textarea, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import {
   createAnnouncement,
   updateAnnouncement,
@@ -16,30 +16,9 @@ import {
 } from '@/lib/announcements';
 import type { AnnouncementType } from '@beco/types';
 
-const INITIAL: AnnouncementActionState = {};
+import { AnnouncementPreview } from './announcement-preview';
 
-function AnnouncementPreview({
-  title,
-  body,
-  type,
-  ctaLabel,
-}: {
-  title: string;
-  body: string;
-  type: AnnouncementType;
-  ctaLabel: string;
-}) {
-  const tone = type === 'clearance' ? 'bg-warm-red-deep text-high-vis-white' : 'bg-charcoal text-high-vis-white';
-  return (
-    <div className={`${tone} px-4 py-3`}>
-      <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">
-        <span className="font-semibold uppercase tracking-[0.12em]">{title || 'Title'}</span>
-        {body ? <span className="text-high-vis-white/75">{body}</span> : null}
-        {ctaLabel ? <span className="underline underline-offset-4">{ctaLabel}</span> : null}
-      </p>
-    </div>
-  );
-}
+const INITIAL: AnnouncementActionState = {};
 
 export function AnnouncementEditor({
   announcement,
@@ -49,6 +28,7 @@ export function AnnouncementEditor({
   const router = useRouter();
   const save = announcement ? updateAnnouncement : createAnnouncement;
   const [state, submit, pending] = useActionState(save, INITIAL);
+  const onSubmitSubmit = useKeepValuesSubmit(submit);
   const [title, setTitle] = useState(announcement?.title ?? '');
   const [body, setBody] = useState(announcement?.body ?? '');
   const [type, setType] = useState<AnnouncementType>(announcement?.type ?? 'notice');
@@ -60,7 +40,7 @@ export function AnnouncementEditor({
   }, [state.announcementId, router]);
 
   return (
-    <form action={submit} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <form onSubmit={onSubmitSubmit} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {announcement ? <input type="hidden" name="announcementId" value={announcement.id} /> : null}
       <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
         <FormSection title="Copy">
@@ -136,7 +116,7 @@ export function AnnouncementEditor({
               type="checkbox"
               name="isActive"
               defaultChecked={announcement?.isActive ?? true}
-              className="h-5 w-5 rounded-[2px] border-neutral-300"
+              className="h-5 w-5 rounded-control border-neutral-300"
             />
             Active
           </label>
@@ -166,7 +146,7 @@ export function AnnouncementEditor({
         </FormSection>
       </div>
       <div className="shrink-0 border-t border-neutral-200 px-5 py-3">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" pending={pending}>
           {pending ? 'Saving' : 'Save'}
         </Button>
       </div>

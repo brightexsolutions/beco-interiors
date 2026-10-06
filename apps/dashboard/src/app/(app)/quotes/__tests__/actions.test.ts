@@ -52,7 +52,7 @@ describe('quote actions', () => {
   });
 
   it('refuses a stale lock with the salesperson-facing sentence', async () => {
-    rpc.mockResolvedValue({ error: { code: '40001', message: 'This quote changed while you were editing' } });
+    rpc.mockResolvedValue({ error: { code: 'PT409', message: 'This quote changed while you were editing' } });
     const result = await updateQuoteLine(
       {},
       lockForm({
@@ -177,5 +177,19 @@ describe('quote actions', () => {
         p_quote_id: '11111111-1111-4111-8111-111111111111',
       }),
     );
+  });
+});
+
+describe('markQuoteSharedWhatsApp', () => {
+  it('refuses a document path that belongs to another quote, before touching the database', async () => {
+    const { markQuoteSharedWhatsApp } = await import('../actions');
+    getSupabase.mockClear();
+    const result = await markQuoteSharedWhatsApp(
+      'BEC-Q-00042',
+      'quotes/BEC-Q-00043/3f2504e0-4f89-41d3-9a0c-0305e82c3301.pdf',
+    );
+    expect(result.error).toBe('That document does not belong to this quote.');
+    expect(requirePath).toHaveBeenCalledWith('/quotes');
+    expect(getSupabase).not.toHaveBeenCalled();
   });
 });

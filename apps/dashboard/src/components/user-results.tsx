@@ -90,7 +90,7 @@ export function UserResults({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(users, requestedPage);
 
@@ -130,7 +130,7 @@ export function UserResults({
       {creating ? (
         <UserCreate />
       ) : viewing ? (
-        <UserEditor key={`${viewing.id}-${viewing.updatedAt}-${resetKey(viewing)}`} user={viewing} viewerId={viewerId} />
+        <UserEditor key={`${viewing.id}-${resetKey(viewing)}`} user={viewing} viewerId={viewerId} />
       ) : null}
     </Sheet>
   );
@@ -146,8 +146,9 @@ export function UserResults({
 
   return (
     <>
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 xl:block">
         <DataTable
+          busy={isPending}
           caption={`${paged.total} users`}
           columns={desktopColumns(viewHref)}
           rows={paged.items}
@@ -155,7 +156,7 @@ export function UserResults({
         />
       </div>
 
-      <div className="min-w-0 overflow-x-hidden lg:hidden">
+      <div className="min-w-0 overflow-x-hidden xl:hidden">
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">{`${paged.total} users`}</caption>
           <thead>

@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
+  RankedBars,
   StatCard,
   Tabs,
   TabsContent,
@@ -22,7 +23,6 @@ import {
   type LeaderboardPerson,
   type LeaderboardReport,
 } from '@/lib/reports';
-import { ReportBars } from './report-bars';
 
 const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
@@ -152,28 +152,28 @@ const categoryColumns: DataTableColumn<ConversionRow>[] = [
 ];
 
 function ChartCard({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-panel border border-neutral-200 p-5">{children}</div>;
+  return <div className="rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel">{children}</div>;
 }
 
 function PersonCard({ person }: { person: LeaderboardPerson }) {
   return (
     <li className="rounded-panel border border-neutral-200 px-4 py-3">
       <p className="font-ui text-base font-semibold text-charcoal">{person.full_name}</p>
-      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 font-ui text-sm">
+      <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 font-ui text-sm sm:grid-cols-2">
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Raised</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Raised</dt>
           <dd className="tabular-nums text-charcoal">{person.raised}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Won</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Won</dt>
           <dd className="tabular-nums text-charcoal">{person.won}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Won value</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Won value</dt>
           <dd className="tabular-nums text-charcoal">{money(person.won_value)}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Conversion</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Conversion</dt>
           <dd className="tabular-nums text-charcoal">{rateLabel(person.conversion)}</dd>
         </div>
       </dl>
@@ -186,29 +186,29 @@ function FunnelCard({ row, kind }: { row: ConversionRow; kind: 'product' | 'cate
     <li className="rounded-panel border border-neutral-200 px-4 py-3">
       <p className="font-ui text-base font-semibold text-charcoal">{row.name}</p>
       {kind === 'product' && row.category ? <p className="font-ui text-sm text-neutral-500">{row.category}</p> : null}
-      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 font-ui text-sm">
+      <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 font-ui text-sm sm:grid-cols-2">
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Views</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Views</dt>
           <dd className="tabular-nums">{row.views}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Add to cart</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Add to cart</dt>
           <dd className="tabular-nums">{row.add_to_cart}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Quoted</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Quoted</dt>
           <dd className="tabular-nums">{row.quote_submitted}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">WhatsApp</dt>
+          <dt className="whitespace-nowrap text-neutral-500">WhatsApp</dt>
           <dd className="tabular-nums">{row.whatsapp}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">Calls</dt>
+          <dt className="whitespace-nowrap text-neutral-500">Calls</dt>
           <dd className="tabular-nums">{row.calls}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt className="text-neutral-500">View to cart</dt>
+          <dt className="whitespace-nowrap text-neutral-500">View to cart</dt>
           <dd className="tabular-nums">{rateLabel(row.view_to_cart)}</dd>
         </div>
       </dl>
@@ -244,10 +244,12 @@ function FunnelView({
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard>
-          <ReportBars
-            caption="Funnel"
+          <RankedBars
+            title="Funnel"
+            description="Views, then the two steps that follow them"
+            valueLabel="Events"
             items={[
               { label: 'Views', value: funnel.views },
               { label: 'Add to cart', value: funnel.add_to_cart },
@@ -256,13 +258,14 @@ function FunnelView({
           />
         </ChartCard>
         <ChartCard>
-          <ReportBars
-            caption={kind === 'product' ? 'Most viewed' : 'Views by category'}
+          <RankedBars
+            title={kind === 'product' ? 'Most viewed' : 'Views by category'}
+            valueLabel="Views"
             items={top.map((row) => ({ label: row.name, value: row.views }))}
           />
         </ChartCard>
       </div>
-      <div className="hidden overflow-x-hidden lg:block">
+      <div className="hidden overflow-x-hidden xl:block">
         <DataTable
           caption={kind === 'product' ? 'Conversion by product' : 'Conversion by category'}
           columns={columns}
@@ -270,7 +273,7 @@ function FunnelView({
           getRowKey={(row) => row.id}
         />
       </div>
-      <ul className="grid gap-2 lg:hidden">
+      <ul className="grid gap-2 xl:hidden">
         {rows.map((row) => (
           <FunnelCard key={row.id} row={row} kind={kind} />
         ))}
@@ -289,7 +292,7 @@ export function ReportResults({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const urlView = parseView(searchParams.get('view') ?? undefined);
   const [view, setViewState] = useState(urlView);
 
@@ -316,7 +319,7 @@ export function ReportResults({
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         <StatCard
           size="compact"
           label="Invoiced"
@@ -361,17 +364,18 @@ export function ReportResults({
           ) : (
             <div className="space-y-8">
               <ChartCard>
-                <ReportBars caption="Won value" items={wonBars} format={money} />
+                <RankedBars title="Won value" description="By salesperson, this period" valueLabel="KES" items={wonBars} format={money} />
               </ChartCard>
-              <div className="hidden lg:block">
+              <div className="hidden xl:block">
                 <DataTable
+                  busy={isPending}
                   caption="Salesperson leaderboard"
                   columns={personColumns}
                   rows={leaderboard.people}
                   getRowKey={(row) => row.id}
                 />
               </div>
-              <ul className="grid gap-2 lg:hidden">
+              <ul className="grid gap-2 xl:hidden">
                 {leaderboard.people.map((person) => (
                   <PersonCard key={person.id} person={person} />
                 ))}

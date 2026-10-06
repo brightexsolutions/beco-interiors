@@ -12,6 +12,7 @@ import {
   type StaffBlogPost,
 } from '@/lib/blog';
 import { processProductPhoto } from '@/lib/product-photo';
+import { readPhotoUpload } from '@/lib/photo-source';
 import {
   deleteProductDerivatives,
   isProductStorageConfigured,
@@ -190,9 +191,9 @@ export async function uploadBlogCover(
 ): Promise<BlogActionState> {
   await requirePath('/studio/blog');
   const postId = formString(form, 'postId');
-  const file = form.get('file');
   if (!postId) return { error: 'Save the draft before you add a cover.' };
-  if (!(file instanceof File) || file.size === 0) return { error: 'Choose a photograph first.' };
+  const photo = await readPhotoUpload(form, 'file');
+  if (photo.error !== undefined) return { error: photo.error };
   if (!isProductStorageConfigured()) {
     return { error: 'Photograph storage is not configured. Add the R2 keys, then try again.' };
   }
@@ -203,7 +204,7 @@ export async function uploadBlogCover(
 
   let processed;
   try {
-    processed = await processProductPhoto(Buffer.from(await file.arrayBuffer()));
+    processed = await processProductPhoto(photo.buffer);
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'That file is not a photograph we can read.' };
   }

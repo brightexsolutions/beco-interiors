@@ -56,9 +56,24 @@ describe('order actions', () => {
   });
 
   it('refuses a stale lock with the salesperson-facing sentence', async () => {
-    rpc.mockResolvedValue({ error: { code: '40001', message: 'This order changed while you were editing' } });
+    rpc.mockResolvedValue({ error: { code: 'PT409', message: 'This order changed while you were editing' } });
     const result = await setOrderStatus({}, form({ status: 'confirmed' }));
     expect(result.error).toMatch(/changed while you were editing/i);
+  });
+
+  it('refuses a cancel from a salesperson before the database is asked (D110)', async () => {
+    const result = await setOrderStatus({}, form({ status: 'cancelled' }));
+    expect(result.error).toMatch(/Only an admin can cancel/);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('lets an admin cancel through the RPC', async () => {
+    requirePath.mockResolvedValueOnce({ userId: 'admin-1', email: 'irene@beco.co.ke', fullName: 'Irene', role: 'beco_admin' as const, isActive: true, mustChangePassword: false } as never);
+    rpc.mockResolvedValue({ error: null });
+    maybeSingle.mockResolvedValue({ data: { reference_number: 'BEC-O-00001', quote: null } });
+    const result = await setOrderStatus({}, form({ status: 'cancelled' }));
+    expect(rpc).toHaveBeenCalledWith('set_order_status', expect.objectContaining({ p_status: 'cancelled' }));
+    expect(result.ok).toMatch(/cancelled/);
   });
 
   it('marks paid through the RPC', async () => {
@@ -91,6 +106,9 @@ describe('order actions', () => {
       reference: 'BEC-O-00001',
       customerName: 'Ada',
       quoteReference: 'BEC-Q-1',
+      paidAt: '2026-10-03T09:30:00.000Z',
+      totals: { isPriced: true, gross: 145000, net: 125000, vat: 20000 },
+      lines: [{ id: 'l1', description: 'Calacatta Gold 12mm', quantity: 2, unitPrice: 65000, listPrice: null, lineTotal: 130000, productId: null }],
     } as never);
     vi.mocked(fetchQuoteSettings).mockResolvedValue({} as never);
     vi.mocked(persistReceiptPdf).mockResolvedValue({
@@ -102,8 +120,24 @@ describe('order actions', () => {
 
     const result = await sendOrderReceipt({}, form({ to: 'ada@example.com' }));
     expect(sendReceipt).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'ada@example.com', reference: 'BEC-O-00001' }),
+      expect.objectContaining({
+        to: 'ada@example.com',
+        reference: 'BEC-O-00001',
+        // The body carries the figure, the Nairobi date and the lines (D109).
+        amountPaid: 145000,
+        paidOn: '3 October 2026',
+        lines: [{ description: 'Calacatta Gold 12mm', quantity: 2, lineTotal: 130000 }],
+      }),
     );
     expect(result.ok).toMatch(/sent to ada@example.com/i);
+  });
+});
+
+describe('markReceiptSharedWhatsApp', () => {
+  it('refuses a quote path or another order\'s receipt', async () => {
+    const { markReceiptSharedWhatsApp } = await import('../actions');
+    const uuid = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+    expect((await markReceiptSharedWhatsApp('BEC-O-00001', `quotes/BEC-O-00001/${uuid}.pdf`)).error).toBeDefined();
+    expect((await markReceiptSharedWhatsApp('BEC-O-00001', `receipts/BEC-O-00002/${uuid}.pdf`)).error).toBeDefined();
   });
 });

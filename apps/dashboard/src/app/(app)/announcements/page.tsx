@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { PageHeading } from '@/components/page-heading';
 import { AnnouncementFilters } from '@/components/announcement-filters';
+import { AnnouncementPreview } from '@/components/announcement-preview';
 import { AnnouncementResults } from '@/components/announcement-results';
 import { NewAnnouncementFab } from '@/components/new-announcement';
 import {
@@ -35,7 +36,11 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
   };
 
   const supabase = await getSupabase();
-  const announcements = await fetchAnnouncements(supabase, filters);
+  const [announcements, live] = await Promise.all([
+    fetchAnnouncements(supabase, filters),
+    fetchAnnouncements(supabase, { window: 'live' }),
+  ]);
+  const showing = [...live].sort((a, b) => b.priority - a.priority);
   const editId = one(params.edit);
   const creating = one(params.new) === '1' && !editId;
   const editing = editId
@@ -44,14 +49,33 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
 
   return (
     <>
-      <PageHeading eyebrow="Storefront" title="Announcements" />
+      <PageHeading eyebrow="Storefront" title="Announcements" actions={<NewAnnouncementFab />} />
+      <section aria-labelledby="on-site-now" className="mb-8 rounded-panel border border-neutral-200 bg-neutral-50 p-4 sm:p-5">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="on-site-now" className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
+            On the site now
+          </h2>
+          {showing.length > 1 ? (
+            <p className="font-ui text-sm text-neutral-500">{showing.length} live, rotating in priority order</p>
+          ) : null}
+        </div>
+        {showing[0] ? (
+          <AnnouncementPreview
+            title={showing[0].title}
+            body={showing[0].body ?? ''}
+            type={showing[0].type}
+            ctaLabel={showing[0].ctaLabel ?? ''}
+          />
+        ) : (
+          <p className="font-ui text-base text-neutral-700">Nothing is live. The bar is hidden on the site.</p>
+        )}
+      </section>
       <div className="mb-4">
         <AnnouncementFilters />
       </div>
       <div className="pb-24">
         <AnnouncementResults announcements={announcements} editing={editing} creating={creating} />
       </div>
-      <NewAnnouncementFab />
     </>
   );
 }

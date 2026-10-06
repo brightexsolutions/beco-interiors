@@ -1,21 +1,33 @@
-import { escapeHtml, eyebrow, heading, paragraph, referenceBox, renderEmailShell } from './shell';
+import {
+  PHONE_DISPLAY,
+  contactButtons,
+  divider,
+  emailHero,
+  escapeHtml,
+  eyebrow,
+  heading,
+  paragraph,
+  referenceBox,
+  renderEmailShell,
+  sectionLabel,
+  signOff,
+  steps,
+} from './shell';
 
 /**
  * The email a customer gets the moment a web quote is submitted.
  *
- * It confirms receipt and carries the reference, nothing more. The priced
- * quote itself is a separate document, sent by a salesperson once it is
- * actually priced, so this one does not list items or totals it cannot yet
- * stand behind. It mirrors the on-site confirmation screen's own copy and
- * structure, eyebrow, then the reference named plainly, so the email reads
- * as a continuation of the page the customer was just on, not a second,
- * unrelated message.
+ * It confirms receipt, carries the reference and says what happens next. The
+ * priced quote is a separate document, sent once it is actually priced, so
+ * this one lists no items or totals it cannot yet stand behind.
  *
  * No em dashes, per rule 1, in the subject or either body.
  */
 export interface QuoteConfirmationInput {
   reference: string;
   customerName: string;
+  /** How many lines the request carried, so the reader knows the list arrived whole. */
+  itemCount?: number | undefined;
 }
 
 export interface QuoteConfirmationEmail {
@@ -24,11 +36,17 @@ export interface QuoteConfirmationEmail {
   html: string;
 }
 
-const PHONE = '+254 722 333 730';
+const NEXT_STEPS = [
+  'A salesperson checks stock and prices every item on your list.',
+  'We send the priced quote to you as a PDF, by email or WhatsApp.',
+  'You confirm, and we arrange collection or delivery.',
+];
 
 export function buildQuoteConfirmationEmail(input: QuoteConfirmationInput): QuoteConfirmationEmail {
-  const { reference, customerName } = input;
+  const { reference, customerName, itemCount } = input;
   const firstName = customerName.trim().split(/\s+/)[0] || 'there';
+  const itemsLine =
+    itemCount && itemCount > 0 ? `${itemCount} ${itemCount === 1 ? 'item' : 'items'} on your list` : null;
 
   const subject = `We have your request, ${reference}`;
 
@@ -36,28 +54,34 @@ export function buildQuoteConfirmationEmail(input: QuoteConfirmationInput): Quot
     `Hi ${firstName},`,
     '',
     `We have your request and it is with our team. Your reference is ${reference}.`,
+    ...(itemsLine ? [itemsLine + '.'] : []),
     '',
-    'A salesperson will price it and send the quote back to you. If it is urgent,',
-    `reply to this email with your reference or call us on ${PHONE}.`,
+    'What happens next:',
+    ...NEXT_STEPS.map((step, i) => `${i + 1}. ${step}`),
     '',
-    'Keep the reference. Everything else is on us.',
+    `If it is urgent, reply to this email with your reference or call us on ${PHONE_DISPLAY}.`,
     '',
-    'Beco Interiors',
+    'The Beco Interiors team',
     'Urban Square, Enterprise Road, Industrial Area, Nairobi',
   ].join('\n');
 
   const bodyHtml =
     eyebrow('Request received') +
-    heading(`Hi ${escapeHtml(firstName)},`) +
-    paragraph('We have your request and it is with our team.') +
-    referenceBox('Your reference', reference) +
-    paragraph(
-      'A salesperson will price it and send the quote back to you. If it is urgent, reply to ' +
-        `this email with your reference or call us on <a href="tel:+254722333730" style="color:#c81419;text-decoration:none">${escapeHtml(PHONE)}</a>.`,
-    ) +
-    paragraph('Keep the reference. Everything else is on us.');
+    heading(`Thank you, ${escapeHtml(firstName)}.`) +
+    paragraph('We have your request and it is with our team. Keep this reference, it is how we find your list.') +
+    referenceBox('Your reference', reference, itemsLine ? [['Request', itemsLine]] : []) +
+    sectionLabel('What happens next') +
+    steps(NEXT_STEPS) +
+    paragraph('Need it sooner? Reply to this email, or reach us directly.') +
+    contactButtons(`Hi Beco, following up on my quote request ${reference}`) +
+    divider() +
+    signOff();
 
-  const html = renderEmailShell({ preview: `We have your request. Reference ${reference}.`, bodyHtml });
+  const html = renderEmailShell({
+    preview: `We have your request. Reference ${reference}.`,
+    bodyHtml,
+    hero: emailHero('request'),
+  });
 
   return { subject, text, html };
 }

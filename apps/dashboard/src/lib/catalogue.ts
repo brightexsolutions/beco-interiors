@@ -2,6 +2,7 @@
 
 import { getSupabase } from '@/lib/supabase';
 import { requirePath } from '@/lib/session';
+import { parseProductImages, productImageUrl } from '@/lib/products';
 
 export interface CatalogueHit {
   id: string;
@@ -11,6 +12,9 @@ export interface CatalogueHit {
   unit: string | null;
   priceDisplayMode: 'fixed' | 'poa';
   categoryName: string | null;
+  /** A 400px derivative of the first photograph, so the counter can pick
+   *  by eye. Null for a product with no photography yet. */
+  thumb: string | null;
 }
 
 export interface CatalogueRange {
@@ -28,9 +32,11 @@ interface CategoryRow {
 }
 
 /**
- * Leaf ranges for the quote picker, including empty ones. A counter
- * salesperson must be able to open Handles even when the first page of
- * published products is all stone.
+ * Ranges for the quote picker: every category that holds products of its
+ * own, plus every empty leaf, so a counter salesperson can open Handles
+ * even when the first page of published products is all stone. A range
+ * that has sub ranges AND its own products (12mm Sintered Stones beside
+ * Heixin 12mm) is listed too, named for what it holds directly.
  */
 export async function listCatalogueRanges(): Promise<CatalogueRange[]> {
   await requirePath('/quotes');
@@ -59,7 +65,7 @@ export async function listCatalogueRanges(): Promise<CatalogueRange[]> {
   }
 
   return rows
-    .filter((row) => !parentIds.has(row.id))
+    .filter((row) => !parentIds.has(row.id) || (counts.get(row.id) ?? 0) > 0)
     .map((row) => {
       const parent = row.parent_id ? byId.get(row.parent_id) : undefined;
       return {
@@ -83,13 +89,13 @@ export async function listCatalogueRanges(): Promise<CatalogueRange[]> {
  */
 export async function searchCatalogue(term: string, rangeId?: string | null): Promise<CatalogueHit[]> {
   await requirePath('/quotes');
-  const q = term.replace(/[%_,()]/g, '').trim();
+  const q = term.replace(/[%_,()"\\]/g, '').trim().slice(0, 80);
   const range = rangeId?.trim() || null;
 
   const supabase = await getSupabase();
   let request = supabase
     .from('products')
-    .select('id, name, slug, price, unit, price_display_mode, categories(name)')
+    .select('id, name, slug, price, unit, price_display_mode, images, categories(name)')
     .is('deleted_at', null)
     .eq('is_published', true)
     .order('name', { referencedTable: 'categories' })
@@ -133,6 +139,7 @@ export async function searchCatalogue(term: string, rangeId?: string | null): Pr
   return (data ?? []).map((row) => {
     const category = row.categories as { name: string } | { name: string }[] | null;
     const categoryName = Array.isArray(category) ? (category[0]?.name ?? null) : (category?.name ?? null);
+    const first = parseProductImages(row.images)[0];
     return {
       id: row.id,
       name: row.name,
@@ -141,6 +148,7 @@ export async function searchCatalogue(term: string, rangeId?: string | null): Pr
       unit: row.unit,
       priceDisplayMode: row.price_display_mode,
       categoryName,
+      thumb: first ? productImageUrl(first.path, 400) : null,
     };
   });
 }

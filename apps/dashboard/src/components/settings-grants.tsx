@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { ConfirmDialog, FormSection, useActionToast } from '@beco/ui';
+import { ConfirmDialog, FormSection, Spinner, useActionToast } from '@beco/ui';
 import { setStaffGrant, type SettingsActionState } from '@/app/(app)/settings/actions';
 import type { GrantStaffRow } from '@/lib/settings';
 
@@ -39,8 +39,10 @@ function GrantButton({
         type="button"
         onClick={() => setOpen(true)}
         disabled={pending}
-        className="h-11 px-3 font-ui text-base text-charcoal underline-offset-4 hover:underline disabled:opacity-50"
+        aria-busy={pending || undefined}
+        className="inline-flex h-11 items-center gap-2 px-3 font-ui text-base text-charcoal underline-offset-4 hover:underline disabled:opacity-50"
       >
+        {pending ? <Spinner /> : null}
         {label}
       </button>
       <ConfirmDialog

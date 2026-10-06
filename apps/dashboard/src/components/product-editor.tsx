@@ -14,6 +14,7 @@ import {
   StatusPill,
   Textarea,
   useActionToast,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import { PRODUCT_UNITS, stockStepFor } from '@beco/validation';
 import type { Availability, PriceDisplayMode } from '@beco/types';
@@ -49,6 +50,7 @@ export function ProductEditor({
   onImagesChanged?: () => void;
 }) {
   const [saveState, save, saving] = useActionState(updateProduct, INITIAL);
+  const onSaveSubmit = useKeepValuesSubmit(save);
   const [deleteState, remove, removing] = useActionState(deleteProduct, INITIAL);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [specs, setSpecs] = useState(product.specs);
@@ -149,7 +151,7 @@ export function ProductEditor({
             </p>
           </div>
 
-          <form id="product-editor" action={save} className="grid min-w-0 gap-8">
+          <form id="product-editor" onSubmit={onSaveSubmit} className="grid min-w-0 gap-8">
             <input type="hidden" name="productId" value={product.id} />
             <input type="hidden" name="updatedAt" value={product.updatedAt} />
             <input type="hidden" name="specs" value={JSON.stringify(specs)} />
@@ -269,7 +271,7 @@ export function ProductEditor({
                   form="product-editor"
                   checked={published}
                   onChange={(event) => setPublished(event.target.checked)}
-                  className="h-5 w-5 rounded-[2px] border-neutral-300 text-charcoal"
+                  className="h-5 w-5 rounded-control border-neutral-300 text-charcoal"
                 />
                 Published on the website
               </label>
@@ -425,8 +427,8 @@ export function ProductEditor({
             <Icon name="trash" />
             Delete product
           </Button>
-          <Button type="submit" form="product-editor" variant="primary" disabled={busy}>
-            {saving ? 'Saving…' : 'Save'}
+          <Button type="submit" form="product-editor" variant="primary" disabled={busy} pending={saving}>
+            {saving ? 'Saving' : 'Save'}
           </Button>
         </div>
       </div>

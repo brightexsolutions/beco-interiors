@@ -67,7 +67,7 @@ export function QuantityStepper({
 
   return (
     <div className={cn('flex flex-wrap items-center gap-3', className)}>
-      <div className={cn('flex items-stretch rounded-[2px] border border-neutral-300 bg-high-vis-white', compact && 'flex-nowrap')}>
+      <div className={cn('flex items-stretch rounded-control border border-neutral-300 bg-high-vis-white', compact && 'flex-nowrap')}>
         <button
           type="button"
           onClick={() => onChange(Math.max(bound, round(value - step)))}

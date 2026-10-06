@@ -40,14 +40,13 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeading eyebrow="Team" title="Users" />
+      <PageHeading eyebrow="Team" title="Users" actions={<NewUserFab />} />
       <div className="mb-4">
         <UserFilters />
       </div>
       <div className="pb-24">
         <UserResults users={users} viewing={viewing} creating={creating} viewerId={session.userId} />
       </div>
-      <NewUserFab />
     </>
   );
 }

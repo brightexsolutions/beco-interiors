@@ -11,6 +11,7 @@ import {
   Input,
   Textarea,
   useActionToast,
+  useKeepValuesSubmit,
 } from '@beco/ui';
 import {
   generateBlogDraft,
@@ -19,6 +20,7 @@ import {
   uploadBlogCover,
   type BlogActionState,
 } from '@/app/(app)/studio/blog/actions';
+import { usePhotoUpload } from '@/components/use-photo-upload';
 import { BlogBodyEditor } from '@/components/blog-body-editor';
 import { BlogLivePreview } from '@/components/blog-live-preview';
 import { coverPreviewUrl, readingTimeMinutes, slugFromTitle, type StaffBlogPost } from '@/lib/blog';
@@ -34,12 +36,18 @@ export function BlogEditor({
 }) {
   const router = useRouter();
   const [saveState, save, savePending] = useActionState(saveBlogPost, INITIAL);
+  const onSaveSubmit = useKeepValuesSubmit(save);
   const [genState, generate, genPending] = useActionState(generateBlogDraft, INITIAL);
+  const onGenerateSubmit = useKeepValuesSubmit(generate);
   const [coverState, uploadCover, coverPending] = useActionState(uploadBlogCover, INITIAL);
+  const upload = usePhotoUpload({ area: 'studio/blog', field: 'file', dispatch: uploadCover });
   const [removeState, removeCover] = useActionState(removeBlogCover, INITIAL);
   useActionToast(saveState);
   useActionToast(genState);
   useActionToast(coverState);
+  useEffect(() => {
+    if (coverState.ok || coverState.error) upload.settle();
+  }, [coverState, upload.settle]);
   useActionToast(removeState);
 
   const [view, setView] = useState<'edit' | 'preview'>('edit');
@@ -120,7 +128,7 @@ export function BlogEditor({
         <Button type="button" variant={view === 'preview' ? 'secondary' : 'ghost'} onClick={() => setView('preview')}>
           Preview
         </Button>
-        <Button type="submit" form="blog-save" disabled={savePending}>
+        <Button type="submit" form="blog-save" pending={savePending}>
           {savePending ? 'Saving' : 'Save draft'}
         </Button>
       </div>
@@ -137,8 +145,8 @@ export function BlogEditor({
           readingTime={body ? readingTimeMinutes(body) : null}
         />
       ) : (
-        <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <form id="blog-save" action={save} className="min-w-0 space-y-6">
+        <div className="grid min-w-0 items-start gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <form id="blog-save" onSubmit={onSaveSubmit} className="min-w-0 space-y-6">
             {hidden}
             <input type="hidden" name="status" value={post?.status === 'published' ? 'published' : 'draft'} />
             <input type="hidden" name="targetTerm" value={targetTerm} />
@@ -182,8 +190,8 @@ export function BlogEditor({
             </FormSection>
           </form>
 
-          <aside className="space-y-6 lg:sticky lg:top-4">
-            <form action={generate} className="space-y-4 rounded-panel border border-neutral-200 p-5">
+          <aside className="space-y-6 xl:sticky xl:top-4">
+            <form onSubmit={onGenerateSubmit} className="space-y-4 rounded-panel border border-neutral-200 p-5">
               <FormSection title="Generate">
                 <Field label="Brief" htmlFor="blog-brief">
                   <Textarea
@@ -207,7 +215,7 @@ export function BlogEditor({
                 <Field label="Related stock" htmlFor="blog-related" hint="Optional">
                   <Input id="blog-related" name="related" />
                 </Field>
-                <Button type="submit" variant="secondary" disabled={genPending}>
+                <Button type="submit" variant="secondary" pending={genPending}>
                   <Icon name="sparkles" />
                   {genPending ? 'Generating' : 'Generate'}
                 </Button>
@@ -265,16 +273,16 @@ export function BlogEditor({
                 />
               </Field>
               {post ? (
-                <form action={uploadCover} className="space-y-4">
+                <form onSubmit={upload.onSubmit} className="space-y-4">
                   <input type="hidden" name="postId" value={post.id} />
                   <input type="hidden" name="coverImageAlt" value={coverAlt} />
                   <Field label="Cover photograph" htmlFor="blog-cover-file">
                     <Input id="blog-cover-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" />
                   </Field>
                   <div className="flex flex-col gap-2">
-                    <Button type="submit" variant="outline" disabled={coverPending}>
+                    <Button type="submit" variant="outline" pending={coverPending || upload.phase !== 'idle'}>
                       <Icon name="upload" />
-                      {coverPending ? 'Uploading' : 'Upload cover'}
+                      {upload.label ?? 'Upload cover'}
                     </Button>
                     {post.coverImage ? (
                       <Button type="button" variant="ghost" onClick={() => setConfirmRemoveCover(true)}>

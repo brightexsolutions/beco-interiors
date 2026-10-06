@@ -16,6 +16,9 @@ import type { UserRole } from '@beco/types';
 
 const ADMINS = ['beco_admin', 'brightex_admin'] as const;
 
+/** beco_admin or brightex_admin: the two roles that act above the counter (D110). */
+export const isAdminRole = (role: UserRole): boolean => (ADMINS as readonly UserRole[]).includes(role);
+
 export type StaffGrant = 'audit';
 
 export interface AccessGrants {
@@ -42,6 +45,8 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/quotes', roles: ['beco_sales', ...ADMINS] },
   { prefix: '/orders', roles: ['beco_sales', ...ADMINS] },
   { prefix: '/products', roles: ['beco_product_manager', ...ADMINS] },
+  // The Drive import rewrites the catalogue from a folder. Brightex runs it (D115).
+  { prefix: '/products/import', roles: ['brightex_admin'] },
   { prefix: '/announcements', roles: [...ADMINS] },
   { prefix: '/reports', roles: [...ADMINS] },
   { prefix: '/leaderboard', roles: [...ADMINS] },

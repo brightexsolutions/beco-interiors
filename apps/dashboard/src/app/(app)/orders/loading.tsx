@@ -6,11 +6,11 @@ export default function Loading() {
       <Skeleton className="h-4 w-16" />
       <Skeleton className="mt-3 h-10 w-44" />
 
-      <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 lg:flex lg:items-end">
-        <Skeleton className="col-span-full h-11 lg:flex-1" />
-        <Skeleton className="h-11 lg:w-40" />
-        <Skeleton className="h-11 lg:w-40" />
-        <Skeleton className="h-11 lg:w-40" />
+      <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 xl:flex xl:items-end">
+        <Skeleton className="col-span-full h-11 xl:flex-1" />
+        <Skeleton className="h-11 xl:w-40" />
+        <Skeleton className="h-11 xl:w-40" />
+        <Skeleton className="h-11 xl:w-40" />
       </div>
 
       <div className="mt-6 space-y-px">

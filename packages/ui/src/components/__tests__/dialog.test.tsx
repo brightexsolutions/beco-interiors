@@ -74,3 +74,37 @@ describe('Dialog', () => {
     expect(screen.getByRole('searchbox', { name: 'Search' })).toHaveFocus();
   });
 });
+
+describe('Dialog with an on screen keyboard', () => {
+  it('pins itself to the visible area while the keyboard is open, so its footer stays above the keys', () => {
+    const listeners: Record<string, () => void> = {};
+    const vv = {
+      height: 420,
+      offsetTop: 60,
+      addEventListener: (type: string, fn: () => void) => {
+        listeners[type] = fn;
+      },
+      removeEventListener: () => {},
+    };
+    const original = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+    Object.defineProperty(window, 'visualViewport', { value: vv, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+    try {
+      setup();
+      const overlay = screen.getByRole('dialog').parentElement!;
+      expect(overlay).toHaveAttribute('data-keyboard-open', 'true');
+      expect(overlay.style.top).toBe('60px');
+      expect(overlay.style.height).toBe('420px');
+    } finally {
+      if (original) Object.defineProperty(window, 'visualViewport', original);
+      else delete (window as { visualViewport?: unknown }).visualViewport;
+    }
+  });
+
+  it('keeps its normal CSS sizing when no keyboard is open', () => {
+    setup();
+    const overlay = screen.getByRole('dialog').parentElement!;
+    expect(overlay).not.toHaveAttribute('data-keyboard-open');
+    expect(overlay.style.top).toBe('');
+  });
+});

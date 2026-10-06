@@ -34,7 +34,7 @@ export function DevQuickLogin({ next }: { next: string }) {
           <form key={account.email} action={action}>
             <input type="hidden" name="next" value={next} />
             <input type="hidden" name="email" value={account.email} />
-            <Button type="submit" variant="outline" className="w-full" disabled={pending}>
+            <Button type="submit" variant="outline" className="w-full" pending={pending}>
               {pending ? 'Signing in' : account.label}
             </Button>
           </form>

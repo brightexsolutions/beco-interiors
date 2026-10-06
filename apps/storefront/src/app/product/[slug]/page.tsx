@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { catalogueOgImage, pageMetadata, productDescription, productTitle, SITE_URL } from '@/lib/seo';
+import { absoluteCatalogueUrl } from '@/lib/image-loader';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import {
   ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn, displayAvailability,
   type GalleryImage, type GalleryRole,
@@ -10,8 +12,11 @@ import { AddToQuote } from '@/components/add-to-quote';
 import { ProductGrid } from '@/components/product-grid';
 import {
   getProductBySlug, getCanonicalProductSlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
+  getCategoryWithTree,
 } from '@/lib/products';
+import { isStoneRange, specNote } from '@/lib/material';
 import { SITE, whatsappLink } from '@/lib/site';
+import { shopSearchFor } from '@/lib/legacy-redirects';
 
 export const revalidate = 3600;
 
@@ -26,26 +31,31 @@ async function loadProduct(slug: string) {
   if (product) return product;
   const canonical = await getCanonicalProductSlug(slug);
   if (canonical) permanentRedirect(`/product/${canonical}`);
-  notFound();
+  // WooCommerce also lived at /product/<slug>, so an unknown slug is most
+  // likely an old listing Google still holds. The shop searched for its words
+  // keeps that visitor, and the 301 passes the page's standing on (D107).
+  permanentRedirect(shopSearchFor(slug));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const product = await loadProduct(slug);
 
-  const image = primaryImage(product);
-  return {
-    // The override column wins, so Beco can tune a page without a deploy.
-    title: product.meta_title ?? `${product.name} sintered stone`,
+  return pageMetadata({
+    // The override columns win, so Beco can tune a page without a deploy.
+    title: product.meta_title ?? productTitle(product.name, product.category?.name),
     description:
       product.meta_description ??
-      product.short_description ??
-      `${product.name} sintered stone slabs, stocked in Nairobi. Heat, scratch and stain resistant. Request a quote from Beco Interiors.`,
-    alternates: { canonical: `/product/${product.slug}` },
-    openGraph: image
-      ? { images: [{ url: image.path, width: image.width, height: image.height }] }
-      : undefined,
-  };
+      productDescription(product.name, product.category?.name, product.short_description),
+    path: `/product/${product.slug}`,
+    // The card is drawn from the product's own primary photograph, as a
+    // JPEG: the catalogue derivatives are WebP, which WhatsApp will not show.
+    image: catalogueOgImage(
+      'product',
+      product.slug,
+      `${product.name}${product.category ? `, ${product.category.name}` : ''}, from Beco Interiors, Nairobi`,
+    ),
+  });
 }
 
 export default async function ProductPage({ params }: Params) {
@@ -69,9 +79,15 @@ export default async function ProductPage({ params }: Params) {
     ),
   }));
 
-  const related = product.category
-    ? await getRelatedProducts(product.category.slug, product.slug)
-    : [];
+  const [related, place] = product.category
+    ? await Promise.all([
+        getRelatedProducts(product.category.slug, product.slug),
+        getCategoryWithTree(product.category.slug),
+      ])
+    : [[], null];
+  // Stone wording only where the range sits under Sintered Stone, so a hinge
+  // is never called a slab. See lib/material.ts for why the tree decides.
+  const stone = isStoneRange(place ? [place.category, ...place.ancestors] : []);
   const hero = primaryImage(product);
   const whatsappIntent = `I'm interested in ${product.name}${product.sku ? ` (${product.sku})` : ''}`;
 
@@ -98,7 +114,7 @@ export default async function ProductPage({ params }: Params) {
       </nav>
 
       <div className="grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(21rem,0.85fr)] lg:gap-14">
-        <ProductGallery images={images} />
+        <ProductGallery images={images} slab={stone} />
 
         <div className="lg:pt-4">
           <h1 className="font-display text-4xl leading-[1.05] text-charcoal sm:text-5xl">
@@ -173,7 +189,7 @@ export default async function ProductPage({ params }: Params) {
             </a>
           </div>
 
-          <dl className="mt-10 flex flex-col gap-1 rounded-[2px] bg-neutral-50 px-6 font-ui text-base">
+          <dl className="mt-10 flex flex-col gap-1 rounded-card bg-neutral-50 px-6 font-ui text-base">
             {product.sku ? <Spec term="SKU" value={product.sku} /> : null}
             {product.category ? <Spec term="Category" value={product.category.name} /> : null}
             {product.face_type ? (
@@ -194,8 +210,7 @@ export default async function ProductPage({ params }: Params) {
               credibility than the gap does. */}
           {Object.keys(product.specs ?? {}).length === 0 ? (
             <p className="mt-4 max-w-[52ch] font-ui text-sm text-neutral-500">
-              Full specification, including slab dimensions and finish options, comes with your
-              quote. Ask and we will send it before you commit to anything.
+              {specNote(stone)}
             </p>
           ) : null}
 
@@ -304,7 +319,9 @@ function ProductSchema(p: {
     name: p.name,
     ...(p.sku ? { sku: p.sku } : {}),
     ...(p.description ? { description: p.description } : {}),
-    ...(p.image ? { image: [new URL(p.image, 'https://www.beco.co.ke').toString()] } : {}),
+    // An absolute derivative, not the bare key: `new URL(key, origin)` gave
+    // a URL with no width and no extension, which is a 404.
+    ...(p.image ? { image: [absoluteCatalogueUrl(p.image, 1600, SITE_URL)] } : {}),
     brand: { '@type': 'Brand', name: SITE.name },
     ...(p.category ? { category: p.category.name } : {}),
     offers: {

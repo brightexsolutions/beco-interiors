@@ -10,6 +10,8 @@ type SupabaseClient = ReturnType<typeof createServerClient>;
  */
 export interface CategoryRow {
   id: string;
+  /** 1 for a major category, 2 for a range under it, 3 for a sub range. */
+  depth: number;
   name: string;
   slug: string;
   description: string | null;
@@ -24,10 +26,18 @@ export interface CategoryRow {
   updatedAt: string;
 }
 
-/** A group with the ranges filed under it, for the tree the admin walks. */
+/** A category with whatever is filed under it, to three levels (D104). */
 export interface CategoryGroupRow extends CategoryRow {
-  children: CategoryRow[];
+  children: CategoryGroupRow[];
 }
+
+/** Every row in a tree, parents before their children. */
+export const flattenCategoryTree = (tree: readonly CategoryGroupRow[]): CategoryGroupRow[] =>
+  tree.flatMap((node) => [node, ...flattenCategoryTree(node.children)]);
+
+/** Products across a node and everything under it. */
+export const subtreeProductCount = (node: CategoryGroupRow): number =>
+  node.productCount + node.children.reduce((sum, child) => sum + subtreeProductCount(child), 0);
 
 // PostgREST cannot be given a hint to pick a direction on a self join: both
 // the constraint name and the column name resolve to the CHILD rows, never
@@ -52,8 +62,9 @@ interface RawRow {
   products: { count: number }[] | null;
 }
 
-const toRow = (raw: RawRow, parentName: string | null, childCount: number): CategoryRow => ({
+const toRow = (raw: RawRow, parentName: string | null, childCount: number, depth: number): CategoryRow => ({
   id: raw.id,
+  depth,
   name: raw.name,
   slug: raw.slug,
   description: raw.description,
@@ -68,8 +79,19 @@ const toRow = (raw: RawRow, parentName: string | null, childCount: number): Cate
   updatedAt: raw.updated_at,
 });
 
-/** The whole taxonomy as a tree: every group, each with its own children.
- *  Two levels only, held up by the same trigger the storefront relies on. */
+const depthOf = (id: string, parentOf: Map<string, string | null>): number => {
+  let depth = 1;
+  let current = parentOf.get(id) ?? null;
+  while (current && depth < 10) {
+    depth += 1;
+    current = parentOf.get(current) ?? null;
+  }
+  return depth;
+};
+
+/** The whole taxonomy as a tree: every major category, its ranges, their
+ *  sub ranges. Three levels at most, held up by the same trigger the
+ *  storefront relies on, migration 58. */
 export async function fetchCategoryTree(supabase: SupabaseClient): Promise<CategoryGroupRow[]> {
   const { data, error } = await supabase
     .from('categories')
@@ -79,24 +101,33 @@ export async function fetchCategoryTree(supabase: SupabaseClient): Promise<Categ
 
   const rows = (data ?? []) as unknown as RawRow[];
   const nameById = new Map(rows.map((row) => [row.id, row.name]));
+  const parentOf = new Map(rows.map((row) => [row.id, row.parent_id]));
   const childCountOf = new Map<string, number>();
   for (const row of rows) {
     if (!row.parent_id) continue;
     childCountOf.set(row.parent_id, (childCountOf.get(row.parent_id) ?? 0) + 1);
   }
 
-  const bySlugRow = rows.map((raw) =>
-    toRow(raw, raw.parent_id ? (nameById.get(raw.parent_id) ?? null) : null, childCountOf.get(raw.id) ?? 0),
+  const flat = rows.map((raw) =>
+    toRow(
+      raw,
+      raw.parent_id ? (nameById.get(raw.parent_id) ?? null) : null,
+      childCountOf.get(raw.id) ?? 0,
+      depthOf(raw.id, parentOf),
+    ),
   );
   const childrenOf = new Map<string, CategoryRow[]>();
-  for (const row of bySlugRow) {
+  for (const row of flat) {
     if (!row.parentId) continue;
     childrenOf.set(row.parentId, [...(childrenOf.get(row.parentId) ?? []), row]);
   }
 
-  return bySlugRow
-    .filter((row) => !row.parentId)
-    .map((group) => ({ ...group, children: childrenOf.get(group.id) ?? [] }));
+  const build = (row: CategoryRow): CategoryGroupRow => ({
+    ...row,
+    children: row.depth >= 3 ? [] : (childrenOf.get(row.id) ?? []).map(build),
+  });
+
+  return flat.filter((row) => !row.parentId).map(build);
 }
 
 export async function fetchCategoryBySlug(
@@ -112,13 +143,15 @@ export async function fetchCategoryBySlug(
   if (!data) return null;
   const raw = data as unknown as RawRow;
 
-  const [{ count }, parent] = await Promise.all([
+  const [{ count }, parent, { data: all }] = await Promise.all([
     supabase.from('categories').select('id', { count: 'exact', head: true }).eq('parent_id', raw.id),
     raw.parent_id
       ? supabase.from('categories').select('name').eq('id', raw.parent_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from('categories').select('id, parent_id'),
   ]);
-  return toRow(raw, parent.data?.name ?? null, count ?? 0);
+  const parentOf = new Map(((all ?? []) as { id: string; parent_id: string | null }[]).map((r) => [r.id, r.parent_id]));
+  return toRow(raw, parent.data?.name ?? null, count ?? 0, depthOf(raw.id, parentOf));
 }
 
 /** Expands a selected row in the ranges panel to every category id its
@@ -131,8 +164,8 @@ export async function fetchCategoryBySlug(
  *  under it yet", which would otherwise both look like an empty array. */
 export function categoryIdsInSelection(tree: CategoryGroupRow[], selectedId: string | null): string[] | null {
   if (!selectedId) return null;
-  const group = tree.find((row) => row.id === selectedId);
-  if (group) return group.children.length > 0 ? group.children.map((child) => child.id) : [group.id];
+  const node = flattenCategoryTree(tree).find((row) => row.id === selectedId);
+  if (node) return flattenCategoryTree([node]).map((row) => row.id);
   return [selectedId];
 }
 
@@ -141,16 +174,34 @@ export interface CategoryParentOption {
   name: string;
 }
 
-/** Groups a new range can be filed under: top level categories with no
- *  parent of their own. A group that already has a parent cannot appear
- *  here, the depth trigger would refuse it anyway. */
+const heightOf = (node: CategoryGroupRow): number =>
+  node.children.length === 0 ? 0 : 1 + Math.max(...node.children.map(heightOf));
+
+/**
+ * Where a category can be filed: a major category or a range under one,
+ * never a sub range, since three levels is the whole taxonomy. When a
+ * category is being edited, itself and everything under it are left out
+ * (a category cannot sit under its own sub range), and so is any parent
+ * that would push its existing sub ranges past the third level. A range
+ * option is named after its major category, "Sintered Stone › 12mm
+ * Sintered Stones", so two ranges called Black cannot be confused.
+ */
+export function categoryParentOptions(tree: CategoryGroupRow[], excludeId?: string): CategoryParentOption[] {
+  const flat = flattenCategoryTree(tree);
+  const editing = excludeId ? flat.find((row) => row.id === excludeId) : undefined;
+  const height = editing ? heightOf(editing) : 0;
+  const excluded = new Set(editing ? flattenCategoryTree([editing]).map((row) => row.id) : []);
+  return flat
+    .filter((row) => row.depth <= 2 && !excluded.has(row.id) && row.depth + 1 + height <= 3)
+    .map((row) => ({
+      id: row.id,
+      name: row.depth === 1 ? row.name : `${row.parentName ?? ''} › ${row.name}`,
+    }));
+}
+
 export async function fetchCategoryGroupOptions(
   supabase: SupabaseClient,
   excludeId?: string,
 ): Promise<CategoryParentOption[]> {
-  let query = supabase.from('categories').select('id,name').is('parent_id', null).order('name');
-  if (excludeId) query = query.neq('id', excludeId);
-  const { data, error } = await query;
-  if (error) throw new Error(`Could not load ranges: ${error.message}`);
-  return (data ?? []) as CategoryParentOption[];
+  return categoryParentOptions(await fetchCategoryTree(supabase), excludeId);
 }

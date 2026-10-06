@@ -60,7 +60,7 @@ export function RangePillarList({ items, className }: RangePillarListProps) {
         const visual = (
           <div
             className={cn(
-              'relative hidden aspect-[4/3] w-full overflow-hidden bg-charcoal sm:block',
+              'relative hidden aspect-[4/3] w-full overflow-hidden rounded-card bg-charcoal sm:block',
               item.href && 'transition-transform duration-500 ease-brand group-hover:scale-[1.03]',
             )}
           >
@@ -69,7 +69,7 @@ export function RangePillarList({ items, className }: RangePillarListProps) {
                 <p className="font-display text-xl leading-tight text-high-vis-white/70">{item.title}</p>
               </div>
             )}
-            <span aria-hidden className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-charcoal/15" />
+            <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
           </div>
         );
 

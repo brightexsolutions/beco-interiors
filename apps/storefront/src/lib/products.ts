@@ -109,17 +109,27 @@ export interface Category {
   description: string | null;
   /** Drive folder of origin. The category's identity, not its slug. */
   source_path: string | null;
-  /** The group this sits under, or null for a group and for Lighting. */
+  /** The group this sits under, or null for a group or a top level range. */
   parent_id: string | null;
   product_count: number;
 }
 
-/** A top level category with whatever sits under it. See migration 19. */
+/**
+ * A category with whatever sits under it, to three levels: a group, its
+ * ranges, their sub ranges. See migrations 19 and 58, D52 and D104.
+ */
 export interface CategoryGroup extends Category {
-  children: Category[];
+  children: CategoryGroup[];
   /** Products across the whole subtree, which is what the reader counts. */
   total_count: number;
 }
+
+/** Every category in a subtree, the root first, then depth first. */
+export const flattenTree = (nodes: readonly CategoryGroup[]): CategoryGroup[] =>
+  nodes.flatMap((node) => [node, ...flattenTree(node.children)]);
+
+/** The slugs a product can carry to count as "in" this category. */
+export const subtreeSlugs = (node: CategoryGroup): string[] => flattenTree([node]).map((c) => c.slug);
 
 const CATEGORY_COLUMNS = 'id,name,slug,description,source_path,parent_id,products(count)';
 
@@ -169,19 +179,20 @@ export const getAllCategories = async (): Promise<Category[]> => {
 };
 
 /**
- * The taxonomy as two levels, which is how a specifier actually looks.
+ * The taxonomy as a tree, which is how a specifier actually looks.
  *
  * Nobody arrives wanting "Bamboo Veneer Wall Panels". They arrive wanting
  * panels, and only then care which kind. Fifteen flat facets in one row asked
  * the reader to hold the whole range in their head to find anything.
  *
  * A top level category with no children is returned as a group of one with an
- * empty `children`, so Lighting does not need a wrapper group invented for it
+ * empty `children`, so a lone top level range needs no wrapper group invented for it
  * and callers do not need a second code path. `total_count` is the subtree
  * total, because that is the number a reader is counting.
  *
- * Depth is guaranteed to be two by a trigger, per migration 19, so this does
- * not recurse.
+ * Depth is capped at three by a trigger, migration 58, so the recursion is
+ * bounded. A child whose parent is not in the list (an unpublished parent is
+ * invisible to anon) is dropped rather than surfaced as a group.
  */
 export const buildCategoryTree = (all: Category[]): CategoryGroup[] => {
   const childrenOf = new Map<string, Category[]>();
@@ -190,17 +201,16 @@ export const buildCategoryTree = (all: Category[]): CategoryGroup[] => {
     childrenOf.set(c.parent_id, [...(childrenOf.get(c.parent_id) ?? []), c]);
   }
 
-  return all
-    .filter((c) => !c.parent_id)
-    .map((parent) => {
-      const children = childrenOf.get(parent.id) ?? [];
-      return {
-        ...parent,
-        children,
-        total_count:
-          parent.product_count + children.reduce((n, c) => n + c.product_count, 0),
-      };
-    });
+  const build = (node: Category, depth: number): CategoryGroup => {
+    const children = depth >= 3 ? [] : (childrenOf.get(node.id) ?? []).map((c) => build(c, depth + 1));
+    return {
+      ...node,
+      children,
+      total_count: node.product_count + children.reduce((n, c) => n + c.total_count, 0),
+    };
+  };
+
+  return all.filter((c) => !c.parent_id).map((root) => build(root, 1));
 };
 
 export const getCategoryTree = async (): Promise<CategoryGroup[]> =>
@@ -222,7 +232,7 @@ export const imageForGroup = (
 ): ProductImage | undefined => {
   const group = groups.find((g) => g.slug === slug);
   if (!group) return undefined;
-  const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+  const inGroup = new Set(subtreeSlugs(group));
   for (const p of products) {
     if (!p.category || !inGroup.has(p.category.slug)) continue;
     const shot = orderedImages(p).find((img) => img.role === 'application') ?? primaryImage(p);
@@ -253,7 +263,7 @@ export const imagesForGroup = (
 ): ProductImage[] => {
   const group = groups.find((g) => g.slug === slug);
   if (!group) return [];
-  const inGroup = new Set([group.slug, ...group.children.map((c) => c.slug)]);
+  const inGroup = new Set(subtreeSlugs(group));
   const matched = products.filter((p) => p.category && inGroup.has(p.category.slug));
 
   const shots: ProductImage[] = [];
@@ -506,6 +516,13 @@ export const getRelatedProducts = async (
 };
 
 /** Published product slugs, for generateStaticParams. */
+/** Slug and last change, for the sitemap's `lastModified`. */
+export const getProductSitemapEntries = async (): Promise<{ slug: string; updated_at: string }[]> => {
+  const { data, error } = await anon().from('products').select('slug,updated_at');
+  if (error) throw new Error(`could not load sitemap entries: ${error.message}`);
+  return (data ?? []).map((r) => ({ slug: r.slug as string, updated_at: r.updated_at as string }));
+};
+
 export const getProductSlugs = async (): Promise<string[]> => {
   const { data, error } = await anon().from('products').select('slug');
   if (error) throw new Error(`could not load slugs: ${error.message}`);
@@ -539,25 +556,32 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
  * `parent` is carried for the breadcrumb, which otherwise skips a level and
  * tells search engines the tree is flatter than it is.
  */
-export const getCategoryWithTree = async (
-  slug: string,
-): Promise<{ category: Category; parent: Category | null; children: Category[] } | null> => {
-  const category = await getCategoryBySlug(slug);
-  if (!category) return null;
+export interface CategoryPlace {
+  category: CategoryGroup;
+  /** The nearest category above, or null at the top. */
+  parent: Category | null;
+  /** Every category above, top first, for the breadcrumb. */
+  ancestors: Category[];
+  children: CategoryGroup[];
+}
 
-  const { data, error } = await anon()
-    .from('categories')
-    .select(CATEGORY_COLUMNS)
-    .eq('parent_id', category.id)
-    .order('sort_order');
-  if (error) throw new Error(`could not load child categories: ${error.message}`);
-
-  let parent: Category | null = null;
-  if (category.parent_id) parent = (await getAllCategories())
-    .find((c) => c.id === category.parent_id) ?? null;
-
-  return { category, parent, children: (data ?? []).map((c) => withCount(c as never)) };
+/** Where one slug sits in a built tree, or null when it is not there. */
+export const placeInTree = (tree: readonly CategoryGroup[], slug: string): CategoryPlace | null => {
+  const walk = (nodes: readonly CategoryGroup[], ancestors: Category[]): CategoryPlace | null => {
+    for (const node of nodes) {
+      if (node.slug === slug) {
+        return { category: node, parent: ancestors[ancestors.length - 1] ?? null, ancestors, children: node.children };
+      }
+      const found = walk(node.children, [...ancestors, node]);
+      if (found) return found;
+    }
+    return null;
+  };
+  return walk(tree, []);
 };
+
+export const getCategoryWithTree = async (slug: string): Promise<CategoryPlace | null> =>
+  placeInTree(buildCategoryTree(await getAllCategories()), slug);
 
 export const getCategorySlugs = async (): Promise<string[]> => {
   const { data, error } = await anon().from('categories').select('slug');
@@ -621,10 +645,7 @@ export const getPublicTeam = async (): Promise<TeamMember[]> => {
  * never disagree about which pages exist for search.
  */
 export const indexableCategories = (tree: CategoryGroup[]): Category[] =>
-  tree.flatMap((group) => [
-    ...(group.total_count > 0 ? [group as Category] : []),
-    ...group.children.filter((child) => child.product_count > 0),
-  ]);
+  flattenTree(tree).filter((node) => node.total_count > 0);
 
 export const getIndexableCategories = async (): Promise<Category[]> =>
   indexableCategories(buildCategoryTree(await getAllCategories()));
