@@ -9,6 +9,7 @@ import { ProductResults } from '@/components/product-results';
 import { categoryIdsInSelection, categoryParentOptions, fetchCategoryTree, flattenCategoryTree } from '@/lib/categories';
 import { fetchProductBySlug, fetchProductCategories, fetchProducts, type ProductListFilters } from '@/lib/products';
 import { canAccess } from '@/lib/access';
+import { QueryNavigationProvider } from '@/lib/use-query-navigation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import type { Availability } from '@beco/types';
@@ -84,23 +85,27 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           </>
         }
       />
-      <CatalogueRanges
-        tree={tree}
-        groupOptions={groupOptions}
-        editing={editingRange}
-        creating={creatingRange}
-        selectedId={selectedCategoryId}
-        createParentId={one(params.parent) || null}
-      />
-      <Panel>
-        <TableToolbar
-          filters={<ProductFilters />}
-          count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`}
+      {/* One transition for the pills, the filters and the list, so a tap on
+          any of them dims the list and shows Busy. D117. */}
+      <QueryNavigationProvider>
+        <CatalogueRanges
+          tree={tree}
+          groupOptions={groupOptions}
+          editing={editingRange}
+          creating={creatingRange}
+          selectedId={selectedCategoryId}
+          createParentId={one(params.parent) || null}
         />
-        <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
-          <ProductResults products={products} editing={editing} creating={creating} categories={productCategories} />
-        </div>
-      </Panel>
+        <Panel>
+          <TableToolbar
+            filters={<ProductFilters />}
+            count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`}
+          />
+          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+            <ProductResults products={products} editing={editing} creating={creating} categories={productCategories} />
+          </div>
+        </Panel>
+      </QueryNavigationProvider>
     </>
   );
 }

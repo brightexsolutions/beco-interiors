@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -19,6 +18,7 @@ import {
 import { ProductEditor } from '@/components/product-editor';
 import { ProductCreate } from '@/components/product-create';
 import { ProductThumb } from '@/components/product-thumb';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import {
   isLowStock,
   productAvailabilityLabel,
@@ -168,8 +168,9 @@ export function ProductResults({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the range pills and the filter row on this page, so the
+  // table dims for a navigation any of them starts. D117.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(products, requestedPage);
 
@@ -189,15 +190,15 @@ export function ProductResults({
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   const closeSheet = () => {
-    startTransition(() => router.push(withParam('edit', null, ['new'])));
+    navigate(() => router.push(withParam('edit', null, ['new'])));
   };
 
   const refresh = () => {
-    startTransition(() => router.refresh());
+    navigate(() => router.refresh());
   };
 
   const sheetOpen = Boolean(editing) || creating;
@@ -259,7 +260,14 @@ export function ProductResults({
         />
       </div>
 
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
+      {/* The cards dim like the table does, since below xl they are the list. */}
+      <ul
+        aria-busy={isPending || undefined}
+        className={cn(
+          'grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden transition-opacity duration-200 xl:hidden',
+          isPending && 'opacity-50',
+        )}
+      >
         {paged.items.map((product) => (
           <ProductCard key={product.id} product={product} href={editHref(product.slug)} />
         ))}
