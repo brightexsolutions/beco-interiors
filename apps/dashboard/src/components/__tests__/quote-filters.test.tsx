@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 
@@ -19,47 +19,61 @@ const ownerOptions = [
   { value: 'unassigned' as const, label: 'Unassigned' },
 ];
 
+/** What a filter control draws for a sighted reader: its caption, then its value. */
+const shown = (select: HTMLElement) =>
+  [...select.closest('label')!.querySelectorAll(':scope > span')].map((span) => span.textContent);
+
 beforeEach(() => {
   push.mockReset();
   params = new URLSearchParams();
 });
 
-describe('QuoteFilters on a phone: chips', () => {
-  it('filters status in one tap, and tapping the active chip clears it', async () => {
-    const user = userEvent.setup();
+describe('QuoteFilters on a phone and tablet: captioned selects, no wrapping pills', () => {
+  it('is one select per filter, each showing its caption and current value, and no chip groups', () => {
+    params = new URLSearchParams('status=won');
     render(<QuoteFilters ownerOptions={ownerOptions} />);
-    const status = screen.getByRole('group', { name: 'Status' });
-    await user.click(within(status).getByRole('button', { name: 'Quoted' }));
-    expect(push).toHaveBeenLastCalledWith('/quotes?status=quoted');
+    expect(screen.queryAllByRole('group')).toHaveLength(0);
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    const status = screen.getByLabelText('Filter by status');
+    expect(status).toHaveValue('won');
+    expect(shown(status)).toEqual(['Status', 'Won']);
+    expect(shown(screen.getByLabelText('Filter by owner'))).toEqual(['Owner', 'Assigned to me']);
+    expect(shown(screen.getByLabelText('Filter by source'))).toEqual(['Source', 'Any']);
   });
 
-  it('clears status when the pressed chip is tapped again', async () => {
+  it('lays owner and status side by side, source then the count beside it, three across from md', () => {
+    render(<QuoteFilters ownerOptions={ownerOptions} count="8 quotes" />);
+    const grid = screen.getByLabelText('Filter by status').closest('[data-filter-grid]') as HTMLElement;
+    expect(grid).toHaveClass('grid-cols-2', 'md:grid-cols-[repeat(3,minmax(0,1fr))_auto]', 'xl:flex');
+    const cells = [...grid.children].map((cell) => {
+      const select = cell.querySelector('select');
+      return select ? shown(select).join(': ') : cell.textContent;
+    });
+    expect(cells).toEqual(['Owner: Assigned to me', 'Status: Any', 'Source: Any', '8 quotes']);
+  });
+
+  it('filters status from the select, and choosing Any clears it, as the chips did', async () => {
     params = new URLSearchParams('status=won');
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
-    const status = screen.getByRole('group', { name: 'Status' });
-    expect(within(status).getByRole('button', { name: 'Won' })).toHaveAttribute('aria-pressed', 'true');
-    await user.click(within(status).getByRole('button', { name: 'Won' }));
+    await user.selectOptions(screen.getByLabelText('Filter by status'), '');
     expect(push).toHaveBeenLastCalledWith('/quotes');
   });
 
-  it('switches owner from a chip and source from the phone select (D112)', async () => {
+  it('switches owner and source, writing the same params', async () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
-    await user.click(within(screen.getByRole('group', { name: 'Owner' })).getByRole('button', { name: 'Unassigned' }));
+    await user.selectOptions(screen.getByLabelText('Filter by owner'), 'unassigned');
     expect(push).toHaveBeenLastCalledWith('/quotes?owner=unassigned');
-    await user.selectOptions(screen.getByLabelText('Filter by source, phone'), 'web');
+    await user.selectOptions(screen.getByLabelText('Filter by source'), 'web');
     expect(push).toHaveBeenLastCalledWith('/quotes?source=web');
-    // Source is not a chip row any more: five options is a select's job.
-    expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
   });
 
   it('falls back to the first owner when the URL carries an empty owner', () => {
     params = new URLSearchParams('owner=');
     render(<QuoteFilters ownerOptions={ownerOptions} />);
-    expect(
-      within(screen.getByRole('group', { name: 'Owner' })).getByRole('button', { name: 'Assigned to me' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('Filter by owner')).toHaveValue('mine');
+    expect(shown(screen.getByLabelText('Filter by owner'))).toEqual(['Owner', 'Assigned to me']);
   });
 });
 
@@ -67,7 +81,8 @@ describe('QuoteFilters', () => {
   it('offers Website as the source label, still filtering on the stored web value', async () => {
     const user = userEvent.setup();
     render(<QuoteFilters ownerOptions={ownerOptions} />);
-    // Two selects, one for desktop and one for the phone; either filters the same way.
+    // One select at every width now; the phone no longer carries a duplicate.
+    expect(screen.getAllByRole('option', { name: 'Website' })).toHaveLength(1);
     const source = screen.getByLabelText('Filter by source');
     for (const option of screen.getAllByRole('option', { name: 'Website' })) expect(option).toHaveValue('web');
     expect(screen.queryByRole('option', { name: 'Web' })).toBeNull();
