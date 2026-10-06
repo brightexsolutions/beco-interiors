@@ -78,8 +78,7 @@ export default function PrivacyPage() {
               run parts of this site for us and handle data only on our instructions: Supabase
               stores quotes and orders in Ireland, in the EU; Vercel hosts the site; Resend sends
               our emails; Cloudflare serves our domain and product photographs; Google provides
-              the analytics below; and Brightex Solutions, in Nairobi, builds and maintains the
-              site. If an order needs delivering, we share your name, phone number and address
+              the analytics below; and Brightex Solutions builds and maintains the site. If an order needs delivering, we share your name, phone number and address
               with whoever is making that delivery.
             </p>
           </LegalSection>
