@@ -54,7 +54,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <aside className="min-w-0 space-y-6 border-b border-neutral-200 pb-6 xl:col-start-2 xl:row-start-1 xl:border-b-0 xl:border-l xl:pb-0 xl:pl-8">
           <div>
-            <h2 className={RAIL_HEADING}>Contact</h2>
+            <h2 className={RAIL_HEADING}>Reach them</h2>
             <div className="mt-2">
               <CustomerContact phone={customer.phone} email={customer.email} reference={customer.name} kind="customer" />
             </div>

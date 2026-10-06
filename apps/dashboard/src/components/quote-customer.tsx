@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Button, Dialog, toast } from '@beco/ui';
 import { linkQuoteCustomer } from '@/app/(app)/quotes/actions';
-import { CustomerCard } from '@/components/customer-card';
+import Link from 'next/link';
 import { CustomerCreate } from '@/components/customer-create';
 import { CustomerPicker } from '@/components/customer-picker';
 import type { CustomerSummary } from '@/lib/customer-search';
@@ -72,7 +72,22 @@ export function QuoteCustomer({
   return (
     <div>
       {customer ? (
-        <CustomerCard customer={customer} action={action} />
+        // The snapshot above already prints the name and numbers, so the
+        // record is one line: whose it is, a link there, and the KRA PIN
+        // that will print on the documents.
+        <div className="flex items-center justify-between gap-3 border-l-4 border-charcoal bg-neutral-50 px-3 py-2 font-ui">
+          <p className="min-w-0 text-sm text-neutral-500">
+            Record{' '}
+            <Link
+              href={`/customers/${customer.id}`}
+              className="font-semibold text-charcoal underline decoration-neutral-300 underline-offset-4 [overflow-wrap:anywhere] hover:decoration-charcoal"
+            >
+              {customer.name}
+            </Link>
+            {customer.kraPin ? <span className="block tabular-nums">KRA PIN {customer.kraPin}</span> : null}
+          </p>
+          {action}
+        </div>
       ) : (
         <div className="flex items-center justify-between gap-3 border-l-4 border-neutral-200 px-3 py-2">
           <p className="font-ui text-sm text-neutral-500">No customer record linked.</p>

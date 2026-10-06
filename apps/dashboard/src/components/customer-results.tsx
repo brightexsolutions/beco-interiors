@@ -41,13 +41,14 @@ export function CustomerFilters({ count, showSpent }: { count?: string | undefin
   return (
     <ListFilters
       searchLabel="Search customers"
-      searchPlaceholder="Name, phone, company or KRA PIN"
+      searchPlaceholder="Name, phone, company, PIN"
       count={count}
       filters={[
         { param: 'type', label: 'Type', options: TYPE_OPTIONS },
         {
           param: 'sort',
           label: 'Sort',
+          accessibleName: 'Sort customers',
           options: showSpent ? SORT_OPTIONS : SORT_OPTIONS.filter((option) => option.value !== 'spent'),
           fallback: 'recent',
         },

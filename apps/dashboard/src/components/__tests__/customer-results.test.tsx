@@ -104,7 +104,7 @@ describe('CustomerFilters (D130)', () => {
     const user = userEvent.setup();
     render(<CustomerFilters showSpent />);
     const search = screen.getByRole('searchbox', { name: 'Search customers' });
-    expect(search).toHaveAttribute('placeholder', 'Name, phone, company or KRA PIN');
+    expect(search).toHaveAttribute('placeholder', 'Name, phone, company, PIN');
     await user.type(search, 'A123');
     await new Promise((r) => setTimeout(r, 400));
     expect(push).toHaveBeenLastCalledWith('/customers?search=A123');
