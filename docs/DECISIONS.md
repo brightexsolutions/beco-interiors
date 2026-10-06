@@ -2996,3 +2996,26 @@ import: a second set of files for one use, and no logo on it.
 
 *Reverses if:* a scraper Beco cares about is seen rejecting the generated JPEGs, or the image host
 moves to img.beco.co.ke and a ready made JPEG derivative becomes cheaper than drawing one.
+
+## D127, 6 October 2026: production moves onto beco-prod
+
+**Found.** Both Vercel projects' Production environment pointed at `beco-staging`. The live
+www.beco.co.ke and dashboard.beco.co.ke had been reading and writing the staging database since
+they were first deployed, in breach of rule 6. `beco-prod` was empty: no tables, no accounts, no
+migrations. Staging held one account and one web quote.
+
+**Done, on Brown's instruction.** Staging was dumped first (`~/beco-backups/2026-10-05`, schema
+and data). `beco-prod` took migrations 1 to 53, the seed rows those migrations write were
+cleared, staging's data was loaded with triggers suspended, then migrations 54 to 62 ran over
+it, so they transformed real data exactly as they will anywhere else. Every copied table
+matched staging row for row, the quote sequence included; `beco-prod` and a local stack at 62
+agree on 21 tables, 0 without RLS, 55 policies. Vercel Production was repointed, both apps
+deployed from `main` at `f6e69ff`. No quote reached staging during the switch. pgTAP was not
+run against `beco-prod`: nothing tests against production data.
+
+**What it changes.** `beco-staging` is staging again and now at migration 62, but it still holds
+a copy of production's one account and one quote; reseed it from `supabase/seed.sql` before
+anyone else is given staging access. pgTAP is installed on staging but `supabase test db
+--linked` cannot see it through the CLI's temporary login role, so the remote test run is open.
+
+*Reverses if:* never. Production stays on `beco-prod`.
