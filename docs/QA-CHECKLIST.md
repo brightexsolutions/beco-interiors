@@ -354,10 +354,11 @@ real phone** (M5 section D).
 |---|---|---|
 | New quote | Phone: the raised tile in the bottom bar. Desktop: the charcoal button in the heading (D113). Both navigate to `/quotes/new`; the pill that floated over the table's Actions column is retired | Test: `bottom-nav.test.tsx`; the heading link is a plain anchor |
 | Search | Debounced, narrows to a matching name, phone or reference | **Server** confirmed: `?search=Mutua` returned exactly that quote |
-| Status / source filters | Narrow the row set via the URL. The `web` source is labelled Website. Below lg they are chip rows (owner, status, source), tap the active chip to clear | **Server** confirmed: `?status=quoted`, `?owner=unassigned` each returned the right subset and count. `QuoteFilters` tested, chips included |
+| Owner / status / source filters | Narrow the row set via the URL. The `web` source is labelled Website. At every width each is a captioned select, "Status / Any"; choosing Any clears the param (D129). On a phone owner and status side by side, source with the count beside it | **Server** 6 Oct: `?owner=unassigned` returned 4 quotes, count changed; status changed the URL. `QuoteFilters`, `ListFilters` tested |
+| Filter feedback | While a filter change loads the rows (phone) or the table (desktop) dim with `aria-busy` and Updating stands where the count was | **Server** 6 Oct, navigation delayed 3s: the row list at 390 and the table at 1280 dimmed, Updating shown. Test: `list-feedback.test.tsx` |
 | Needs approval chip | `?approval=pending`, linked from home. A removable chip says the filter is on | **Server** confirmed |
 | Owner filter, per role | `beco_sales` gets Mine / I'm preparing / Unassigned; admins additionally get Everyone | **Server** confirmed for both a sales and an admin session |
-| Row / card "View" | Navigates to the real quote detail. Desktop: underlined quote number plus a View control in the last column. Phone: the card itself is the View link | `QuoteResults` tested |
+| Row "View" | Navigates to the real quote detail. Desktop: underlined quote number plus a View control in the last column. Phone: the row itself is the View link, a new quote marked by a charcoal edge (D129) | `QuoteResults`, `ListRows` tested |
 | Pagination | Previous / Next. Eight quotes a page. Page lives in `?page=`. Hidden when everything fits on one page. Changing a filter returns to page 1 | `QuoteResults` and `QuoteFilters` tested |
 | Needs approval / Expired badges | Show exactly when `requires_approval` and `isExpired()` say so | **Server** confirmed against the seeded discounted and expired fixtures |
 | Empty state | Renders when a filter matches nothing | **Server** confirmed: `?search=nonexistentxyz` |
@@ -372,7 +373,7 @@ real phone** (M5 section D).
 | Customer fields | Name and phone required, email optional, source Walk in or Phone | Written into `create_counter_quote` |
 | Save quote | Disabled until there is a line, reason shown. Primary in the heading on desktop; on a phone it lives in a sticky action bar with the item count and total, which steps aside while the keyboard is open | Tested: disabled until a line, bar count and total update |
 | Returning customer (28 September) | Searches earlier quotes by name, phone, email or company, merged by phone in any format. Picking one fills name, phone and email; Clear empties them | `CustomerFinder`, `searchCustomers`, `dedupeCustomers` tested. **Server** confirmed against local seed data |
-| Catalogue picker ranges | One `Select` beside the search: All ranges, then each range holding products with its count, nested ranges under their parent's optgroup; empty ranges absent. Combines with search. Only the product list scrolls, controls and the Add footer stay put, so the list is reachable at 390, 820 and a laptop 800px tall (D112). Rows show the product photograph | `CataloguePicker` tested. **Server** measured |
+| Catalogue picker ranges | One `Select` beside the search: All ranges, then each range holding products with its count, nested ranges under their parent's optgroup; empty ranges absent. Combines with search. The catalogue loads once when the dialog opens ("Loading the catalogue", or "Could not load the catalogue." with Try again); changing the range or typing then filters on the phone with no network request. Only the product list scrolls, controls and the Add footer stay put, so the list is reachable at 390, 820 and a laptop 800px tall (D112). Rows show the product photograph | `CataloguePicker` tested. **Server** measured. One load on open, then range and search change the list in the same event with no request, observed on the dev server at 390 and 1280 against 276 published products (6 October 2026) |
 | Keyboard | A focused field scrolls into the visible area once the keyboard settles; the picker dialog fits above the keyboard | `KeyboardAwareFocus` and `Dialog` tested in jsdom. **NOT walked on a real phone**, and it can only be proven on one |
 
 ### `/quotes/[reference]`
@@ -472,10 +473,10 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 | Control | What it does | Status |
 |---|---|---|
 | Search | Debounced, rewrites `?search=`, list re-filters by name, phone or reference | Test: `OrderFilters` |
-| Status / Payment / Source | Narrow the row set via the URL. `web` is labelled Website. Below lg: owner, payment and status as chip rows | Test: `OrderFilters`, chips included |
+| Status / Payment / Source | Narrow the row set via the URL. `web` is labelled Website. Captioned selects at every width, two by two on a phone, four across from md, one row with search from xl (D129). The rows dim while a change loads | Test: `OrderFilters`, `list-feedback.test.tsx`. **Server** 6 Oct: `?payment=unpaid` written, Updating shown, no overflow at 1280 |
 | Owner filter, per role | Sales defaults to Assigned to me. Admins default to Everyone | Test: `OrderFilters`. Page wires the options |
 | Desktop table | Order, Customer, Status, Payment, Owner, Source, Raised, Value, Actions. Actions is icon plus View | Test: `OrderResults` |
-| Order cards | Phone only. The card itself is View. No horizontal scroll | Test: `OrderResults` |
+| Order rows | Below xl. The row itself is View, rows divided by a rule, not cards (D129). No horizontal scroll | Test: `OrderResults` |
 | Pagination | Previous / Next. Page lives in `?page=` | Test: `OrderResults` |
 | Empty state | Convert a won quote, or clear the search. No New order control | Test: `OrderResults` |
 | Line items | Item / Qty / Unit / Line on desktop. Phone: name, then qty × unit and line. Catalogue strike under the name. Totals sit under Line | Test: `OrderLines` |
@@ -510,7 +511,7 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 | Control | What it does | Status |
 |---|---|---|
 | Search | Debounced, rewrites `?search=`, list re-filters by name or email | Test: `UserFilters` |
-| Role / Status | Narrow the row set via the URL | Test: `UserFilters` |
+| Role / Status | Narrow the row set via the URL. Captioned selects; the phone table dims while a change loads (D129) | Test: `UserFilters` |
 | Desktop table | Name, Email, Role, Status, Last login, Actions. Actions is icon plus View | Test: `UserResults` |
 | Phone table | Name, Status, Actions. No cards. No horizontal scroll | Test: `UserResults` |
 | View | Opens the detail sheet at `?user=id` | Test: `UserResults` |
@@ -531,7 +532,7 @@ D110: as `beco_sales`, an order shows Confirm, Fulfil and Mark paid and no Cance
 | Control | What it does | Status |
 |---|---|---|
 | On the site now | The live bar as a visitor sees it, highest priority first, or "Nothing is live" | `AnnouncementPreview` tested. **Server** screenshot |
-| Search / Type / Window | URL filters. One row from `lg` | Test: `AnnouncementFilters` |
+| Search / Type / Window | URL filters, captioned selects, one row from `xl`. Rows dim while a change loads (D129) | Test: `AnnouncementFilters` |
 | Desktop table | Title, Type, Dates, Priority, Status, Actions. Actions is icon plus Edit | Test: `AnnouncementResults` |
 | Cards | Phone only. The card is Edit | Test: `AnnouncementResults` |
 | New announcement | Charcoal labelled FAB | Test: `NewAnnouncementFab` |
@@ -598,7 +599,7 @@ Brightex only. Irene, sales, and a `can_write_blog` flag cannot load it.
 
 | Control | What it does | Status |
 |---|---|---|
-| Search / Status | URL filters. One row from `lg` | Test: `BlogFilters` |
+| Search / Status | URL filters, captioned select, one row from `xl`. Rows dim while a change loads (D129) | Test: `BlogFilters` |
 | Desktop table | Title, Status, Search term, Updated, Actions. Actions is icon plus Edit | Test: `BlogResults` |
 | Cards | Phone only. The card is Edit | Test: `BlogResults` |
 | New article | Charcoal labelled FAB to `/studio/blog/new` | Test: `NewBlogFab` |
@@ -616,7 +617,7 @@ Brightex by default. A granted user (`can_read_audit`) can also load it. Irene c
 
 | Control | What it does | Status |
 |---|---|---|
-| Search / Entity / Action | URL filters. One row from `lg` | Test: `AuditFilters` |
+| Search / Entity / Action | URL filters, captioned selects, one row from `xl`. Rows dim while a change loads (D129) | Test: `AuditFilters` |
 | Desktop table | When, Who, Action, Entity, Actions. Actions is icon plus View | Test: `AuditResults` |
 | Cards | Phone only. The card is View | Test: `AuditResults` |
 | View | Sheet with labelled before / after rows, not JSON. Close uses the x icon | Test: `AuditResults`, `formatAuditFields` |

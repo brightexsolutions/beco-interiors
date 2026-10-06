@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -14,6 +13,8 @@ import {
   paginate,
   type DataTableColumn,
 } from '@beco/ui';
+import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import { ORDER_SOURCE_LABEL, ORDER_STATUS, PAYMENT_STATUS, type OrderListItem } from '@/lib/orders';
 
 const money = (n: number) =>
@@ -131,56 +132,36 @@ const columns: DataTableColumn<OrderListItem>[] = [
   },
 ];
 
-function OrderCard({ order }: { order: OrderListItem }) {
+function OrderRow({ order }: { order: OrderListItem }) {
   return (
-    <li>
-      <Link
-        href={`/orders/${order.referenceNumber}`}
-        aria-label={`View ${order.referenceNumber}`}
-        className="group flex items-stretch gap-3 overflow-hidden rounded-panel border border-neutral-200 py-3 pl-4 pr-3 transition-shadow hover:shadow-panel active:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
-      >
-        {/* The customer owns a row and wraps; the figure sits with the status
-            on the next, so nothing is cut to make room (D112). */}
-        <div className="min-w-0 flex-1">
-          <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{order.customerName}</p>
-          <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
-            <span className="tabular-nums">{order.referenceNumber}</span> · {order.customerPhone}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-            <p className="font-ui text-base font-semibold text-charcoal">
-              <ValueCell order={order} />
-            </p>
-            <BadgeRow order={order} />
-          </div>
-          <p className="mt-1.5 font-ui text-sm text-neutral-500">
-            {order.salespersonName ?? 'Unassigned'}
-            <span className="ml-2 whitespace-nowrap tabular-nums">
-              {formatDate(order.createdAt)}, {formatTime(order.createdAt)}
-            </span>
-          </p>
-        </div>
-        <svg
-          aria-hidden
-          viewBox="0 0 24 24"
-          className="h-5 w-5 shrink-0 self-center text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal motion-reduce:transition-none"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      </Link>
-    </li>
+    <ListRowLink href={`/orders/${order.referenceNumber}`} label={`View ${order.referenceNumber}`}>
+      {/* The customer owns a row and wraps; the figure sits with the status
+          on the next, so nothing is cut to make room (D112). */}
+      <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{order.customerName}</p>
+      <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
+        <span className="tabular-nums">{order.referenceNumber}</span> · {order.customerPhone}
+      </p>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+        <p className="font-ui text-base font-semibold text-charcoal">
+          <ValueCell order={order} />
+        </p>
+        <BadgeRow order={order} />
+      </div>
+      <p className="mt-1.5 font-ui text-sm text-neutral-500">
+        {order.salespersonName ?? 'Unassigned'}
+        <span className="ml-2 whitespace-nowrap tabular-nums">
+          {formatDate(order.createdAt)}, {formatTime(order.createdAt)}
+        </span>
+      </p>
+    </ListRowLink>
   );
 }
 
 export function OrderResults({ orders }: { orders: OrderListItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the filter row (D117), so a filter change dims the list.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(orders, requestedPage);
 
@@ -189,15 +170,17 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   if (orders.length === 0) {
     return (
-      <EmptyState
-        title="No orders here"
-        description="Nothing matches this filter yet. Convert a won quote, or clear the search."
-      />
+      <BusyRegion busy={isPending}>
+        <EmptyState
+          title="No orders here"
+          description="Nothing matches this filter yet. Convert a won quote, or clear the search."
+        />
+      </BusyRegion>
     );
   }
 
@@ -213,11 +196,11 @@ export function OrderResults({ orders }: { orders: OrderListItem[] }) {
         />
       </div>
 
-      <ul className="grid gap-2 xl:hidden">
+      <ListRows busy={isPending} label="Orders">
         {paged.items.map((order) => (
-          <OrderCard key={order.id} order={order} />
+          <OrderRow key={order.id} order={order} />
         ))}
-      </ul>
+      </ListRows>
 
       <Pagination
         className="mt-4 xl:px-5 xl:pb-4"

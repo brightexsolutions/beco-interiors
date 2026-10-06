@@ -26,9 +26,9 @@ describe('UserFilters', () => {
     expect(push).toHaveBeenCalledWith('/users?role=beco_sales');
   });
 
-  it('puts search and the two filters on one row from lg', () => {
+  it('puts search and the two filters on one row from xl', () => {
     const { container } = render(<UserFilters />);
-    expect(container.firstChild).toHaveClass('xl:flex');
+    expect(container.firstChild).toHaveClass('xl:flex-row');
   });
 
   it('has no accessibility violations', async () => {

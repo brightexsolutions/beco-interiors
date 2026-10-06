@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -14,6 +13,8 @@ import {
   paginate,
   type DataTableColumn,
 } from '@beco/ui';
+import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, isExpired, type QuoteListItem } from '@/lib/quotes';
 
 /**
@@ -138,64 +139,44 @@ const columns: DataTableColumn<QuoteListItem>[] = [
   },
 ];
 
-function QuoteCard({ quote }: { quote: QuoteListItem }) {
-  const fresh = quote.status === 'new';
+function QuoteRow({ quote }: { quote: QuoteListItem }) {
+  // A new, untouched quote keeps its mark as a thin charcoal rule down the
+  // row's edge: the queue still reads at a glance, without a card per row
+  // or Warm Red on every arrival.
   return (
-    <li className="min-w-0">
-      <Link
-        href={`/quotes/${quote.referenceNumber}`}
-        aria-label={`View ${quote.referenceNumber}, ${quote.customerName}`}
-        className={cn(
-          'group flex items-stretch gap-3 overflow-hidden rounded-panel border border-neutral-200 bg-high-vis-white py-3 pl-4 pr-3',
-          'transition-shadow hover:shadow-panel active:bg-neutral-50',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal',
-          // A new, untouched quote carries a charcoal edge: the queue reads
-          // at a glance without spending Warm Red on every arrival.
-          fresh ? 'border-l-4 border-l-charcoal' : null,
-        )}
-      >
-        {/* The name owns its row and wraps; the figure sits on the next row
-            with the status, so neither is ever cut to make room (D112). */}
-        <div className="min-w-0 flex-1">
-          <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{quote.customerName}</p>
-          <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
-            <span className="tabular-nums">{quote.referenceNumber}</span> · {quote.customerPhone}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-            <p className="font-ui text-base font-semibold text-charcoal">
-              {quote.isPriced ? <span className="tabular-nums">{money(quote.value)}</span> : <span className="text-neutral-500">Pricing on application</span>}
-            </p>
-            <BadgeRow quote={quote} />
-          </div>
-          <p className="mt-1.5 font-ui text-sm text-neutral-500">
-            <OwnerLine quote={quote} />
-            <span className="ml-2 whitespace-nowrap tabular-nums">
-              {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
-            </span>
-          </p>
-        </div>
-        <svg
-          aria-hidden
-          viewBox="0 0 24 24"
-          className="h-5 w-5 shrink-0 self-center text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-charcoal motion-reduce:transition-none"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      </Link>
-    </li>
+    <ListRowLink
+      href={`/quotes/${quote.referenceNumber}`}
+      label={`View ${quote.referenceNumber}, ${quote.customerName}`}
+      marked={quote.status === 'new'}
+    >
+      {/* The name owns its row and wraps; the figure sits on the next row
+          with the status, so neither is ever cut to make room (D112). */}
+      <p className="font-ui text-base font-semibold leading-snug text-charcoal [overflow-wrap:anywhere]">{quote.customerName}</p>
+      <p className="mt-0.5 font-ui text-sm text-neutral-500 [overflow-wrap:anywhere]">
+        <span className="tabular-nums">{quote.referenceNumber}</span> · {quote.customerPhone}
+      </p>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+        <p className="font-ui text-base font-semibold text-charcoal">
+          {quote.isPriced ? <span className="tabular-nums">{money(quote.value)}</span> : <span className="text-neutral-500">Pricing on application</span>}
+        </p>
+        <BadgeRow quote={quote} />
+      </div>
+      <p className="mt-1.5 font-ui text-sm text-neutral-500">
+        <OwnerLine quote={quote} />
+        <span className="ml-2 whitespace-nowrap tabular-nums">
+          {formatDate(quote.createdAt)}, {formatTime(quote.createdAt)}
+        </span>
+      </p>
+    </ListRowLink>
   );
 }
 
 export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // The page's shared transition (D117): a filter change dims these rows and
+  // the table, not only the filter row's Busy.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(quotes, requestedPage);
 
@@ -204,22 +185,24 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   if (quotes.length === 0) {
     return (
-      <EmptyState
-        title="No quotes here"
-        description="Nothing matches this filter yet. Try Everyone or clear the search."
-      />
+      <BusyRegion busy={isPending}>
+        <EmptyState
+          title="No quotes here"
+          description="Nothing matches this filter yet. Try Everyone or clear the search."
+        />
+      </BusyRegion>
     );
   }
 
   return (
     <>
       {/* Desktop: the sortable table. Per D38, quotes are a decision per
-          row, so mobile gets full cards instead, not a squeezed table. */}
+          row, so a phone gets full rows instead, not a squeezed table. */}
       <div className="hidden xl:block">
         <DataTable
           busy={isPending}
@@ -230,11 +213,11 @@ export function QuoteResults({ quotes }: { quotes: QuoteListItem[] }) {
         />
       </div>
 
-      <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 xl:hidden">
+      <ListRows busy={isPending} label="Quotes">
         {paged.items.map((q) => (
-          <QuoteCard key={q.id} quote={q} />
+          <QuoteRow key={q.id} quote={q} />
         ))}
-      </ul>
+      </ListRows>
 
       <Pagination
         className="mt-4 xl:px-5 xl:pb-4"

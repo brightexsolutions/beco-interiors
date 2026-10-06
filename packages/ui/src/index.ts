@@ -61,6 +61,7 @@ export { RoomStack, type RoomStackCard } from './components/room-stack';
 export { RangePillarList, type RangePillarItem, type RangePillarListProps } from './components/range-pillar-list';
 export { RangeCardGrid, type RangeCardItem, type RangeCardGridProps } from './components/range-card-grid';
 export { ChipGroup, type ChipGroupProps, type ChipOption } from './components/chip-group';
+export { FilterSelect, type FilterSelectProps, type FilterSelectOption } from './components/filter-select';
 export { cn } from './lib/cn';
 export { useVisualViewport, readVisualViewport, type VisualViewportState } from './lib/use-visual-viewport';
 export { useKeepValuesSubmit } from './lib/use-keep-values-submit';

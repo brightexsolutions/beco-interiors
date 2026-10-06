@@ -28,8 +28,8 @@ describe('AuditFilters', () => {
   it('has search, entity and action', () => {
     render(<AuditFilters />);
     expect(screen.getByLabelText('Search entity')).toBeInTheDocument();
-    expect(screen.getByLabelText('Entity')).toBeInTheDocument();
-    expect(screen.getByLabelText('Action')).toBeInTheDocument();
+    expect(screen.getByLabelText('Filter by entity')).toBeInTheDocument();
+    expect(screen.getByLabelText('Filter by action')).toBeInTheDocument();
   });
 });
 

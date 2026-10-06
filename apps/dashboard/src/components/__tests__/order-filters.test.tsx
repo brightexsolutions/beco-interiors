@@ -39,17 +39,33 @@ describe('OrderFilters', () => {
     expect(push).toHaveBeenCalledWith('/orders?source=web');
   });
 
-  it('puts search and the selects on one row from xl, and chips below xl', () => {
+  it('puts search and the selects on one row from xl, and the four selects two by two below it, no chips', () => {
     render(<OrderFilters ownerOptions={ownerOptions} />);
-    expect(screen.getByLabelText('Search orders').closest('div.xl\\:flex-row')).not.toBeNull();
-    expect(screen.getByRole('group', { name: 'Payment' }).parentElement).toHaveClass('xl:hidden');
+    expect(screen.getByLabelText('Search orders').closest('form.xl\\:flex-row')).not.toBeNull();
+    const grid = screen.getByLabelText('Filter by payment').closest('[data-filter-grid]');
+    expect(grid).toHaveClass('grid-cols-2', 'md:grid-cols-4', 'xl:flex');
+    expect(screen.queryByRole('group', { name: 'Payment' })).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
   });
 
-  it('filters payment in one tap from the phone chips', async () => {
+  it('filters payment from its select, the same param the chips wrote', async () => {
     const user = userEvent.setup();
     render(<OrderFilters ownerOptions={ownerOptions} />);
-    await user.click(within(screen.getByRole('group', { name: 'Payment' })).getByRole('button', { name: 'Unpaid' }));
+    await user.selectOptions(screen.getByLabelText('Filter by payment'), 'unpaid');
     expect(push).toHaveBeenLastCalledWith('/orders?payment=unpaid');
+  });
+
+  it('switches owner, and shows the first owner when the URL names none', async () => {
+    const user = userEvent.setup();
+    render(<OrderFilters ownerOptions={ownerOptions} />);
+    expect(screen.getByLabelText('Filter by owner')).toHaveValue('all');
+    await user.selectOptions(screen.getByLabelText('Filter by owner'), 'mine');
+    expect(push).toHaveBeenLastCalledWith('/orders?owner=mine');
+  });
+
+  it('shows the count in the filter grid', () => {
+    render(<OrderFilters ownerOptions={ownerOptions} count="3 orders" />);
+    expect(within(screen.getByLabelText('Filter by payment').closest('[data-filter-grid]') as HTMLElement).getByText('3 orders')).toBeInTheDocument();
   });
 
   it('has no Search label, only a placeholder and aria-label', () => {

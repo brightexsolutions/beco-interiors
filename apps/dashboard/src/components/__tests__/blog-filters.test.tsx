@@ -15,7 +15,7 @@ describe('BlogFilters', () => {
   it('has search and status on one toolbar', () => {
     render(<BlogFilters />);
     expect(screen.getByLabelText('Search articles')).toBeInTheDocument();
-    expect(screen.getByLabelText('Status')).toBeInTheDocument();
+    expect(screen.getByLabelText('Filter by status')).toBeInTheDocument();
   });
 
   it('has no accessibility violations', async () => {

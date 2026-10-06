@@ -102,8 +102,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         />
         <Panel>
           <TableToolbar
-            filters={<ProductFilters />}
-            count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`}
+            filters={<ProductFilters count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`} />}
           />
           <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
             <ProductResults products={pageItems} paging={paging} editing={editing} creating={creating} categories={productCategories} />

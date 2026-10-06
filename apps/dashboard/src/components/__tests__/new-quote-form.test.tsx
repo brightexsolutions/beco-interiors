@@ -9,8 +9,9 @@ vi.mock('@/app/(app)/quotes/actions', () => ({
 }));
 
 vi.mock('@/lib/catalogue', () => ({
-  listCatalogueRanges: vi.fn(async () => []),
-  searchCatalogue: vi.fn(async () => [
+  loadPickerCatalogue: vi.fn(async () => ({
+    ranges: [],
+    products: [
     {
       id: '11111111-1111-4111-8111-111111111111',
       name: 'Amber Jade',
@@ -29,7 +30,8 @@ vi.mock('@/lib/catalogue', () => ({
       priceDisplayMode: 'fixed',
       categoryName: '12mm Sintered Stones',
     },
-  ]),
+    ],
+  })),
 }));
 
 vi.mock('@/lib/customers', () => ({

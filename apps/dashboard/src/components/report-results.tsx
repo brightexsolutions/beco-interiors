@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
+  cn,
   DataTable,
   EmptyState,
   RankedBars,
@@ -13,6 +14,7 @@ import {
   TabsTrigger,
   type DataTableColumn,
 } from '@beco/ui';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import {
   funnelTotals,
   parseView,
@@ -291,8 +293,9 @@ export function ReportResults({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the period controls in the heading (D117), so a period
+  // change dims every figure here until the new period lands.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const urlView = parseView(searchParams.get('view') ?? undefined);
   const [view, setViewState] = useState(urlView);
 
@@ -314,11 +317,15 @@ export function ReportResults({
     if (parsed === 'sales') params.delete('view');
     else params.set('view', parsed);
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   return (
-    <div>
+    <div
+      data-testid="report-results"
+      aria-busy={isPending || undefined}
+      className={cn('transition-opacity duration-200', isPending && 'opacity-50')}
+    >
       <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         <StatCard
           size="compact"

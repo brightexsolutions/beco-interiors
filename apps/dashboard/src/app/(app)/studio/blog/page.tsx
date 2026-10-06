@@ -4,6 +4,7 @@ import { BlogFilters } from '@/components/blog-filters';
 import { BlogResults } from '@/components/blog-results';
 import { NewBlogFab } from '@/components/new-blog';
 import { fetchBlogPosts, type BlogListFilters } from '@/lib/blog';
+import { QueryNavigationProvider } from '@/lib/use-query-navigation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -29,12 +30,15 @@ export default async function BlogListPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeading eyebrow="Studio" title="Blog" actions={<NewBlogFab />} />
-      <div className="mb-4">
-        <BlogFilters />
-      </div>
-      <div className="pb-24">
-        <BlogResults posts={posts} />
-      </div>
+      {/* One transition for the filters and the list. D117. */}
+      <QueryNavigationProvider>
+        <div className="mb-4">
+          <BlogFilters count={`${posts.length} ${posts.length === 1 ? 'article' : 'articles'}`} />
+        </div>
+        <div className="pb-24">
+          <BlogResults posts={posts} />
+        </div>
+      </QueryNavigationProvider>
     </>
   );
 }

@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -17,6 +16,8 @@ import {
 } from '@beco/ui';
 import { UserCreate } from '@/components/user-create';
 import { UserEditor } from '@/components/user-editor';
+import { BusyRegion } from '@/components/list-rows';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import { STAFF_ROLE_LABEL, formatLastLogin, type StaffUser } from '@/lib/users';
 
 function ViewAction({ href, name }: { href: string; name: string }) {
@@ -89,8 +90,8 @@ export function UserResults({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the filter row (D117), so a filter change dims the list.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(users, requestedPage);
 
@@ -110,11 +111,11 @@ export function UserResults({
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   const closeSheet = () => {
-    startTransition(() => router.push(withParam('user', null, ['new'])));
+    navigate(() => router.push(withParam('user', null, ['new'])));
   };
 
   const sheetOpen = Boolean(viewing) || creating;
@@ -138,7 +139,9 @@ export function UserResults({
   if (users.length === 0) {
     return (
       <>
-        <EmptyState title="No users here" description="Nothing matches this filter yet. Clear search, or create a user." fill />
+        <BusyRegion busy={isPending}>
+          <EmptyState title="No users here" description="Nothing matches this filter yet. Clear search, or create a user." fill />
+        </BusyRegion>
         {sheet}
       </>
     );
@@ -156,7 +159,11 @@ export function UserResults({
         />
       </div>
 
-      <div className="min-w-0 overflow-x-hidden xl:hidden">
+      {/* Below xl this table is the list, so it dims like the wide one. */}
+      <div
+        aria-busy={isPending || undefined}
+        className={cn('min-w-0 overflow-x-hidden transition-opacity duration-200 xl:hidden', isPending && 'opacity-50')}
+      >
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">{`${paged.total} users`}</caption>
           <thead>

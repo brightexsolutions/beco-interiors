@@ -43,21 +43,29 @@ export function useQueryNavigation() {
   const isPending = shared ? shared.isPending : ownPending;
   const startTransition = shared ? shared.startTransition : ownStart;
 
+  /**
+   * `during` runs inside the transition, before the push: the place for a
+   * `useOptimistic` setter, so a control shows the new choice at once and
+   * settles to the URL when the navigation lands.
+   */
   const push = useCallback(
-    (params: URLSearchParams) => {
+    (params: URLSearchParams, during?: () => void) => {
       const query = params.toString();
-      startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+      startTransition(() => {
+        during?.();
+        return router.push(query ? `${pathname}?${query}` : pathname);
+      });
     },
     [pathname, router, startTransition],
   );
 
   const setParam = useCallback(
-    (key: string, value: string) => {
+    (key: string, value: string, during?: () => void) => {
       const params = new URLSearchParams(searchParams.toString());
       if (value) params.set(key, value);
       else params.delete(key);
       params.delete('page');
-      push(params);
+      push(params, during);
     },
     [searchParams, push],
   );

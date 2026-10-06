@@ -4,6 +4,7 @@ import { PageHeading } from '@/components/page-heading';
 import { OrderFilters, type OrderOwnerOption } from '@/components/order-filters';
 import { OrderResults } from '@/components/order-results';
 import { fetchOrders, type OrderOwnerFilter } from '@/lib/orders';
+import { QueryNavigationProvider } from '@/lib/use-query-navigation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -50,15 +51,19 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     <>
       <PageHeading eyebrow="Sales" title="Orders" />
 
-      <Panel className="mb-8">
-        <TableToolbar
-          filters={<OrderFilters ownerOptions={ownerOptions} />}
-          count={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'}`}
-        />
-        <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
-          <OrderResults orders={orders} />
-        </div>
-      </Panel>
+      {/* One transition for the filters and the list. D117. */}
+      <QueryNavigationProvider>
+        <Panel className="mb-8">
+          <TableToolbar
+            filters={
+              <OrderFilters ownerOptions={ownerOptions} count={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'}`} />
+            }
+          />
+          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+            <OrderResults orders={orders} />
+          </div>
+        </Panel>
+      </QueryNavigationProvider>
     </>
   );
 }

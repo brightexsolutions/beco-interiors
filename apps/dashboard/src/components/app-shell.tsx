@@ -89,7 +89,7 @@ export function AppShell({
                 <Link
                   href="/"
                   aria-label="Beco Operations, home"
-                  className="ml-1 inline-flex shrink-0 items-center gap-2.5 font-ui text-sm font-bold uppercase tracking-[0.3em] text-charcoal"
+                  className="ml-1 inline-flex min-h-11 shrink-0 items-center gap-2.5 font-ui text-sm font-bold uppercase tracking-[0.3em] text-charcoal"
                 >
                   <img src="/logo-mark.png" alt="" width={32} height={31} className="h-8 w-8 shrink-0" />
                   <span className="hidden sm:inline">Beco</span>
@@ -107,7 +107,10 @@ export function AppShell({
           </div>
 
           {/* Desktop top bar */}
-          <div className="hidden items-center justify-between gap-4 border-b border-neutral-200 bg-high-vis-white/80 px-8 py-3 backdrop-blur lg:flex">
+          {/* relative z-20: backdrop-blur makes this bar its own stacking
+              context, so without a z-index of its own the main panel below
+              painted over it and hid the account menu that opens from it. */}
+          <div className="relative z-20 hidden items-center justify-between gap-4 border-b border-neutral-200 bg-high-vis-white/80 px-8 py-3 backdrop-blur lg:flex">
             <TopBarCrumb />
             <div className="flex shrink-0 items-center gap-1.5">
               <ThemeToggle />
