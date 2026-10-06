@@ -6,7 +6,7 @@ import { markQuoteSharedWhatsApp, sendQuoteEmail, type QuoteActionState } from '
 import { PdfPreview } from '@/components/pdf-preview';
 import { useQuoteDraftFlush } from '@/components/quote-draft-flush';
 import { WhatsAppShare } from '@/components/whatsapp-share';
-import { quoteWhatsAppLink } from '@/lib/whatsapp';
+import { SHARE_DOCUMENTS_ON_WHATSAPP, quoteWhatsAppLink } from '@/lib/whatsapp';
 
 const INITIAL: QuoteActionState = {};
 
@@ -132,7 +132,8 @@ export function QuoteDocumentPanel({
                 </Button>
               </form>
             ) : null}
-            <div className="grid grid-cols-2 gap-2 xl:flex">
+            <div className={SHARE_DOCUMENTS_ON_WHATSAPP ? 'grid grid-cols-2 gap-2 xl:flex' : 'grid gap-2'}>
+            {SHARE_DOCUMENTS_ON_WHATSAPP ? (
             <WhatsAppShare
               downloadHref={downloadHref}
               fallbackFilename={`${reference}.pdf`}
@@ -141,6 +142,7 @@ export function QuoteDocumentPanel({
               beforeShare={ensureStoredLines}
               onShared={(path) => markQuoteSharedWhatsApp(reference, path)}
             />
+            ) : null}
             <a
               href={downloadHref}
               className={buttonClasses({ variant: 'outline' })}

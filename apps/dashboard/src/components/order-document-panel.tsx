@@ -5,7 +5,7 @@ import { Button, Dialog, Field, Input, buttonClasses, Icon, useActionToast, useK
 import { markReceiptSharedWhatsApp, sendOrderReceipt, type OrderActionState } from '@/app/(app)/orders/actions';
 import { PdfPreview } from '@/components/pdf-preview';
 import { WhatsAppShare } from '@/components/whatsapp-share';
-import { whatsAppChatLink } from '@/lib/whatsapp';
+import { SHARE_DOCUMENTS_ON_WHATSAPP, whatsAppChatLink } from '@/lib/whatsapp';
 
 const INITIAL: OrderActionState = {};
 
@@ -81,7 +81,8 @@ export function OrderDocumentPanel({
                 </Button>
               </form>
             ) : null}
-            <div className="grid grid-cols-2 gap-2 xl:flex">
+            <div className={SHARE_DOCUMENTS_ON_WHATSAPP ? 'grid grid-cols-2 gap-2 xl:flex' : 'grid gap-2'}>
+              {SHARE_DOCUMENTS_ON_WHATSAPP ? (
               <WhatsAppShare
                 downloadHref={downloadHref}
                 fallbackFilename={`${reference}.pdf`}
@@ -89,6 +90,7 @@ export function OrderDocumentPanel({
                 message={`Beco receipt ${reference}`}
                 onShared={(path) => markReceiptSharedWhatsApp(reference, path)}
               />
+              ) : null}
               <a href={downloadHref} className={buttonClasses({ variant: 'outline' })}>
                 Download
               </a>
