@@ -84,7 +84,7 @@ export function MobileMenu({ light = false }: { light?: boolean }) {
   }, [open]);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         ref={trigger}
         type="button"
