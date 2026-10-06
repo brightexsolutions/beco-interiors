@@ -139,3 +139,25 @@ describe('SiteHeader, light chrome over the hero', () => {
     expect(desktopLink('Projects')).toHaveAttribute('aria-current', 'page');
   });
 });
+
+describe('SiteHeader breakpoints', () => {
+  it('swaps the full nav and the menu button at the same width, lg, so a tablet is never without one', () => {
+    mockPathname.mockReturnValue('/shop');
+    const { container } = render(<SiteHeader />);
+    const nav = screen.getByRole('navigation', { name: 'Main' });
+    expect(nav).toHaveClass('hidden', 'lg:block');
+    const menuButton = screen.getByRole('button', { name: /menu/i });
+    expect(menuButton.closest('.lg\\:hidden')).not.toBeNull();
+    expect(container.querySelector('.md\\:block, .md\\:hidden')).toBeNull();
+  });
+});
+
+describe('SiteHeader wordmark', () => {
+  it('keeps the logo from shrinking and drops the wordmark between lg and xl, where the nav needs the room', () => {
+    mockPathname.mockReturnValue('/shop');
+    render(<SiteHeader />);
+    const home = screen.getByRole('link', { name: 'Beco Interiors, home' });
+    expect(home).toHaveClass('shrink-0');
+    expect(screen.getByText('Interiors', { selector: 'span' })).toHaveClass('sm:block', 'lg:hidden', 'xl:block');
+  });
+});

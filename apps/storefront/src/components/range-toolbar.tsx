@@ -24,9 +24,11 @@ const STRIP_ANCHOR = 'range-strip';
  *
  * On a phone the chip row scrolls sideways in one line, no panel, no
  * "Filters" button; the search and the sort share the row beneath. On a
- * desktop the chips, finishes, search and sort sit on one line: the search
- * folds to a 44px icon until it is used, and the per range counts show from
- * xl up, which is what lets five ranges fit a 1190px laptop. The chips still
+ * desktop from 1180px the chips, finishes, search and sort sit on one line:
+ * the search folds to a 44px icon until it is used, and the per range counts
+ * show from xl up, which is what lets five ranges fit a 1190px laptop.
+ * Measured: at 1024 to 1100 one line clipped the last chip, so below 1180
+ * the chips keep their own row and the controls sit beneath. The chips still
  * scroll inside their share if a range ever has more than fit. The count and
  * Clear sit on a quiet line under the row.
  */
@@ -90,9 +92,9 @@ export function RangeToolbar({
     // results; landing here keeps both in front of the reader. scroll-mt
     // clears the sticky 80px header.
     <div id={STRIP_ANCHOR} className="flex scroll-mt-28 flex-col gap-3">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
+      <div className="flex flex-col gap-4 min-[1180px]:flex-row min-[1180px]:items-center min-[1180px]:gap-3">
         {chips.length > 1 ? (
-          <nav aria-label="Ranges" className="-mx-8 overflow-x-auto px-8 sm:-mx-24 sm:px-24 lg:mx-0 lg:min-w-0 lg:shrink lg:px-0 [scrollbar-width:none]">
+          <nav aria-label="Ranges" className="-mx-8 overflow-x-auto px-8 sm:-mx-24 sm:px-24 lg:mx-0 lg:px-0 min-[1180px]:min-w-0 min-[1180px]:shrink [scrollbar-width:none]">
             <ul className="flex w-max gap-2">
               {chips.map((chip) => (
                 <li key={chip.href}>
@@ -117,7 +119,7 @@ export function RangeToolbar({
           </nav>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-3 lg:ml-auto lg:shrink-0 lg:flex-nowrap">
+        <div className="flex flex-wrap items-center gap-3 min-[1180px]:ml-auto min-[1180px]:shrink-0 min-[1180px]:flex-nowrap">
           {finishes.length > 1 && finishes.length <= MAX_FINISH_BUTTONS ? (
             <div role="group" aria-label="Finish" className="flex flex-wrap gap-2 lg:flex-nowrap">
               {finishes.map((f) => {
@@ -168,7 +170,7 @@ export function RangeToolbar({
             onClick={() => { setSearchOpen(true); requestAnimationFrame(() => searchInput.current?.focus()); }}
             className={cn(
               'hidden h-11 w-11 shrink-0 items-center justify-center rounded-control border border-neutral-300 bg-high-vis-white text-charcoal transition-colors hover:border-charcoal',
-              !searchShown && 'lg:inline-flex',
+              !searchShown && 'min-[1180px]:inline-flex',
             )}
           >
             <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 stroke-current" fill="none" strokeWidth="1.8">
@@ -180,8 +182,8 @@ export function RangeToolbar({
           <span
             data-search-shown={searchShown}
             className={cn(
-              'relative min-w-0 flex-1 basis-[12rem] lg:w-48 lg:flex-none lg:basis-auto',
-              !searchShown && 'lg:hidden',
+              'relative min-w-0 flex-1 basis-[12rem] min-[1180px]:w-48 min-[1180px]:flex-none min-[1180px]:basis-auto',
+              !searchShown && 'min-[1180px]:hidden',
             )}
           >
             <label htmlFor="range-search" className="sr-only">Search</label>
