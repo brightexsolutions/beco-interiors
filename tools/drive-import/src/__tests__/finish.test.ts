@@ -96,6 +96,16 @@ describe('readFinish', { timeout: 20_000 }, () => {
     expect((await readFinish(toDecodable(heic, 'gold-on-white.heic', undefined, 'linux'))).finish).toBe('gold');
   });
 
+  it('reads a dark grey piece on a white sheet as black, judged against the sheet', async () => {
+    // L about 45 on its own scale, which the pixel vote calls silver. Against
+    // a white backdrop it is under half the backdrop's lightness.
+    expect((await readFinish(await centred('#ffffff', '#6a6a6a'))).finish).toBe('black');
+  });
+
+  it('keeps a mid grey piece on a grey backdrop silver: it is lighter than the backdrop', async () => {
+    expect((await readFinish(await centred('#8a8a8a', '#c4c4c6'))).finish).toBe('silver');
+  });
+
   it('returns no finish for an empty frame', async () => {
     const reading = await readFinish(await centred('#ffffff', '#ffffff'));
     expect(reading).toEqual({ finish: null, share: 0, subject: 0 });
@@ -103,5 +113,27 @@ describe('readFinish', { timeout: 20_000 }, () => {
 
   it('returns no finish for a piece in a colour Beco does not stock', async () => {
     expect((await readFinish(await centred('#ffffff', '#1e50c8'))).finish).toBeNull();
+  });
+});
+
+/**
+ * Beco's own photographs, from the HINGES folder in Drive, downscaled to
+ * 160px so they stay a few KB. IMG_1187 and IMG_1307 are matte black and
+ * dark gunmetal shot on a white sheet, and read silver until 6 October:
+ * the camera exposed for the sheet, and their satin faces mirrored it, so
+ * their pixels sat at L 34 to 52 rather than under 30. The silver and gold
+ * beside them are the readings that already held and must keep holding.
+ */
+describe('readFinish on real hinge photographs', { timeout: 20_000 }, () => {
+  it.each([
+    ['hinge-1187-black-on-white.jpg', 'black'],
+    ['hinge-1307-black-on-white.jpg', 'black'],
+    ['hinge-1181-silver-on-white.jpg', 'silver'],
+    ['hinge-1186-silver-on-grey.jpg', 'silver'],
+    ['hinge-1182-gold-on-grey.jpg', 'gold'],
+  ])('reads %s as %s', async (file, finish) => {
+    const reading = await readFinish(readFileSync(new URL(`./fixtures/${file}`, import.meta.url)));
+    expect(reading.finish).toBe(finish);
+    expect(reading.share).toBeGreaterThan(0.6);
   });
 });

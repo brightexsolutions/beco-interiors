@@ -2834,6 +2834,22 @@ over and this path is never reached; or the finish reading proves wrong often en
 photographs that sorting by hand is quicker, when Hinges comes out of `SPLIT_BY_FINISH` and its
 products all land in Hinges unsorted.
 
+**Amended 6 October 2026: dark metal is judged against the backdrop.** Brown found matte black
+and dark gunmetal hinges filed as Silver Hinges: IMG_1187, IMG_1307 and IMG_1308, all shot on a
+white sheet. The camera exposes for the sheet and a satin face mirrors it, so those pieces sat at
+L 34 to 52, above the black cut at 30, and their pixels voted silver. Now, before the vote, a
+piece that is at least 80% neutral and whose median neutral lightness is under 0.545 of the
+backdrop's reads black. Measured over all 124 cached Hinges, Door Locks and Furniture Legs
+photographs: the black hinges sit at 0.38 to 0.52 of the backdrop, every silver hinge at 0.57 or
+more. Thirteen readings changed, all silver to black: the three hinges, a black leg on white
+(IMG_4482), and nine gunmetal or black nickel locks and legs, filed under black because Brown
+asked for gunmetal to read black. No gold, bronze, copper or none reading changed. Real photographs,
+downscaled to a few KB, are committed as fixtures for black, silver on white, silver on grey and
+gold. Still wrong and not addressed: mirror polished gold legs that reflect a grey room read
+silver or none (IMG_4474, 4479, 4514, 4516 and others); a mid grey brushed hinge finish
+(IMG_1165, 1166, 1178 to 1181, 1317 to 1319, 1322, 1323) stays silver, being lighter than the
+cut, and would need a finish of its own if Beco calls it gunmetal.
+
 ## D123, 5 October 2026: HEIC decodes on Linux, so the import button handles hardware
 
 **Decision.** `toDecodable` converts HEIC with `heif-convert` from libheif everywhere but macOS,
