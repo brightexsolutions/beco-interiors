@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { desktopColumns } from '@/lib/layout';
 import { HOME_DESCRIPTION, HOME_TITLE, pageMetadata, sectionOgImage } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -508,7 +509,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={`mt-10 grid gap-6 sm:grid-cols-2 ${desktopColumns(beyondStoneRanges.length)}`}>
           {beyondStoneRanges.map((range, i) => {
             const tile = (
               <>
@@ -517,7 +518,7 @@ export default async function HomePage() {
                     src={range.image.path}
                     alt={range.image.alt}
                     fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover transition-transform duration-700 ease-brand group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                   />
                   <span

@@ -57,7 +57,7 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
           {/* --- The parting frame. Grows to fill the leftover height on a
                   phone; a fixed tall panel on desktop. Nothing reflows either
                   way because the frame's own box is set before its contents. --- */}
-          <div className="relative w-full flex-1 overflow-hidden lg:h-[min(80vh,48rem)] lg:flex-none">
+          <div className="relative isolate w-full flex-1 overflow-hidden rounded-card lg:h-[min(80vh,48rem)] lg:flex-none">
             {/* The room fills the frame. The selection above guarantees a
                 landscape interior, so covering it crops a sliver off the long
                 edge rather than reducing a room to a worktop corner. */}
