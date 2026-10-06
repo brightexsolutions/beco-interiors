@@ -13,6 +13,8 @@ import { SHOP_SORTS, isShopSort, type Facet, type RangeChip } from '@/lib/shop';
  */
 const MAX_FINISH_BUTTONS = 3;
 
+const STRIP_ANCHOR = 'range-strip';
+
 /**
  * The strip above a range's grid, D119. Range chips are LINKS to real pages,
  * so a sub range can rank on its own and the back button walks the tree.
@@ -83,7 +85,11 @@ export function RangeToolbar({
   const filtered = Boolean(query.trim() || finish || sort !== 'name');
 
   return (
-    <div className="flex flex-col gap-3">
+    // The anchor a range chip lands on. A chip is a real page (D119), so
+    // following one would open at the top, away from the chips and the
+    // results; landing here keeps both in front of the reader. scroll-mt
+    // clears the sticky 80px header.
+    <div id={STRIP_ANCHOR} className="flex scroll-mt-28 flex-col gap-3">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-3">
         {chips.length > 1 ? (
           <nav aria-label="Ranges" className="-mx-8 overflow-x-auto px-8 sm:-mx-24 sm:px-24 lg:mx-0 lg:min-w-0 lg:shrink lg:px-0 [scrollbar-width:none]">
@@ -91,7 +97,7 @@ export function RangeToolbar({
               {chips.map((chip) => (
                 <li key={chip.href}>
                   <Link
-                    href={chip.href}
+                    href={`${chip.href}#${STRIP_ANCHOR}`}
                     aria-current={chip.active ? 'page' : undefined}
                     className={cn(
                       'inline-flex h-11 items-center gap-2 rounded-control border px-4 font-ui text-base font-semibold whitespace-nowrap lg:px-3 transition-colors',
