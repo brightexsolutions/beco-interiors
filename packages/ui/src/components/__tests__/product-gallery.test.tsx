@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { ProductGallery, orderImages, type GalleryImage } from '../product-gallery';
+import { ProductGallery, orderImages, roleLabel, type GalleryImage } from '../product-gallery';
 
 const img = (role: GalleryImage['role']): GalleryImage => ({
   role, alt: role, node: <div data-testid={role} />,
@@ -53,6 +53,38 @@ describe('ProductGallery', () => {
   it('labels each thumbnail with its position for screen readers', () => {
     render(<ProductGallery images={[img('slab'), img('application')]} />);
     expect(screen.getByLabelText('Full slab, photograph 1 of 2')).toBeDefined();
+  });
+});
+
+/**
+ * A hardware photograph arrives with the `slab` role, because it is the
+ * item's own shot. On a hinge the badge must not say "Full slab".
+ */
+describe('ProductGallery off a slab product', () => {
+  it('labels the slab role shot a product photo', () => {
+    render(<ProductGallery slab={false} images={[img('slab')]} />);
+    expect(screen.getByText('Product photo')).toBeDefined();
+    expect(screen.queryByText('Full slab')).toBeNull();
+  });
+
+  it('carries the same label to the thumbnails and the live region', () => {
+    render(<ProductGallery slab={false} images={[img('slab'), img('unknown')]} />);
+    expect(screen.getByLabelText('Product photo, photograph 1 of 2')).toBeDefined();
+    expect(screen.queryByText(/Full slab/)).toBeNull();
+  });
+
+  it('still says Full slab on a stone by default', () => {
+    render(<ProductGallery images={[img('slab'), img('on_stand')]} />);
+    expect(screen.getByText('Full slab')).toBeDefined();
+  });
+});
+
+describe('roleLabel', () => {
+  it('only changes the slab role', () => {
+    expect(roleLabel('slab', true)).toBe('Full slab');
+    expect(roleLabel('slab', false)).toBe('Product photo');
+    expect(roleLabel('on_stand', false)).toBe('In the showroom');
+    expect(roleLabel('application', false)).toBe('In a space');
   });
 });
 

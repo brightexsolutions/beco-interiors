@@ -13,6 +13,7 @@ import {
 } from '@/lib/products';
 import { applyCatalogueFilters, finishFacetsOf, isFilteredView, rangeChips } from '@/lib/shop';
 import { SITE } from '@/lib/site';
+import { isStoneRange, stockCount } from '@/lib/material';
 
 export const revalidate = 3600;
 
@@ -202,7 +203,7 @@ export default async function CategoryPage({ params, searchParams }: Params) {
                 isGroup
                   ? `${children.length}`
                   : inRange.length > 0
-                    ? `${inRange.length} ${inRange.length === 1 ? 'colour' : 'colours'}`
+                    ? stockCount(inRange.length, isStoneRange([category, ...ancestors]))
                     : 'Being photographed'
               }
             />

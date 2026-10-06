@@ -283,7 +283,7 @@ M5 section A. The dashboard has its own Vitest project (`--project dashboard`, j
 | `Field` `Input` `Select` `Textarea` | The label genuinely reaches the control, an error is announced not just coloured, the drawn chevron stays out of the click path, `optgroup` carries the taxonomy. 10 tests |
 | `PasswordInput` | The toggle actually flips the input between `password` and `text`, both ways, from mouse and from the keyboard. It is `type="button"` so it never submits. Ref forwards to the input, `name` and `autoComplete` pass through. Axe clean masked and revealed. See the show/hide toggle on the dashboard auth screens |
 | `PriceDisplay` | POA reads as deliberate. "fixed" with a null price falls back rather than rendering `KES null`. A stale `compare_at_price` cannot fake a sale |
-| `ProductCard` `ProductGallery` | Correct on three images as well as six, since a fifth of the catalogue has only three. Card reads Out of stock when `stockQuantity` is 0 |
+| `ProductCard` `ProductGallery` | Correct on three images as well as six, since a fifth of the catalogue has only three. Card reads Out of stock when `stockQuantity` is 0. A hardware photo is never badged Full slab; the product page and range count use stone wording only under Sintered Stone (`lib/material.ts`) |
 | `ScrollMotion` | An element with no attribute is fully visible, so nothing is hidden waiting for JavaScript |
 | `RoomStack` | Extracted from the storefront. Picks each product's application shot and only that, caps at four, renders nothing under two. Tests in both `@beco/ui` and the storefront wrapper |
 | `LoadingState` | The skeleton keeps its shape but stops pulsing under `motion-reduce` |
