@@ -359,6 +359,65 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          client_type: Database["public"]["Enums"]["client_type"] | null
+          company: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string
+          kra_pin: string | null
+          location: string | null
+          name: string
+          notes: string | null
+          phone: string
+          phone_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_type?: Database["public"]["Enums"]["client_type"] | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          kra_pin?: string | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          phone: string
+          phone_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_type?: Database["public"]["Enums"]["client_type"] | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          kra_pin?: string | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string
+          phone_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -611,6 +670,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_email: string | null
+          customer_id: string | null
           customer_name: string
           customer_phone: string
           deleted_at: string | null
@@ -637,6 +697,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
+          customer_id?: string | null
           customer_name: string
           customer_phone: string
           deleted_at?: string | null
@@ -663,6 +724,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
+          customer_id?: string | null
           customer_name?: string
           customer_phone?: string
           deleted_at?: string | null
@@ -689,6 +751,20 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -904,6 +980,7 @@ export type Database = {
           created_by: string | null
           currency: string
           customer_email: string | null
+          customer_id: string | null
           customer_name: string
           customer_phone: string
           deleted_at: string | null
@@ -943,6 +1020,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           customer_email?: string | null
+          customer_id?: string | null
           customer_name: string
           customer_phone: string
           deleted_at?: string | null
@@ -982,6 +1060,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           customer_email?: string | null
+          customer_id?: string | null
           customer_name?: string
           customer_phone?: string
           deleted_at?: string | null
@@ -1037,6 +1116,20 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
@@ -1172,8 +1265,40 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_overview: {
+        Row: {
+          client_type: Database["public"]["Enums"]["client_type"] | null
+          company: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          kra_pin: string | null
+          last_activity_at: string | null
+          location: string | null
+          name: string | null
+          order_count: number | null
+          phone: string | null
+          phone_key: string | null
+          quote_count: number | null
+          total_spent: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      activity_series: {
+        Args: { p_weeks?: number }
+        Returns: {
+          collected: number
+          invoiced: number
+          lost: number
+          raised: number
+          week_start: string
+          won: number
+          won_value: number
+        }[]
+      }
       add_catalogue_quote_line: {
         Args: {
           p_expected_updated_at: string
@@ -1214,6 +1339,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      backfill_customers: { Args: never; Returns: number }
+      category_depth: { Args: { p_id: string }; Returns: number }
+      category_height: { Args: { p_id: string }; Returns: number }
+      category_subtree_ids: { Args: { p_id: string }; Returns: string[] }
       claim_quote: {
         Args: { p_expected_updated_at: string; p_quote_id: string }
         Returns: undefined
@@ -1230,6 +1359,7 @@ export type Database = {
       create_counter_quote: {
         Args: {
           p_customer_email?: string
+          p_customer_id?: string
           p_customer_name: string
           p_customer_phone: string
           p_items: Json
@@ -1241,30 +1371,38 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
-      activity_series: {
-        Args: { p_weeks?: number }
-        Returns: {
-          week_start: string
-          raised: number
-          won: number
-          lost: number
-          won_value: number
-          invoiced: number
-          collected: number
-        }[]
+      customer_for_phone: {
+        Args: {
+          p_company?: string
+          p_email?: string
+          p_location?: string
+          p_name: string
+          p_phone: string
+        }
+        Returns: string
       }
+      customer_phone_key: { Args: { p_phone: string }; Returns: string }
       dashboard_summary: { Args: never; Returns: Json }
       end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
       has_audit_read: { Args: never; Returns: boolean }
       has_blog_write: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_brightex_user: { Args: never; Returns: boolean }
+      link_quote_customer: {
+        Args: {
+          p_customer_id: string
+          p_expected_updated_at: string
+          p_quote_id: string
+        }
+        Returns: undefined
+      }
       mark_order_paid: {
         Args: { p_expected_updated_at: string; p_order_id: string }
         Returns: undefined
       }
       next_order_reference: { Args: never; Returns: string }
       next_quote_reference: { Args: never; Returns: string }
+      quote_pipeline: { Args: never; Returns: Json }
       record_sign_in: { Args: never; Returns: undefined }
       refresh_order_money: { Args: { p_order_id: string }; Returns: undefined }
       refresh_quote_money: { Args: { p_quote_id: string }; Returns: undefined }
@@ -1310,7 +1448,6 @@ export type Database = {
         Returns: undefined
       }
       slugify: { Args: { input: string }; Returns: string }
-      quote_pipeline: { Args: never; Returns: Json }
       staff_names: {
         Args: { p_ids: string[] }
         Returns: {
@@ -1366,6 +1503,13 @@ export type Database = {
         | "export"
         | "assign"
       availability: "in_stock" | "pre_order" | "poa"
+      client_type:
+        | "homeowner"
+        | "contractor"
+        | "designer"
+        | "developer"
+        | "business"
+        | "other"
       document_type: "quote" | "receipt"
       face_type: "book_match" | "one_face"
       fulfilment: "pickup" | "delivery"
@@ -1525,6 +1669,14 @@ export const Constants = {
         "assign",
       ],
       availability: ["in_stock", "pre_order", "poa"],
+      client_type: [
+        "homeowner",
+        "contractor",
+        "designer",
+        "developer",
+        "business",
+        "other",
+      ],
       document_type: ["quote", "receipt"],
       face_type: ["book_match", "one_face"],
       fulfilment: ["pickup", "delivery"],
