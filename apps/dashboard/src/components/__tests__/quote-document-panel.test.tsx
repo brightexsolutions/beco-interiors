@@ -17,8 +17,7 @@ vi.mock('@/app/(app)/quotes/actions', () => ({
 }));
 
 vi.mock('@/lib/catalogue', () => ({
-  listCatalogueRanges: vi.fn(async () => []),
-  searchCatalogue: vi.fn(async () => []),
+  loadPickerCatalogue: vi.fn(async () => ({ products: [], ranges: [] })),
 }));
 
 const props = {

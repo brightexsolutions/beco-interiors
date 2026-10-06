@@ -1,9 +1,9 @@
 'use client';
 
-import { forwardRef, useEffect, useId, useRef, useState, useTransition } from 'react';
-import { Button, Dialog, Field, Input, Select, cn } from '@beco/ui';
-import { listCatalogueRanges, searchCatalogue, type CatalogueHit, type CatalogueRange } from '@/lib/catalogue';
-import { groupHitsByCategory } from '@/lib/catalogue-search';
+import { forwardRef, useCallback, useId, useMemo, useRef, useState } from 'react';
+import { Button, Dialog, Field, Input, Select, Spinner, cn } from '@beco/ui';
+import { loadPickerCatalogue, type CatalogueHit, type CatalogueRange, type PickerCatalogue } from '@/lib/catalogue';
+import { filterCatalogue, groupHitsByCategory } from '@/lib/catalogue-search';
 
 /**
  * The range select's options: ranges that hold products, in the catalogue's
@@ -36,10 +36,17 @@ export function catalogueLineDraft(hit: CatalogueHit): { quantity: number; unitP
   };
 }
 
+type LoadState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'ready'; catalogue: PickerCatalogue }
+  | { status: 'error' };
+
 /**
  * Opens a searchable, multi-select catalogue dialog. Used on new quote and
- * on an existing quote. Focus in the search field loads published products
- * immediately, across every range, not only stone.
+ * on an existing quote. Opening it loads the whole published catalogue in
+ * one server action; the range select and the search field then filter on
+ * the phone, in the same frame, with no further round trip.
  */
 export const CataloguePicker = forwardRef<
   HTMLButtonElement,
@@ -57,39 +64,39 @@ export const CataloguePicker = forwardRef<
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [range, setRange] = useState('');
-  const [ranges, setRanges] = useState<CatalogueRange[]>([]);
-  const [hits, setHits] = useState<CatalogueHit[]>([]);
+  const [load, setLoad] = useState<LoadState>({ status: 'idle' });
   const [selected, setSelected] = useState<Map<string, CatalogueHit>>(() => new Map());
-  const [searching, startSearch] = useTransition();
+  // Counts loads so a reply that lands after the dialog closed, or after a
+  // newer retry, is dropped rather than shown.
+  const loadSeq = useRef(0);
 
-  useEffect(() => {
-    if (!open) return;
-    startSearch(async () => {
-      setRanges(await listCatalogueRanges());
-    });
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const term = query.trim();
-    const handle = window.setTimeout(
-      () => {
-        startSearch(async () => {
-          setHits(await searchCatalogue(term, range || null));
-        });
+  const fetchCatalogue = useCallback(() => {
+    const seq = ++loadSeq.current;
+    setLoad({ status: 'loading' });
+    loadPickerCatalogue().then(
+      (catalogue) => {
+        if (seq === loadSeq.current) setLoad({ status: 'ready', catalogue });
       },
-      term.length === 0 ? 0 : 180,
+      () => {
+        if (seq === loadSeq.current) setLoad({ status: 'error' });
+      },
     );
-    return () => window.clearTimeout(handle);
-  }, [open, query, range]);
+  }, []);
+
+  const catalogue = load.status === 'ready' ? load.catalogue : null;
+  const ranges = useMemo(() => catalogue?.ranges ?? [], [catalogue]);
+  const hits = useMemo(
+    () => (catalogue ? filterCatalogue(catalogue.products, { term: query, rangeId: range || null }) : []),
+    [catalogue, query, range],
+  );
 
   const close = (nextOpen: boolean) => {
     setOpen(nextOpen);
     if (!nextOpen) {
+      loadSeq.current += 1;
       setQuery('');
       setRange('');
-      setHits([]);
-      setRanges([]);
+      setLoad({ status: 'idle' });
       setSelected(new Map());
     }
   };
@@ -108,9 +115,10 @@ export const CataloguePicker = forwardRef<
   const rangeGroups = rangeSelectGroups(ranges);
   const hitGroups = groupHitsByCategory(hits);
   const selectedRange = ranges.find((item) => item.id === range);
-  const emptyMessage = selectedRange
-    ? `No published products in ${selectedRange.name} yet.`
-    : 'No published product matches.';
+  const emptyMessage =
+    selectedRange && !query.trim()
+      ? `No published products in ${selectedRange.name} yet.`
+      : 'No published product matches.';
 
   const confirm = () => {
     if (chosen.length === 0) return;
@@ -126,7 +134,10 @@ export const CataloguePicker = forwardRef<
         variant="outline"
         disabled={disabled}
         className="h-11 w-full py-0 sm:w-auto"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          fetchCatalogue();
+        }}
       >
         Add from catalogue
       </Button>
@@ -191,8 +202,23 @@ export const CataloguePicker = forwardRef<
           </div>
 
           <ul id={listId} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-3">
-            {searching && hits.length === 0 ? (
-              <li className="px-3 py-3 font-ui text-base text-neutral-500">Searching</li>
+            {load.status === 'loading' ? (
+              <li>
+                <p role="status" className="flex items-center gap-2 px-3 py-3 font-ui text-base text-neutral-500">
+                  <Spinner />
+                  Loading the catalogue
+                </p>
+              </li>
+            ) : null}
+            {load.status === 'error' ? (
+              <li>
+                <div role="alert" className="px-3 py-3 font-ui text-base text-charcoal">
+                  <p>Could not load the catalogue.</p>
+                  <Button type="button" variant="outline" className="mt-3" onClick={fetchCatalogue}>
+                    Try again
+                  </Button>
+                </div>
+              </li>
             ) : null}
             {hitGroups.map((group) => (
               <li key={group.name} className="mb-2">
@@ -245,7 +271,7 @@ export const CataloguePicker = forwardRef<
                 </ul>
               </li>
             ))}
-            {!searching && hits.length === 0 ? (
+            {catalogue && hits.length === 0 ? (
               <li className="px-3 py-3 font-ui text-base text-neutral-500">{emptyMessage}</li>
             ) : null}
           </ul>

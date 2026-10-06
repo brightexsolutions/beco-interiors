@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
-import { listCatalogueRanges, searchCatalogue } from '@/lib/catalogue';
+import { loadPickerCatalogue } from '@/lib/catalogue';
 import { CataloguePicker, catalogueLineDraft, rangeSelectGroups } from '../catalogue-picker';
-import type { CatalogueHit, CatalogueRange } from '@/lib/catalogue';
+import type { CatalogueHit, CatalogueRange, PickerCatalogue } from '@/lib/catalogue';
 
 const amber: CatalogueHit = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -13,7 +13,9 @@ const amber: CatalogueHit = {
   price: 65000,
   unit: 'per slab',
   priceDisplayMode: 'fixed',
+  categoryId: 'stone',
   categoryName: '12mm Sintered Stones',
+  parentCategoryName: 'Sintered Stone',
   thumb: 'http://img.test/products/amber-jade/hero-400.webp',
 };
 
@@ -24,7 +26,22 @@ const handle: CatalogueHit = {
   price: 450,
   unit: 'each',
   priceDisplayMode: 'fixed',
+  categoryId: 'handles',
   categoryName: 'Handles',
+  parentCategoryName: 'Hardware',
+  thumb: null,
+};
+
+const heixin: CatalogueHit = {
+  id: '44444444-4444-4444-8444-444444444444',
+  name: 'Heixin Calacatta',
+  slug: 'heixin-calacatta',
+  price: 70000,
+  unit: 'per slab',
+  priceDisplayMode: 'fixed',
+  categoryId: 'heixin',
+  categoryName: 'Heixin 12mm',
+  parentCategoryName: '12mm Sintered Stones',
   thumb: null,
 };
 
@@ -37,15 +54,31 @@ const ranges: CatalogueRange[] = [
   { id: 'knobs', name: 'Knobs', groupName: 'Hardware', productCount: 3 },
 ];
 
-vi.mock('@/lib/catalogue', () => ({
-  listCatalogueRanges: vi.fn(async () => ranges),
-  searchCatalogue: vi.fn(async (term: string, rangeId?: string | null) => {
-    const all = [amber, handle];
-    const inRange = rangeId === 'handles' ? [handle] : rangeId === 'stone' ? [amber] : all;
-    if (!term) return inRange;
-    return inRange.filter((hit) => hit.name.toLowerCase().includes(term.toLowerCase()));
-  }),
-}));
+vi.mock('@/lib/catalogue', () => ({ loadPickerCatalogue: vi.fn() }));
+
+const load = vi.mocked(loadPickerCatalogue);
+
+beforeEach(() => {
+  load.mockReset();
+  // Range name then product name, the order the server sends.
+  load.mockResolvedValue({ products: [amber, handle, heixin], ranges });
+});
+
+/** Opens the picker and waits for the one load to land. */
+async function openLoaded(onAdd = vi.fn()) {
+  const user = userEvent.setup();
+  const view = render(<CataloguePicker onAdd={onAdd} />);
+  await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+  const dialog = await screen.findByRole('dialog', { name: 'Add from catalogue' });
+  await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
+  return { user, dialog, onAdd, container: view.container };
+}
+
+/** The product names listed, in the order shown. */
+const listed = (dialog: HTMLElement) =>
+  within(dialog)
+    .queryAllByRole('checkbox')
+    .map((box) => box.closest('label')!.querySelector('span.flex-1 > span')!.textContent);
 
 describe('catalogueLineDraft', () => {
   it('starts a slab at half, everything else at one, and POA at zero', () => {
@@ -74,17 +107,16 @@ describe('rangeSelectGroups', () => {
 });
 
 describe('CataloguePicker', () => {
-  it('opens a dialog of every range, stones and handles together', async () => {
-    const user = userEvent.setup();
+  it('does not load anything until it is opened', () => {
     render(<CataloguePicker onAdd={vi.fn()} />);
-    expect(screen.queryByRole('dialog')).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Add from catalogue' });
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('opens a dialog of every range, stones and handles together, from one load', async () => {
+    const { dialog } = await openLoaded();
     expect(within(dialog).getByRole('searchbox', { name: /search/i })).toHaveFocus();
-    expect(searchCatalogue).toHaveBeenCalledWith('', null);
-    expect(listCatalogueRanges).toHaveBeenCalled();
-    expect(await within(dialog).findByRole('checkbox', { name: /Amber Jade/i })).toBeInTheDocument();
-    expect(within(dialog).getByRole('checkbox', { name: /537 160 Black/i })).toBeInTheDocument();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(listed(dialog)).toEqual(['Amber Jade', '537 160 Black', 'Heixin Calacatta']);
     expect(within(dialog).getByRole('heading', { name: '12mm Sintered Stones' })).toBeInTheDocument();
     expect(within(dialog).getByRole('heading', { name: 'Handles' })).toBeInTheDocument();
     const select = within(dialog).getByRole('combobox', { name: 'Range' });
@@ -92,33 +124,82 @@ describe('CataloguePicker', () => {
     expect(within(select).getByRole('option', { name: /Handles \(12\)/ })).toBeInTheDocument();
   });
 
-  it('narrows to Handles when that range is chosen in the select', async () => {
+  it('says it is loading the catalogue until the one load lands', async () => {
+    let resolve!: (value: PickerCatalogue) => void;
+    load.mockReturnValueOnce(new Promise<PickerCatalogue>((r) => (resolve = r)));
     const user = userEvent.setup();
     render(<CataloguePicker onAdd={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
     const dialog = await screen.findByRole('dialog');
-    await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
-    const select = within(dialog).getByRole('combobox', { name: 'Range' });
-    await user.selectOptions(select, 'handles');
-    expect(select).toHaveValue('handles');
-    await waitFor(() => expect(searchCatalogue).toHaveBeenLastCalledWith('', 'handles'));
-    expect(await within(dialog).findByRole('checkbox', { name: /537 160 Black/i })).toBeInTheDocument();
-    await waitFor(() => {
-      expect(within(dialog).queryByRole('checkbox', { name: /Amber Jade/i })).toBeNull();
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Loading the catalogue');
+    expect(within(dialog).queryByText('No published product matches.')).toBeNull();
+    expect(await axe(dialog)).toHaveNoViolations();
+    await act(async () => resolve({ products: [amber, handle], ranges }));
+    expect(within(dialog).queryByText('Loading the catalogue')).toBeNull();
+    expect(listed(dialog)).toEqual(['Amber Jade', '537 160 Black']);
+  });
+
+  it('says the load failed, and loads again on Try again', async () => {
+    load.mockRejectedValueOnce(new Error('network'));
+    const user = userEvent.setup();
+    render(<CataloguePicker onAdd={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    const dialog = await screen.findByRole('dialog');
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent('Could not load the catalogue.');
+    expect(within(dialog).queryByRole('checkbox')).toBeNull();
+    expect(within(dialog).queryByText('No published product matches.')).toBeNull();
+    await user.click(within(alert).getByRole('button', { name: 'Try again' }));
+    expect(await within(dialog).findByRole('checkbox', { name: /Amber Jade/i })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('alert')).toBeNull();
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('drops a load that lands after the dialog was closed', async () => {
+    let resolve!: (value: PickerCatalogue) => void;
+    load.mockReturnValueOnce(new Promise<PickerCatalogue>((r) => (resolve = r)));
+    const user = userEvent.setup();
+    render(<CataloguePicker onAdd={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    await screen.findByRole('dialog');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    load.mockReturnValueOnce(new Promise<PickerCatalogue>(() => {}));
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    const dialog = await screen.findByRole('dialog');
+    await act(async () => resolve({ products: [amber], ranges }));
+    expect(within(dialog).queryByRole('checkbox')).toBeNull();
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Loading the catalogue');
+  });
+
+  it('narrows to Handles in the same render, with no further load', async () => {
+    const { dialog } = await openLoaded();
+    // A synchronous change and an immediate read: no findBy, no waitFor, so
+    // a list that needed a round trip would fail here.
+    fireEvent.change(within(dialog).getByRole('combobox', { name: 'Range' }), {
+      target: { value: 'handles' },
     });
+    expect(listed(dialog)).toEqual(['537 160 Black']);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('filters a range by its own products: the parent range does not pull in its sub range', async () => {
+    const { user, dialog } = await openLoaded();
+    const select = within(dialog).getByRole('combobox', { name: 'Range' });
+    await user.selectOptions(select, 'stone');
+    expect(listed(dialog)).toEqual(['Amber Jade']);
+    await user.selectOptions(select, 'heixin');
+    expect(listed(dialog)).toEqual(['Heixin Calacatta']);
+    expect(load).toHaveBeenCalledTimes(1);
   });
 
   it('offers only ranges with products, with their counts, nested ranges under their parent', async () => {
-    const user = userEvent.setup();
-    render(<CataloguePicker onAdd={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    const dialog = await screen.findByRole('dialog');
-    await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
+    const { dialog } = await openLoaded();
     const select = within(dialog).getByRole('combobox', { name: 'Range' });
-    const names = within(select)
+    const options = within(select)
       .getAllByRole('option')
       .map((option) => option.textContent);
-    expect(names).toEqual([
+    expect(options).toEqual([
       'All ranges',
       '12mm Sintered Stones (24)',
       'Heixin 12mm (7)',
@@ -138,47 +219,94 @@ describe('CataloguePicker', () => {
     ]);
   });
 
-  it('combines search and range: both reach the search, and either can be cleared', async () => {
+  it('filters in the same render as each keystroke, with no further load', async () => {
+    const { dialog } = await openLoaded();
+    fireEvent.change(within(dialog).getByRole('searchbox', { name: /search/i }), {
+      target: { value: 'amb' },
+    });
+    expect(listed(dialog)).toEqual(['Amber Jade']);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('matches a range name or its parent range name, in any case, when no range is chosen', async () => {
+    const { user, dialog } = await openLoaded();
+    const search = within(dialog).getByRole('searchbox', { name: /search/i });
+    await user.type(search, 'HARDWARE');
+    expect(listed(dialog)).toEqual(['537 160 Black']);
+    await user.clear(search);
+    await user.type(search, 'sintered');
+    expect(listed(dialog)).toEqual(['Amber Jade', 'Heixin Calacatta']);
+  });
+
+  it('combines search and range, and either can be cleared', async () => {
+    const { user, dialog } = await openLoaded();
+    const select = within(dialog).getByRole('combobox', { name: 'Range' });
+    const search = within(dialog).getByRole('searchbox', { name: /search/i });
+    await user.type(search, 'a');
+    expect(listed(dialog)).toHaveLength(3);
+    await user.selectOptions(select, 'stone');
+    expect(listed(dialog)).toEqual(['Amber Jade']);
+    await user.clear(search);
+    await user.type(search, 'black');
+    expect(listed(dialog)).toEqual([]);
+    expect(within(dialog).getByText('No published product matches.')).toBeInTheDocument();
+    await user.selectOptions(select, '');
+    expect(listed(dialog)).toEqual(['537 160 Black']);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('says a chosen range has nothing published when it is empty', async () => {
+    load.mockResolvedValueOnce({ products: [amber], ranges });
     const user = userEvent.setup();
     render(<CataloguePicker onAdd={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
     const dialog = await screen.findByRole('dialog');
     await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
-    await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Range' }), 'stone');
-    await user.type(within(dialog).getByRole('searchbox', { name: /search/i }), 'Amb');
-    await waitFor(() => expect(searchCatalogue).toHaveBeenLastCalledWith('Amb', 'stone'));
-    expect(await within(dialog).findByRole('checkbox', { name: /Amber Jade/i })).toBeInTheDocument();
-    expect(within(dialog).queryByRole('checkbox', { name: /537 160 Black/i })).toBeNull();
-    await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Range' }), '');
-    await waitFor(() => expect(searchCatalogue).toHaveBeenLastCalledWith('Amb', null));
+    await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Range' }), 'handles');
+    expect(within(dialog).getByText('No published products in Handles yet.')).toBeInTheDocument();
   });
 
   it('adds a product picked inside a filtered range', async () => {
-    const onAdd = vi.fn();
-    const user = userEvent.setup();
-    render(<CataloguePicker onAdd={onAdd} />);
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    const dialog = await screen.findByRole('dialog');
-    await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
+    const { user, dialog, onAdd } = await openLoaded();
     await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Range' }), 'handles');
-    await waitFor(() => {
-      expect(within(dialog).queryByRole('checkbox', { name: /Amber Jade/i })).toBeNull();
-    });
+    expect(within(dialog).queryByRole('checkbox', { name: /Amber Jade/i })).toBeNull();
     await user.click(within(dialog).getByRole('checkbox', { name: /537 160 Black/i }));
     expect(within(dialog).getByText('1 selected')).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Add 1 item' }));
     expect(onAdd).toHaveBeenCalledWith([expect.objectContaining({ id: handle.id })]);
   });
 
+  it('keeps a tick across a range change, so a quote can mix ranges', async () => {
+    const { user, dialog, onAdd } = await openLoaded();
+    await user.click(within(dialog).getByRole('checkbox', { name: /Amber Jade/i }));
+    await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Range' }), 'handles');
+    await user.click(within(dialog).getByRole('checkbox', { name: /537 160 Black/i }));
+    expect(within(dialog).getByText('2 selected')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Add 2 items' }));
+    expect(onAdd).toHaveBeenCalledWith([
+      expect.objectContaining({ id: amber.id }),
+      expect.objectContaining({ id: handle.id }),
+    ]);
+  });
+
+  it('loads afresh each time it is opened, and starts unfiltered', async () => {
+    const { user, dialog } = await openLoaded();
+    await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Range' }), 'handles');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
+    const again = await screen.findByRole('dialog');
+    await within(again).findByRole('checkbox', { name: /Amber Jade/i });
+    expect(within(again).getByRole('combobox', { name: 'Range' })).toHaveValue('');
+    expect(listed(again)).toHaveLength(3);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
   // jsdom cannot measure, so the layout that keeps the list reachable is held
   // by its classes: the controls and the footer never shrink, the list is the
   // one flexible, scrolling region between them.
   it('keeps the list the only scrolling region, between fixed controls and a fixed footer', async () => {
-    const user = userEvent.setup();
-    render(<CataloguePicker onAdd={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    const dialog = await screen.findByRole('dialog');
-    await within(dialog).findByRole('checkbox', { name: /Amber Jade/i });
+    const { dialog } = await openLoaded();
     const list = within(dialog).getAllByRole('list')[0]!;
     expect(list).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
     const controls = within(dialog).getByRole('searchbox').closest('.grid')!;
@@ -188,21 +316,14 @@ describe('CataloguePicker', () => {
   });
 
   it('shows the product photograph where there is one, a plain tile where there is not', async () => {
-    const user = userEvent.setup();
-    const { container } = render(<CataloguePicker onAdd={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    await screen.findByRole('checkbox', { name: /Amber Jade/i });
-    expect(document.querySelector('img[src="http://img.test/products/amber-jade/hero-400.webp"]')).not.toBeNull();
-    expect(container.ownerDocument.querySelectorAll('[role="dialog"] img')).toHaveLength(1);
+    const { dialog } = await openLoaded();
+    expect(dialog.querySelector('img[src="http://img.test/products/amber-jade/hero-400.webp"]')).not.toBeNull();
+    expect(dialog.querySelectorAll('img')).toHaveLength(1);
   });
 
   it('adds every checked product in one confirm, not one tap each', async () => {
-    const onAdd = vi.fn();
-    const user = userEvent.setup();
-    render(<CataloguePicker onAdd={onAdd} />);
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    const dialog = await screen.findByRole('dialog');
-    await user.click(await within(dialog).findByRole('checkbox', { name: /Amber Jade/i }));
+    const { user, dialog, onAdd } = await openLoaded();
+    await user.click(within(dialog).getByRole('checkbox', { name: /Amber Jade/i }));
     await user.click(within(dialog).getByRole('checkbox', { name: /537 160 Black/i }));
     await user.click(within(dialog).getByRole('button', { name: 'Add 2 items' }));
     expect(onAdd).toHaveBeenCalledWith([
@@ -213,25 +334,9 @@ describe('CataloguePicker', () => {
   });
 
   it('keeps Add disabled until something is checked', async () => {
-    const user = userEvent.setup();
-    render(<CataloguePicker onAdd={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    const dialog = await screen.findByRole('dialog');
+    const { dialog } = await openLoaded();
     expect(within(dialog).getByRole('button', { name: 'Add 0 items' })).toBeDisabled();
     expect(within(dialog).getByText('Pick at least one.')).toBeInTheDocument();
-  });
-
-  it('filters the list as the search field is typed', async () => {
-    const user = userEvent.setup();
-    render(<CataloguePicker onAdd={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    const dialog = await screen.findByRole('dialog');
-    await within(dialog).findByRole('checkbox', { name: /537 160 Black/i });
-    await user.type(within(dialog).getByRole('searchbox', { name: /search/i }), 'Amb');
-    expect(await within(dialog).findByRole('checkbox', { name: /Amber Jade/i })).toBeInTheDocument();
-    await waitFor(() => {
-      expect(within(dialog).queryByRole('checkbox', { name: /537 160 Black/i })).toBeNull();
-    });
   });
 
   it('says why the trigger is disabled', () => {
@@ -241,10 +346,16 @@ describe('CataloguePicker', () => {
   });
 
   it('is axe clean while open', async () => {
+    const { container } = await openLoaded();
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('is axe clean in the error state', async () => {
+    load.mockRejectedValueOnce(new Error('network'));
     const user = userEvent.setup();
     const { container } = render(<CataloguePicker onAdd={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
-    await screen.findByRole('dialog');
+    await screen.findByRole('alert');
     expect(await axe(container)).toHaveNoViolations();
   });
 });

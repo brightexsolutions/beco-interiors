@@ -13,8 +13,9 @@ vi.mock('@/app/(app)/quotes/actions', () => ({
 }));
 
 vi.mock('@/lib/catalogue', () => ({
-  listCatalogueRanges: vi.fn(async () => []),
-  searchCatalogue: vi.fn(async () => [
+  loadPickerCatalogue: vi.fn(async () => ({
+    ranges: [],
+    products: [
     {
       id: '33333333-3333-4333-8333-333333333333',
       name: 'Calacatta Gold',
@@ -33,7 +34,8 @@ vi.mock('@/lib/catalogue', () => ({
       priceDisplayMode: 'fixed',
       categoryName: '12mm Sintered Stones',
     },
-  ]),
+    ],
+  })),
 }));
 
 const line = (over: Partial<QuoteLine> = {}): QuoteLine => ({
