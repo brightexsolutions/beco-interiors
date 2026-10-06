@@ -5,6 +5,7 @@ import { ReportFilters } from '@/components/report-filters';
 import { ReportResults } from '@/components/report-results';
 import { fetchActivitySeries, hasActivity, toMoneyPoints } from '@/lib/activity';
 import { fetchConversionReport, fetchLeaderboard, parseReportQuery } from '@/lib/reports';
+import { QueryNavigationProvider } from '@/lib/use-query-navigation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -29,7 +30,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   ]);
 
   return (
-    <>
+    // One transition for the period controls in the heading and the figures
+    // below, so a period change dims the figures until they land. D117.
+    <QueryNavigationProvider>
       <PageHeading
         eyebrow="Sales"
         title="Reports"
@@ -43,6 +46,6 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <ReportCharts points={toMoneyPoints(weeks)} quiet={!hasActivity(weeks)} />
       </div>
       <ReportResults leaderboard={leaderboard} conversion={conversion} />
-    </>
+    </QueryNavigationProvider>
   );
 }

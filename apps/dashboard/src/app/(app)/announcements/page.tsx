@@ -10,6 +10,7 @@ import {
   type AnnouncementListFilters,
   type AnnouncementWindow,
 } from '@/lib/announcements';
+import { QueryNavigationProvider } from '@/lib/use-query-navigation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { ANNOUNCEMENT_TYPES, type AnnouncementType } from '@beco/types';
@@ -70,12 +71,17 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
           <p className="font-ui text-base text-neutral-700">Nothing is live. The bar is hidden on the site.</p>
         )}
       </section>
-      <div className="mb-4">
-        <AnnouncementFilters />
-      </div>
-      <div className="pb-24">
-        <AnnouncementResults announcements={announcements} editing={editing} creating={creating} />
-      </div>
+      {/* One transition for the filters and the list. D117. */}
+      <QueryNavigationProvider>
+        <div className="mb-4">
+          <AnnouncementFilters
+            count={`${announcements.length} ${announcements.length === 1 ? 'announcement' : 'announcements'}`}
+          />
+        </div>
+        <div className="pb-24">
+          <AnnouncementResults announcements={announcements} editing={editing} creating={creating} />
+        </div>
+      </QueryNavigationProvider>
     </>
   );
 }

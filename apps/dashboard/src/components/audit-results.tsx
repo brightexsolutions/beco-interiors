@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DataTable,
   EmptyState,
@@ -15,6 +14,8 @@ import {
   paginate,
   type DataTableColumn,
 } from '@beco/ui';
+import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import {
   formatAuditAction,
   formatAuditFields,
@@ -87,8 +88,8 @@ function AuditFields({ title, value }: { title: string; value: unknown }) {
 export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: AuditRow | null }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // Shared with the filter row (D117), so a filter change dims the list.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
   const paged = paginate(rows, requestedPage);
 
@@ -105,13 +106,13 @@ export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: Aud
     if (next <= 1) params.delete('page');
     else params.set('page', String(next));
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   const sheet = (
     <Sheet
       open={Boolean(viewing)}
-      onOpenChange={(open) => !open && startTransition(() => router.push(withParam('row', null)))}
+      onOpenChange={(open) => !open && navigate(() => router.push(withParam('row', null)))}
       title={viewing ? formatAuditTitle(viewing.action, viewing.entityType) : 'Audit'}
     >
       {viewing ? (
@@ -129,7 +130,9 @@ export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: Aud
   if (rows.length === 0) {
     return (
       <>
-        <EmptyState title="No audit rows" description="Nothing matches this filter yet." fill />
+        <BusyRegion busy={isPending}>
+          <EmptyState title="No audit rows" description="Nothing matches this filter yet." fill />
+        </BusyRegion>
         {sheet}
       </>
     );
@@ -146,24 +149,20 @@ export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: Aud
           getRowKey={(row) => row.id}
         />
       </div>
-      <ul className="grid min-w-0 grid-cols-1 gap-2 overflow-x-hidden xl:hidden">
+      <ListRows busy={isPending} label="Audit events" className="border-y border-neutral-200">
         {paged.items.map((row) => (
-          <li key={row.id}>
-            <Link
-              href={withParam('row', row.id)}
-              aria-label={`View ${formatAuditTitle(row.action, row.entityType)}`}
-              className="block min-w-0 overflow-hidden rounded-panel border border-neutral-200 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red"
-            >
-              <p className="font-semibold text-charcoal">
-                {formatAuditTitle(row.action, row.entityType)}
-              </p>
-              <p className="mt-1 text-neutral-500">
-                {row.actor ?? 'System'} · {formatAuditWhen(row.createdAt)}
-              </p>
-            </Link>
-          </li>
+          <ListRowLink
+            key={row.id}
+            href={withParam('row', row.id)}
+            label={`View ${formatAuditTitle(row.action, row.entityType)}`}
+          >
+            <p className="font-ui text-base font-semibold text-charcoal">{formatAuditTitle(row.action, row.entityType)}</p>
+            <p className="mt-1 font-ui text-base text-neutral-500">
+              {row.actor ?? 'System'} · {formatAuditWhen(row.createdAt)}
+            </p>
+          </ListRowLink>
         ))}
-      </ul>
+      </ListRows>
       <Pagination
         className="mt-4"
         page={paged.page}

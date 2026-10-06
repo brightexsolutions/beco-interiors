@@ -18,6 +18,7 @@ import {
 import { ProductEditor } from '@/components/product-editor';
 import { ProductCreate } from '@/components/product-create';
 import { ProductThumb } from '@/components/product-thumb';
+import { BusyRegion } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
 import {
   isLowStock,
@@ -254,10 +255,12 @@ export function ProductResults({
   if (products.length === 0) {
     return (
       <>
-        <EmptyState
-          title="No products here"
-          description="Nothing matches this filter yet. Clear search, or create a product."
-        />
+        <BusyRegion busy={isPending}>
+          <EmptyState
+            title="No products here"
+            description="Nothing matches this filter yet. Clear search, or create a product."
+          />
+        </BusyRegion>
         {sheet}
       </>
     );

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Busy, Button, Dialog, Input, Select, buttonClasses } from '@beco/ui';
 import { PdfPreview } from '@/components/pdf-preview';
+import { useQueryNavigation } from '@/lib/use-query-navigation';
 import { nairobiMonthStart, nairobiYmd, periodDisplayLabel } from '@/lib/reports';
 
 export type ReportPersonOption = { id: string; name: string };
@@ -38,8 +39,9 @@ function reportPdfHref(
 export function ReportFilters({ people = [] }: { people?: readonly ReportPersonOption[] }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  // The page's shared transition (D117): a period change dims the figures
+  // below, not only this row's Busy.
+  const { searchParams, navigate, isPending } = useQueryNavigation();
   const period = searchParams.get('period') ?? 'this_month';
   const from = searchParams.get('from') ?? '';
   const to = searchParams.get('to') ?? '';
@@ -79,7 +81,7 @@ export function ReportFilters({ people = [] }: { people?: readonly ReportPersonO
     if (!nextPerson) params.delete('person');
     else params.set('person', nextPerson);
     const query = params.toString();
-    startTransition(() => router.push(query ? `${pathname}?${query}` : pathname));
+    navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
   return (
