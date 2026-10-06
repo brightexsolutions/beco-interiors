@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Panel, TableToolbar, buttonClasses } from '@beco/ui';
+import { Panel, TableToolbar, buttonClasses, paginate } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { NewProductFab } from '@/components/new-product';
 import { CatalogueRanges } from '@/components/catalogue-ranges';
@@ -53,6 +53,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     categoryIds: categoryIdsInSelection(tree, selectedCategoryId) ?? undefined,
   };
   const products = await fetchProducts(supabase, filters);
+  // Paged here, not in the browser: only this page's rows cross the wire,
+  // which is what a range pill tap waits for. Paging was already a
+  // navigation, so this costs nothing extra.
+  const { items: pageItems, ...paging } = paginate(products, Number(one(params.page) || 1));
 
   const editSlug = one(params.edit);
   const creating = one(params.new) === '1' && !editSlug;
@@ -102,7 +106,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`}
           />
           <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
-            <ProductResults products={products} editing={editing} creating={creating} categories={productCategories} />
+            <ProductResults products={pageItems} paging={paging} editing={editing} creating={creating} categories={productCategories} />
           </div>
         </Panel>
       </QueryNavigationProvider>

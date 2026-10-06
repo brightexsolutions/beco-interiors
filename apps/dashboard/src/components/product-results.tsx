@@ -155,13 +155,30 @@ function ProductCard({ product, href }: { product: CatalogueProduct; href: strin
   );
 }
 
+/** Where `products` sits in the whole result, when the server already paged it. */
+export interface ProductPaging {
+  page: number;
+  pageCount: number;
+  from: number;
+  to: number;
+  total: number;
+}
+
 export function ProductResults({
   products,
+  paging,
   editing,
   creating,
   categories,
 }: {
+  /** The rows to show. With `paging`, one page the server sliced; without, the whole list. */
   products: CatalogueProduct[];
+  /**
+   * The catalogue page slices on the server and passes this, so a range pill
+   * sends eight products to the browser, not every product in the range with
+   * its description and specs: 178KB per tap for Handles before, on 4G.
+   */
+  paging?: ProductPaging | undefined;
   editing: CatalogueProduct | null;
   creating: boolean;
   categories: ProductCategoryOption[];
@@ -172,7 +189,7 @@ export function ProductResults({
   // table dims for a navigation any of them starts. D117.
   const { searchParams, navigate, isPending } = useQueryNavigation();
   const requestedPage = Number(searchParams.get('page') ?? 1);
-  const paged = paginate(products, requestedPage);
+  const paged = paging ? { ...paging, items: products } : paginate(products, requestedPage);
 
   const withParam = (key: string, value: string | null, extraClear: string[] = []) => {
     const params = new URLSearchParams(searchParams.toString());
