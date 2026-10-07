@@ -99,6 +99,14 @@ describe('reportOpsFailure', () => {
       vi.mocked(console.error).mock.calls.some((c) => String(c[0]).includes('ops_alert_undelivered')),
     ).toBe(true);
   });
+
+  it('still logs locally, and does not call a log-only alert undelivered', async () => {
+    sendOpsAlert.mockResolvedValue({ sent: false, reason: 'local-only' });
+    await reportOpsFailure({ area: 'test.local', summary: 'Local summary' });
+    const lines = vi.mocked(console.error).mock.calls.map((c) => String(c[0]));
+    expect(lines.some((s) => s.includes('"event":"ops_alert"') && s.includes('test.local'))).toBe(true);
+    expect(lines.some((s) => s.includes('ops_alert_undelivered'))).toBe(false);
+  });
 });
 
 describe('reportSendFailure', () => {

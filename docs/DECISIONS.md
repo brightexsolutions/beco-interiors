@@ -3490,3 +3490,43 @@ stale-edit message. The route check refuses those roles first, so this is the se
 
 *Reverses if:* Beco wants a gate before publishing, say no product live without a photograph,
 when the warning becomes a disabled button with the reason and a database check to match.
+
+## D134, 7 October 2026: the announcement bar is one row, and a long line ticks
+
+Reported by Brown and Irene: "HAPPY CUSTOMER SERVICE WEEK" with a long thank you and an
+"Experience Beco" link wrapped the bar onto three lines and pushed the page down. Measured on the
+local dev server with Irene's text, the bar was 70px at 390 (body hidden, link on its own line),
+123px at 820 and 101px at 1440, against the 3rem `.beco-hero-bleed` assumes.
+
+**One row at every width, fixed at `h-12`.** Label, body and call to action share the row. A
+line that fits sits still and centred, as before. A line that does not, measured by a
+ResizeObserver on the bar and the line rather than guessed from its length, becomes a ticker:
+two copies on one track, `translateX(0)` to `-50%`, linear, so the loop has no seam. The pace is
+a constant 48px a second, the duration computed from the measured width, so a longer line takes
+longer rather than moving faster. 1.5s before it moves, so the opening words can be read.
+
+**The keyframe is new, `beco-ticker`.** The rail's old CSS marquee was a back and forth pass,
+retired by D59 for `scrollLeft`; the bar has no arrows, so CSS off the main thread is still the
+right tool. It follows the rail's pause rule: `:hover` and `:focus-within` pause it.
+
+**One announcement for assistive tech, one link in the tab order.** The second copy is
+`aria-hidden`, `inert`, and its links `tabIndex -1`. The viewport is `overflow-clip`, not
+`hidden`, so focus cannot scroll it out of register. If Tab lands on a link the ticker has carried
+out of view, the ticker stops and holds the line with that link inside the bar until focus leaves.
+
+**Rotation waits for the pass.** A ticking line rotates on `animationiteration`, not the 5.5s
+timer, so it is read to the end, and a pause under the pointer holds the rotation too.
+
+**Reduced motion: truncate, not wrap.** No ticker and no copy. The body ellipsises, the label and
+the call to action stay whole, so the link is always visible and reachable. Wrapping was rejected
+because it grows the bar and breaks the fixed height the hero is laid out against, which is the
+bug being fixed. The full text stays in the DOM for a screen reader and in the row's `title` for
+a pointer. The server sends this same layout, so first paint is one clean row before script.
+
+After, same server and text: 48px at 390, 820 and 1440, measured 48px/s at each, no sideways
+page scroll. The close button keeps its 44px target, fixed at the right outside the ticker; on a
+phone it moves to `right-2` and the line is inset 20px either side so the two never overlap.
+
+*Reverses if:* Beco wants the full text of a long announcement readable without motion, at
+which point the answer is a shorter announcement or a page the call to action opens, not a taller
+bar.
