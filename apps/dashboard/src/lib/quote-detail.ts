@@ -4,6 +4,7 @@ import type { createServerClient } from '@beco/supabase-client';
 
 import { fetchStaffNames, staffName } from './staff-names';
 import { customerFromEmbed, type CustomerSummary } from './customer-search';
+import { parseQuoteRequest, type QuoteRequest } from './quote-request';
 
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
@@ -78,6 +79,8 @@ export interface QuoteDetail {
    *  The name, phone and email above are the quote's own snapshot. */
   customer: CustomerSummary | null;
   lines: QuoteLine[];
+  /** What the website form submitted, kept as it was (D131). Null for a counter quote. */
+  request: QuoteRequest | null;
   totals: QuoteMoney;
   vatRate: number;
   documents: QuoteDocumentRow[];
@@ -194,6 +197,7 @@ export async function fetchQuote(
        source, status, created_at, updated_at, valid_until, finalized_at, lost_reason,
        reviewing_at, quoted_at, won_at, lost_at, reopened_at,
        requires_approval, approved_at, assigned_to, created_by, approved_by, converted_order_id,
+       requested_items,
        assigned_user:users!quotes_assigned_to_fkey(full_name),
        created_user:users!quotes_created_by_fkey(full_name),
        approved_user:users!quotes_approved_by_fkey(full_name),
@@ -282,6 +286,7 @@ export async function fetchQuote(
     convertedOrderReference: oneRef(quote.converted_order),
     customer: customerFromEmbed(quote.customer),
     lines,
+    request: parseQuoteRequest(quote.requested_items),
     totals: quoteTotals(
       lines.map((line) => ({ unitPrice: line.unitPrice, quantity: line.quantity })),
       settings.vatRate,

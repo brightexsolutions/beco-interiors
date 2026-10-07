@@ -71,6 +71,11 @@ export const updateQuoteLinesSchema = quoteLockSchema.extend({
     .max(60),
 });
 
+/** D131: take one line off a quote. The database refuses the last line. */
+export const removeQuoteLineSchema = quoteLockSchema.extend({
+  lineId: z.uuid('Pick the item to remove'),
+});
+
 export const addCustomLineSchema = quoteLockSchema.extend({
   description: z.string().trim().min(2, 'Describe the item').max(300),
   quantity: z.coerce.number().positive().max(10_000).multipleOf(0.5),

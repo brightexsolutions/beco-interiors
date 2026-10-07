@@ -163,6 +163,12 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
             quoteId={quote.id}
             updatedAt={quote.updatedAt}
             canMutate={canMutate}
+            reference={quote.reference}
+            status={quote.status}
+            convertedOrderReference={quote.convertedOrderReference}
+            canClaim={canClaim}
+            assignedToName={quote.assignedToName}
+            request={quote.request}
           />
 
           <div className="mt-6 flex justify-end">

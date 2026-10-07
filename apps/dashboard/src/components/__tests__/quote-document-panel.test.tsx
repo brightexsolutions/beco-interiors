@@ -14,6 +14,8 @@ vi.mock('@/app/(app)/quotes/actions', () => ({
   updateQuoteLines: vi.fn(async () => ({ ok: 'Items saved.', updatedAt: '2026-09-17T12:00:00.000Z' })),
   addCustomLine: vi.fn(async () => ({})),
   addCatalogueLines: vi.fn(async () => ({})),
+  claimQuote: vi.fn(async () => ({})),
+  removeQuoteLine: vi.fn(async () => ({})),
 }));
 
 vi.mock('@/lib/catalogue', () => ({
@@ -152,7 +154,7 @@ describe('QuoteDocumentPanel', () => {
           customerPhone="0722333730"
           canMutate
         />
-        <QuoteLines lines={[line]} quoteId="11111111-1111-4111-8111-111111111111" updatedAt="lock" canMutate />
+        <QuoteLines reference="BEC-Q-00012" lines={[line]} quoteId="11111111-1111-4111-8111-111111111111" updatedAt="lock" canMutate />
       </QuoteDraftFlushProvider>,
     );
     await user.click(screen.getByRole('button', { name: /increase quantity of amber jade/i }));

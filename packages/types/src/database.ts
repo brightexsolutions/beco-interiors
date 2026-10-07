@@ -995,6 +995,7 @@ export type Database = {
           quoted_at: string | null
           reference_number: string
           reopened_at: string | null
+          requested_items: Json | null
           requires_approval: boolean
           reviewing_at: string | null
           source: Database["public"]["Enums"]["quote_source"]
@@ -1035,6 +1036,7 @@ export type Database = {
           quoted_at?: string | null
           reference_number?: string
           reopened_at?: string | null
+          requested_items?: Json | null
           requires_approval?: boolean
           reviewing_at?: string | null
           source?: Database["public"]["Enums"]["quote_source"]
@@ -1075,6 +1077,7 @@ export type Database = {
           quoted_at?: string | null
           reference_number?: string
           reopened_at?: string | null
+          requested_items?: Json | null
           requires_approval?: boolean
           reviewing_at?: string | null
           source?: Database["public"]["Enums"]["quote_source"]
@@ -1409,6 +1412,14 @@ export type Database = {
       reissue_quote: {
         Args: { p_expected_updated_at: string; p_quote_id: string }
         Returns: undefined
+      }
+      remove_quote_line: {
+        Args: {
+          p_expected_updated_at: string
+          p_line_id: string
+          p_quote_id: string
+        }
+        Returns: string
       }
       reopen_quote: {
         Args: { p_expected_updated_at: string; p_quote_id: string }

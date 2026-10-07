@@ -12,6 +12,7 @@ import {
   claimQuoteSchema,
   createCounterQuoteSchema,
   linkQuoteCustomerSchema,
+  removeQuoteLineSchema,
   reopenQuoteSchema,
   sendQuoteEmailSchema,
   setQuoteStatusSchema,
@@ -158,6 +159,34 @@ export async function updateQuoteLines(_prev: QuoteActionState, form: FormData):
     // `updatedAt: undefined` is not the same as omitting updatedAt entirely.
     ...(data?.updated_at ? { updatedAt: data.updated_at } : {}),
   };
+}
+
+/**
+ * Take one line off a quote (D131). The owner or an admin, under the quote's
+ * lock. The database refuses the last line, a won, lost or converted quote,
+ * and writes the audit row; the customer's original request stays on the
+ * quote untouched.
+ */
+export async function removeQuoteLine(_prev: QuoteActionState, form: FormData): Promise<QuoteActionState> {
+  await requirePath('/quotes');
+  const parsed = removeQuoteLineSchema.safeParse({
+    ...lockFrom(form),
+    lineId: String(form.get('lineId') ?? ''),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Pick the item to remove' };
+
+  const supabase = await getSupabase();
+  const { data: removed, error } = await supabase.rpc('remove_quote_line', {
+    p_quote_id: parsed.data.quoteId,
+    p_line_id: parsed.data.lineId,
+    p_expected_updated_at: parsed.data.updatedAt,
+  });
+  if (error) return { error: mutationMessage(error) };
+
+  const reference = await referenceOf(parsed.data.quoteId);
+  revalidateQuote(reference);
+  // Named, so two removals in a row each get their own toast.
+  return { ok: removed ? `Removed ${removed}. Total updated.` : 'Item removed. Total updated.' };
 }
 
 export async function addCustomLine(_prev: QuoteActionState, form: FormData): Promise<QuoteActionState> {

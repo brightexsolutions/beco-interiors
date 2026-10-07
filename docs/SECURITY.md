@@ -86,6 +86,7 @@ has always been, not forgotten.
 | `createCustomer`, `updateCustomer` (D130) | `requirePath('/customers')`, then sales or admin only | `createCustomerSchema` / `updateCustomerSchema`: name, Kenyan phone, email, KRA PIN shape, client type, length caps | by the session |
 | `deleteCustomer` (D130) | `requirePath('/customers')`, then `isAdminRole` | the id | by the session |
 | `linkQuoteCustomer` (D130) | `requirePath('/quotes')`; the RPC checks owner or admin and the lock | `linkQuoteCustomerSchema` | by the session |
+| `removeQuoteLine` (D131) | `requirePath('/quotes')`; `remove_quote_line` checks role, owner or admin, the lock, the quote's state and the last line | `removeQuoteLineSchema`: quote id, line id, lock token | by the session |
 
 ### Findings fixed
 
@@ -154,6 +155,9 @@ for a role that cannot use it.
 | Function | sales | product manager | beco_admin | brightex_admin |
 |---|---|---|---|---|
 | Raise, price and issue a quote; claim an unassigned one | own | no | yes | yes |
+| **Remove a line from a quote** (D131), not the last one, not on a won, lost or converted quote | own, **after claiming** | no | yes | yes |
+| Read what the customer first submitted (`quotes.requested_items`, D131) | yes | no (no quote read, D87) | yes | yes |
+| Change what the customer first submitted | no | no | **no** | **no** |
 | **Read the customer list and a customer's record** (D130) | yes | **yes, without quote or order figures** | yes | yes |
 | Add a customer, edit a customer's details | yes | no | yes | yes |
 | Link or change the customer on a quote | own | no | yes | yes |
@@ -179,8 +183,26 @@ for a role that cannot use it.
 "own" means the quotes and orders assigned to that salesperson; the database functions check
 `assigned_to` or `salesperson_id` against `auth.uid()` and the admin bypass is `is_admin()`.
 Tested in `21_convert_quote_to_order.test.sql` (cancel), `10_quote_pricing_approval.test.sql`
-(approve), `12_quote_claim_assign.test.sql` (assign) and the action tests named in
+(approve), `12_quote_claim_assign.test.sql` (assign), `41_remove_quote_line.test.sql` (remove a
+line, the customer's request, line audit) and the action tests named in
 `docs/TEST-COVERAGE.md`.
+
+## Finding, 7 October 2026: a deactivated account passed the quote functions' role guard (migration 66)
+
+Found while testing `remove_quote_line` (D131). `current_user_role()` is null for an account
+with `is_active = false`, so `is_admin()` returned null as well, and every quote and order
+function opens with `if current_user_role() is distinct from 'beco_sales' and not is_admin()`.
+`not null` is null and IF treats null as false, so the guard waved the account through; the
+owner check after it (`not is_admin() and v_assigned is distinct from v_uid`) failed the same
+way. A salesperson deactivated while their token was still valid could therefore still edit,
+claim, reopen, convert or cancel through a direct RPC call, which never meets the proxy that
+signs them out (D83). The admin-only cancel in `set_order_status` (D110) had the same hole.
+
+Fixed in one place: `is_admin()` now returns `coalesce(..., false)`. Every policy that reads it
+uses it positively (`using (is_admin())`, `is_admin() or ...`), where false and null both deny,
+so nothing previously refused became allowed. Proven by `42_is_admin_never_null.test.sql`
+(the function for anon, a deactivated, an active sales and an admin account; two quote
+functions refusing a deactivated owner) and by the full pgTAP suite passing unchanged.
 
 
 ## Customers, 6 October 2026 (D130)

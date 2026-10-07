@@ -27,7 +27,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-const { claimQuote, updateQuoteLine, setQuoteStatus, createCounterQuote, addCatalogueLine, addCatalogueLines, updateQuoteLines, reopenQuote, linkQuoteCustomer } = await import('../actions');
+const { claimQuote, updateQuoteLine, setQuoteStatus, createCounterQuote, addCatalogueLine, addCatalogueLines, updateQuoteLines, reopenQuote, linkQuoteCustomer, removeQuoteLine } = await import('../actions');
 
 afterEach(() => {
   rpc.mockReset();
@@ -211,6 +211,38 @@ describe('quote actions', () => {
     const result = await updateQuoteLines({}, lockForm({ items: '[]' }));
     expect(result.error).toMatch(/nothing to save/i);
     expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('removes one line through remove_quote_line under the lock, and names it (D131)', async () => {
+    rpc.mockResolvedValue({ data: 'Amber Jade', error: null });
+    maybeSingle.mockResolvedValue({ data: { reference_number: 'BEC-Q-1' } });
+    const result = await removeQuoteLine({}, lockForm({ lineId: '22222222-2222-4222-8222-222222222222' }));
+    expect(requirePath).toHaveBeenCalledWith('/quotes');
+    expect(rpc).toHaveBeenCalledWith('remove_quote_line', {
+      p_quote_id: '11111111-1111-4111-8111-111111111111',
+      p_line_id: '22222222-2222-4222-8222-222222222222',
+      p_expected_updated_at: '2026-09-17T10:00:00.000Z',
+    });
+    expect(result).toEqual({ ok: 'Removed Amber Jade. Total updated.' });
+  });
+
+  it('refuses a removal with no line before touching the database', async () => {
+    const result = await removeQuoteLine({}, lockForm({ lineId: 'not-a-line' }));
+    expect(result.error).toBe('Pick the item to remove');
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('passes the database refusal of a last line, or a colleague\'s quote, through as a sentence', async () => {
+    rpc.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'P0001', message: 'A quote needs at least one item. Mark it lost instead.' },
+    });
+    const last = await removeQuoteLine({}, lockForm({ lineId: '22222222-2222-4222-8222-222222222222' }));
+    expect(last.error).toBe('A quote needs at least one item. Mark it lost instead.');
+
+    rpc.mockResolvedValueOnce({ data: null, error: { code: '42501', message: 'Not allowed' } });
+    const other = await removeQuoteLine({}, lockForm({ lineId: '22222222-2222-4222-8222-222222222222' }));
+    expect(other.error).toMatch(/do not have permission/i);
   });
 
   it('reopens a lost quote through reopen_quote', async () => {

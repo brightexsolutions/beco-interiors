@@ -41,6 +41,14 @@ beforeAll(async () => {
     role: 'beco_sales',
   });
   authUserIds.push(salesId);
+  authUserIds.push(
+    await ensureTestUser(sb, {
+      email: 'zz-int-mut-colleague@beco.co.ke',
+      password: PASSWORD,
+      fullName: 'ZZ Mut Colleague',
+      role: 'beco_sales',
+    }),
+  );
 
   const { data: product, error: productErr } = await sb
     .from('products')
@@ -194,5 +202,145 @@ describe('create_counter_quote', () => {
       .select('id')
       .eq('quote_id', quote!.id);
     expect(items).toHaveLength(3);
+  });
+});
+
+describe('remove_quote_line on a web quote (D131)', () => {
+  const anon = () =>
+    createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { persistSession: false },
+    });
+
+  /** A real website submission: two lines, unassigned, unpriced. */
+  const submitWebQuote = async (name: string, phone: string) => {
+    const { data: reference, error } = await anon().rpc('submit_quote', {
+      p_customer_name: `${PREFIX} ${name}`,
+      p_customer_phone: phone,
+      p_items: [
+        { slug: 'zz-int-mut-product', quantity: 2 },
+        { slug: 'zz-int-mut-product', quantity: 1 },
+      ],
+    });
+    expect(error, error?.message).toBeNull();
+    const { data: quote } = await service()
+      .from('quotes')
+      .select('id, updated_at, assigned_to, requested_items')
+      .eq('reference_number', reference!)
+      .single();
+    quoteIds.push(quote!.id);
+    const { data: items } = await service()
+      .from('quote_items')
+      .select('id, quantity')
+      .eq('quote_id', quote!.id)
+      .order('sort_order');
+    return { reference: reference!, quote: quote!, items: items! };
+  };
+
+  const lockOf = async (client: ReturnType<typeof createClient<Database>>, quoteId: string) => {
+    const { data } = await client.from('quotes').select('updated_at').eq('id', quoteId).single();
+    return data!.updated_at;
+  };
+
+  it('a salesperson cannot remove a line until they claim the quote, then can, and the total follows', async () => {
+    const web = await submitWebQuote('Phoned Back', '0722000020');
+    expect(web.quote.assigned_to).toBeNull();
+    expect(web.items).toHaveLength(2);
+    const { client } = await signInAs('zz-int-mut-sales@beco.co.ke');
+
+    const refused = await client.rpc('remove_quote_line', {
+      p_quote_id: web.quote.id,
+      p_line_id: web.items[1]!.id,
+      p_expected_updated_at: web.quote.updated_at,
+    });
+    expect(refused.error?.code).toBe('42501');
+
+    expect((await client.rpc('claim_quote', { p_quote_id: web.quote.id, p_expected_updated_at: web.quote.updated_at })).error).toBeNull();
+
+    // Price both lines at list so the totals are real numbers.
+    const priced = await client.rpc('update_quote_lines', {
+      p_quote_id: web.quote.id,
+      p_items: web.items.map((item) => ({ line_id: item.id, quantity: Number(item.quantity), unit_price: 65000 })),
+      p_expected_updated_at: await lockOf(client, web.quote.id),
+    });
+    expect(priced.error, priced.error?.message).toBeNull();
+
+    const removed = await client.rpc('remove_quote_line', {
+      p_quote_id: web.quote.id,
+      p_line_id: web.items[1]!.id,
+      p_expected_updated_at: await lockOf(client, web.quote.id),
+    });
+    expect(removed.error, removed.error?.message).toBeNull();
+    expect(removed.data).toBe('ZZ Mut Integration Slab');
+
+    const { data: after } = await client
+      .from('quotes')
+      .select('total_amount, vat_amount, subtotal, requested_items')
+      .eq('id', web.quote.id)
+      .single();
+    // 2 x 65,000 left, VAT inside at the configured rate.
+    expect(Number(after!.total_amount)).toBe(130000);
+    expect(Number(after!.subtotal) + Number(after!.vat_amount)).toBeCloseTo(130000, 2);
+    // The salesperson reads the customer's request through the quote's own RLS.
+    const request = after!.requested_items as { source: string; lines: { id: string }[] };
+    expect(request.source).toBe('submission');
+    expect(request.lines.map((line) => line.id)).toEqual(web.items.map((item) => item.id));
+
+    const { data: audit } = await service()
+      .from('audit_log')
+      .select('action, before')
+      .eq('entity_type', 'quote_items')
+      .eq('entity_id', web.items[1]!.id)
+      .eq('action', 'delete');
+    expect(audit).toHaveLength(1);
+    expect((audit![0]!.before as { quote_id: string }).quote_id).toBe(web.quote.id);
+  });
+
+  it('refuses the last line, a stale lock, and a colleague', async () => {
+    const web = await submitWebQuote('Refusals', '0722000021');
+    const { client } = await signInAs('zz-int-mut-sales@beco.co.ke');
+    expect((await client.rpc('claim_quote', { p_quote_id: web.quote.id, p_expected_updated_at: web.quote.updated_at })).error).toBeNull();
+
+    const stale = await client.rpc('remove_quote_line', {
+      p_quote_id: web.quote.id,
+      p_line_id: web.items[1]!.id,
+      p_expected_updated_at: '1999-01-01T00:00:00.000Z',
+    });
+    // PT409, never 40001: PostgREST would retry a serialization failure forever.
+    expect(stale.error?.code).toBe('PT409');
+
+    const colleague = await signInAs('zz-int-mut-colleague@beco.co.ke');
+    const theirs = await colleague.client.rpc('remove_quote_line', {
+      p_quote_id: web.quote.id,
+      p_line_id: web.items[1]!.id,
+      p_expected_updated_at: await lockOf(client, web.quote.id),
+    });
+    expect(theirs.error?.code).toBe('42501');
+
+    expect(
+      (
+        await client.rpc('remove_quote_line', {
+          p_quote_id: web.quote.id,
+          p_line_id: web.items[1]!.id,
+          p_expected_updated_at: await lockOf(client, web.quote.id),
+        })
+      ).error,
+    ).toBeNull();
+    const last = await client.rpc('remove_quote_line', {
+      p_quote_id: web.quote.id,
+      p_line_id: web.items[0]!.id,
+      p_expected_updated_at: await lockOf(client, web.quote.id),
+    });
+    expect(last.error?.message).toBe('A quote needs at least one item. Mark it lost instead.');
+    const { data: left } = await client.from('quote_items').select('id').eq('quote_id', web.quote.id);
+    expect(left).toHaveLength(1);
+  });
+
+  it('anon cannot call it at all', async () => {
+    const { error } = await anon().rpc('remove_quote_line', {
+      p_quote_id: '11111111-1111-4111-8111-111111111111',
+      p_line_id: '11111111-1111-4111-8111-111111111111',
+      p_expected_updated_at: '2026-10-07T00:00:00.000Z',
+    });
+    expect(error).not.toBeNull();
   });
 });
