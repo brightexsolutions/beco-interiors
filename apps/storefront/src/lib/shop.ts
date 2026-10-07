@@ -26,11 +26,17 @@ export interface CatalogueFilter {
   q?: string | undefined;
   finish?: string | undefined;
   sort?: string | undefined;
+  /** `bookmatched` keeps only stones sold as a bookmatched pair (face_type book_match). */
+  face?: string | undefined;
 }
+
+/** The one face filter the shop offers, from the home page's "All bookmatched stone". */
+export const BOOKMATCHED = 'bookmatched';
+export const readFace = (raw: string): string | undefined => (raw.trim() === BOOKMATCHED ? BOOKMATCHED : undefined);
 
 /** True when any control is set, which is when a view is noindex and canonicalises to its page. D29. */
 export const isFilteredView = (f: CatalogueFilter): boolean =>
-  Boolean(f.q?.trim() || f.finish || (f.sort && f.sort !== 'name'));
+  Boolean(f.q?.trim() || f.finish || f.face || (f.sort && f.sort !== 'name'));
 
 /**
  * Search, finish and sort over a list that is already scoped to a range.
@@ -39,12 +45,13 @@ export const isFilteredView = (f: CatalogueFilter): boolean =>
  */
 export const applyCatalogueFilters = (
   products: readonly CatalogueProduct[],
-  { q, finish, sort }: CatalogueFilter,
+  { q, finish, sort, face }: CatalogueFilter,
 ): CatalogueProduct[] => {
   const needle = (q ?? '').trim().toLowerCase();
   let out = products.filter((p) => {
     if (needle && !p.name.toLowerCase().includes(needle)) return false;
     if (finish && finishOf(p) !== finish) return false;
+    if (face === BOOKMATCHED && p.face_type !== 'book_match') return false;
     return true;
   });
   if (sort === 'price-asc' || sort === 'price-desc') {
