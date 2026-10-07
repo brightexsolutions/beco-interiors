@@ -109,6 +109,33 @@ describe('QuantityStepper', () => {
     expect(first.id).not.toBe(second.id);
   });
 
+  it('disabled turns off both buttons and the typed field, and points each at the reason (D132)', async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <>
+        <p id="why">A won quote is closed. Its items are fixed.</p>
+        <QuantityStepper value={3} onChange={onChange} label="Amber Jade" editable disabled describedBy="why" />
+      </>,
+    );
+    const minus = screen.getByRole('button', { name: 'Decrease quantity of Amber Jade' });
+    const plus = screen.getByRole('button', { name: 'Increase quantity of Amber Jade' });
+    const input = screen.getByLabelText('Amber Jade quantity');
+    for (const control of [minus, plus, input]) {
+      expect(control).toBeDisabled();
+      expect(control).toHaveAttribute('aria-describedby', 'why');
+    }
+    await user.click(plus);
+    await user.click(minus);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('carries no describedby while enabled', () => {
+    render(<QuantityStepper value={3} onChange={vi.fn()} label="Amber Jade" />);
+    expect(screen.getByRole('button', { name: 'Increase quantity of Amber Jade' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Increase quantity of Amber Jade' })).not.toHaveAttribute('aria-describedby');
+  });
+
   it('has no accessibility violations, in the default and the editable shape', async () => {
     const { container, rerender } = render(
       <QuantityStepper value={2} onChange={vi.fn()} label="Amber Jade" unit="per slab" />,

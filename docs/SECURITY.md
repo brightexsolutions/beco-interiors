@@ -146,6 +146,12 @@ tables, an admin still writes, and the conversion function stays security define
 Not yet checked: whether any order rows were inserted this way before the fix. Look
 for orders with no `quote_id` and no admin `created_by` on beco-prod.
 
+## 7 October 2026: quote lines change only through functions (migration 68)
+
+`quote_items_write_owner` (migration 5) allowed direct writes to quote lines by the owner or an
+admin, bypassing the won, lost and converted lock (D132), the optimistic lock, rounding and the
+approval reset. Dropped; reads unchanged. See D132.
+
 ## Who may do what, by function (D110, 3 October 2026)
 
 Routes are the coarse gate (`lib/access.ts`). Inside a route, these are the functions that

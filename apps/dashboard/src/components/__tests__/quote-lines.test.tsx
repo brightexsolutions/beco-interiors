@@ -152,21 +152,31 @@ describe('QuoteLines', () => {
     ]);
   });
 
-  it('pins item, qty, unit and line to one desktop row so they sit under the headers', () => {
+  it('pins item, qty, unit and line to one row once the list itself is wide, so they sit under the headers', () => {
     render(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
     const row = screen.getByText('Amber Jade').closest('[data-dirty]');
     expect(row).toBeTruthy();
-    expect(row?.className).toContain('md:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem]');
-    expect(row?.innerHTML).toContain('md:col-start-1 md:row-start-1');
-    expect(row?.innerHTML).toContain('md:col-start-2 md:row-start-1');
-    expect(row?.innerHTML).toContain('md:col-start-3 md:row-start-1');
-    expect(row?.innerHTML).toContain('md:col-start-4 md:row-start-1');
+    // A container query on the list, not a screen breakpoint: beside the
+    // quote page's rail, md: gave the item column about 80px at 1280.
+    expect(row?.className).toContain('@3xl:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem]');
+    expect(row?.className).not.toMatch(/(^|\s)md:/);
+    expect(row?.innerHTML).not.toMatch(/(^|[\s"])md:/);
+    expect(row?.closest('.\\@container')).not.toBeNull();
+    expect(row?.innerHTML).toContain('@3xl:col-start-1 @3xl:row-start-1');
+    expect(row?.innerHTML).toContain('@3xl:col-start-2 @3xl:row-start-1');
+    expect(row?.innerHTML).toContain('@3xl:col-start-3 @3xl:row-start-1');
+    expect(row?.innerHTML).toContain('@3xl:col-start-4 @3xl:row-start-1');
     // Remove sits under the line amount, not in a fifth column (D131): measured
     // at 1280, a fifth column left the item column no width at all.
-    expect(row?.innerHTML).toContain('md:col-start-4 md:row-start-2');
-    expect(row?.innerHTML).not.toContain('md:col-start-5');
+    expect(row?.innerHTML).toContain('@3xl:col-start-4 @3xl:row-start-2');
+    expect(row?.innerHTML).not.toContain('col-start-5');
     const header = screen.getByText('Item').closest('div');
     expect(header).toBeTruthy();
+    // The header switches on the same container and the same columns as the rows.
+    expect(header?.className).toContain('@3xl:grid');
+    expect(header?.className).toContain('@3xl:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem]');
+    expect(header?.className).toContain('hidden');
+    expect(header?.closest('.\\@container')).toBe(row?.closest('.\\@container'));
     expect(within(header as HTMLElement).getByText('Qty')).toBeInTheDocument();
     expect(within(header as HTMLElement).getByText('Unit')).toBeInTheDocument();
     expect(within(header as HTMLElement).getByText('Line')).toBeInTheDocument();
@@ -287,12 +297,15 @@ describe('QuoteLines', () => {
       const { rerender } = render(
         <QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate status="won" />,
       );
-      expect(screen.getByRole('button', { name: 'Remove Amber Jade' })).toBeDisabled();
-      expect(screen.getByText('A won quote is closed. Nothing can be removed.')).toBeInTheDocument();
+      const remove = screen.getByRole('button', { name: 'Remove Amber Jade' });
+      expect(remove).toBeDisabled();
+      expect(document.getElementById(remove.getAttribute('aria-describedby') ?? '')).toHaveTextContent(
+        'A won quote is closed. Its items are fixed.',
+      );
       rerender(
         <QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate status="lost" />,
       );
-      expect(screen.getByText('Reopen this quote to remove items.')).toBeInTheDocument();
+      expect(screen.getAllByText('Reopen this quote to change its items.').length).toBeGreaterThan(0);
       rerender(
         <QuoteLines
           reference="BEC-Q-00012"
@@ -304,7 +317,7 @@ describe('QuoteLines', () => {
           convertedOrderReference="BEC-O-00004"
         />,
       );
-      expect(screen.getByText('This quote became order BEC-O-00004. Nothing can be removed.')).toBeInTheDocument();
+      expect(screen.getAllByText('This quote became order BEC-O-00004. Its items are fixed.').length).toBeGreaterThan(0);
     });
 
     it('asks for unsaved line changes to be saved first, so a removal cannot throw them away', async () => {
@@ -313,6 +326,137 @@ describe('QuoteLines', () => {
       await user.click(screen.getByRole('button', { name: /increase quantity of amber jade/i }));
       expect(screen.getByRole('button', { name: 'Remove ZZ Seed Jatoba Brown' })).toBeDisabled();
       expect(screen.getAllByText('Save your line changes first.')).toHaveLength(2);
+    });
+  });
+
+  describe('a closed quote (D132)', () => {
+    const cases = [
+      { label: 'won', status: 'won' as const, order: null, reason: 'A won quote is closed. Its items are fixed.' },
+      { label: 'lost', status: 'lost' as const, order: null, reason: 'Reopen this quote to change its items.' },
+      {
+        label: 'converted',
+        status: 'won' as const,
+        order: 'BEC-O-00004',
+        reason: 'This quote became order BEC-O-00004. Its items are fixed.',
+      },
+    ];
+
+    it.each(cases)('on a $label quote, every line control is off and points at the one reason', async ({ status, order, reason }) => {
+      const user = userEvent.setup();
+      vi.mocked(updateQuoteLines).mockClear();
+      render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line(), jatoba]}
+          quoteId="q"
+          updatedAt="t"
+          canMutate
+          status={status}
+          convertedOrderReference={order}
+        />,
+      );
+      // The reason line above the list, the one Remove already used.
+      const remove = screen.getByRole('button', { name: 'Remove Amber Jade' });
+      const reasonId = remove.getAttribute('aria-describedby');
+      expect(reasonId).toBeTruthy();
+      const reasonLine = document.getElementById(reasonId!);
+      expect(reasonLine).toHaveTextContent(reason);
+      expect(reasonLine).toBeVisible();
+
+      const controls = [
+        remove,
+        screen.getByRole('button', { name: 'Increase quantity of Amber Jade' }),
+        screen.getByRole('button', { name: 'Decrease quantity of ZZ Seed Jatoba Brown' }),
+        screen.getByRole('button', { name: 'Increase quantity of ZZ Seed Jatoba Brown' }),
+        document.getElementById(`price-${line().id}`)!,
+        document.getElementById(`price-${jatoba.id}`)!,
+        screen.getByRole('button', { name: 'Save' }),
+        screen.getByLabelText('What to quote'),
+        screen.getByLabelText('Qty'),
+        screen.getByLabelText('Price'),
+        screen.getByRole('button', { name: 'Add' }),
+      ];
+      for (const control of controls) {
+        expect(control).toBeDisabled();
+        expect(control).toHaveAttribute('aria-describedby', reasonId);
+      }
+      // The catalogue add is off too, with the reason under it and tied to it.
+      const catalogue = screen.getByRole('button', { name: 'Add from catalogue' });
+      expect(catalogue).toBeDisabled();
+      expect(document.getElementById(catalogue.getAttribute('aria-describedby') ?? '')).toHaveTextContent(reason);
+      expect(screen.getAllByText(reason)).toHaveLength(2);
+      // No "No changes to save." beside a Save that can never be used.
+      expect(screen.queryByText('No changes to save.')).toBeNull();
+
+      // Clicking does nothing: nothing turns dirty, nothing is sent.
+      await user.click(screen.getByRole('button', { name: 'Increase quantity of Amber Jade' }));
+      expect(screen.queryByText('Unsaved')).toBeNull();
+      expect(updateQuoteLines).not.toHaveBeenCalled();
+    });
+
+    it('an open quote keeps every control live, quoted included', () => {
+      for (const status of ['new', 'reviewing', 'quoted'] as const) {
+        const { unmount } = render(
+          <QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate status={status} />,
+        );
+        expect(screen.getByRole('button', { name: 'Increase quantity of Amber Jade' })).toBeEnabled();
+        expect(document.getElementById(`price-${line().id}`)).toBeEnabled();
+        expect(screen.getByRole('button', { name: 'Add from catalogue' })).toBeEnabled();
+        expect(screen.getByLabelText('What to quote')).toBeEnabled();
+        expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled();
+        expect(screen.getByRole('button', { name: 'Remove Amber Jade' })).toBeEnabled();
+        expect(screen.getByRole('button', { name: 'Increase quantity of Amber Jade' })).not.toHaveAttribute('aria-describedby');
+        unmount();
+      }
+    });
+
+    it('is axe clean on a won quote', async () => {
+      const { container } = render(
+        <QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate status="won" />,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe('an unpriced line', () => {
+    // A web line arrives at 0, "not priced yet" (D86), carrying the catalogue
+    // price it was asked for. That is not a discount and must not read as one.
+    const web = line({ unitPrice: 0, lineTotal: 0, listPrice: 65000 });
+
+    it('read-only, says not priced yet and shows the catalogue price plainly', () => {
+      render(<QuoteLines reference="BEC-Q-00012" lines={[web]} quoteId="q" updatedAt="t" canMutate={false} />);
+      expect(screen.getByText(/not priced yet/)).toBeInTheDocument();
+      const catalogue = screen.getByText(/Catalogue .*65,000/);
+      expect(catalogue.className).not.toContain('line-through');
+      expect(catalogue.querySelector('.line-through')).toBeNull();
+      expect(document.querySelector('.line-through')).toBeNull();
+      expect(screen.getByText('POA')).toBeInTheDocument();
+    });
+
+    it('editable, says not priced yet beside the catalogue price, then strikes it only once a different price is typed', async () => {
+      const user = userEvent.setup();
+      render(<QuoteLines reference="BEC-Q-00012" lines={[web]} quoteId="q" updatedAt="t" canMutate />);
+      expect(screen.getByText(/Not priced yet\. Catalogue .*65,000/)).toBeInTheDocument();
+      expect(document.querySelector('.line-through')).toBeNull();
+      const price = document.getElementById(`price-${web.id}`)!;
+      await user.clear(price);
+      await user.type(price, '60000');
+      expect(screen.queryByText(/Not priced yet/)).toBeNull();
+      expect(document.querySelector('.line-through')).toHaveTextContent(/65,000/);
+    });
+
+    it('with no catalogue price, it is price on application, with no reference', () => {
+      render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line({ unitPrice: 0, lineTotal: 0, listPrice: null, productId: null })]}
+          quoteId="q"
+          updatedAt="t"
+          canMutate={false}
+        />,
+      );
+      expect(screen.getByText(/price on application/)).toBeInTheDocument();
+      expect(screen.queryByText(/Catalogue/)).toBeNull();
     });
   });
 

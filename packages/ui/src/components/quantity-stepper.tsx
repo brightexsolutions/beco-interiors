@@ -30,6 +30,12 @@ export interface QuantityStepperProps {
   /** Narrower buttons and input, height unchanged: the 44px touch target is
       a hard floor, never a compact override. */
   compact?: boolean | undefined;
+  /** Both buttons and the typed field off, for a quantity that cannot change
+      (a closed quote, D132). Pair it with `describedBy` so the reason is read
+      out: a control disabled with no reason given is not allowed. */
+  disabled?: boolean | undefined;
+  /** Id of the visible element that says why the control is disabled. */
+  describedBy?: string | undefined;
   className?: string | undefined;
 }
 
@@ -58,7 +64,8 @@ const stepperButton = (compact: boolean) => cn(
 );
 
 export function QuantityStepper({
-  value, onChange, label, step = 1, min, floor, unit, editable = false, compact = false, className,
+  value, onChange, label, step = 1, min, floor, unit, editable = false, compact = false, disabled = false,
+  describedBy, className,
 }: QuantityStepperProps) {
   const id = useId();
   const bound = min ?? floor ?? 0;
@@ -71,8 +78,9 @@ export function QuantityStepper({
         <button
           type="button"
           onClick={() => onChange(Math.max(bound, round(value - step)))}
-          disabled={atFloor}
+          disabled={disabled || atFloor}
           aria-label={`Decrease quantity of ${label}`}
+          aria-describedby={describedBy}
           className={stepperButton(compact)}
         >
           <MinusIcon />
@@ -90,6 +98,8 @@ export function QuantityStepper({
               min={bound}
               step={step}
               value={value}
+              disabled={disabled}
+              aria-describedby={describedBy}
               onChange={(e) => onChange(Math.max(bound, Number(e.target.value) || bound))}
               className={cn(
                 'h-11 border-x border-neutral-300 bg-transparent px-1 text-center font-ui text-base tabular-nums text-charcoal',
@@ -114,7 +124,9 @@ export function QuantityStepper({
         <button
           type="button"
           onClick={() => onChange(round(value + step))}
+          disabled={disabled}
           aria-label={`Increase quantity of ${label}`}
+          aria-describedby={describedBy}
           className={stepperButton(compact)}
         >
           <PlusIcon />

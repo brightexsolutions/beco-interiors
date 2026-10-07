@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import type { Database } from '@beco/types';
 import { ensureTestUser } from './__tests__/ensure-test-user';
+import { mutationMessage } from './quote-errors';
 
 config({ path: new URL('../../../../.env.local', import.meta.url).pathname, quiet: true });
 
@@ -333,6 +334,100 @@ describe('remove_quote_line on a web quote (D131)', () => {
     expect(last.error?.message).toBe('A quote needs at least one item. Mark it lost instead.');
     const { data: left } = await client.from('quote_items').select('id').eq('quote_id', web.quote.id);
     expect(left).toHaveLength(1);
+  });
+
+  it('a won quote refuses every line change over HTTP, a lost one asks for a reopen, and a reopened one takes it (D132)', async () => {
+    const web = await submitWebQuote('Closed Lines', '0722000022');
+    const { client } = await signInAs('zz-int-mut-sales@beco.co.ke');
+    expect((await client.rpc('claim_quote', { p_quote_id: web.quote.id, p_expected_updated_at: web.quote.updated_at })).error).toBeNull();
+    // Priced at list, so D86 never gates and only the closed rule can refuse.
+    const priced = await client.rpc('update_quote_lines', {
+      p_quote_id: web.quote.id,
+      p_items: web.items.map((item) => ({ line_id: item.id, quantity: Number(item.quantity), unit_price: 65000 })),
+      p_expected_updated_at: await lockOf(client, web.quote.id),
+    });
+    expect(priced.error, priced.error?.message).toBeNull();
+
+    const everyChange = async () => {
+      const lock = await lockOf(client, web.quote.id);
+      return Promise.all([
+        client.rpc('update_quote_lines', {
+          p_quote_id: web.quote.id,
+          p_items: [{ line_id: web.items[0]!.id, quantity: 5, unit_price: 65000 }],
+          p_expected_updated_at: lock,
+        }),
+        client.rpc('update_quote_line', {
+          p_quote_id: web.quote.id,
+          p_line_id: web.items[0]!.id,
+          p_quantity: 5,
+          p_unit_price: 65000,
+          p_expected_updated_at: lock,
+        }),
+        client.rpc('add_catalogue_quote_lines', {
+          p_quote_id: web.quote.id,
+          p_items: [{ product_id: productId, quantity: 1 }],
+          p_expected_updated_at: lock,
+        }),
+        client.rpc('add_catalogue_quote_line', {
+          p_quote_id: web.quote.id,
+          p_product_id: productId,
+          p_quantity: 1,
+          p_unit_price: 65000,
+          p_expected_updated_at: lock,
+        }),
+        client.rpc('add_custom_quote_line', {
+          p_quote_id: web.quote.id,
+          p_description: 'ZZ Mut Delivery',
+          p_quantity: 1,
+          p_unit_price: 5000,
+          p_expected_updated_at: lock,
+        }),
+        client.rpc('remove_quote_line', {
+          p_quote_id: web.quote.id,
+          p_line_id: web.items[1]!.id,
+          p_expected_updated_at: lock,
+        }),
+      ]);
+    };
+
+    const toStatus = async (status: 'quoted' | 'won' | 'lost', reason = '') => {
+      const { error } = await client.rpc('set_quote_status', {
+        p_quote_id: web.quote.id,
+        p_status: status,
+        p_lost_reason: reason,
+        p_expected_updated_at: await lockOf(client, web.quote.id),
+      });
+      expect(error, error?.message).toBeNull();
+    };
+
+    await toStatus('lost', 'Went elsewhere');
+    for (const result of await everyChange()) {
+      expect(result.error?.code).toBe('P0001');
+      // The action layer passes the sentence through as the toast.
+      expect(mutationMessage(result.error)).toBe('Reopen this quote to change its items');
+    }
+
+    expect((await client.rpc('reopen_quote', { p_quote_id: web.quote.id, p_expected_updated_at: await lockOf(client, web.quote.id) })).error).toBeNull();
+    const reopened = await client.rpc('update_quote_lines', {
+      p_quote_id: web.quote.id,
+      p_items: [{ line_id: web.items[0]!.id, quantity: 3, unit_price: 65000 }],
+      p_expected_updated_at: await lockOf(client, web.quote.id),
+    });
+    expect(reopened.error, reopened.error?.message).toBeNull();
+
+    await toStatus('won');
+    for (const result of await everyChange()) {
+      expect(result.error?.code).toBe('P0001');
+      expect(mutationMessage(result.error)).toBe('A won quote is closed');
+    }
+
+    const { data: lines } = await service()
+      .from('quote_items')
+      .select('id, quantity')
+      .eq('quote_id', web.quote.id)
+      .order('sort_order');
+    expect(lines?.map((line) => line.id)).toEqual(web.items.map((item) => item.id));
+    expect(Number(lines![0]!.quantity)).toBe(3);
   });
 
   it('anon cannot call it at all', async () => {
