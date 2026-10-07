@@ -10,13 +10,14 @@ import PrivacyPage from '../page';
 describe('Privacy policy', () => {
   const text = () => document.body.textContent ?? '';
 
-  it('names the controller and every service provider that handles personal data', () => {
+  it('names the controller, describes providers without naming them or where they host', () => {
     render(<PrivacyPage />);
     expect(text()).toContain('Beco Interiors Limited');
-    for (const name of ['Supabase', 'Vercel', 'Resend', 'Cloudflare', 'Google', 'Brightex Solutions']) {
-      expect(text(), name).toContain(name);
+    expect(text()).toMatch(/trusted\s+service providers/);
+    expect(text()).toMatch(/outside Kenya/);
+    for (const name of ['Supabase', 'Vercel', 'Resend', 'Cloudflare', 'Ireland', 'Brightex']) {
+      expect(text(), name).not.toContain(name);
     }
-    expect(text()).toMatch(/Ireland, in the EU/);
   });
 
   it('no longer claims nothing leaves Beco', () => {
@@ -33,11 +34,12 @@ describe('Privacy policy', () => {
     expect(screen.getByRole('link', { name: /opt-out add-on/i })).toHaveAttribute('href', 'https://tools.google.com/dlpage/gaoptout');
   });
 
-  it('states retention and the reader’s rights, with the ODPC to complain to', () => {
+  it('states retention and the reader\u2019s rights, without pointing to the regulator', () => {
     render(<PrivacyPage />);
     expect(text()).toMatch(/five years/);
     expect(text()).toMatch(/Data Protection Act, 2019/);
-    expect(screen.getByRole('link', { name: /Office of the Data Protection Commissioner/ })).toHaveAttribute('href', 'https://www.odpc.go.ke');
+    expect(text()).not.toMatch(/Data Protection Commissioner/);
+    expect(screen.queryByRole('link', { name: /Commissioner/ })).toBeNull();
   });
 
   it('carries the date of this revision', () => {
