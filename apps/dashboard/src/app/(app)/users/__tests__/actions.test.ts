@@ -184,3 +184,100 @@ describe('uploadStaffPhoto', () => {
     expect(update).not.toHaveBeenCalled();
   });
 });
+
+describe('a Beco holder of the staff grant (D135)', () => {
+  const HOLDER = {
+    userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    email: 'irene@beco.co.ke',
+    fullName: 'Irene',
+    role: 'beco_admin',
+    isActive: true,
+    mustChangePassword: false,
+  } as never;
+  const TARGET = '33333333-3333-4333-8333-333333333333';
+  const asHolder = () => requirePath.mockResolvedValueOnce(HOLDER);
+  const targetForm = (extra: Record<string, string> = {}) => {
+    const form = new FormData();
+    form.set('userId', TARGET);
+    form.set('updatedAt', '2026-10-07T10:00:00.000Z');
+    for (const [key, value] of Object.entries(extra)) form.set(key, value);
+    return form;
+  };
+
+  it('cannot create a Brightex admin, and the login is never made', async () => {
+    asHolder();
+    const form = new FormData();
+    form.set('email', 'sneak@brightex.test');
+    form.set('fullName', 'Sneak');
+    form.set('role', 'brightex_admin');
+    const result = await createStaffUser({}, form);
+    expect(result.error).toBe('Only Brightex manages a Brightex account.');
+    expect(createUser).not.toHaveBeenCalled();
+  });
+
+  it('creates a Beco account', async () => {
+    asHolder();
+    createUser.mockResolvedValue({ data: { user: { id: TARGET } }, error: null });
+    maybeSingle.mockResolvedValue({ error: null });
+    const form = new FormData();
+    form.set('email', 'new.sales@beco.co.ke');
+    form.set('fullName', 'New Sales');
+    form.set('role', 'beco_sales');
+    const result = await createStaffUser({}, form);
+    expect(result.password).toBeTruthy();
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ role: 'beco_sales', created_by: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }));
+  });
+
+  it('cannot reissue a Brightex password, checked before the service role call', async () => {
+    asHolder();
+    maybeSingle.mockResolvedValueOnce({ data: { role: 'brightex_admin' }, error: null });
+    const result = await resetStaffPassword({}, targetForm());
+    expect(result.error).toBe('Only Brightex manages a Brightex account.');
+    expect(updateUserById).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('reissues a Beco password', async () => {
+    asHolder();
+    maybeSingle
+      .mockResolvedValueOnce({ data: { role: 'beco_sales' }, error: null })
+      .mockResolvedValueOnce({ data: { id: TARGET }, error: null });
+    updateUserById.mockResolvedValue({ error: null });
+    rpc.mockResolvedValue({ error: null });
+    const result = await resetStaffPassword({}, targetForm());
+    expect(result.password).toBeTruthy();
+    expect(updateUserById).toHaveBeenCalledWith(TARGET, expect.objectContaining({ password: result.password }));
+  });
+
+  it('cannot promote anyone into Brightex', async () => {
+    asHolder();
+    const result = await setStaffRole({}, targetForm({ role: 'brightex_admin' }));
+    expect(result.error).toBe('Only Brightex manages a Brightex account.');
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('cannot deactivate a Brightex admin or end their sessions', async () => {
+    asHolder();
+    maybeSingle.mockResolvedValueOnce({ data: { role: 'brightex_admin' }, error: null });
+    const result = await setStaffActive({}, targetForm({ isActive: 'false' }));
+    expect(result.error).toBe('Only Brightex manages a Brightex account.');
+    expect(update).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('cannot edit a Brightex admin on the website listing either', async () => {
+    asHolder();
+    maybeSingle.mockResolvedValueOnce({ data: { role: 'brightex_admin' }, error: null });
+    const result = await saveStaffPublicProfile({}, targetForm({ publicTitle: 'x' }));
+    expect(result.error).toBe('Only Brightex manages a Brightex account.');
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('stops on an account that is no longer there', async () => {
+    asHolder();
+    maybeSingle.mockResolvedValueOnce({ data: null, error: null });
+    const result = await setStaffActive({}, targetForm({ isActive: 'false' }));
+    expect(result.error).toBe('That account is gone. Reload the list.');
+    expect(update).not.toHaveBeenCalled();
+  });
+});

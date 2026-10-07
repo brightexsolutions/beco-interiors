@@ -1,5 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
-import { generateIssuedPassword, parseStaffPublicPhoto, staffPhotoUrl, userMutationMessage } from '../users';
+import {
+  canManageAccount,
+  generateIssuedPassword,
+  parseStaffPublicPhoto,
+  rolesAssignableBy,
+  staffPhotoUrl,
+  userMutationMessage,
+} from '../users';
+
+describe('what a viewer may manage (D135)', () => {
+  it('offers Brightex every role and a Beco holder only Beco roles', () => {
+    expect(rolesAssignableBy('brightex_admin')).toContain('brightex_admin');
+    expect(rolesAssignableBy('beco_admin')).not.toContain('brightex_admin');
+    expect(rolesAssignableBy('beco_admin')).toEqual(['beco_admin', 'beco_sales', 'beco_product_manager', 'beco_editor']);
+  });
+
+  it('keeps Brightex accounts out of a Beco holder\'s reach', () => {
+    expect(canManageAccount('beco_admin', 'brightex_admin')).toBe(false);
+    expect(canManageAccount('beco_admin', 'beco_admin')).toBe(true);
+    expect(canManageAccount('beco_sales', 'beco_editor')).toBe(true);
+    expect(canManageAccount('brightex_admin', 'brightex_admin')).toBe(true);
+  });
+});
 
 describe('generateIssuedPassword', () => {
   it('is long enough for the first-login floor and not a fixed string', () => {

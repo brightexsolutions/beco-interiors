@@ -68,7 +68,7 @@ export type DashboardSettingsFields = z.infer<typeof dashboardSettingsSchema>;
 
 export const setStaffGrantSchema = z.object({
   userId: z.uuid(),
-  grant: z.enum(['can_read_audit']),
+  grant: z.enum(['can_read_audit', 'can_manage_users']),
   enabled: z.preprocess((value) => value === true || value === 'true' || value === 'on', z.boolean()),
 });
 

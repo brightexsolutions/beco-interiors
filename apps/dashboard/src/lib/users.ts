@@ -15,6 +15,17 @@ export const STAFF_ROLE_LABEL: Record<UserRole, string> = {
 
 export const STAFF_ROLES: readonly UserRole[] = USER_ROLES;
 
+/**
+ * D135: a Beco person holding the staff manage grant works on Beco accounts
+ * only. Brightex keeps every role. RLS refuses the rest; this decides what the
+ * screen offers, and the actions check it before any service role call.
+ */
+export const rolesAssignableBy = (viewerRole: UserRole): readonly UserRole[] =>
+  viewerRole === 'brightex_admin' ? STAFF_ROLES : STAFF_ROLES.filter((role) => role !== 'brightex_admin');
+
+export const canManageAccount = (viewerRole: UserRole, targetRole: UserRole): boolean =>
+  viewerRole === 'brightex_admin' || targetRole !== 'brightex_admin';
+
 export interface StaffPublicPhoto {
   path: string;
   alt: string;

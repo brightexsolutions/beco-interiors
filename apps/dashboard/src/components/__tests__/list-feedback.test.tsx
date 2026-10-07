@@ -223,7 +223,7 @@ const cases: Case[] = [
     screen: (
       <>
         <UserFilters count="1 user" />
-        <UserResults users={[staff]} viewing={null} creating={false} viewerId="brightex-1" />
+        <UserResults users={[staff]} viewing={null} creating={false} viewerId="brightex-1" viewerRole="brightex_admin" />
       </>
     ),
     filter: 'Filter by status',

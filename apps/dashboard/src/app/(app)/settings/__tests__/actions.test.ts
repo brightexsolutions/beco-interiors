@@ -14,6 +14,7 @@ const requirePath = vi.fn(
     mustChangePassword: false,
     canWriteBlog: false,
     canReadAudit: false,
+    canManageUsers: false,
   }),
 );
 vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
@@ -94,6 +95,7 @@ describe('saveDashboardSettings', () => {
       mustChangePassword: false,
       canWriteBlog: true,
       canReadAudit: true,
+      canManageUsers: false,
     });
     maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
     await saveDashboardSettings({}, formFrom());
@@ -165,6 +167,7 @@ describe('setStaffGrant', () => {
       mustChangePassword: false,
       canWriteBlog: false,
       canReadAudit: false,
+      canManageUsers: false,
     });
     maybeSingle.mockResolvedValue({ data: { full_name: 'Sam Odhiambo' }, error: null });
     const form = new FormData();
@@ -174,5 +177,27 @@ describe('setStaffGrant', () => {
     const result = await setStaffGrant({}, form);
     expect(result.ok).toMatch(/Sam Odhiambo can read the audit log/);
     expect(update).toHaveBeenCalledWith({ can_read_audit: true });
+  });
+
+  it('writes staff management as its own column, never the audit one (D135)', async () => {
+    requirePath.mockResolvedValueOnce({
+      userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      email: 'beco.brightex.dev@gmail.com',
+      fullName: 'Brightex Ops',
+      role: 'brightex_admin',
+      isActive: true,
+      mustChangePassword: false,
+      canWriteBlog: false,
+      canReadAudit: false,
+      canManageUsers: false,
+    });
+    maybeSingle.mockResolvedValue({ data: { full_name: 'Irene' }, error: null });
+    const form = new FormData();
+    form.set('userId', '11111111-1111-4111-8111-111111111111');
+    form.set('grant', 'can_manage_users');
+    form.set('enabled', 'true');
+    const result = await setStaffGrant({}, form);
+    expect(result.ok).toBe('Irene can manage Beco staff accounts.');
+    expect(update).toHaveBeenCalledWith({ can_manage_users: true });
   });
 });

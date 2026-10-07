@@ -36,7 +36,19 @@ import type { UserRole } from '@beco/types';
 
 const INITIAL: UserActionState = {};
 
-export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: string }) {
+export function UserEditor({
+  user,
+  viewerId,
+  roles = STAFF_ROLES,
+  canManage = true,
+}: {
+  user: StaffUser;
+  viewerId: string;
+  /** The roles this viewer may assign (D135). */
+  roles?: readonly UserRole[];
+  /** False for a Brightex account seen by a Beco holder of the grant: shown, never editable. */
+  canManage?: boolean;
+}) {
   const router = useRouter();
   const isSelf = user.id === viewerId;
   const [roleState, changeRole, rolePending] = useActionState(setStaffRole, INITIAL);
@@ -102,9 +114,15 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
 
         <FormSection
           title="Role"
-          hint={isSelf ? 'Another Brightex admin changes this. You cannot change your own role.' : undefined}
+          hint={
+            !canManage
+              ? 'Brightex manages this account.'
+              : isSelf
+                ? 'Someone else changes this. You cannot change your own role.'
+                : undefined
+          }
         >
-          {isSelf ? (
+          {isSelf || !canManage ? (
             <p className="font-ui text-base text-charcoal">{STAFF_ROLE_LABEL[user.role]}</p>
           ) : (
             <Field label="Role" htmlFor="staff-role">
@@ -115,7 +133,7 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
                 onChange={(event) => setPendingRole(event.target.value as UserRole)}
                 aria-label={`Change role for ${user.fullName}`}
               >
-                {STAFF_ROLES.map((value) => (
+                {roles.map((value) => (
                   <option key={value} value={value}>
                     {STAFF_ROLE_LABEL[value]}
                   </option>
@@ -125,110 +143,112 @@ export function UserEditor({ user, viewerId }: { user: StaffUser; viewerId: stri
           )}
         </FormSection>
 
-        <FormSection
-          title="On the website"
-          hint={
-            user.role === 'beco_sales'
-              ? 'Portrait, title and phone for /team. Directors cannot be listed.'
-              : 'Only sales accounts can appear on /team. The photograph can still be stored.'
-          }
-        >
-          <form onSubmit={onSavePublicSubmit} className="space-y-4">
-            <input type="hidden" name="userId" value={user.id} />
-            <input type="hidden" name="updatedAt" value={user.updatedAt} />
-            {user.role === 'beco_sales' ? (
-              <label className="flex min-h-11 items-center gap-3 font-ui text-base text-charcoal">
-                <input
-                  type="checkbox"
-                  name="isPublic"
-                  defaultChecked={user.isPublic}
-                  className="h-5 w-5 rounded-control border-neutral-300"
+        {canManage ? (
+          <FormSection
+            title="On the website"
+            hint={
+              user.role === 'beco_sales'
+                ? 'Portrait, title and phone for /team. Directors cannot be listed.'
+                : 'Only sales accounts can appear on /team. The photograph can still be stored.'
+            }
+          >
+            <form onSubmit={onSavePublicSubmit} className="space-y-4">
+              <input type="hidden" name="userId" value={user.id} />
+              <input type="hidden" name="updatedAt" value={user.updatedAt} />
+              {user.role === 'beco_sales' ? (
+                <label className="flex min-h-11 items-center gap-3 font-ui text-base text-charcoal">
+                  <input
+                    type="checkbox"
+                    name="isPublic"
+                    defaultChecked={user.isPublic}
+                    className="h-5 w-5 rounded-control border-neutral-300"
+                  />
+                  Show on /team
+                </label>
+              ) : (
+                <p className="font-ui text-base text-neutral-500">This role stays off /team.</p>
+              )}
+              <Field label="Public title" htmlFor="staff-public-title" hint="Shown under the name">
+                <Input
+                  id="staff-public-title"
+                  name="publicTitle"
+                  defaultValue={user.publicTitle ?? ''}
+                  disabled={busy}
                 />
-                Show on /team
-              </label>
-            ) : (
-              <p className="font-ui text-base text-neutral-500">This role stays off /team.</p>
-            )}
-            <Field label="Public title" htmlFor="staff-public-title" hint="Shown under the name">
-              <Input
-                id="staff-public-title"
-                name="publicTitle"
-                defaultValue={user.publicTitle ?? ''}
-                disabled={busy}
-              />
-            </Field>
-            <Field label="Public phone" htmlFor="staff-public-phone" hint="Kenyan mobile. Used for Call on /team">
-              <Input
-                id="staff-public-phone"
-                name="publicPhone"
-                type="tel"
-                defaultValue={user.publicPhone ?? ''}
-                disabled={busy}
-              />
-            </Field>
-            <Button type="submit" variant="secondary" disabled={busy} pending={publicPending}>
-              {publicPending ? 'Saving' : 'Save website listing'}
-            </Button>
-          </form>
-
-          {user.publicPhoto ? (
-            <div className="space-y-3 border border-neutral-200 p-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={staffPhotoUrl(user.publicPhoto.path, 400)}
-                alt={user.publicPhoto.alt || user.fullName}
-                width={120}
-                height={150}
-                className="h-[150px] w-[120px] object-cover"
-              />
-              <p className="font-ui text-base text-charcoal">{user.publicPhoto.alt}</p>
-              <Button type="button" variant="ghost" disabled={busy} onClick={() => setConfirmRemovePhoto(true)}>
-                <Icon name="trash" />
-                Remove photograph
+              </Field>
+              <Field label="Public phone" htmlFor="staff-public-phone" hint="Kenyan mobile. Used for Call on /team">
+                <Input
+                  id="staff-public-phone"
+                  name="publicPhone"
+                  type="tel"
+                  defaultValue={user.publicPhone ?? ''}
+                  disabled={busy}
+                />
+              </Field>
+              <Button type="submit" variant="secondary" disabled={busy} pending={publicPending}>
+                {publicPending ? 'Saving' : 'Save website listing'}
               </Button>
-            </div>
-          ) : (
-            <p className="font-ui text-base text-neutral-500">No photograph yet. /team shows a name plate until you add one.</p>
-          )}
+            </form>
 
-          <form onSubmit={upload.onSubmit} className="min-w-0 space-y-3 border border-dashed border-neutral-300 p-4">
-            <input type="hidden" name="userId" value={user.id} />
-            <input type="hidden" name="updatedAt" value={user.updatedAt} />
-            <div className="flex items-center gap-2 text-charcoal">
-              <Icon name="photo" className="h-5 w-5" />
-              <p className="font-ui text-sm font-semibold text-charcoal">
-                {user.publicPhoto ? 'Replace photograph' : 'Add a photograph'}
-              </p>
-            </div>
-            <Field label="Photograph" htmlFor="staff-photo" hint="JPEG, PNG or WebP. 12MB max">
-              <Input
-                id="staff-photo"
-                name="photo"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                required
-                disabled={busy}
-                className="min-w-0 max-w-full"
-              />
-            </Field>
-            <Field label="Alt text" htmlFor="staff-photo-alt" hint="Spoken on /team">
-              <Input
-                id="staff-photo-alt"
-                name="alt"
-                required
-                disabled={busy}
-                defaultValue={user.publicPhoto?.alt || defaultAlt}
-              />
-            </Field>
-            <Button type="submit" variant="secondary" disabled={busy} pending={photoPending || upload.phase !== 'idle'}>
-              <Icon name="upload" />
-              {upload.label ?? (user.publicPhoto ? 'Replace photograph' : 'Upload photograph')}
-            </Button>
-          </form>
-        </FormSection>
+            {user.publicPhoto ? (
+              <div className="space-y-3 border border-neutral-200 p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={staffPhotoUrl(user.publicPhoto.path, 400)}
+                  alt={user.publicPhoto.alt || user.fullName}
+                  width={120}
+                  height={150}
+                  className="h-[150px] w-[120px] object-cover"
+                />
+                <p className="font-ui text-base text-charcoal">{user.publicPhoto.alt}</p>
+                <Button type="button" variant="ghost" disabled={busy} onClick={() => setConfirmRemovePhoto(true)}>
+                  <Icon name="trash" />
+                  Remove photograph
+                </Button>
+              </div>
+            ) : (
+              <p className="font-ui text-base text-neutral-500">No photograph yet. /team shows a name plate until you add one.</p>
+            )}
+
+            <form onSubmit={upload.onSubmit} className="min-w-0 space-y-3 border border-dashed border-neutral-300 p-4">
+              <input type="hidden" name="userId" value={user.id} />
+              <input type="hidden" name="updatedAt" value={user.updatedAt} />
+              <div className="flex items-center gap-2 text-charcoal">
+                <Icon name="photo" className="h-5 w-5" />
+                <p className="font-ui text-sm font-semibold text-charcoal">
+                  {user.publicPhoto ? 'Replace photograph' : 'Add a photograph'}
+                </p>
+              </div>
+              <Field label="Photograph" htmlFor="staff-photo" hint="JPEG, PNG or WebP. 12MB max">
+                <Input
+                  id="staff-photo"
+                  name="photo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  required
+                  disabled={busy}
+                  className="min-w-0 max-w-full"
+                />
+              </Field>
+              <Field label="Alt text" htmlFor="staff-photo-alt" hint="Spoken on /team">
+                <Input
+                  id="staff-photo-alt"
+                  name="alt"
+                  required
+                  disabled={busy}
+                  defaultValue={user.publicPhoto?.alt || defaultAlt}
+                />
+              </Field>
+              <Button type="submit" variant="secondary" disabled={busy} pending={photoPending || upload.phase !== 'idle'}>
+                <Icon name="upload" />
+                {upload.label ?? (user.publicPhoto ? 'Replace photograph' : 'Upload photograph')}
+              </Button>
+            </form>
+          </FormSection>
+        ) : null}
       </div>
 
-      {isSelf ? null : (
+      {isSelf || !canManage ? null : (
         <div className="flex shrink-0 flex-wrap gap-2 border-t border-neutral-200 px-5 py-3">
           {user.isActive ? (
             <Button type="button" variant="outline" disabled={busy} onClick={() => setConfirmActive(true)}>

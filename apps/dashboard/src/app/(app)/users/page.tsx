@@ -48,7 +48,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           <UserFilters count={`${users.length} ${users.length === 1 ? 'user' : 'users'}`} />
         </div>
         <div className="pb-24">
-          <UserResults users={users} viewing={viewing} creating={creating} viewerId={session.userId} />
+          <UserResults users={users} viewing={viewing} creating={creating} viewerId={session.userId} viewerRole={session.role} />
         </div>
       </QueryNavigationProvider>
     </>

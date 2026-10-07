@@ -18,7 +18,8 @@ import { UserCreate } from '@/components/user-create';
 import { UserEditor } from '@/components/user-editor';
 import { BusyRegion } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
-import { STAFF_ROLE_LABEL, formatLastLogin, type StaffUser } from '@/lib/users';
+import type { UserRole } from '@beco/types';
+import { STAFF_ROLE_LABEL, canManageAccount, formatLastLogin, rolesAssignableBy, type StaffUser } from '@/lib/users';
 
 function ViewAction({ href, name }: { href: string; name: string }) {
   return (
@@ -82,12 +83,15 @@ export function UserResults({
   viewing,
   creating,
   viewerId,
+  viewerRole,
 }: {
   users: StaffUser[];
   viewing: StaffUser | null;
   creating: boolean;
   viewerId: string;
+  viewerRole: UserRole;
 }) {
+  const roles = rolesAssignableBy(viewerRole);
   const router = useRouter();
   const pathname = usePathname();
   // Shared with the filter row (D117), so a filter change dims the list.
@@ -129,9 +133,15 @@ export function UserResults({
   const sheet = (
     <Sheet open={sheetOpen} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle} description={sheetDescription}>
       {creating ? (
-        <UserCreate />
+        <UserCreate roles={roles} />
       ) : viewing ? (
-        <UserEditor key={`${viewing.id}-${resetKey(viewing)}`} user={viewing} viewerId={viewerId} />
+        <UserEditor
+          key={`${viewing.id}-${resetKey(viewing)}`}
+          user={viewing}
+          viewerId={viewerId}
+          roles={roles}
+          canManage={canManageAccount(viewerRole, viewing.role)}
+        />
       ) : null}
     </Sheet>
   );

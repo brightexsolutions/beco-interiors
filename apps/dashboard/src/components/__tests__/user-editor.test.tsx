@@ -60,6 +60,36 @@ describe('UserEditor', () => {
     expect(setStaffActive).toHaveBeenCalled();
   });
 
+  it('shows a Brightex account to a Beco holder with nothing to press (D135)', () => {
+    render(
+      <UserEditor
+        user={{ ...person, role: 'brightex_admin' }}
+        viewerId="irene-1"
+        roles={['beco_admin', 'beco_sales', 'beco_product_manager', 'beco_editor']}
+        canManage={false}
+      />,
+    );
+    expect(screen.getByText('Brightex manages this account.')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deactivate' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reset password' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /photograph/i })).not.toBeInTheDocument();
+  });
+
+  it('offers a Beco holder only Beco roles on a Beco account (D135)', () => {
+    render(
+      <UserEditor
+        user={person}
+        viewerId="irene-1"
+        roles={['beco_admin', 'beco_sales', 'beco_product_manager', 'beco_editor']}
+      />,
+    );
+    const options = screen.getAllByRole('option').map((o) => o.textContent);
+    expect(options).not.toContain('Brightex admin');
+    expect(options).toContain('Beco admin');
+    expect(screen.getByRole('button', { name: 'Deactivate' })).toBeInTheDocument();
+  });
+
   it('hides role and session actions on your own row', () => {
     render(<UserEditor user={{ ...person, id: 'brightex-1' }} viewerId="brightex-1" />);
     expect(screen.queryByRole('button', { name: 'Deactivate' })).not.toBeInTheDocument();
