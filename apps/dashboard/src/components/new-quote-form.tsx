@@ -39,10 +39,16 @@ const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
 
 /** Header and every line share this so cells sit on the same vertical axes. */
-const LINE_COLS = 'md:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem_auto]';
+/**
+ * Sized to the list, not the screen: a container query. Above 1280 the form
+ * shares the screen with the sidebar and the 22rem summary, about 518px, and
+ * the four fixed columns need about 480 of it, so a screen breakpoint left the
+ * item name 0px wide. Rows stack, as on a phone, until the list is 48rem.
+ */
+const LINE_COLS = '@3xl:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem_auto]';
 const LINE_GRID = [
   'flex flex-col gap-2 px-4 py-3',
-  `md:grid ${LINE_COLS} md:items-center md:gap-x-4 md:px-5 md:py-2`,
+  `@3xl:grid ${LINE_COLS} @3xl:items-center @3xl:gap-x-4 @3xl:px-5 @3xl:py-2`,
 ].join(' ');
 /** Column headers name the fields, so labels stay accessible but take no space. */
 const TABLE_FIELD = '[&>label]:sr-only [&>div]:mt-0';
@@ -184,10 +190,10 @@ export function NewQuoteForm() {
               />
             </div>
           ) : (
-            <div className="max-h-[min(28rem,50dvh)] overflow-y-auto md:max-h-[min(32rem,60dvh)]">
+            <div className="@container max-h-[min(28rem,50dvh)] overflow-y-auto md:max-h-[min(32rem,60dvh)]">
               <ul>
                 <li
-                  className={`sticky top-0 z-10 hidden border-b border-neutral-200 bg-neutral-50 py-2 md:grid ${LINE_COLS} md:items-center md:gap-4 md:px-5`}
+                  className={`sticky top-0 z-10 hidden border-b border-neutral-200 bg-neutral-50 py-2 @3xl:grid ${LINE_COLS} @3xl:items-center @3xl:gap-4 @3xl:px-5`}
                 >
                 <span className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
                   Item
@@ -348,11 +354,11 @@ function LineEditor({
   const step = lineStep(line);
   return (
     <li className={`${LINE_GRID} border-b border-neutral-100 last:border-0`}>
-      <div className="flex items-center justify-between gap-3 md:contents">
-        <div className="min-w-0 flex-1 md:col-start-1 md:row-start-1">
+      <div className="flex items-center justify-between gap-3 @3xl:contents">
+        <div className="min-w-0 flex-1 @3xl:col-start-1 @3xl:row-start-1">
           <LineIdentity line={line} onChange={onChange} />
         </div>
-        <div className="shrink-0 md:col-start-5 md:row-start-1 md:justify-self-end">
+        <div className="shrink-0 @3xl:col-start-5 @3xl:row-start-1 @3xl:justify-self-end">
           <Button
             type="button"
             variant="ghost"
@@ -363,8 +369,8 @@ function LineEditor({
           </Button>
         </div>
       </div>
-      <div className="flex items-center gap-3 md:contents">
-        <div className="shrink-0 md:col-start-2 md:row-start-1">
+      <div className="flex items-center gap-3 @3xl:contents">
+        <div className="shrink-0 @3xl:col-start-2 @3xl:row-start-1">
           <QuantityStepper
             className="flex-nowrap"
             value={line.quantity}
@@ -375,7 +381,7 @@ function LineEditor({
           />
         </div>
         <Field
-          className={`min-w-0 flex-1 md:col-start-3 md:row-start-1 md:min-w-0 ${TABLE_FIELD}`}
+          className={`min-w-0 flex-1 @3xl:col-start-3 @3xl:row-start-1 @3xl:min-w-0 ${TABLE_FIELD}`}
           label="Unit price"
           htmlFor={`price-${line.key}`}
           hint="KES"
@@ -390,7 +396,7 @@ function LineEditor({
             onChange={(e) => onChange(line.key, { unitPrice: Number(e.target.value) || 0 })}
           />
         </Field>
-        <div className="shrink-0 whitespace-nowrap md:col-start-4 md:row-start-1 md:justify-self-end">
+        <div className="shrink-0 whitespace-nowrap @3xl:col-start-4 @3xl:row-start-1 @3xl:justify-self-end">
           <LineAmount line={line} />
         </div>
       </div>
