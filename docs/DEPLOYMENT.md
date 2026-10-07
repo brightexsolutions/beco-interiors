@@ -17,6 +17,12 @@ only the four Vercel secrets, so `deploy-production.yml` cannot migrate anything
 step is a placeholder; the `Production` environment has no required reviewers; Vercel Preview
 for the dashboard lacks its keys, so there is no working staging dashboard yet.
 
+**7 October 2026: both databases at migration 69.** `beco-prod` took 63 to 68 across 6 and
+7 October and 69 (`staff_manage_grant`, D135) on 7 October, each after a schema and data dump to
+`~/beco-backups/2026-10-07/*-pre69.sql`. `beco-staging` had stopped at 62 when production moved
+off it; it took 63 to 69 the same day, fictional data only. Release PR #17 is live on the
+dashboard.
+
 `vercel deploy --prod --skip-domain` did NOT keep the custom domains off: www served the new
 build at once. Do not rely on it as a dry run; deploy to Preview to test before promoting.
 
