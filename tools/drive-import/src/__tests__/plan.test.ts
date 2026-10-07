@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan, exportItemName, exportRef, isExportName, photoRef } from '../plan';
+import { buildPlan, exportItemName, exportRef, isExportName, isPerPhotoRange, photoRef, singularNoun } from '../plan';
+import { umbrellaRetirements } from '../run';
 import { renderReport } from '../report';
 import type { DriveFile } from '../classify';
 import type { FolderNode } from '../misnest';
@@ -9,7 +10,7 @@ import type { FolderNode } from '../misnest';
  * A future change to the pipeline cannot silently start guessing without
  * failing here.
  */
-const f = (id: string, path: string, md5 = 'x'): DriveFile => ({
+const f = (id: string, path: string, md5 = `md5-${id}`): DriveFile => ({
   id, path, md5, size: 1024, modifiedTime: '2026-08-29T00:00:00Z',
 });
 
@@ -108,7 +109,7 @@ describe('buildPlan incrementality', () => {
     const known = [{
       driveFileId: '4',
       path: '12MM SINTERED STONES/BVLGARI/SLAB ON STAND.JPG',
-      md5: 'x', role: 'on_stand' as const, productId: null,
+      md5: 'md5-4', role: 'on_stand' as const, productId: null,
     }];
     const plan = buildPlan([LISTING[3]!], FOLDERS, known);
     expect(plan.files[0]!.outcome).toBe('moved');
@@ -119,9 +120,12 @@ describe('buildPlan incrementality', () => {
   it('loose files in a category are reported ONCE per folder, not once per file', () => {
     // Real case: Irene uploaded 157 photographs directly into HANDLES with no
     // product folders. Reporting that 157 times buries every other problem.
-    const listing = Array.from({ length: 12 }, (_, i) =>
-      f(`loose-${i}`, `HANDLES/IMG_${1000 + i}.HEIC`),
-    );
+    // One named file keeps it an umbrella: a range of nothing but phone
+    // names splits per photograph since 7 October.
+    const listing = [
+      ...Array.from({ length: 11 }, (_, i) => f(`loose-${i}`, `HANDLES/IMG_${1000 + i}.HEIC`)),
+      f('loose-named', 'HANDLES/ASSORTED.HEIC'),
+    ];
     const plan = buildPlan(listing, [], []);
     expect(plan.looseFolders).toEqual([{ folder: 'HANDLES', count: 12 }]);
     const issue = plan.issues.find((i) => i.path === 'HANDLES');
@@ -139,21 +143,27 @@ describe('buildPlan incrementality', () => {
     // to `unknown`, never guessed, exactly as it would inside a real
     // product folder: this only changes where the files land, not how a
     // role is decided.
-    const listing = Array.from({ length: 5 }, (_, i) =>
-      f(`oa-${i}`, `OFFICE ACCESSORIES/IMG_${4480 + i}.HEIC`),
-    );
+    //
+    // Since 7 October a range of nothing but phone photographs splits one
+    // product per photograph, so the umbrella is what is left for a loose
+    // folder that also holds a named file and is not an item folder.
+    const listing = [
+      ...Array.from({ length: 4 }, (_, i) => f(`oa-${i}`, `SPC FLOORING/IMG_${4480 + i}.HEIC`)),
+      f('oa-named', 'SPC FLOORING/SHOWROOM.HEIC'),
+    ];
     const plan = buildPlan(listing, [], []);
     expect(plan.files).toHaveLength(5);
     expect(plan.files.every((x) => x.role === 'unknown')).toBe(true);
-    expect(plan.files.every((x) => x.productSlug === 'office-accessories')).toBe(true);
-    expect(plan.files.every((x) => x.categorySlug === 'office-accessories')).toBe(true);
-    expect(plan.files[0]!.productName).toBe('Office Accessories');
-    expect(plan.productsWithUnknowns).toContain('office-accessories');
-    expect(plan.productsWithoutSlab).toContain('office-accessories');
+    expect(plan.files.every((x) => x.productSlug === 'spc-flooring')).toBe(true);
+    expect(plan.files.every((x) => x.categorySlug === 'spc-flooring')).toBe(true);
+    expect(plan.files[0]!.productName).toBe('Spc Flooring');
+    expect(plan.productsWithUnknowns).toContain('spc-flooring');
+    expect(plan.productsWithoutSlab).toContain('spc-flooring');
+    expect(plan.photoFolders).toEqual([]);
 
-    const issue = plan.issues.find((i) => i.path === 'OFFICE ACCESSORIES');
+    const issue = plan.issues.find((i) => i.path === 'SPC FLOORING');
     expect(issue?.reason).toContain('Imported as ONE product');
-    expect(issue?.reason).toContain('Office Accessories');
+    expect(issue?.reason).toContain('Spc Flooring');
   });
 
   it('still imports nothing for a file with no category folder at all', () => {
@@ -304,15 +314,12 @@ describe('buildPlan against the taxonomy Beco actually keep, D104', () => {
     expect(plan.itemFolders).toEqual([]);
   });
 
-  it('keeps a folder of camera named files as ONE umbrella product', () => {
-    // Was 15MM SINTERED STONES until 6 October, which now splits per
-    // photograph. Any range outside the split lists keeps the old rule.
-    const listing = [
-      f('c1', 'SPC FLOORING/IMG_4197.heic'),
-      f('c2', 'SPC FLOORING/IMG_4200.heic'),
-    ];
-    const plan = buildPlan(listing, [], []);
-    expect(plan.files.every((x) => x.productSlug === 'spc-flooring')).toBe(true);
+  it('keeps a range holding a single loose phone photograph as ONE product', () => {
+    // A range of two or more phone photographs splits per photograph since
+    // 7 October. One photograph is one product either way, named after its
+    // range rather than a photo number.
+    const plan = buildPlan([f('c1', 'SPC FLOORING/IMG_4197.heic')], [], []);
+    expect(plan.files.map((x) => x.productSlug)).toEqual(['spc-flooring']);
     expect(plan.itemFolders).toEqual([]);
     expect(plan.photoFolders).toEqual([]);
   });
@@ -477,10 +484,12 @@ describe('ranges split by finish, D122', () => {
     expect(legs.reason).toContain('"Furniture Leg 4517"');
   });
 
-  it('leaves every other loose range as one umbrella product, as before', () => {
-    const plan = buildPlan([f('l1', 'KITCHEN ACCESSORIES/IMG_1.HEIC'), f('l2', 'KITCHEN ACCESSORIES/IMG_2.HEIC')], [], []);
-    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['kitchen-accessories']));
+  it('never sorts a range outside the list by finish, even when it splits per photograph', () => {
+    const plan = buildPlan([f('l1', 'KITCHEN ACCESSORIES/IMG_1001.HEIC'), f('l2', 'KITCHEN ACCESSORIES/IMG_1002.HEIC')], [], []);
+    expect(plan.files.map((x) => x.productSlug)).toEqual(['kitchen-accessory-1001', 'kitchen-accessory-1002']);
+    expect(plan.files.every((x) => !x.splitByFinish)).toBe(true);
     expect(plan.finishFolders).toEqual([]);
+    expect(plan.photoFolders).toEqual([{ folder: 'KITCHEN ACCESSORIES', count: 2 }]);
   });
 
   it('keeps a product folder inside the range as one product', () => {
@@ -598,5 +607,339 @@ describe('isExportName and exportRef', () => {
   it('builds the placeholder from the folder, with the noun only where ITEM_NOUNS gives one', () => {
     expect(exportItemName('GOLD HANDLES', 'Handle', '34D0')).toBe('Gold Handle 34D0');
     expect(exportItemName('HINGES', undefined, '1234')).toBe('Hinges 1234');
+  });
+});
+
+/**
+ * Brown, 7 October: Bamboo Veneer Wall Panels was one product with 31
+ * photographs of different panels. Six ranges in Drive were in that state,
+ * every file a phone name, no subfolders. The listing below is each folder
+ * as it is in Drive on 7 October, cut down, with the real filenames.
+ */
+describe('ranges of phone photographs split one product per photograph, 7 October', () => {
+  const six = [
+    f('bv1', 'BAMBOO VENEER WALL PANELS/IMG_4580.HEIC'),
+    f('bv2', 'BAMBOO VENEER WALL PANELS/IMG_5109.HEIC'),
+    f('ka1', 'KITCHEN ACCESSORIES/IMG_1011.HEIC'),
+    f('ka2', 'KITCHEN ACCESSORIES/IMG_4147.heic'),
+    f('oa1', 'OFFICE ACCESSORIES/IMG_0996.HEIC'),
+    f('oa2', 'OFFICE ACCESSORIES/IMG_5695.HEIC'),
+    f('fs1', 'FLOATING SHELF ACCESSORIES/IMG_1033.HEIC'),
+    f('fs2', 'FLOATING SHELF ACCESSORIES/IMG_1098.HEIC'),
+    f('dr1', 'Drawer rails/IMG_4160.heic'),
+    f('dr2', 'Drawer rails/IMG_4170.HEIC'),
+    f('fw1', 'FLUTED WALL PANELS/IMG_4535.HEIC'),
+    f('fw2', 'FLUTED WALL PANELS/IMG_4604.HEIC'),
+  ];
+  const plan = buildPlan(six, [], []);
+
+  it('makes each photograph its own product with a readable placeholder name', () => {
+    expect(plan.files.map((x) => [x.productName, x.productSlug])).toEqual([
+      ['Bamboo Veneer Wall Panel 4580', 'bamboo-veneer-wall-panel-4580'],
+      ['Bamboo Veneer Wall Panel 5109', 'bamboo-veneer-wall-panel-5109'],
+      ['Kitchen Accessory 1011', 'kitchen-accessory-1011'],
+      ['Kitchen Accessory 4147', 'kitchen-accessory-4147'],
+      ['Office Accessory 0996', 'office-accessory-0996'],
+      ['Office Accessory 5695', 'office-accessory-5695'],
+      ['Floating Shelf Accessory 1033', 'floating-shelf-accessory-1033'],
+      ['Floating Shelf Accessory 1098', 'floating-shelf-accessory-1098'],
+      ['Drawer Rail 4160', 'drawer-rail-4160'],
+      ['Drawer Rail 4170', 'drawer-rail-4170'],
+      ['Fluted Wall Panel 4535', 'fluted-wall-panel-4535'],
+      ['Fluted Wall Panel 4604', 'fluted-wall-panel-4604'],
+    ]);
+  });
+
+  it('files each directly in its own range, as its own shot, with no finish sorting', () => {
+    for (const x of plan.files) {
+      const range = x.path.split('/')[0]!;
+      expect(x.categoryPath).toBe(range);
+      expect(x.categoryChain.map((c) => c.path)).toEqual([range]);
+      expect(x.productPath).toBe(x.path.replace(/\.[^.]+$/, ''));
+      expect(x.role).toBe('slab');
+      expect(x.splitByFinish).toBeUndefined();
+    }
+    expect(plan.finishFolders).toEqual([]);
+    expect(plan.looseFolders).toEqual([]);
+    expect(plan.productsWithoutSlab).toEqual([]);
+    expect(plan.productsWithUnknowns).toEqual([]);
+  });
+
+  it('reports each range once and marks its old umbrella product for unpublishing', () => {
+    expect(plan.photoFolders.map((p) => p.folder).sort()).toEqual([
+      'BAMBOO VENEER WALL PANELS', 'Drawer rails', 'FLOATING SHELF ACCESSORIES',
+      'FLUTED WALL PANELS', 'KITCHEN ACCESSORIES', 'OFFICE ACCESSORIES',
+    ]);
+    const bamboo = plan.issues.filter((i) => i.path === 'BAMBOO VENEER WALL PANELS');
+    expect(bamboo).toHaveLength(1);
+    expect(bamboo[0]!.reason).toContain('"Bamboo Veneer Wall Panel 4580"');
+    expect(bamboo[0]!.reason).toContain("Set each panel's name in the dashboard catalogue");
+    expect(bamboo[0]!.reason).toContain('"Bamboo Veneer Wall Panels" product is unpublished');
+    expect(umbrellaRetirements(plan).filter((r) => r.replacedBy === 'photograph').map((r) => r.folder).sort())
+      .toEqual(plan.photoFolders.map((p) => p.folder).sort());
+  });
+
+  it('gives every photograph the same slug on a second run and downloads nothing', () => {
+    const known = six.map((s) => ({ driveFileId: s.id, path: s.path, md5: s.md5, role: null, productId: null }));
+    const again = buildPlan(six, [], known);
+    expect(again.files.map((x) => x.productSlug)).toEqual(plan.files.map((x) => x.productSlug));
+    expect(again.files.every((x) => !x.needsDownload)).toBe(true);
+  });
+
+  it('leaves the 15mm stones named as before, through the list', () => {
+    const stones = buildPlan([f('m1', '15MM SINTERED STONES/IMG_4197.heic'), f('m2', '15MM SINTERED STONES/IMG_4198.heic')], [], []);
+    expect(stones.files.map((x) => x.productName)).toEqual(['15mm Sintered Stone 4197', '15mm Sintered Stone 4198']);
+  });
+
+  it('keeps hinges, locks and legs on the finish path, never split twice', () => {
+    const hw = buildPlan([f('h1', 'HINGES/IMG_1193.HEIC'), f('h2', 'HINGES/IMG_1194.HEIC')], [], []);
+    expect(hw.finishFolders).toEqual([{ folder: 'HINGES', count: 2 }]);
+    expect(hw.photoFolders).toEqual([]);
+  });
+
+  it('keeps a range with a named file in it as one umbrella, never guessing', () => {
+    const mixed = buildPlan([
+      f('x1', 'OFFICE ACCESSORIES/IMG_0996.HEIC'),
+      f('x2', 'OFFICE ACCESSORIES/IMG_1007.HEIC'),
+      f('x3', 'OFFICE ACCESSORIES/DESK ORGANISER.HEIC'),
+    ], [], []);
+    expect(new Set(mixed.files.map((x) => x.productSlug))).toEqual(new Set(['office-accessories']));
+    expect(mixed.photoFolders).toEqual([]);
+  });
+
+  it('lists the ranges in the run report', () => {
+    const report = renderReport(plan);
+    expect(report).toContain('   2 product(s)  BAMBOO VENEER WALL PANELS');
+    expect(report).toContain('   2 product(s)  Drawer rails');
+  });
+});
+
+/**
+ * KITCHEN ACCESSORIES in Drive holds every Drawer rails photograph again:
+ * the same bytes (same md5) under a different Drive id, uploaded on 22
+ * September, a day before Beco made the Drawer rails folder, and some of
+ * them two or three times over. One photograph must be one product.
+ */
+describe('one photograph is one product, however many copies Drive holds', () => {
+  const listing = [
+    f('k-own', 'KITCHEN ACCESSORIES/IMG_1011.HEIC', 'md5-sink'),
+    f('k-own-2', 'KITCHEN ACCESSORIES/IMG_1046.HEIC', 'md5-tap'),
+    f('k-4160-a', 'KITCHEN ACCESSORIES/IMG_4160.heic', 'md5-4160'),
+    f('k-4160-b', 'KITCHEN ACCESSORIES/IMG_4160.heic', 'md5-4160'),
+    f('k-4160-c', 'KITCHEN ACCESSORIES/IMG_4160.heic', 'md5-4160'),
+    f('k-4170', 'KITCHEN ACCESSORIES/IMG_4170.HEIC', 'md5-4170'),
+    f('d-4160', 'Drawer rails/IMG_4160.heic', 'md5-4160'),
+    f('d-4170', 'Drawer rails/IMG_4170.HEIC', 'md5-4170'),
+  ];
+  const plan = buildPlan(listing, [], []);
+
+  it('keeps each drawer rail once, in Drawer rails, the narrower range', () => {
+    expect(plan.files.map((x) => [x.driveFileId, x.productSlug, x.categoryPath])).toEqual([
+      ['k-own', 'kitchen-accessory-1011', 'KITCHEN ACCESSORIES'],
+      ['k-own-2', 'kitchen-accessory-1046', 'KITCHEN ACCESSORIES'],
+      ['d-4160', 'drawer-rail-4160', 'Drawer rails'],
+      ['d-4170', 'drawer-rail-4170', 'Drawer rails'],
+    ]);
+    const slugs = plan.files.map((x) => x.productSlug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+  });
+
+  it('reports the copies once per folder, saying where each photograph was kept', () => {
+    expect(plan.copies).toEqual([{ folder: 'KITCHEN ACCESSORIES', keptIn: 'Drawer rails', count: 4 }]);
+    expect(plan.photoFolders).toEqual([
+      { folder: 'KITCHEN ACCESSORIES', count: 2 },
+      { folder: 'Drawer rails', count: 2 },
+    ]);
+    const issue = plan.issues.find((i) => i.reason.includes('exact copies'))!;
+    expect(issue.path).toBe('KITCHEN ACCESSORIES');
+    expect(issue.reason).toContain('4 photograph(s) in "KITCHEN ACCESSORIES" are exact copies of photographs in "Drawer rails"');
+    expect(renderReport(plan)).toContain('COPIES OF ONE PHOTOGRAPH, IMPORTED ONCE');
+  });
+
+  it('chooses the same copy whatever order Drive lists them in', () => {
+    const reversed = buildPlan([...listing].reverse(), [], []);
+    expect(reversed.files.map((x) => x.driveFileId).sort()).toEqual(plan.files.map((x) => x.driveFileId).sort());
+  });
+
+  it('keeps one of several copies inside a single folder, the lowest id', () => {
+    const one = buildPlan([
+      f('z', 'KITCHEN ACCESSORIES/IMG_4160.heic', 'md5-4160'),
+      f('a', 'KITCHEN ACCESSORIES/IMG_4160.heic', 'md5-4160'),
+      f('m', 'KITCHEN ACCESSORIES/IMG_4161.heic', 'md5-4161'),
+    ], [], []);
+    expect(one.files.map((x) => [x.driveFileId, x.productSlug])).toEqual([
+      ['a', 'kitchen-accessory-4160'],
+      ['m', 'kitchen-accessory-4161'],
+    ]);
+    expect(one.copies).toEqual([{ folder: 'KITCHEN ACCESSORIES', keptIn: 'KITCHEN ACCESSORIES', count: 1 }]);
+    expect(one.issues.find((i) => i.reason.includes('exact copies'))!.reason).toContain('in the same folder');
+  });
+
+  it('dedupes across a finish range and a per photograph range too', () => {
+    const hw = buildPlan([
+      f('l1', 'DOOR LOCKS/IMG_5687.HEIC', 'md5-lock'),
+      f('o1', 'OFFICE ACCESSORIES/IMG_5687.HEIC', 'md5-lock'),
+      f('o2', 'OFFICE ACCESSORIES/IMG_0996.HEIC', 'md5-tray'),
+    ], [], []);
+    expect(hw.files.map((x) => x.productSlug)).toEqual(['door-lock-5687', 'office-accessory-0996']);
+  });
+
+  it('never dedupes the photographs of a stone product', () => {
+    // A stone folder is one product with several shots; an application shot
+    // reused in two stones' folders still belongs to both.
+    const stones = buildPlan([
+      f('s1', '12MM SINTERED STONES/AMBER JADE/APP 1.jpg', 'md5-kitchen'),
+      f('s2', '12MM SINTERED STONES/CYPRUS LIGHT GREY/APP 1.jpg', 'md5-kitchen'),
+    ], [], []);
+    expect(stones.files.map((x) => x.productSlug)).toEqual(['amber-jade', 'cyprus-light-grey']);
+    expect(stones.copies).toEqual([]);
+  });
+});
+
+describe('a folder of phone photographs nested inside a range', () => {
+  it('becomes a sub range of the range, one product per photograph, when the range itself splits', () => {
+    const plan = buildPlan([
+      f('k1', 'KITCHEN ACCESSORIES/IMG_1011.HEIC'),
+      f('k2', 'KITCHEN ACCESSORIES/IMG_1046.HEIC'),
+      f('n1', 'KITCHEN ACCESSORIES/DRAWER RAILS/IMG_4160.heic'),
+      f('n2', 'KITCHEN ACCESSORIES/DRAWER RAILS/IMG_4161.heic'),
+    ], [{ path: 'DRAWER RAILS', name: 'DRAWER RAILS', depth: 1 }], []);
+    const rail = plan.files.find((x) => x.driveFileId === 'n1')!;
+    expect(rail.productName).toBe('Drawer Rail 4160');
+    // The same slug as the photograph in a top level Drawer rails folder, so
+    // moving the folder in Drive does not make a second product.
+    expect(rail.productSlug).toBe('drawer-rail-4160');
+    expect(rail.productPath).toBe('KITCHEN ACCESSORIES/DRAWER RAILS/IMG_4160');
+    expect(rail.categoryPath).toBe('KITCHEN ACCESSORIES/DRAWER RAILS');
+    expect(rail.categoryChain.map((c) => c.slug)).toEqual(['kitchen-accessories', 'drawer-rails']);
+    expect(rail.role).toBe('slab');
+    expect(plan.misnests).toEqual([]);
+    expect(plan.photoFolders).toEqual([
+      { folder: 'KITCHEN ACCESSORIES', count: 2 },
+      { folder: 'KITCHEN ACCESSORIES/DRAWER RAILS', count: 2 },
+    ]);
+    expect(plan.issues.find((i) => i.path === 'KITCHEN ACCESSORIES/DRAWER RAILS')!.reason)
+      .toContain('"Drawer Rail 4160" after its photo number, in Drawer Rails');
+  });
+
+  it('keeps a copy at the range root as the nested sub range product, never two', () => {
+    const plan = buildPlan([
+      f('k1', 'KITCHEN ACCESSORIES/IMG_1011.HEIC'),
+      f('k2', 'KITCHEN ACCESSORIES/IMG_4160.heic', 'md5-4160'),
+      f('k3', 'KITCHEN ACCESSORIES/IMG_1046.HEIC'),
+      f('n1', 'KITCHEN ACCESSORIES/DRAWER RAILS/IMG_4160.heic', 'md5-4160'),
+      f('n2', 'KITCHEN ACCESSORIES/DRAWER RAILS/IMG_4161.heic'),
+    ], [], []);
+    expect(plan.files.map((x) => x.productSlug)).toEqual([
+      'kitchen-accessory-1011', 'kitchen-accessory-1046', 'drawer-rail-4160', 'drawer-rail-4161',
+    ]);
+    expect(plan.copies).toEqual([{ folder: 'KITCHEN ACCESSORIES', keptIn: 'KITCHEN ACCESSORIES/DRAWER RAILS', count: 1 }]);
+  });
+
+  it('stays one product inside a range that does not split, the D104 product folder', () => {
+    // A stone photographed on a phone in its own folder is several angles of
+    // one stone, never several stones.
+    const plan = buildPlan([
+      f('a1', '12MM SINTERED STONES/AMBER JADE/SLAB.jpg'),
+      f('p1', '12MM SINTERED STONES/NEW STONE/IMG_2001.HEIC'),
+      f('p2', '12MM SINTERED STONES/NEW STONE/IMG_2002.HEIC'),
+    ], [], []);
+    const newStone = plan.files.filter((x) => x.path.includes('NEW STONE'));
+    expect(new Set(newStone.map((x) => x.productSlug))).toEqual(new Set(['new-stone']));
+    expect(plan.photoFolders).toEqual([]);
+  });
+
+  it('stays one product when the range has no loose photographs of its own', () => {
+    const plan = buildPlan([
+      f('p1', 'NEW RANGE/ONE STONE/IMG_2001.HEIC'),
+      f('p2', 'NEW RANGE/ONE STONE/IMG_2002.HEIC'),
+    ], [], []);
+    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['one-stone']));
+    expect(plan.photoFolders).toEqual([]);
+  });
+});
+
+/**
+ * The 12mm stones as they are in Drive: each folder one stone, up to six
+ * photographs named by role. None of the new rules may touch them.
+ */
+describe('stone folders with several role named photographs, untouched', () => {
+  const oro = ['CALCATTA ORO SLAB.png', 'APP 1.jpg', 'APP 2.jpg', 'APP 3.jpg', 'SLAB ON STAND.JPG', 'BOOK MATCH.jpg']
+    .map((name, i) => f(`co${i}`, `12MM SINTERED STONES/CALCATTA ORO/${name}`));
+  const plan = buildPlan([
+    ...oro,
+    f('lc1', '12MM SINTERED STONES/LIMESTONE CREAMY/LIMESTONE CREAMY SLAB.JPG'),
+    f('lc2', '12MM SINTERED STONES/LIMESTONE CREAMY/DSC02078.JPG'),
+  ], [], []);
+
+  it('keeps each stone one product with its shots in their roles', () => {
+    const shots = plan.files.filter((x) => x.productSlug === 'calcatta-oro');
+    expect(shots).toHaveLength(6);
+    expect(shots.map((x) => x.role).sort()).toEqual(['application', 'application', 'application', 'bookmatch', 'on_stand', 'slab']);
+    expect(new Set(plan.files.map((x) => x.productSlug))).toEqual(new Set(['calcatta-oro', 'limestone-creamy']));
+    expect(plan.photoFolders).toEqual([]);
+    expect(plan.copies).toEqual([]);
+    expect(plan.itemFolders).toEqual([]);
+    expect(umbrellaRetirements(plan)).toEqual([]);
+  });
+});
+
+/**
+ * Production still published black-handles, gold-handles, knobs and
+ * grey-handles on 7 October: single products from before D104 holding a
+ * whole handle folder, beside the per item products that replaced them.
+ */
+describe('umbrella retirement for D104 item folders', () => {
+  const handles = [
+    f('b1', 'HANDLES/BLACK HANDLES/B762 BLACK'),
+    f('b2', 'HANDLES/BLACK HANDLES/HT-8350 BLACK GOLD'),
+    f('g1', 'HANDLES/GOLD HANDLES/A7355 K GOLD'),
+    f('g2', 'HANDLES/GOLD HANDLES/HT-8352 BROWN GOLD'),
+    f('r1', 'HANDLES/GREY HANDLES/A7800 64 GRAY'),
+    f('r2', 'HANDLES/GREY HANDLES/F58 SILVER'),
+    f('n1', 'HANDLES/KNOBS/HT-8355 K GOLD KNOB'),
+    f('n2', 'HANDLES/KNOBS/2001 64 GRAY KNOB'),
+    f('l1', 'HANDLES/LEATHER HANDLES/HT-8321 BROWN'),
+  ];
+  const plan = buildPlan(handles, [], []);
+
+  it('names each item folder for unpublishing its old single product', () => {
+    expect(umbrellaRetirements(plan)).toEqual([
+      { folder: 'HANDLES/BLACK HANDLES', replacedBy: 'item' },
+      { folder: 'HANDLES/GOLD HANDLES', replacedBy: 'item' },
+      { folder: 'HANDLES/GREY HANDLES', replacedBy: 'item' },
+      { folder: 'HANDLES/KNOBS', replacedBy: 'item' },
+    ]);
+  });
+
+  it('leaves a one handle folder alone: it is still one product, and nothing replaces it', () => {
+    expect(umbrellaRetirements(plan).some((r) => r.folder === 'HANDLES/LEATHER HANDLES')).toBe(false);
+    expect(plan.files.find((x) => x.driveFileId === 'l1')!.productSlug).toBe('leather-handles');
+  });
+
+  it('says so in the item folder issue and the report', () => {
+    const issue = plan.issues.find((i) => i.path === 'HANDLES/KNOBS')!;
+    expect(issue.reason).toContain('"Knobs" product holding every photograph is unpublished');
+    expect(renderReport(plan)).toContain('holding the whole folder is unpublished');
+  });
+});
+
+describe('singularNoun and isPerPhotoRange', () => {
+  it.each([
+    ['BAMBOO VENEER WALL PANELS', 'Bamboo Veneer Wall Panel'],
+    ['KITCHEN ACCESSORIES', 'Kitchen Accessory'],
+    ['Drawer rails', 'Drawer Rail'],
+    ['15MM SINTERED STONES', '15mm Sintered Stone'],
+    ['HINGES', 'Hinge'],
+    ['STORAGE BOXES', 'Storage Box'],
+    ['GLASS', 'Glass'],
+    ['WALL TRAYS', 'Wall Tray'],
+  ])('reads one of %s as %s', (folder, noun) => expect(singularNoun(folder)).toBe(noun));
+
+  it('splits a range only when it holds two loose photographs and nothing but phone names', () => {
+    expect(isPerPhotoRange(['IMG_1.HEIC', 'IMG_2.HEIC'], ['IMG_1.HEIC', 'IMG_2.HEIC'])).toBe(true);
+    expect(isPerPhotoRange(['IMG_1.HEIC'], ['IMG_1.HEIC'])).toBe(false);
+    expect(isPerPhotoRange(['IMG_1.HEIC', 'IMG_2.HEIC'], ['IMG_1.HEIC', 'IMG_2.HEIC', 'SLAB.jpg'])).toBe(false);
+    expect(isPerPhotoRange([], ['IMG_1.HEIC', 'IMG_2.HEIC'])).toBe(false);
   });
 });
