@@ -76,11 +76,15 @@ select is(
   'Handles is a major category, beside Sintered Stone'
 );
 
--- The real subtree size, read before the role changes. The import adds sub
--- ranges under Sintered Stone (Heixin 12mm, D104), so a literal count holds
--- only on a database that has never imported.
+-- The real subtree size a visitor may see, read before the role changes.
+-- The import adds sub ranges under Sintered Stone, and a range can be
+-- unpublished (Heixin 12mm, hidden on 7 October 2026), so the count is of
+-- the published ranges: category_subtree_ids is security invoker and
+-- anon reads only those.
 select count(*) as sintered_subtree
-  from category_subtree_ids((select id from categories where slug = 'sintered-stone')) \gset
+  from category_subtree_ids((select id from categories where slug = 'sintered-stone')) as s(id)
+  join categories c on c.id = s.id
+ where c.is_published \gset
 
 set local role anon;
 select is(
