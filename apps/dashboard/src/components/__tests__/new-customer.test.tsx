@@ -25,7 +25,9 @@ describe('NewCustomer (D130)', () => {
     await user.type(within(dialog).getByLabelText(/^name/i), 'ZZ Wanjiku');
     await user.type(within(dialog).getByLabelText(/^phone/i), '0711000111');
     await user.click(within(dialog).getByRole('button', { name: 'Add customer' }));
-    expect(push).toHaveBeenCalledWith('/customers/c9');
+    // The redirect follows the save resolving, so wait for it: asserted
+    // synchronously it raced the action on CI's slower runner.
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/customers/c9'));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });
