@@ -36,7 +36,9 @@ import { SITE } from '@/lib/site';
 const ABOUT: NavItem[] = [
   { href: '/about', label: 'About Beco', description: 'Who we are and what we stock' },
   {
-    href: '/shop/12mm-sintered-stones',
+    // The Sintered Stone range page, which holds 12mm and 15mm alike. It once
+    // pointed at the 12mm sub range, so the item read as a broken link.
+    href: '/shop/sintered-stone',
     label: 'Sintered stone',
     description: 'What the material is and where it works',
   },
