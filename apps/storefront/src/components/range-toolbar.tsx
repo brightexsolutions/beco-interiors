@@ -84,7 +84,8 @@ export function RangeToolbar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  const filtered = Boolean(query.trim() || finish || sort !== 'name');
+  const face = params.get('face') === 'bookmatched' ? 'bookmatched' : '';
+  const filtered = Boolean(query.trim() || finish || face || sort !== 'name');
 
   return (
     // The anchor a range chip lands on. A chip is a real page (D119), so
@@ -230,10 +231,22 @@ export function RangeToolbar({
           {pending ? <Busy pending label="Filtering" /> : `${showing} of ${total}`}
         </p>
 
+        {face ? (
+          <button
+            type="button"
+            aria-label="Bookmatched only, show every stone"
+            onClick={() => write({ face: null })}
+            className="inline-flex h-11 items-center gap-2 rounded-control border border-charcoal bg-charcoal px-3 font-ui text-sm font-semibold text-high-vis-white"
+          >
+            Bookmatched
+            <span aria-hidden>&times;</span>
+          </button>
+        ) : null}
+
         {filtered ? (
           <button
             type="button"
-            onClick={() => { setQuery(''); write({ q: null, finish: null, sort: null }); }}
+            onClick={() => { setQuery(''); write({ q: null, finish: null, sort: null, face: null }); }}
             className="h-11 px-2 font-ui text-sm font-semibold text-warm-red-deep underline-offset-4 hover:underline"
           >
             Clear

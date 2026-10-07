@@ -163,7 +163,7 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
                   See {product.name}
                 </Link>
                 <Link
-                  href="/shop"
+                  href="/shop/sintered-stone?face=bookmatched"
                   className="hidden min-h-11 items-center font-ui text-sm font-semibold uppercase tracking-[0.12em] text-high-vis-white underline-offset-8 hover:underline sm:inline-flex"
                 >
                   All bookmatched stone

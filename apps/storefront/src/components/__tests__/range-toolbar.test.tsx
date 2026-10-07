@@ -136,4 +136,15 @@ describe('RangeToolbar', () => {
       expect(link.getAttribute('href')).toMatch(/#range-strip$/);
     }
   });
+
+  it('shows the bookmatched filter as a chip that clears it, and Clear clears it too', async () => {
+    const user = userEvent.setup();
+    search = new URLSearchParams('face=bookmatched');
+    render(<RangeToolbar chips={CHIPS} finishes={FINISHES} total={24} showing={6} />);
+    await user.click(screen.getByRole('button', { name: 'Bookmatched only, show every stone' }));
+    expect(replace).toHaveBeenLastCalledWith('/shop/sintered-stone', { scroll: false });
+    await user.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(replace).toHaveBeenLastCalledWith('/shop/sintered-stone', { scroll: false });
+  });
 });
+

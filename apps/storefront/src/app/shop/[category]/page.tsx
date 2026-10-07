@@ -11,7 +11,7 @@ import {
   getCategoryWithTree, getCategorySlugs, getCategoryTree, getProductsByCategory, getProductsInCategories,
   categoryIsIndexable, primaryImage, blurProps, flattenTree,
 } from '@/lib/products';
-import { applyCatalogueFilters, finishFacetsOf, isFilteredView, rangeChips } from '@/lib/shop';
+import { applyCatalogueFilters, finishFacetsOf, isFilteredView, rangeChips, readFace } from '@/lib/shop';
 import { SITE } from '@/lib/site';
 import { isStoneRange, stockCount } from '@/lib/material';
 
@@ -27,6 +27,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 const readFilter = (params: Search) => ({
   q: one(params.q).trim().slice(0, 80),
   finish: one(params.finish).trim().slice(0, 40),
+  face: readFace(one(params.face)),
   sort: one(params.sort).trim(),
 });
 

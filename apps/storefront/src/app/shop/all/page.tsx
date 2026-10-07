@@ -5,7 +5,7 @@ import { EmptyState, buttonClasses } from '@beco/ui';
 import { ProductGridPaginated } from '@/components/product-grid-paginated';
 import { RangeToolbar } from '@/components/range-toolbar';
 import { getPublishedProducts, getCategoryTree } from '@/lib/products';
-import { applyCatalogueFilters, isFilteredView, rangeChips } from '@/lib/shop';
+import { applyCatalogueFilters, isFilteredView, rangeChips, readFace } from '@/lib/shop';
 
 export const revalidate = 3600;
 
@@ -15,6 +15,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 const read = (params: Search) => ({
   q: one(params.q).trim().slice(0, 80),
   finish: one(params.finish).trim().slice(0, 40),
+  face: readFace(one(params.face)),
   sort: one(params.sort).trim(),
 });
 
