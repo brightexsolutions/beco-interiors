@@ -3,12 +3,13 @@ import type { Metadata } from 'next';
 import { catalogueOgImage, pageMetadata, rangeDescription, rangeTitle } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { EmptyState, CutoutReveal, buttonClasses } from '@beco/ui';
 import { ProductGridPaginated } from '@/components/product-grid-paginated';
 import { RangeToolbar } from '@/components/range-toolbar';
 import {
-  getCategoryWithTree, getCategorySlugs, getCategoryTree, getProductsByCategory, getProductsInCategories,
+  getCanonicalCategorySlug, getCategoryWithTree, getCategorySlugs, getCategoryTree, getProductsByCategory,
+  getProductsInCategories,
   categoryIsIndexable, primaryImage, blurProps, flattenTree,
 } from '@/lib/products';
 import { applyCatalogueFilters, finishFacetsOf, isFilteredView, rangeChips, readFace } from '@/lib/shop';
@@ -31,10 +32,23 @@ const readFilter = (params: Search) => ({
   sort: one(params.sort).trim(),
 });
 
+/**
+ * A slug no published range answers to. If a range held it before, a
+ * permanent redirect to that range, so an old link and whatever standing it
+ * earned carry over: a renamed range (migration 49), or a supplier range
+ * retired by the D104 amendment of 7 October, /shop/heixin-12mm to
+ * /shop/12mm-sintered-stones. Otherwise a 404, as before.
+ */
+async function redirectFormerSlug(slug: string): Promise<never> {
+  const canonical = await getCanonicalCategorySlug(slug);
+  if (canonical) permanentRedirect(`/shop/${canonical}`);
+  notFound();
+}
+
 export async function generateMetadata({ params, searchParams }: Params): Promise<Metadata> {
   const { category: slug } = await params;
   const tree = await getCategoryWithTree(slug);
-  if (!tree) return {};
+  if (!tree) return redirectFormerSlug(slug);
   const { category } = tree;
   const filtered = isFilteredView(readFilter(await searchParams));
 
@@ -68,13 +82,13 @@ export default async function CategoryPage({ params, searchParams }: Params) {
     searchParams.then(readFilter),
     getCategoryTree(),
   ]);
-  if (!tree) notFound();
+  if (!tree) return redirectFormerSlug(slug);
   const { category, parent, ancestors, children } = tree;
 
   // One route, one job at every level. A category with ranges beneath it
   // shows those ranges and everything in them, its own products included
-  // (12mm Sintered Stones holds stones of its own beside the Heixin sub
-  // range); a leaf shows its own products. Branching here rather than in
+  // (Sintered Stone holds its 12mm and 15mm ranges); a leaf shows its own
+  // products. Branching here rather than in
   // several routes keeps /shop/<anything> a single URL shape, which is what
   // the breadcrumbs, the sitemap and every existing link already assume.
   const isGroup = children.length > 0;

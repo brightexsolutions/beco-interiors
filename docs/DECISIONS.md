@@ -2322,6 +2322,73 @@ lists Black Handles (29 items from 36 files), Gold Handles (27 from 33), Grey Ha
 `CODE: 711 WHITE` and `CODE: 761 WHITE`, which name one subject once the folder's words and
 the numbers are set aside, so it stays one product, as before.
 
+**Amended 7 October 2026: a supplier's name never reaches the site.** Irene, for Beco: supplier
+names must not appear on the website at all, Heixin and Delfone the two named. Production showed
+"Heixin 12mm" as a published sub range of 12mm Sintered Stones holding seven stones, as a range
+chip, heading, breadcrumb and `/shop/heixin-12mm`, in alt text ("Hanting Jade, Heixin 12mm,
+slab") and in R2 keys (`/api/img/heixin-12mm/...`); and the unpublished Delfone product sat on
+the slug `delfone-12mm`. This amendment reverses the part of this decision that made `HEIXIN
+12MM` a sub range.
+
+*The importer reads supplier folders through.* `SUPPLIER_WORDS` in `tools/drive-import/src/
+supplier.ts` lists `HEIXIN` and `DELFONE`. A folder is a supplier's when its name contains one
+of the words anywhere, case aside, not when it equals a listed folder name, so `HEIXIN 15MM` is
+caught the day Beco make it; the words are unusual enough that no stone or range contains one. A
+supplier folder below a range is not a category: its stone folders file directly in the range
+above (`throughSuppliers`), so the Heixin stones plan into 12mm Sintered Stones, and depth is
+counted on what the site shows. A supplier folder holding photographs is still one product, its
+photographs together (Delfone's stays flagged as mixed and unpublished), named without the word,
+or after its range ("12mm Sintered Stone") when nothing else is left. A supplier word in a
+product folder or item name is dropped too, and a slug clash takes the range's prefix, never the
+supplier's. A supplier folder at the top of Drive has no range to file into and is skipped and
+reported. The product's Drive path stays verbatim, since it is the product's identity and is
+never rendered: the importer finds an existing product by slug, then by that path (D122), so no
+stone is imported twice. Name and category stay first import only (D54), so the importer alone
+does not move a product that already exists; that is the data script's job, below.
+
+*Image keys are re-keyed by the importer.* A photograph's key is built from the plan's category
+and product slugs, now supplier free. An unchanged photograph of an existing product whose stored
+key or alt text names a supplier is downloaded (from the local cache when present) and encoded
+again, its derivatives written under the new key (`12mm-sintered-stones/hanting-jade/slab-0`)
+and the gallery entry rewritten with fresh alt text (`needsRekey`). Only a supplier word triggers
+this, never a key that merely differs, so ordinary galleries are still carried forward; a second
+run is clean and changes nothing. The old objects are left in R2, unreferenced. No lifecycle
+rule clears them, so they stay reachable by anyone who has the exact old URL until someone
+deletes the `heixin-12mm/` prefix and `12mm-sintered-stones/delfone-12mm/` by hand.
+
+*The guard.* `supplierLeaks` checks every product name and slug, every category name, slug and
+path, and the alt text and key of each photograph the plan would write. `supplier.test.ts` runs
+it against the real 12mm folder file for file and every other shape a supplier folder can take;
+the dry run prints it; a real run refuses to write when it finds a leak.
+
+*The correction for existing rows.* `pnpm catalogue:hide-suppliers` (`hide-suppliers.ts`), one
+off, service role, `--dry-run` printing every change: products in a supplier range move to the
+nearest range above that is not a supplier's, and so do ranges inside it; the supplier range is
+unpublished, never deleted; its rows in `category_slugs` point at the range its stones moved to;
+a product name or slug carrying a supplier word loses it, the old slug kept in `product_slugs`;
+alt text naming a supplier becomes "Hanting Jade, 12mm Sintered Stones, slab". Image keys are
+listed as remaining, not touched: renaming a key without moving the object breaks the
+photograph, so the next import moves both. Copy a person wrote (descriptions, meta) is reported,
+never rewritten. Run twice, the second finds nothing. Against the local stack, a mirror of
+production after a real import: Heixin 12mm unpublished, seven stones moved, 36 alt texts
+rewritten, Delfone's product renamed "12mm Sintered Stone" on `12mm-sintered-stone` (on
+production its dashboard name, "slate blue 12mm", is kept and gives `slate-blue-12mm`), and
+/shop/12mm-sintered-stones carried no supplier word outside 94 image URLs, from 129 before.
+
+*The storefront honours former range slugs.* Migration 49 recorded every slug a range had held
+but nothing read it, so a renamed range 404ed its old links. The range page now looks a missing
+slug up in `category_slugs` as anon, through a published range only, and answers with a
+permanent redirect (`/shop/heixin-12mm` to `/shop/12mm-sintered-stones`), else a 404 as before.
+
+*What remains.* Until the next import, the seven stones' and Delfone's image URLs still carry the
+supplier word. `/product/delfone-12mm` redirects, as any unknown product slug does (D107), to the
+shop searched for its words, "delfone 12mm", because the product it belongs to is unpublished and
+anon cannot follow its history; publishing the product would make it redirect to its new slug.
+Code comments and this record still name the suppliers; neither is served.
+
+*Reverses if:* Beco decide a supplier is a brand customers ask for, in which case the word comes
+out of `SUPPLIER_WORDS` and the folder becomes a sub range again on the next import.
+
 ## D105, 3 October 2026: the Drive import runs from the dashboard, through GitHub Actions
 
 Brown's instruction: the import had only ever been run by the agent on his own machine, and it

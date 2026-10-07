@@ -111,6 +111,19 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('');
   }
 
+  if (plan.supplierFolders.length) {
+    L.push('SUPPLIER FOLDERS, READ THROUGH');
+    L.push('------------------------------');
+    L.push('  Named for a supplier, which never appears on the site. A folder of stone');
+    L.push('  folders is not a sub range: its products file in the range above it. A folder');
+    L.push('  of photographs is one product, named without the supplier.');
+    L.push('');
+    for (const { folder, into, products } of plan.supplierFolders) {
+      L.push(`  ${String(products).padStart(4)} product(s)  ${folder}, filed in ${into}`);
+    }
+    L.push('');
+  }
+
   if (plan.copies.length) {
     L.push('COPIES OF ONE PHOTOGRAPH, IMPORTED ONCE');
     L.push('---------------------------------------');

@@ -5,6 +5,7 @@ import { renderReport } from './report';
 import { createFixtureSource } from './fixture-source';
 import { createGoogleDriveSource } from './google-drive';
 import { executePlan } from './run';
+import { supplierLeaks } from './supplier-guard';
 import { createClient } from '@supabase/supabase-js';
 
 /**
@@ -67,6 +68,17 @@ const main = async () => {
 
   const plan = buildPlan(listing, folders, known, { force });
   console.log(renderReport(plan));
+
+  // D104 amended 7 October: nothing the import writes may name a supplier.
+  // Checked on every run, and a leak stops a real import before it writes.
+  const leaks = supplierLeaks(plan);
+  if (leaks.length) {
+    console.log(`SUPPLIER NAME CHECK: ${leaks.length} leak(s)`);
+    for (const l of leaks.slice(0, 20)) console.log(`  ${l.field}: ${l.value}  (${l.path})`);
+    if (!dryRun) throw new Error('supplier names in the plan, nothing imported');
+  } else {
+    console.log('SUPPLIER NAME CHECK: no supplier word in any planned name, slug, category, alt text or image key.\n');
+  }
 
   if (dryRun) {
     console.log('Dry run. Nothing downloaded, nothing written.\n');
