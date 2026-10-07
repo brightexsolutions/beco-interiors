@@ -4,6 +4,7 @@ import { BackLink, StatusPill } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { CustomerContact } from '@/components/customer-contact';
 import { QuoteActions } from '@/components/quote-actions';
+import { QuoteCustomer } from '@/components/quote-customer';
 import { QuoteDates } from '@/components/quote-dates';
 import { QuoteDocumentPanel } from '@/components/quote-document-panel';
 import { QuoteDraftFlushProvider } from '@/components/quote-draft-flush';
@@ -119,6 +120,16 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
             {/* One tap to the person, the counter's most common next move. */}
             <div className="mt-3">
               <CustomerContact phone={quote.customerPhone} email={quote.customerEmail} reference={quote.reference} kind="quote" />
+            </div>
+            {/* The client record (D130). The lines above are the quote's own
+                snapshot and do not change when the record does. */}
+            <div className="mt-3">
+              <QuoteCustomer
+                quoteId={quote.id}
+                updatedAt={quote.updatedAt}
+                customer={quote.customer}
+                canMutate={canMutate}
+              />
             </div>
           </div>
 

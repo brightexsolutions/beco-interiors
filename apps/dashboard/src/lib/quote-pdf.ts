@@ -8,6 +8,8 @@ export const toPdfInput = (quote: QuoteDetail, settings: QuoteSettings): QuotePd
   customerPhone: quote.customerPhone,
   customerEmail: quote.customerEmail,
   company: quote.company,
+  // The customer's KRA PIN, from their record, under the customer block (D130).
+  customerKraPin: quote.customer?.kraPin ?? null,
   projectDetails: quote.projectDetails,
   validUntil: quote.validUntil,
   lines: quote.lines.map((line) => ({

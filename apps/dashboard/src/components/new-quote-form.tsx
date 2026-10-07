@@ -1,8 +1,9 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
+  Dialog,
   EmptyState,
   Field,
   Input,
@@ -16,10 +17,12 @@ import {
 import { roundMoney } from '@beco/validation';
 import { createCounterQuote, type QuoteActionState } from '@/app/(app)/quotes/actions';
 import { CataloguePicker, catalogueLineDraft } from '@/components/catalogue-picker';
-import { CustomerFinder } from '@/components/customer-finder';
+import { CustomerCard } from '@/components/customer-card';
+import { CustomerCreate } from '@/components/customer-create';
+import { CustomerPicker } from '@/components/customer-picker';
 import { PageHeading } from '@/components/page-heading';
 import type { CatalogueHit } from '@/lib/catalogue';
-import type { CustomerMatch } from '@/lib/customer-search';
+import type { CustomerSummary } from '@/lib/customer-search';
 
 const INITIAL: QuoteActionState = {};
 
@@ -36,10 +39,16 @@ const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
 
 /** Header and every line share this so cells sit on the same vertical axes. */
-const LINE_COLS = 'md:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem_auto]';
+/**
+ * Sized to the list, not the screen: a container query. Above 1280 the form
+ * shares the screen with the sidebar and the 22rem summary, about 518px, and
+ * the four fixed columns need about 480 of it, so a screen breakpoint left the
+ * item name 0px wide. Rows stack, as on a phone, until the list is 48rem.
+ */
+const LINE_COLS = '@3xl:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem_auto]';
 const LINE_GRID = [
   'flex flex-col gap-2 px-4 py-3',
-  `md:grid ${LINE_COLS} md:items-center md:gap-x-4 md:px-5 md:py-2`,
+  `@3xl:grid ${LINE_COLS} @3xl:items-center @3xl:gap-x-4 @3xl:px-5 @3xl:py-2`,
 ].join(' ');
 /** Column headers name the fields, so labels stay accessible but take no space. */
 const TABLE_FIELD = '[&>label]:sr-only [&>div]:mt-0';
@@ -50,19 +59,25 @@ export function NewQuoteForm() {
   const addRef = useRef<HTMLButtonElement>(null);
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [state, save, saving] = useActionState(createCounterQuote, INITIAL);
-  const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
-  const [returning, setReturning] = useState<CustomerMatch | null>(null);
+  // The client is a record picked or added here (D130). The quote stores
+  // its id, and the database snapshots its name, phone and email onto the
+  // quote, so editing the client later never rewrites this quote.
+  const [customer, setCustomer] = useState<CustomerSummary | null>(null);
+  const [adding, setAdding] = useState(false);
   const viewport = useVisualViewport();
   const keyboardOpen = viewport?.keyboardOpen ?? false;
 
-  const pickCustomer = (match: CustomerMatch) => {
-    setCustomer({ name: match.name, phone: match.phone, email: match.email ?? '' });
-    setReturning(match);
-  };
-  const clearCustomer = () => {
-    setCustomer({ name: '', phone: '', email: '' });
-    setReturning(null);
-  };
+  const pickCustomer = useCallback((picked: CustomerSummary) => {
+    setCustomer({
+      id: picked.id,
+      name: picked.name,
+      phone: picked.phone,
+      email: picked.email,
+      company: picked.company,
+      kraPin: picked.kraPin,
+    });
+    setAdding(false);
+  }, []);
 
   useEffect(() => {
     addRef.current?.focus();
@@ -114,7 +129,8 @@ export function NewQuoteForm() {
   const gross = priced
     ? lines.reduce((sum, line) => roundMoney(sum + roundMoney(line.quantity * line.unitPrice)), 0)
     : 0;
-  const canSave = lines.length > 0 && !saving;
+  const canSave = lines.length > 0 && customer !== null && !saving;
+  const blocker = lines.length === 0 ? 'Add an item first.' : customer === null ? 'Pick or add a client first.' : null;
 
   const saveButton = (className?: string) => (
     <Button type="submit" disabled={!canSave} pending={saving} className={className}>
@@ -123,7 +139,12 @@ export function NewQuoteForm() {
   );
 
   return (
+    <>
     <form action={save}>
+      <input type="hidden" name="customerId" value={customer?.id ?? ''} />
+      <input type="hidden" name="customerName" value={customer?.name ?? ''} />
+      <input type="hidden" name="customerPhone" value={customer?.phone ?? ''} />
+      <input type="hidden" name="customerEmail" value={customer?.email ?? ''} />
       <input
         type="hidden"
         name="items"
@@ -140,7 +161,7 @@ export function NewQuoteForm() {
       <PageHeading
         eyebrow="Counter"
         title="New quote"
-        lede="Add products, then the customer."
+        lede="Add products, then the client."
         actions={<div className="hidden sm:block">{saveButton()}</div>}
       />
 
@@ -169,10 +190,10 @@ export function NewQuoteForm() {
               />
             </div>
           ) : (
-            <div className="max-h-[min(28rem,50dvh)] overflow-y-auto md:max-h-[min(32rem,60dvh)]">
+            <div className="@container max-h-[min(28rem,50dvh)] overflow-y-auto md:max-h-[min(32rem,60dvh)]">
               <ul>
                 <li
-                  className={`sticky top-0 z-10 hidden border-b border-neutral-200 bg-neutral-50 py-2 md:grid ${LINE_COLS} md:items-center md:gap-4 md:px-5`}
+                  className={`sticky top-0 z-10 hidden border-b border-neutral-200 bg-neutral-50 py-2 @3xl:grid ${LINE_COLS} @3xl:items-center @3xl:gap-4 @3xl:px-5`}
                 >
                 <span className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
                   Item
@@ -210,54 +231,18 @@ export function NewQuoteForm() {
           className="xl:sticky xl:top-4"
         >
           <div className="grid gap-4 p-5">
-            <CustomerFinder onPick={pickCustomer} />
-            {returning ? (
-              <div className="flex items-center justify-between gap-3 border-l-4 border-charcoal bg-neutral-50 px-3 py-2">
-                <p className="min-w-0 font-ui text-sm text-neutral-700">
-                  Filled from {returning.quoteCount === 1 ? 'an earlier quote' : `${returning.quoteCount} earlier quotes`}.
-                </p>
-                <Button type="button" variant="ghost" className="h-11 shrink-0 px-2 py-0" onClick={clearCustomer}>
-                  Clear
-                </Button>
-              </div>
-            ) : null}
-            <Field label="Name" htmlFor="customerName">
-              <Input
-                id="customerName"
-                name="customerName"
-                required
-                autoComplete="name"
-                autoCapitalize="words"
-                enterKeyHint="next"
-                value={customer.name}
-                onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))}
+            {customer ? (
+              <CustomerCard
+                customer={customer}
+                action={
+                  <Button type="button" variant="ghost" className="h-11 px-2 py-0" onClick={() => setCustomer(null)}>
+                    Change
+                  </Button>
+                }
               />
-            </Field>
-            <Field label="Phone" htmlFor="customerPhone" hint="07.. or +254">
-              <Input
-                id="customerPhone"
-                name="customerPhone"
-                type="tel"
-                required
-                inputMode="tel"
-                autoComplete="tel"
-                enterKeyHint="next"
-                value={customer.phone}
-                onChange={(e) => setCustomer((c) => ({ ...c, phone: e.target.value }))}
-              />
-            </Field>
-            <Field label="Email" htmlFor="customerEmail" hint="Optional">
-              <Input
-                id="customerEmail"
-                name="customerEmail"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                enterKeyHint="done"
-                value={customer.email}
-                onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))}
-              />
-            </Field>
+            ) : (
+              <CustomerPicker onPick={pickCustomer} onAddNew={() => setAdding(true)} />
+            )}
             <Field label="Source" htmlFor="source">
               <Select id="source" name="source" defaultValue="walk_in">
                 <option value="walk_in">Walk in</option>
@@ -275,6 +260,7 @@ export function NewQuoteForm() {
             </div>
             <p className="font-ui text-sm text-neutral-500">Prices include VAT.</p>
 
+            {blocker ? <p className="hidden font-ui text-sm text-neutral-500 sm:block">{blocker}</p> : null}
             {state.error ? <Notice tone="alert">{state.error}</Notice> : null}
           </div>
         </Panel>
@@ -301,11 +287,15 @@ export function NewQuoteForm() {
           </div>
           {saveButton('shrink-0 px-6')}
         </div>
-        {!canSave && !saving ? (
-          <p className="mt-1 font-ui text-sm text-neutral-500">Add an item first.</p>
-        ) : null}
+        {blocker && !saving ? <p className="mt-1 font-ui text-sm text-neutral-500">{blocker}</p> : null}
       </div>
     </form>
+
+    {/* Outside the quote form, because the client form is a form of its own. */}
+    <Dialog open={adding} onOpenChange={setAdding} title="Add new client">
+      <CustomerCreate submitLabel="Add and use" onCreated={pickCustomer} onUseExisting={pickCustomer} />
+    </Dialog>
+    </>
   );
 }
 
@@ -364,11 +354,11 @@ function LineEditor({
   const step = lineStep(line);
   return (
     <li className={`${LINE_GRID} border-b border-neutral-100 last:border-0`}>
-      <div className="flex items-center justify-between gap-3 md:contents">
-        <div className="min-w-0 flex-1 md:col-start-1 md:row-start-1">
+      <div className="flex items-center justify-between gap-3 @3xl:contents">
+        <div className="min-w-0 flex-1 @3xl:col-start-1 @3xl:row-start-1">
           <LineIdentity line={line} onChange={onChange} />
         </div>
-        <div className="shrink-0 md:col-start-5 md:row-start-1 md:justify-self-end">
+        <div className="shrink-0 @3xl:col-start-5 @3xl:row-start-1 @3xl:justify-self-end">
           <Button
             type="button"
             variant="ghost"
@@ -379,8 +369,8 @@ function LineEditor({
           </Button>
         </div>
       </div>
-      <div className="flex items-center gap-3 md:contents">
-        <div className="shrink-0 md:col-start-2 md:row-start-1">
+      <div className="flex items-center gap-3 @3xl:contents">
+        <div className="shrink-0 @3xl:col-start-2 @3xl:row-start-1">
           <QuantityStepper
             className="flex-nowrap"
             value={line.quantity}
@@ -391,7 +381,7 @@ function LineEditor({
           />
         </div>
         <Field
-          className={`min-w-0 flex-1 md:col-start-3 md:row-start-1 md:min-w-0 ${TABLE_FIELD}`}
+          className={`min-w-0 flex-1 @3xl:col-start-3 @3xl:row-start-1 @3xl:min-w-0 ${TABLE_FIELD}`}
           label="Unit price"
           htmlFor={`price-${line.key}`}
           hint="KES"
@@ -406,7 +396,7 @@ function LineEditor({
             onChange={(e) => onChange(line.key, { unitPrice: Number(e.target.value) || 0 })}
           />
         </Field>
-        <div className="shrink-0 whitespace-nowrap md:col-start-4 md:row-start-1 md:justify-self-end">
+        <div className="shrink-0 whitespace-nowrap @3xl:col-start-4 @3xl:row-start-1 @3xl:justify-self-end">
           <LineAmount line={line} />
         </div>
       </div>

@@ -19,6 +19,8 @@ const ALL: readonly NavItem[] = [
   { href: '/quotes', label: 'Quotes' },
   { href: '/orders', label: 'Orders' },
   { href: '/products', label: 'Catalogue' },
+  // After Catalogue, so the product manager's bar leads with its own screen.
+  { href: '/customers', label: 'Customers' },
   { href: '/announcements', label: 'Announcements' },
   { href: '/reports', label: 'Reports' },
   { href: '/users', label: 'Users' },
@@ -42,7 +44,7 @@ export interface NavGroup {
  * a salesperson's first screen is Quotes, so for them it is not listed.
  */
 const GROUPS: ReadonlyArray<{ label: string; hrefs: readonly string[] }> = [
-  { label: 'Sales', hrefs: ['/quotes', '/orders'] },
+  { label: 'Sales', hrefs: ['/quotes', '/orders', '/customers'] },
   { label: 'Catalogue', hrefs: ['/products'] },
   { label: 'Content', hrefs: ['/announcements', '/studio/blog'] },
   { label: 'Insight', hrefs: ['/reports'] },
@@ -116,6 +118,7 @@ function nestedPageLabel(sectionHref: string, page: string): string {
   }
   if (UUID.test(page)) {
     if (sectionHref === '/studio/blog') return 'Edit article';
+    if (sectionHref === '/customers') return 'Customer';
     return 'Edit';
   }
   return page;
@@ -137,8 +140,8 @@ export interface BottomNav {
  * same access map as everything else, so the bar can never offer a screen
  * the proxy would refuse.
  *
- *   sales            Quotes, New quote, Orders
- *   product manager  Catalogue
+ *   sales            Quotes, New quote, Orders, Customers
+ *   product manager  Catalogue, Customers
  *   admins           Overview, Quotes, New quote, Orders, More
  */
 export const bottomNavFor = (role: UserRole, grants: AccessGrants = {}): BottomNav => {

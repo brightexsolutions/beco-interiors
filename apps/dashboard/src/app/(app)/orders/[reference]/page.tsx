@@ -5,6 +5,7 @@ import { BackLink, StatusPill } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { OrderActions } from '@/components/order-actions';
 import { OrderDates } from '@/components/order-dates';
+import { CustomerCard } from '@/components/customer-card';
 import { CustomerContact } from '@/components/customer-contact';
 import { OrderDocumentPanel } from '@/components/order-document-panel';
 import { OrderLines } from '@/components/order-lines';
@@ -122,6 +123,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
             <div className="mt-3">
               <CustomerContact phone={order.customerPhone} email={order.customerEmail} reference={order.reference} kind="order" />
             </div>
+            {/* The client record, from the quote it came from (D130). */}
+            {order.customer ? (
+              <div className="mt-3">
+                <CustomerCard customer={order.customer} />
+              </div>
+            ) : null}
           </div>
 
           <div>

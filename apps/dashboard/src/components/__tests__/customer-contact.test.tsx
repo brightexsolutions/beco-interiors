@@ -23,6 +23,15 @@ describe('CustomerContact', () => {
     expect(screen.getByRole('link', { name: 'WhatsApp' }).getAttribute('href')).toContain('Beco%20order%20BEC-O-00007');
   });
 
+  it('greets a customer by first name on their own page, with no reference (D130)', () => {
+    render(<CustomerContact phone="0722333730" email="a@example.com" reference="Achieng Otieno" kind="customer" />);
+    expect(screen.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute(
+      'href',
+      'https://wa.me/254722333730?text=Hi%20Achieng%2C%20this%20is%20Beco%20Interiors.',
+    );
+    expect(screen.getByRole('link', { name: 'Email' })).toHaveAttribute('href', 'mailto:a@example.com?subject=Beco%20Interiors');
+  });
+
   // jsdom cannot lay out, so the guarantee is held by the classes that make
   // overflow impossible: each label stays on one line and each button is
   // never narrower than that line, and the row wraps instead of squeezing.

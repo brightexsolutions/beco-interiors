@@ -82,7 +82,10 @@ has always been, not forgotten.
 | `GET /api/health` (both) | none, anon key, one row | none | none, it is the uptime probe |
 | `submit_quote` (storefront) | public by design | zod, prices recomputed server side | 5 a minute per address (D81) |
 | `loadPickerCatalogue` | `requirePath('/quotes')` | takes no input; published, live products only, through the session client so RLS applies; the picker filters on the phone | by the session |
-| `searchCustomers` | `requirePath('/quotes')` | filter characters stripped, **now capped at 60 characters** | by the session |
+| `searchCustomers` | `requirePath('/quotes')` | filter characters stripped, **now capped at 60 characters**; reads `customer_overview` since D130 | by the session |
+| `createCustomer`, `updateCustomer` (D130) | `requirePath('/customers')`, then sales or admin only | `createCustomerSchema` / `updateCustomerSchema`: name, Kenyan phone, email, KRA PIN shape, client type, length caps | by the session |
+| `deleteCustomer` (D130) | `requirePath('/customers')`, then `isAdminRole` | the id | by the session |
+| `linkQuoteCustomer` (D130) | `requirePath('/quotes')`; the RPC checks owner or admin and the lock | `linkQuoteCustomerSchema` | by the session |
 
 ### Findings fixed
 
@@ -124,6 +127,24 @@ table has RLS on (`03_role_separation`). Audit triggers stand on users, categori
 quotes, orders, documents, blog posts, announcements, clients and settings. Soft delete on
 everything with commercial meaning. No `window.confirm`, `alert` or `prompt` anywhere (lint).
 
+## Finding, 6 October 2026: anyone could insert an order (migration 63)
+
+Migration 6 created `orders_insert_anon` and `order_items_insert_anon` as
+`for insert with check (true)` with no role, so any role, the anonymous web visitor
+included, could write an order or an order line directly with the public anon key.
+The 3 October review (D108) did not catch it. Found during the customers work and
+confirmed by a direct anonymous insert against a local stack. Live in production from
+the first deploy until migration 63.
+
+Fixed in migration 63, `close_anon_order_insert`: both policies dropped. Nothing
+legitimate used them: every order is written by `convert_quote_to_order`, a security
+definer function, and admins keep `orders_write_admin`. pgTAP
+`39_orders_insert_closed.test.sql` proves anon and a salesperson are refused on both
+tables, an admin still writes, and the conversion function stays security definer.
+
+Not yet checked: whether any order rows were inserted this way before the fix. Look
+for orders with no `quote_id` and no admin `created_by` on beco-prod.
+
 ## Who may do what, by function (D110, 3 October 2026)
 
 Routes are the coarse gate (`lib/access.ts`). Inside a route, these are the functions that
@@ -133,6 +154,10 @@ for a role that cannot use it.
 | Function | sales | product manager | beco_admin | brightex_admin |
 |---|---|---|---|---|
 | Raise, price and issue a quote; claim an unassigned one | own | no | yes | yes |
+| **Read the customer list and a customer's record** (D130) | yes | **yes, without quote or order figures** | yes | yes |
+| Add a customer, edit a customer's details | yes | no | yes | yes |
+| Link or change the customer on a quote | own | no | yes | yes |
+| **Soft delete a customer** | **no** | no | yes | yes |
 | Mark a quote quoted, won or lost; reopen | own | no | yes | yes |
 | Reassign a quote to someone else | no | no | yes | yes |
 | Approve a price away from the catalogue | no | no | yes | yes |
@@ -157,3 +182,33 @@ Tested in `21_convert_quote_to_order.test.sql` (cancel), `10_quote_pricing_appro
 (approve), `12_quote_claim_assign.test.sql` (assign) and the action tests named in
 `docs/TEST-COVERAGE.md`.
 
+
+## Customers, 6 October 2026 (D130)
+
+The `customers` table holds names, phone numbers, KRA PINs and staff notes, so it is closed by
+default and opened role by role, each proven in `40_customers.test.sql` (85 assertions):
+
+| Who | Read | Create | Edit | Soft delete | Hard delete |
+|---|---|---|---|---|---|
+| anon | no (no grant, `42501`) | only through `submit_quote` | no | no | no |
+| `beco_sales` | live rows | as themselves | live rows, not `deleted_at`, not `created_by` | no (`42501`) | no |
+| `beco_product_manager` | live rows, the overview without counts or spend | no | no (zero rows) | no | no |
+| `beco_editor` | nothing | no | no | no | no |
+| inactive account | nothing | no | no | no | no |
+| `beco_admin`, `brightex_admin` | live and soft deleted | as themselves | yes, not `created_by` | yes | no |
+
+**Through the public RPC.** `submit_quote` calls `customer_for_phone`, which links to the record
+with that phone key or creates one and never updates an existing record, so an anonymous visitor
+who types a known number cannot rename or re-email that client. The test proves a submission
+from a known number with another name, email and company leaves the record as it was, and
+creates no second record. What an anonymous caller *can* still do is attach a new web quote to
+an existing client's history by using their number, which was already true of the inferred
+history before D130 and is visible on the quote as a web submission.
+
+`customer_for_phone` and `backfill_customers` are granted to nobody; anon is tested to be refused
+both. `link_quote_customer` follows every quote mutation: owner or admin, under the lock.
+
+**Resolved.** `orders_insert_anon` (migration 6) let any role, anon included, insert an
+`orders` row directly. Migration 63 dropped it and its `order_items` twin, with its own test
+file; see "Finding, 6 October 2026" above. A direct order carrying a `customer_id` is refused
+with every other direct insert, and `40_customers.test.sql` still asserts it for anon.

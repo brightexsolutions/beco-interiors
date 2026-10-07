@@ -14,10 +14,14 @@ export function CustomerContact({
 }: {
   phone: string;
   email: string | null;
+  /** The quote or order reference; on a customer's own page, their name. */
   reference: string;
-  kind: 'quote' | 'order';
+  kind: 'quote' | 'order' | 'customer';
 }) {
   const noun = kind === 'quote' ? 'quote' : 'order';
+  const firstName = reference.trim().split(/\s+/)[0] ?? '';
+  const whatsAppText = kind === 'customer' ? `Hi ${firstName}, this is Beco Interiors.` : `Beco ${noun} ${reference}`;
+  const emailSubject = kind === 'customer' ? 'Beco Interiors' : `Your Beco ${noun}, ${reference}`;
   // Equal thirds squeezed WHATSAPP past its own border in the narrow side
   // column: uppercase at the button's 0.09em tracking is wider than a third
   // of ~300px. Each button now grows to share the row but never shrinks
@@ -35,7 +39,7 @@ export function CustomerContact({
         Call
       </a>
       <a
-        href={whatsAppChatLink(phone, `Beco ${noun} ${reference}`)}
+        href={whatsAppChatLink(phone, whatsAppText)}
         target="_blank"
         rel="noopener noreferrer"
         className={button}
@@ -43,7 +47,7 @@ export function CustomerContact({
         WhatsApp
       </a>
       {email ? (
-        <a href={`mailto:${email}?subject=${encodeURIComponent(`Your Beco ${noun}, ${reference}`)}`} className={button}>
+        <a href={`mailto:${email}?subject=${encodeURIComponent(emailSubject)}`} className={button}>
           Email
         </a>
       ) : null}

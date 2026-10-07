@@ -3,6 +3,7 @@ import type { QuoteSource, QuoteStatus } from '@beco/types';
 import type { createServerClient } from '@beco/supabase-client';
 
 import { fetchStaffNames, staffName } from './staff-names';
+import { customerFromEmbed, type CustomerSummary } from './customer-search';
 
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
@@ -73,6 +74,9 @@ export interface QuoteDetail {
   approvedByName: string | null;
   convertedOrderId: string | null;
   convertedOrderReference: string | null;
+  /** The linked customer record, D130. Null when none, or it was soft deleted.
+   *  The name, phone and email above are the quote's own snapshot. */
+  customer: CustomerSummary | null;
   lines: QuoteLine[];
   totals: QuoteMoney;
   vatRate: number;
@@ -193,7 +197,8 @@ export async function fetchQuote(
        assigned_user:users!quotes_assigned_to_fkey(full_name),
        created_user:users!quotes_created_by_fkey(full_name),
        approved_user:users!quotes_approved_by_fkey(full_name),
-       converted_order:orders!quotes_converted_order_fk(reference_number)`,
+       converted_order:orders!quotes_converted_order_fk(reference_number),
+       customer:customers!quotes_customer_id_fkey(id, name, phone, email, company, kra_pin, deleted_at)`,
     )
     .eq('reference_number', reference)
     .maybeSingle();
@@ -275,6 +280,7 @@ export async function fetchQuote(
     approvedByName: staffName(quote.approved_by, joinedApproved, names),
     convertedOrderId: quote.converted_order_id,
     convertedOrderReference: oneRef(quote.converted_order),
+    customer: customerFromEmbed(quote.customer),
     lines,
     totals: quoteTotals(
       lines.map((line) => ({ unitPrice: line.unitPrice, quantity: line.quantity })),

@@ -41,6 +41,8 @@ export interface PricedQuoteEmailInput {
   totals?: { gross: number; net: number; vat: number } | undefined;
   /** A fraction, as settings store it and the PDF reads it: 0.16 prints as 16%. */
   vatRate?: number | undefined;
+  /** The customer's KRA PIN, from their record. Printed with the reference when set. D130. */
+  customerKraPin?: string | null | undefined;
 }
 
 export interface PricedQuoteEmail {
@@ -59,6 +61,7 @@ export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuote
   const showTotal = input.isPriced && input.totals !== undefined && input.totals.gross > 0;
 
   const subject = `Your Beco quote, ${input.reference}`;
+  const customerPin = input.customerKraPin?.trim() || null;
 
   const textLines = lines.slice(0, 8).map((line) => {
     const amount = line.lineTotal && line.lineTotal > 0 ? formatKes(line.lineTotal) : 'On application';
@@ -73,7 +76,7 @@ export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuote
     '',
     ...(textLines.length > 0 ? ['Your quote:', ...textLines, ''] : []),
     ...(showTotal ? [`Total, VAT inclusive: ${formatKes(input.totals!.gross)}`, ''] : []),
-    `Your reference is ${input.reference}. To go ahead, reply to this email or call us on ${PHONE_DISPLAY}.`,
+    `Your reference is ${input.reference}.${customerPin ? ` Your KRA PIN on it is ${customerPin}.` : ''} To go ahead, reply to this email or call us on ${PHONE_DISPLAY}.`,
     'We reserve stock once you confirm.',
     '',
     'The Beco Interiors team',
@@ -81,6 +84,7 @@ export function buildPricedQuoteEmail(input: PricedQuoteEmailInput): PricedQuote
   ].join('\n');
 
   const rows: Array<[string, string]> = [];
+  if (customerPin) rows.push(['Your KRA PIN', customerPin]);
   if (input.validUntil) rows.push(['Valid until', input.validUntil]);
   rows.push(['Pricing', input.isPriced ? 'VAT inclusive' : 'Some items on application']);
 

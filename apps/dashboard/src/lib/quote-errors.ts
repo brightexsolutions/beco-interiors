@@ -15,6 +15,9 @@ export function mutationMessage(error: { message?: string; code?: string } | nul
   if (code === '42501' || /^Not allowed/i.test(message) || /Not signed in/i.test(message)) {
     return 'You do not have permission to change this quote.';
   }
+  if (/customer is no longer on file/i.test(message)) {
+    return 'That customer is no longer on file. Pick another.';
+  }
   if (code === 'P0002' || /Quote not found|Line not found/i.test(message)) {
     return 'That quote is no longer here.';
   }

@@ -11,6 +11,7 @@ import {
   assignQuoteSchema,
   claimQuoteSchema,
   createCounterQuoteSchema,
+  linkQuoteCustomerSchema,
   reopenQuoteSchema,
   sendQuoteEmailSchema,
   setQuoteStatusSchema,
@@ -24,6 +25,7 @@ import { fetchQuote, fetchQuoteSettings, type QuoteDetail } from '@/lib/quote-de
 import { persistQuotePdf, quotePdfFilename } from '@/lib/quote-pdf';
 import { reportSendFailure } from '@/lib/ops-alert';
 import { isDocumentPathFor } from '@/lib/document-path';
+import { linkQuoteToCustomer } from '@/lib/customer-records';
 
 export interface QuoteActionState {
   error?: string;
@@ -337,6 +339,7 @@ export async function createCounterQuote(
     customerName: form.get('customerName'),
     customerPhone: form.get('customerPhone'),
     customerEmail: form.get('customerEmail') ?? '',
+    customerId: form.get('customerId') ?? '',
     source: form.get('source'),
     items,
   });
@@ -356,11 +359,43 @@ export async function createCounterQuote(
     // exactOptionalPropertyTypes: p_customer_email is an optional key, so it must be
     // left out entirely rather than set to undefined when there is no email.
     ...(parsed.data.customerEmail ? { p_customer_email: parsed.data.customerEmail } : {}),
+    // The picked record, D130. The database snapshots its details onto the
+    // quote rather than trusting the fields the form showed.
+    ...(parsed.data.customerId ? { p_customer_id: parsed.data.customerId } : {}),
   });
   if (error || !data) return { error: mutationMessage(error) };
 
   revalidatePath('/quotes');
   redirect(`/quotes/${data}`);
+}
+
+/**
+ * Point a quote, and the order it became, at a customer record (D130). The
+ * owner or an admin, under the quote's lock, the same as every quote edit.
+ * The quote's printed name and phone do not change: it is a historical
+ * document.
+ */
+export async function linkQuoteCustomer(_prev: QuoteActionState, form: FormData): Promise<QuoteActionState> {
+  await requirePath('/quotes');
+  const parsed = linkQuoteCustomerSchema.safeParse({
+    ...lockFrom(form),
+    customerId: String(form.get('customerId') ?? ''),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Pick a customer first' };
+
+  const supabase = await getSupabase();
+  const { error } = await linkQuoteToCustomer(
+    supabase,
+    parsed.data.quoteId,
+    parsed.data.customerId,
+    parsed.data.updatedAt,
+  );
+  if (error) return { error: mutationMessage(error) };
+
+  const reference = await referenceOf(parsed.data.quoteId);
+  revalidateQuote(reference);
+  revalidatePath(`/customers/${parsed.data.customerId}`);
+  return { ok: 'Customer linked.' };
 }
 
 async function storeQuotePdf(reference: string): Promise<
@@ -417,6 +452,8 @@ export async function sendQuoteEmail(
     })),
     totals: stored.quote.totals,
     vatRate: stored.quote.vatRate,
+    // Under the reference, when the customer's record carries one (D130).
+    customerKraPin: stored.quote.customer?.kraPin ?? null,
     pdf: stored.bytes,
     filename: quotePdfFilename(row.reference_number, row.customer_name),
   });

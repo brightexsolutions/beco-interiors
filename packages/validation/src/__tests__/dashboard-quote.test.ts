@@ -112,6 +112,20 @@ describe('createCounterQuoteSchema', () => {
     expect(createCounterQuoteSchema.safeParse({ ...base, source: 'phone' }).success).toBe(true);
   });
 
+  it('takes a picked customer id, treats a blank one as none, and refuses a malformed one (D130)', () => {
+    const base = {
+      customerName: 'Achieng',
+      customerPhone: '0722333730',
+      source: 'walk_in',
+      items: [{ description: 'Slab', quantity: 1, unitPrice: 65000 }],
+    };
+    const picked = createCounterQuoteSchema.safeParse({ ...base, customerId: lock.quoteId });
+    expect(picked.success && picked.data.customerId).toBe(lock.quoteId);
+    const blank = createCounterQuoteSchema.safeParse({ ...base, customerId: '' });
+    expect(blank.success && blank.data.customerId).toBeUndefined();
+    expect(createCounterQuoteSchema.safeParse({ ...base, customerId: 'nope' }).success).toBe(false);
+  });
+
   it('refuses a quote with no lines', () => {
     expect(
       createCounterQuoteSchema.safeParse({
