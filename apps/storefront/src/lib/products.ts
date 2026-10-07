@@ -583,6 +583,27 @@ export const placeInTree = (tree: readonly CategoryGroup[], slug: string): Categ
 export const getCategoryWithTree = async (slug: string): Promise<CategoryPlace | null> =>
   placeInTree(buildCategoryTree(await getAllCategories()), slug);
 
+/**
+ * Former category slug from `category_slugs` to the slug of the published
+ * range it now answers for, or null. Migration 49 records every slug a range
+ * has had, so a renamed range keeps its old links; the D104 amendment of 7
+ * October points a retired supplier range's slugs (`heixin-12mm`) at the
+ * range its stones moved to. Read as anon, so a slug pointing at a range
+ * that is not published resolves to nothing rather than to a hidden page.
+ */
+export const getCanonicalCategorySlug = async (slug: string): Promise<string | null> => {
+  const { data, error } = await anon()
+    .from('category_slugs')
+    .select('categories!inner(slug)')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw new Error(`could not resolve category slug: ${error.message}`);
+  if (!data) return null;
+  const category = data.categories as { slug: string } | { slug: string }[] | null;
+  const canonical = Array.isArray(category) ? category[0]?.slug : category?.slug;
+  return canonical && canonical !== slug ? canonical : null;
+};
+
 export const getCategorySlugs = async (): Promise<string[]> => {
   const { data, error } = await anon().from('categories').select('slug');
   if (error) throw new Error(`could not load category slugs: ${error.message}`);

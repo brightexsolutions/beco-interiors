@@ -226,19 +226,19 @@ describe('buildPlan incrementality', () => {
 
 describe('buildPlan against the taxonomy Beco actually keep, D104', () => {
   it('files a sub range: a folder of folders under a category', () => {
-    // 12MM SINTERED STONES/HEIXIN 12MM/INK WHITE/... Heixin holds only stone
+    // 12MM SINTERED STONES/MATT 12MM/INK WHITE/... Matt holds only stone
     // folders, so it is a sub range and Ink White is a product under it.
     const listing = [
-      f('h1', '12MM SINTERED STONES/HEIXIN 12MM/INK WHITE/SLAB.jpg'),
-      f('h2', '12MM SINTERED STONES/HEIXIN 12MM/INK WHITE/APP 1.jpg'),
-      f('h3', '12MM SINTERED STONES/HEIXIN 12MM/PRADA GREEN/SLAB.jpg'),
+      f('h1', '12MM SINTERED STONES/MATT 12MM/INK WHITE/SLAB.jpg'),
+      f('h2', '12MM SINTERED STONES/MATT 12MM/INK WHITE/APP 1.jpg'),
+      f('h3', '12MM SINTERED STONES/MATT 12MM/PRADA GREEN/SLAB.jpg'),
       f('a1', '12MM SINTERED STONES/AMBER JADE/SLAB.jpg'),
     ];
     const folders: FolderNode[] = [
       { path: 'AMBER JADE', name: 'AMBER JADE', depth: 1 },
-      { path: 'HEIXIN 12MM', name: 'HEIXIN 12MM', depth: 1 },
-      { path: 'HEIXIN 12MM/INK WHITE', name: 'INK WHITE', depth: 2 },
-      { path: 'HEIXIN 12MM/PRADA GREEN', name: 'PRADA GREEN', depth: 2 },
+      { path: 'MATT 12MM', name: 'MATT 12MM', depth: 1 },
+      { path: 'MATT 12MM/INK WHITE', name: 'INK WHITE', depth: 2 },
+      { path: 'MATT 12MM/PRADA GREEN', name: 'PRADA GREEN', depth: 2 },
     ];
     const plan = buildPlan(listing, folders, []);
     expect(plan.misnests).toEqual([]);
@@ -246,10 +246,10 @@ describe('buildPlan against the taxonomy Beco actually keep, D104', () => {
     expect(ink.productSlug).toBe('ink-white');
     expect(ink.productName).toBe('Ink White');
     expect(ink.role).toBe('slab');
-    expect(ink.categoryPath).toBe('12MM SINTERED STONES/HEIXIN 12MM');
-    expect(ink.categorySlug).toBe('heixin-12mm');
-    expect(ink.categoryChain.map((c) => c.path)).toEqual(['12MM SINTERED STONES', '12MM SINTERED STONES/HEIXIN 12MM']);
-    expect(ink.categoryChain[1]!.name).toBe('Heixin 12mm');
+    expect(ink.categoryPath).toBe('12MM SINTERED STONES/MATT 12MM');
+    expect(ink.categorySlug).toBe('matt-12mm');
+    expect(ink.categoryChain.map((c) => c.path)).toEqual(['12MM SINTERED STONES', '12MM SINTERED STONES/MATT 12MM']);
+    expect(ink.categoryChain[1]!.name).toBe('Matt 12mm');
     const amber = plan.files.find((x) => x.driveFileId === 'a1')!;
     expect(amber.categoryChain.map((c) => c.path)).toEqual(['12MM SINTERED STONES']);
   });

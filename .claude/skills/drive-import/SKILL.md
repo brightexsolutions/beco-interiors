@@ -51,7 +51,8 @@ never guessed into a role.**
 | Shape | Result |
 |---|---|
 | `CATEGORY/PRODUCT/photos` | A range and its products, the original convention |
-| `CATEGORY/SUB RANGE/PRODUCT/photos` | A sub range under the range, its products under it. `HEIXIN 12MM` |
+| `CATEGORY/SUB RANGE/PRODUCT/photos` | A sub range under the range, its products under it |
+| `CATEGORY/SUPPLIER/PRODUCT/photos` | D104 amended 7 October: a folder whose name holds a word in `SUPPLIER_WORDS` (`HEIXIN`, `DELFONE`, in `supplier.ts`) is read through, never a sub range. `HEIXIN 12MM`'s stones file directly in 12mm Sintered Stones. A supplier folder of photographs (`DELFONE 12MM`) is one product named without the word, "12mm Sintered Stone". A supplier folder at the top of Drive is skipped and reported |
 | `CATEGORY/SUB RANGE/one photo per item` | Every file names its own item (`B762 BLACK`, `HT-8350 BLACK GOLD`), so each becomes a product and the folder becomes a sub range. `BLACK HANDLES`. Any older single product of the whole folder is unpublished |
 | `CATEGORY/photos`, every file a phone name | D122, 7 October: each photograph is its own product, `Bamboo Veneer Wall Panel 4580`, filed in the range, the noun from the range name (`SPLIT_PER_PHOTO` overrides it). A folder of phone photographs inside such a range is a sub range split the same way. A byte identical copy (same md5) is imported once, in the folder holding fewer photographs. The old umbrella product is unpublished |
 | `CATEGORY/photos`, some named | Not every file a phone name and not an item folder: one umbrella product, reported |
@@ -102,4 +103,14 @@ shows the runs and the last report (D105). From a terminal: `pnpm drive:import -
 - Reports what it skipped and why, into `import_issues`. Never fails silently, never invents
   a default
 - Raw downloads live in `_incoming/`, gitignored, and never enter git
-- Slugs derive from folder names so the taxonomy stays traceable to its source
+- Slugs derive from folder names so the taxonomy stays traceable to its source, **except a
+  supplier's name, which never reaches the site** (D104 amended 7 October). No product name,
+  slug, category, alt text or R2 key the importer writes may contain a supplier word.
+  `supplierLeaks` checks the plan on every run: the dry run prints `SUPPLIER NAME CHECK`, and
+  a real run refuses to write on a leak. A new supplier goes into `SUPPLIER_WORDS`, nowhere else
+- A stored photograph whose key or alt text names a supplier is re-encoded under the plan's
+  clean key on the next run (`needsRekey`), then left alone. The old R2 objects are not deleted
+- `pnpm catalogue:hide-suppliers --dry-run`, then without the flag, is the one-off that took
+  supplier names off rows imported before the amendment: moves the stones, unpublishes the
+  supplier range, points its old slug at the parent range, reslugs and rewrites alt text. It
+  never touches image keys, which the next import moves
