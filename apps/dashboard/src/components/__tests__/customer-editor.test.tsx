@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { CustomerRecord } from '@/lib/customer-records';
@@ -66,7 +66,7 @@ describe('CustomerEditor (D130)', () => {
     expect(first.get('customerId')).toBe(record.id);
     expect(first.get('updatedAt')).toBe(record.updatedAt);
     expect(first.get('company')).toBe('Karen Interiors');
-    expect(toastSuccess).toHaveBeenCalledWith('Saved.');
+    await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith('Saved.'));
     await user.click(screen.getByRole('button', { name: 'Save customer' }));
     expect((updateCustomer.mock.calls[1]?.[1] as FormData).get('updatedAt')).toBe('lock-2');
   });
@@ -81,7 +81,7 @@ describe('CustomerEditor (D130)', () => {
     render(<CustomerEditor customer={record} canEdit canDelete={false} />);
     await user.click(screen.getByRole('button', { name: 'Save customer' }));
     expect(await screen.findByText('That number already belongs to ZZ Other.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open ZZ Other' })).toHaveAttribute('href', '/customers/c2');
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Open ZZ Other' })).toHaveAttribute('href', '/customers/c2'));
     expect(toastError).not.toHaveBeenCalled();
   });
 
@@ -103,7 +103,7 @@ describe('CustomerEditor (D130)', () => {
     expect(updateCustomer).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole('button', { name: 'Delete customer' }));
     expect((deleteCustomer.mock.calls[0]?.[1] as FormData).get('customerId')).toBe(record.id);
-    expect(toastSuccess).toHaveBeenCalledWith('ZZ Achieng Otieno deleted.');
+    await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith('ZZ Achieng Otieno deleted.'));
     expect(push).toHaveBeenCalledWith('/customers');
     // The confirm button is outside the details form, so it never saved them.
     expect(updateCustomer).not.toHaveBeenCalled();
@@ -115,7 +115,7 @@ describe('CustomerEditor (D130)', () => {
     render(<CustomerEditor customer={record} canEdit canDelete />);
     await user.click(screen.getByRole('button', { name: 'Delete customer' }));
     await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete customer' }));
-    expect(toastError).toHaveBeenCalledWith('Only an admin can delete a customer.');
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith('Only an admin can delete a customer.'));
     expect(push).not.toHaveBeenCalled();
   });
 
