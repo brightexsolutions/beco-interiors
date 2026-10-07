@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useId, useRef, useState, useTransition, type ChangeEvent } from 'react';
 import {
   AvailabilityBadge,
   Button,
@@ -13,12 +13,18 @@ import {
   Select,
   StatusPill,
   Textarea,
+  Tooltip,
   useActionToast,
   useKeepValuesSubmit,
 } from '@beco/ui';
 import { PRODUCT_UNITS, stockStepFor } from '@beco/validation';
 import type { Availability, PriceDisplayMode } from '@beco/types';
-import { deleteProduct, updateProduct, type ProductActionState } from '@/app/(app)/products/actions';
+import {
+  deleteProduct,
+  setProductPublished,
+  updateProduct,
+  type ProductActionState,
+} from '@/app/(app)/products/actions';
 import { ProductImages } from '@/components/product-images';
 import { groupCategoryOptions, type CatalogueProduct, type ProductCategoryOption } from '@/lib/products';
 
@@ -26,6 +32,13 @@ const INITIAL: ProductActionState = {};
 
 const NUMBER_INPUT =
   'min-w-0 [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+
+export const PUBLISH_TIP = 'Shows this product on the website, in its range and in search. You can unpublish it any time.';
+export const UNPUBLISH_TIP =
+  'Hides this product from the website. It stays here in the catalogue, and existing quotes are not affected.';
+
+/** What a Save was started by, so only the control that was pressed spins. D117. */
+type SaveIntent = 'save' | 'publish' | 'unpublish';
 
 const asNumber = (value: string): number | null => {
   if (value.trim() === '') return null;
@@ -67,8 +80,31 @@ export function ProductEditor({
   );
   const [unit, setUnit] = useState(product.unit ?? 'per slab');
   const step = stockStepFor(unit);
+  const [publishState, publish, publishing] = useActionState(setProductPublished, INITIAL);
+  const [, startTransition] = useTransition();
+  const [saveIntent, setSaveIntent] = useState<SaveIntent>('save');
+  const [unpublishOpen, setUnpublishOpen] = useState(false);
+  // Any edit to a field of this form since the row last loaded. Typing a
+  // value back to what it was still counts: the cost of a false positive is
+  // one extra save, the cost of a false negative is lost work.
+  const [dirty, setDirty] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const publishTarget = useRef<boolean | null>(null);
+  const warningsId = useId();
   useActionToast(saveState);
   useActionToast(deleteState);
+  useActionToast(publishState);
+
+  useEffect(() => {
+    setDirty(false);
+  }, [product.id, product.updatedAt]);
+
+  // The fresh row normally arrives with the action's response and the sync
+  // below flips the pill. This makes it flip on the result itself as well,
+  // so the pill never contradicts the toast beside it.
+  useEffect(() => {
+    if (publishState.ok && publishTarget.current !== null) setPublished(publishTarget.current);
+  }, [publishState]);
 
   useEffect(() => {
     setSpecs(product.specs);
@@ -106,23 +142,88 @@ export function ProductEditor({
     if (saveState.ok) onSaved?.();
   }, [saveState.ok, onSaved]);
 
-  const addSpec = () => setSpecs((current) => [...current, { label: '', value: '' }]);
+  const addSpec = () => {
+    setDirty(true);
+    setSpecs((current) => [...current, { label: '', value: '' }]);
+  };
   const updateSpec = (index: number, patch: { label?: string; value?: string }) => {
+    setDirty(true);
     setSpecs((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   };
-  const removeSpec = (index: number) => setSpecs((current) => current.filter((_, i) => i !== index));
-  const busy = saving || removing;
+  const removeSpec = (index: number) => {
+    setDirty(true);
+    setSpecs((current) => current.filter((_, i) => i !== index));
+  };
+  // Fields sit inside and outside the <form>, tied to it with `form=`, so the
+  // test is the field's form owner, not where it is in the DOM. Photograph
+  // controls belong to their own forms and save themselves.
+  const markDirty = (event: ChangeEvent<HTMLDivElement>) => {
+    const target = event.target as unknown as { form?: HTMLFormElement | null };
+    if (target.form?.id === 'product-editor') setDirty(true);
+  };
+
+  /**
+   * Publish or unpublish. With no pending edits this writes the flag alone
+   * (`setProductPublished`). With pending edits it saves the form WITH the
+   * new flag, through the same `updateProduct` as Save, so nothing typed is
+   * thrown away and the pill never says Published over a page that does not
+   * yet hold what is on screen. D133.
+   */
+  const changePublished = (next: boolean) => {
+    if (dirty) {
+      const form = formRef.current;
+      if (!form || !form.reportValidity()) return;
+      const payload = new FormData(form);
+      payload.set('isPublished', String(next));
+      setSaveIntent(next ? 'publish' : 'unpublish');
+      startTransition(() => save(payload));
+      return;
+    }
+    const payload = new FormData();
+    payload.set('productId', product.id);
+    payload.set('updatedAt', product.updatedAt);
+    payload.set('published', String(next));
+    publishTarget.current = next;
+    startTransition(() => publish(payload));
+  };
+
+  const busy = saving || removing || publishing;
+  const publishPending = publishing || (saving && saveIntent !== 'save');
   const stockQuantity = asNumber(stockInput);
+  const warnings = published
+    ? []
+    : [
+        product.images.length === 0 ? 'No photo yet' : null,
+        priceMode !== 'poa' && asNumber(priceInput) == null ? 'No price yet' : null,
+      ].filter((warning): warning is string => warning != null);
+  const publishLabel = publishPending
+    ? published
+      ? 'Unpublishing'
+      : 'Publishing'
+    : published
+      ? dirty
+        ? 'Save and unpublish'
+        : 'Unpublish'
+      : dirty
+        ? 'Save and publish'
+        : 'Publish';
 
   return (
     <>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
+        <div
+          onChange={markDirty}
+          className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5"
+        >
           <div className="min-w-0 border border-neutral-200 px-4 py-4">
             <p className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Website
             </p>
             <p className="mt-2 font-ui text-lg font-semibold text-charcoal">{name.trim() || 'Unnamed product'}</p>
+            {/* The one place the published flag is shown and changed, D133.
+                The Availability checkbox it replaces sat halfway down the
+                form, where staff missed it and finished products stayed
+                hidden as drafts. */}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {published ? (
                 <StatusPill label="Published" tone="positive" />
@@ -134,7 +235,29 @@ export function ProductEditor({
                 priceDisplayMode={priceMode}
                 stockQuantity={stockQuantity}
               />
+              <Tooltip
+                className="ml-auto"
+                align="end"
+                content={published ? UNPUBLISH_TIP : PUBLISH_TIP}
+                infoLabel={published ? 'About Unpublish' : 'About Publish'}
+              >
+                <Button
+                  type="button"
+                  variant={published ? 'outline' : 'primary'}
+                  disabled={busy}
+                  pending={publishPending}
+                  aria-describedby={warnings.length > 0 ? warningsId : undefined}
+                  onClick={() => (published ? setUnpublishOpen(true) : changePublished(true))}
+                >
+                  {publishLabel}
+                </Button>
+              </Tooltip>
             </div>
+            {warnings.length > 0 ? (
+              <p id={warningsId} className="mt-2 font-ui text-sm font-semibold text-charcoal">
+                {warnings.join('. ')}.
+              </p>
+            ) : null}
             <div className="mt-2">
               <PriceDisplay
                 priceDisplayMode={priceMode}
@@ -151,7 +274,15 @@ export function ProductEditor({
             </p>
           </div>
 
-          <form id="product-editor" onSubmit={onSaveSubmit} className="grid min-w-0 gap-8">
+          <form
+            ref={formRef}
+            id="product-editor"
+            onSubmit={(event) => {
+              setSaveIntent('save');
+              onSaveSubmit(event);
+            }}
+            className="grid min-w-0 gap-8"
+          >
             <input type="hidden" name="productId" value={product.id} />
             <input type="hidden" name="updatedAt" value={product.updatedAt} />
             <input type="hidden" name="specs" value={JSON.stringify(specs)} />
@@ -264,17 +395,6 @@ export function ProductEditor({
               title="Availability"
               hint="In stock, out of stock and the badge on the card. Stock of 0 reads as Out of stock."
             >
-              <label className="flex min-h-11 items-center gap-3 font-ui text-base text-charcoal">
-                <input
-                  type="checkbox"
-                  name="isPublished"
-                  form="product-editor"
-                  checked={published}
-                  onChange={(event) => setPublished(event.target.checked)}
-                  className="h-5 w-5 rounded-control border-neutral-300 text-charcoal"
-                />
-                Published on the website
-              </label>
               <Field label="Availability" htmlFor="availability">
                 <Select
                   id="availability"
@@ -427,11 +547,29 @@ export function ProductEditor({
             <Icon name="trash" />
             Delete product
           </Button>
-          <Button type="submit" form="product-editor" variant="primary" disabled={busy} pending={saving}>
-            {saving ? 'Saving' : 'Save'}
+          <Button
+            type="submit"
+            form="product-editor"
+            variant="primary"
+            disabled={busy}
+            pending={saving && saveIntent === 'save'}
+          >
+            {saving && saveIntent === 'save' ? 'Saving' : 'Save'}
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={unpublishOpen}
+        onOpenChange={setUnpublishOpen}
+        title={`Unpublish ${product.name}?`}
+        description="It will disappear from the website until you publish it again."
+        confirmLabel="Unpublish"
+        onConfirm={() => {
+          setUnpublishOpen(false);
+          changePublished(false);
+        }}
+      />
 
       <ConfirmDialog
         open={confirmOpen}

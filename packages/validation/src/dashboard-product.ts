@@ -81,7 +81,12 @@ export const updateProductSchema = z
     compareAtPrice: optionalPrice,
     availability: z.enum(AVAILABILITY),
     badge: z.preprocess(emptyToNull, z.enum(PRODUCT_BADGES).nullable()),
-    isPublished: z.preprocess((value) => value === true || value === 'true' || value === 'on', z.boolean()),
+    // Optional since the editor's own checkbox went (D133): a plain Save leaves
+    // the published flag alone, and only the top Publish control sends it.
+    isPublished: z.preprocess(
+      (value) => (value == null || value === '' ? undefined : value === true || value === 'true' || value === 'on'),
+      z.boolean().optional(),
+    ),
     sortOrder: z.coerce.number().int().min(0).max(10_000),
     shortDescription: z.preprocess(emptyToNull, z.string().trim().max(400).nullable()),
     description: z.preprocess(emptyToNull, z.string().trim().max(8000).nullable()),
@@ -134,6 +139,21 @@ export const updateProductSchema = z
       });
     }
   });
+
+/**
+ * The editor's Publish and Unpublish control. Only the flag is written, under
+ * the same optimistic lock as every other product write. `published` must be
+ * an explicit true or false: anything else is refused rather than read as
+ * "unpublish".
+ */
+export const setProductPublishedSchema = z.object({
+  productId: z.uuid(),
+  updatedAt: z.string().min(1, 'Missing lock token'),
+  published: z.preprocess(
+    (value) => (value === 'true' ? true : value === 'false' ? false : value),
+    z.boolean({ message: 'Say whether to publish or unpublish' }),
+  ),
+});
 
 export const deleteProductSchema = z.object({
   productId: z.uuid(),

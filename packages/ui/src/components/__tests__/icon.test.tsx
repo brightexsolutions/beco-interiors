@@ -22,6 +22,7 @@ const names: IconName[] = [
   'link',
   'sun',
   'moon',
+  'info',
 ];
 
 describe('Icon', () => {

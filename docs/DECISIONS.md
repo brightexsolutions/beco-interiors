@@ -3447,3 +3447,46 @@ Migration 67, `43_closed_quote_lines.test.sql`, 92 assertions.
 
 *Reverses if:* Beco wants a won quote corrected after the fact, say a quantity keyed wrong, at
 which point the route is a reopen for won quotes with its own audit, not loosening this rule.
+
+## D133, 7 October 2026: a product is published from the top of its editor
+
+**Decision.** Asked for by Brown and Irene at Beco. A new product still starts as a draft. The
+editor now carries Publish (primary) beside the Draft pill, or Unpublish (outline) beside the
+Published pill, and the "Published on the website" checkbox in the Availability section is
+removed. Publish with no unsaved edits calls `setProductPublished`, which writes `is_published`
+and nothing else, under the same `/products` route check, zod parse and `updated_at` lock as
+Save, audited by the existing `products_audit` trigger. Unpublish goes through `ConfirmDialog`
+("Unpublish (name)?", "It will disappear from the website until you publish it again.",
+confirm "Unpublish"). Pending and result follow D117: the pressed button spins as Publishing or
+Unpublishing, the toast reads "Published. It will appear on the website shortly." or
+"Unpublished.", and the pill flips. On a draft, "No photo yet." and "No price yet." (a fixed
+price product with no price) sit under the pill and in the button's description, and Publish
+stays enabled. No rule anywhere blocked publishing without a photograph, so there was none to
+follow instead. Both buttons carry a `Tooltip`, new in `@beco/ui`, shown on hover, on focus and
+from an info button for touch. Creating a draft now toasts "Draft created. Add a photo, then
+Publish."
+
+**Unsaved edits: save them with the flag, rather than disable Publish.** When any field of the
+form has changed since the row loaded, the button reads "Save and publish" (or "Save and
+unpublish", still confirmed) and submits the whole form through `updateProduct` with the flag,
+which then reports "Saved and published. It will appear on the website shortly." The other
+option, Publish disabled with "Save your changes first", was rejected because Save closes the
+sheet on success (D117): staff would save, lose the editor, find the product again and only then
+publish, which is the same friction that left finished products hidden. The label names both
+operations, so nothing happens that the button did not say. Dirty means any change event on a
+field owned by the editor's form, plus spec rows; a value typed back to what it was still counts,
+since the cost is one extra save. Photograph controls belong to their own forms and do not count.
+
+**One source of truth: the checkbox goes.** Keeping it in sync with the top control would have
+left two controls with different semantics for one flag, one saved on Save and one immediately,
+and a checkbox ticked but not yet saved would contradict the pill. `isPublished` is now optional
+in `updateProductSchema`: a form that does not send it leaves the column alone, so a plain Save
+can never unpublish, which the old checkbox could, by being unticked by accident.
+
+**Telling a refusal from a stale lock.** RLS filters an UPDATE silently, the same result as a
+stale lock. `writeProductPublished` (`lib/product-publish.ts`) reads the row after a no-match: a
+lock that still matches means the role may not write products, and says so; otherwise the
+stale-edit message. The route check refuses those roles first, so this is the second line.
+
+*Reverses if:* Beco wants a gate before publishing, say no product live without a photograph,
+when the warning becomes a disabled button with the reason and a database check to match.

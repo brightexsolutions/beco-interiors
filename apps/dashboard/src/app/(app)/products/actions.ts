@@ -8,6 +8,7 @@ import {
   deleteProductSchema,
   removeProductImageSchema,
   saveProductImagesSchema,
+  setProductPublishedSchema,
   specsToRecord,
   updateProductSchema,
 } from '@beco/validation';
@@ -15,6 +16,7 @@ import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { productMutationMessage } from '@/lib/product-errors';
 import { processProductPhoto } from '@/lib/product-photo';
+import { writeProductPublished } from '@/lib/product-publish';
 import { readPhotoUpload } from '@/lib/photo-source';
 import { deleteProductDerivatives, isProductStorageConfigured, uploadProductDerivatives } from '@/lib/product-storage';
 import { parseProductImages } from '@/lib/products';
@@ -114,7 +116,9 @@ export async function updateProduct(_prev: ProductActionState, form: FormData): 
       compare_at_price: parsed.data.compareAtPrice,
       availability: parsed.data.availability,
       badge: parsed.data.badge,
-      is_published: parsed.data.isPublished,
+      // Only when the form sent it: a plain Save leaves the flag alone, and
+      // the top Publish control sends it when it saves pending edits too.
+      ...(parsed.data.isPublished === undefined ? {} : { is_published: parsed.data.isPublished }),
       sort_order: parsed.data.sortOrder,
       short_description: parsed.data.shortDescription,
       description: parsed.data.description,
@@ -138,7 +142,30 @@ export async function updateProduct(_prev: ProductActionState, form: FormData): 
     formerSlug,
     categorySlug: categorySlugOf(data.categories) ?? categorySlug,
   });
+  if (parsed.data.isPublished === true) return { ok: 'Saved and published. It will appear on the website shortly.' };
+  if (parsed.data.isPublished === false) return { ok: 'Saved and unpublished.' };
   return { ok: 'Saved.' };
+}
+
+/**
+ * The editor's top Publish and Unpublish control: writes the published flag
+ * and nothing else, so a draft goes live in one press without the rest of
+ * the form being resubmitted. Same route permission and lock as Save.
+ */
+export async function setProductPublished(_prev: ProductActionState, form: FormData): Promise<ProductActionState> {
+  await requirePath('/products');
+  const parsed = setProductPublishedSchema.safeParse({
+    productId: formString(form, 'productId'),
+    updatedAt: formString(form, 'updatedAt'),
+    published: form.get('published'),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Reload and try again.' };
+
+  const written = await writeProductPublished(await getSupabase(), parsed.data);
+  if (written.error !== undefined) return { error: written.error };
+
+  await revalidateStorefront({ productSlug: written.slug, categorySlug: written.categorySlug });
+  return { ok: parsed.data.published ? 'Published. It will appear on the website shortly.' : 'Unpublished.' };
 }
 
 export async function createProduct(_prev: ProductActionState, form: FormData): Promise<ProductActionState> {
@@ -182,7 +209,7 @@ export async function createProduct(_prev: ProductActionState, form: FormData): 
     productSlug: data.slug,
     categorySlug: categorySlugOf(data.categories),
   });
-  return { ok: 'Draft created. Add photographs, then publish.', slug: data.slug };
+  return { ok: 'Draft created. Add a photo, then Publish.', slug: data.slug };
 }
 
 export async function deleteProduct(_prev: ProductActionState, form: FormData): Promise<ProductActionState> {
