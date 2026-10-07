@@ -90,10 +90,49 @@ export function buildOpsAlertEmail(alert: OpsAlert): { subject: string; text: st
 }
 
 /**
+ * Whether this runtime emails an alert or only logs it.
+ *
+ * Only a deployed Vercel runtime sends: `VERCEL_ENV` is `production` or
+ * `preview`, which Vercel sets on every function it runs and nothing sets
+ * locally. Everything else is a developer's machine or CI: `next dev`, a
+ * local `next start` (NODE_ENV is `production` there, which is why NODE_ENV
+ * is not the test), `vercel dev` (VERCEL_ENV `development`) and the test
+ * runner. Those log the alert and send nothing, because a local storefront
+ * that is simply not running is not an outage and must not page Brightex.
+ * The same VERCEL_ENV gate as GA4, see `apps/storefront/src/lib/analytics.ts`.
+ *
+ * `OPS_ALERT_SEND_IN_DEV=1` opts a local run back in, for testing the real
+ * send end to end. Preview still sends, tagged `[preview]` in the subject,
+ * since a failure on staging is a real signal before it reaches production.
+ */
+export function opsAlertDelivery(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): 'send' | 'local-only' {
+  if (env.VERCEL_ENV === 'production' || env.VERCEL_ENV === 'preview') return 'send';
+  const optIn = env.OPS_ALERT_SEND_IN_DEV?.trim().toLowerCase();
+  return optIn === '1' || optIn === 'true' ? 'send' : 'local-only';
+}
+
+export type OpsAlertSendResult = SendResult | { sent: false; reason: 'local-only' };
+
+/**
  * Never throws. An alert that cannot be sent is logged by the caller, which
  * is the most anyone can do when the mail provider is itself the failure.
+ * Outside a deployed runtime it logs instead of sending, see
+ * `opsAlertDelivery`.
  */
-export async function sendOpsAlert(alert: OpsAlert): Promise<SendResult> {
+export async function sendOpsAlert(alert: OpsAlert): Promise<OpsAlertSendResult> {
+  if (opsAlertDelivery() === 'local-only') {
+    console.info(
+      JSON.stringify({
+        event: 'ops_alert_local_only',
+        subject: buildOpsAlertEmail(alert).subject,
+        note: 'Not emailed outside a deployed runtime. Set OPS_ALERT_SEND_IN_DEV=1 to send.',
+      }),
+    );
+    return { sent: false, reason: 'local-only' };
+  }
+
   const key = process.env.RESEND_API_KEY;
   if (!key) return { sent: false, reason: 'no-api-key' };
 

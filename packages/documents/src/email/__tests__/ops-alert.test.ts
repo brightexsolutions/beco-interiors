@@ -7,7 +7,9 @@ vi.mock('resend', () => ({
   },
 }));
 
-const { buildOpsAlertEmail, sendOpsAlert, DEFAULT_OPS_ALERT_EMAIL } = await import('../ops-alert');
+const { buildOpsAlertEmail, sendOpsAlert, opsAlertDelivery, DEFAULT_OPS_ALERT_EMAIL } = await import(
+  '../ops-alert'
+);
 
 const alert = {
   app: 'dashboard' as const,
@@ -64,6 +66,23 @@ describe('buildOpsAlertEmail', () => {
   });
 });
 
+describe('opsAlertDelivery', () => {
+  it('sends only from a deployed Vercel runtime', () => {
+    expect(opsAlertDelivery({ VERCEL_ENV: 'production' })).toBe('send');
+    expect(opsAlertDelivery({ VERCEL_ENV: 'preview' })).toBe('send');
+    expect(opsAlertDelivery({ VERCEL_ENV: 'development' })).toBe('local-only');
+    expect(opsAlertDelivery({})).toBe('local-only');
+  });
+
+  it('is opted back in locally by OPS_ALERT_SEND_IN_DEV, and only by a yes', () => {
+    expect(opsAlertDelivery({ OPS_ALERT_SEND_IN_DEV: '1' })).toBe('send');
+    expect(opsAlertDelivery({ OPS_ALERT_SEND_IN_DEV: ' TRUE ' })).toBe('send');
+    expect(opsAlertDelivery({ OPS_ALERT_SEND_IN_DEV: '0' })).toBe('local-only');
+    expect(opsAlertDelivery({ OPS_ALERT_SEND_IN_DEV: '' })).toBe('local-only');
+    expect(opsAlertDelivery({ VERCEL_ENV: 'development', OPS_ALERT_SEND_IN_DEV: '1' })).toBe('send');
+  });
+});
+
 describe('sendOpsAlert', () => {
   const OLD_ENV = process.env;
 
@@ -71,11 +90,68 @@ describe('sendOpsAlert', () => {
     process.env = { ...OLD_ENV };
     delete process.env.OPS_ALERT_EMAIL;
     delete process.env.OPS_ALERT_FROM_EMAIL;
+    delete process.env.OPS_ALERT_SEND_IN_DEV;
+    // The send path below is a deployed runtime's. The local path has its own block.
+    process.env.VERCEL_ENV = 'production';
     sendMock.mockReset();
   });
 
   afterEach(() => {
     process.env = OLD_ENV;
+    vi.restoreAllMocks();
+  });
+
+  it('sends from preview as well as production', async () => {
+    process.env.RESEND_API_KEY = 'k';
+    process.env.VERCEL_ENV = 'preview';
+    sendMock.mockResolvedValue({ data: { id: 'p1' }, error: null });
+    expect(await sendOpsAlert(alert)).toEqual({ sent: true, id: 'p1' });
+  });
+
+  describe('outside a deployed runtime', () => {
+    it('logs and sends nothing under next dev, even with a key', async () => {
+      process.env.RESEND_API_KEY = 'k';
+      delete process.env.VERCEL_ENV;
+      vi.stubEnv('NODE_ENV', 'development');
+      const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+      expect(await sendOpsAlert({ ...alert, environment: 'development' })).toEqual({
+        sent: false,
+        reason: 'local-only',
+      });
+      expect(sendMock).not.toHaveBeenCalled();
+      const line = JSON.parse(String(info.mock.calls[0]![0]));
+      expect(line.event).toBe('ops_alert_local_only');
+      expect(line.subject).toContain('Quote BEC-Q-00042 email did not send');
+      expect(line.note).toContain('OPS_ALERT_SEND_IN_DEV=1');
+      vi.unstubAllEnvs();
+    });
+
+    it('sends nothing from a local next start, where NODE_ENV is production', async () => {
+      process.env.RESEND_API_KEY = 'k';
+      delete process.env.VERCEL_ENV;
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.spyOn(console, 'info').mockImplementation(() => {});
+      expect(await sendOpsAlert(alert)).toEqual({ sent: false, reason: 'local-only' });
+      expect(sendMock).not.toHaveBeenCalled();
+      vi.unstubAllEnvs();
+    });
+
+    it('sends nothing from vercel dev', async () => {
+      process.env.RESEND_API_KEY = 'k';
+      process.env.VERCEL_ENV = 'development';
+      vi.spyOn(console, 'info').mockImplementation(() => {});
+      expect(await sendOpsAlert(alert)).toEqual({ sent: false, reason: 'local-only' });
+      expect(sendMock).not.toHaveBeenCalled();
+    });
+
+    it('sends for real with OPS_ALERT_SEND_IN_DEV=1', async () => {
+      process.env.RESEND_API_KEY = 'k';
+      delete process.env.VERCEL_ENV;
+      process.env.OPS_ALERT_SEND_IN_DEV = '1';
+      sendMock.mockResolvedValue({ data: { id: 'd1' }, error: null });
+      expect(await sendOpsAlert({ ...alert, environment: 'development' })).toEqual({ sent: true, id: 'd1' });
+      expect(sendMock.mock.calls[0]![0].subject).toContain('[development]');
+    });
   });
 
   it('is a no-op without an API key', async () => {
