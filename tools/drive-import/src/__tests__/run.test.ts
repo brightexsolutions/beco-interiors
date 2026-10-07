@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { finishPlacement, needsProcessing, productWriteFields, retirementReason, umbrellaRetirements, type ProductIdentity, type ProductPhotography } from '../run';
+import {
+  finishPlacement, imageAlt, imageKeyBase, needsProcessing, needsRekey, productWriteFields, retirementReason,
+  storedEntryFor, umbrellaRetirements, type ProductIdentity, type ProductPhotography,
+} from '../run';
 import type { ImageEntry } from '../merge-images';
 
 /**
@@ -112,5 +115,43 @@ describe('needsProcessing', () => {
     expect(needsProcessing({ needsDownload: false }, false)).toBe(true);
     // Running twice must change nothing the second time.
     expect(needsProcessing({ needsDownload: false }, true)).toBe(false);
+  });
+});
+
+describe('re-keying a photograph off a supplier named path, D104 amended 7 October', () => {
+  const heixin: ImageEntry = {
+    ...IMAGE,
+    path: 'heixin-12mm/hanting-jade/slab-0',
+    alt: 'Hanting Jade, Heixin 12mm, slab',
+    driveFileId: 'h1',
+  };
+
+  it('builds the key and the alt text from the plan, which names no supplier', () => {
+    expect(imageKeyBase('12mm-sintered-stones', 'hanting-jade', 'slab', 0)).toBe('12mm-sintered-stones/hanting-jade/slab-0');
+    expect(imageAlt('hanting-jade', '12mm-sintered-stones', 'on_stand')).toBe('Hanting Jade, 12mm Sintered Stones, on stand');
+  });
+
+  it('finds the stored entry a file was built from, by Drive id, then the first legacy entry of its role', () => {
+    const legacy: ImageEntry = { ...IMAGE, role: 'application', driveFileId: null, path: 'legacy' };
+    expect(storedEntryFor({ driveFileId: 'h1', role: 'slab' }, [legacy, heixin])).toBe(heixin);
+    expect(storedEntryFor({ driveFileId: 'zz', role: 'application' }, [heixin, legacy])).toBe(legacy);
+    expect(storedEntryFor({ driveFileId: 'zz', role: 'slab' }, [heixin])).toBeUndefined();
+  });
+
+  it('re-keys an entry whose key or alt text names a supplier, and nothing else', () => {
+    expect(needsRekey(heixin)).toBe(true);
+    // After the one-off data script the alt is clean, but the key is not.
+    expect(needsRekey({ path: heixin.path, alt: 'Hanting Jade, 12mm Sintered Stones, slab' })).toBe(true);
+    expect(needsRekey({ path: '12mm-sintered-stones/delfone-12mm/slab-0', alt: 'x' })).toBe(true);
+    expect(needsRekey({ path: '12mm-sintered-stones/hanting-jade/slab-0', alt: 'Hanting Jade, Heixin 12mm, slab' })).toBe(true);
+    // A clean entry is carried forward, even when its index has shifted.
+    expect(needsRekey(IMAGE)).toBe(false);
+    expect(needsRekey({ ...IMAGE, path: '12mm-sintered-stones/amber-jade/slab-3' })).toBe(false);
+    expect(needsRekey(undefined)).toBe(false);
+  });
+
+  it('processes an unchanged photograph of an existing product when it must be re-keyed, and a clean one not', () => {
+    expect(needsProcessing({ needsDownload: false }, true, true)).toBe(true);
+    expect(needsProcessing({ needsDownload: false }, true, needsRekey(IMAGE))).toBe(false);
   });
 });

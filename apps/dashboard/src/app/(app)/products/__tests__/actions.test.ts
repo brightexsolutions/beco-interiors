@@ -74,7 +74,7 @@ vi.mock('@/lib/product-storage', () => ({
   deleteProductDerivatives: vi.fn(),
 }));
 
-const { updateProduct, deleteProduct, createProduct, addProductImage } = await import('../actions');
+const { updateProduct, deleteProduct, createProduct, addProductImage, setProductPublished } = await import('../actions');
 
 afterEach(() => {
   requirePath.mockClear();
@@ -95,7 +95,6 @@ const formFrom = (over: Record<string, string> = {}) => {
   form.set('compareAtPrice', '');
   form.set('availability', 'in_stock');
   form.set('badge', '');
-  form.set('isPublished', 'on');
   form.set('sortOrder', '0');
   form.set('shortDescription', 'A slab.');
   form.set('description', 'A longer slab note.');
@@ -153,6 +152,93 @@ describe('updateProduct', () => {
     const result = await updateProduct({}, formFrom());
     expect(result.error).toMatch(/changed while you were editing/i);
     expect(revalidateStorefront).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateProduct and the published flag', () => {
+  const saved = () =>
+    maybeSingle
+      .mockResolvedValueOnce({ data: { slug: 'limestone-ivory', categories: null } })
+      .mockResolvedValueOnce({ data: { id: '11111111-1111-4111-8111-111111111111' }, error: null });
+
+  it('leaves is_published alone on a plain Save, so Save can never unpublish', async () => {
+    saved();
+    const result = await updateProduct({}, formFrom());
+    expect(result.ok).toBe('Saved.');
+    expect(update.mock.calls[0]?.[0]).not.toHaveProperty('is_published');
+  });
+
+  it('writes the flag and says so when Publish saves pending edits with it', async () => {
+    saved();
+    const result = await updateProduct({}, formFrom({ isPublished: 'true' }));
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_published: true }));
+    expect(result.ok).toBe('Saved and published. It will appear on the website shortly.');
+  });
+
+  it('says Saved and unpublished when Unpublish saves pending edits', async () => {
+    saved();
+    const result = await updateProduct({}, formFrom({ isPublished: 'false' }));
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_published: false }));
+    expect(result.ok).toBe('Saved and unpublished.');
+  });
+});
+
+describe('setProductPublished', () => {
+  const publishForm = (published: string, updatedAt = '2026-09-17T10:00:00.000Z') => {
+    const form = new FormData();
+    form.set('productId', '11111111-1111-4111-8111-111111111111');
+    form.set('updatedAt', updatedAt);
+    form.set('published', published);
+    return form;
+  };
+
+  it('checks the route permission and writes only the flag', async () => {
+    maybeSingle.mockResolvedValueOnce({
+      data: { slug: 'limestone-ivory', updated_at: '2026-10-07T09:00:00.000Z', categories: { slug: '12mm-sintered-stones' } },
+      error: null,
+    });
+    const result = await setProductPublished({}, publishForm('true'));
+    expect(requirePath).toHaveBeenCalledWith('/products');
+    expect(update).toHaveBeenCalledWith({ is_published: true });
+    expect(eq).toHaveBeenCalledWith('updated_at', '2026-09-17T10:00:00.000Z');
+    expect(result).toEqual({ ok: 'Published. It will appear on the website shortly.' });
+    expect(revalidateStorefront).toHaveBeenCalledWith({
+      productSlug: 'limestone-ivory',
+      categorySlug: '12mm-sintered-stones',
+    });
+  });
+
+  it('unpublishes with its own message', async () => {
+    maybeSingle.mockResolvedValueOnce({
+      data: { slug: 'limestone-ivory', updated_at: '2026-10-07T09:00:00.000Z', categories: null },
+      error: null,
+    });
+    const result = await setProductPublished({}, publishForm('false'));
+    expect(update).toHaveBeenCalledWith({ is_published: false });
+    expect(result).toEqual({ ok: 'Unpublished.' });
+  });
+
+  it('refuses a flag that is not true or false before touching the database', async () => {
+    const result = await setProductPublished({}, publishForm('on'));
+    expect(result.error).toBeTruthy();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('gives the stale-edit message when the row moved on', async () => {
+    maybeSingle
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: { updated_at: '2026-10-07T09:30:00.000Z', deleted_at: null }, error: null });
+    const result = await setProductPublished({}, publishForm('true'));
+    expect(result.error).toMatch(/changed while you were editing/i);
+    expect(revalidateStorefront).not.toHaveBeenCalled();
+  });
+
+  it('says permission, not stale, when the lock matched and the row still refused', async () => {
+    maybeSingle
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: { updated_at: '2026-09-17T10:00:00.000Z', deleted_at: null }, error: null });
+    const result = await setProductPublished({}, publishForm('true'));
+    expect(result.error).toMatch(/do not have permission/i);
   });
 });
 

@@ -7,6 +7,7 @@ import { assessQuality } from './quality';
 import { createStorage } from './storage';
 import { slugify, titleise } from './slug';
 import { readCache, writeCache } from './cache';
+import { containsSupplier } from './supplier';
 import { toDecodable } from './decode';
 import {
   mergeProductImages,
@@ -99,8 +100,59 @@ export const finishPlacement = (
  * product would never become products of their own, and a database reset
  * would leave every unchanged product missing until a forced run.
  */
-export const needsProcessing = (file: Pick<PlannedFile, 'needsDownload'>, productExists: boolean): boolean =>
-  file.needsDownload || !productExists;
+export const needsProcessing = (
+  file: Pick<PlannedFile, 'needsDownload'>,
+  productExists: boolean,
+  rekey = false,
+): boolean => file.needsDownload || !productExists || rekey;
+
+/**
+ * Where a photograph's derivatives live in R2, before the width and format:
+ * `12mm-sintered-stones/hanting-jade/slab-0`. Built from the plan's category
+ * and product slugs, so it carries a supplier word only if the plan does,
+ * and the plan never does, D104 amended 7 October.
+ */
+export const imageKeyBase = (categorySlug: string, productSlug: string, role: string, index: number): string =>
+  `${categorySlug}/${productSlug}/${role}-${index}`;
+
+/**
+ * A photograph's alt text: the product, its own range, the shot. The
+ * product's own category, never the flagship one: this said "sintered
+ * stone" for every product in the catalogue, so a brass handle was described
+ * as stone to a screen reader and to search.
+ */
+export const imageAlt = (productSlug: string, categorySlug: string, role: string): string =>
+  `${titleise(productSlug.replace(/-/g, ' '))}, ` +
+  `${titleise(categorySlug.replace(/-/g, ' '))}, ` +
+  `${role.replace('_', ' ')}`;
+
+/**
+ * The stored gallery entry a planned file was built from: by Drive id, or
+ * for an entry written before ids were recorded, the first of its role, the
+ * same fallback `mergeProductImages` uses.
+ */
+export const storedEntryFor = (
+  file: Pick<PlannedFile, 'driveFileId' | 'role'>,
+  stored: readonly ImageEntry[],
+): ImageEntry | undefined =>
+  stored.find((e) => e.driveFileId === file.driveFileId) ??
+  stored.find((e) => !e.driveFileId && e.role === file.role);
+
+/**
+ * Whether an unchanged photograph is processed again to move it off a
+ * supplier named key, D104 amended 7 October. The Heixin stones' derivatives
+ * sit at `heixin-12mm/<stone>/...` with alt text naming Heixin; carried
+ * forward untouched, both would stay on the site forever. Re-encoding writes
+ * them under the plan's supplier free key with fresh alt text, and the
+ * product's gallery points there. The old objects are left in R2, unreferenced.
+ *
+ * Only a supplier word triggers this, never a key that merely differs from
+ * the plan's: keys shift whenever a photograph is added, and re-encoding a
+ * whole gallery for that is what carrying entries forward exists to avoid.
+ * Once re-keyed, the stored entry is clean, so a second run does nothing.
+ */
+export const needsRekey = (entry: Pick<ImageEntry, 'path' | 'alt'> | undefined): boolean =>
+  Boolean(entry && (containsSupplier(entry.path) || containsSupplier(entry.alt)));
 
 /**
  * Every Drive folder whose photographs the plan turns into several products,
@@ -274,10 +326,14 @@ export const executePlan = async (
                 a.path.localeCompare(b.path),
     );
 
-    for (const [index, file] of ordered.entries()) {
-      const keyBase = `${file.categorySlug}/${productSlug}/${file.role}-${index}`;
+    const stored = parseStoredImages(existing?.images);
 
-      if (!needsProcessing(file, Boolean(existing))) continue;
+    for (const [index, file] of ordered.entries()) {
+      const keyBase = imageKeyBase(file.categorySlug, productSlug, file.role, index);
+      const rekey = Boolean(existing) && !file.needsDownload && needsRekey(storedEntryFor(file, stored));
+
+      if (!needsProcessing(file, Boolean(existing), rekey)) continue;
+      if (rekey) log(`  ${productSlug}  re-keyed off a supplier named path, now ${keyBase}`);
 
       // One bad file must never kill a whole run. Sharp's prebuilt binary
       // cannot decode iPhone HEIC, and a single such file was aborting the
@@ -329,12 +385,7 @@ export const executePlan = async (
       processedImages.set(file.driveFileId, {
         role: file.role,
         path: keyBase,
-        // The product's own category, never the flagship one. This said
-        // "sintered stone" for every product in the catalogue, so a brass
-        // handle was described as stone to a screen reader and to search.
-        alt: `${titleise(productSlug.replace(/-/g, ' '))}, ` +
-             `${titleise(first.categorySlug.replace(/-/g, ' '))}, ` +
-             `${file.role.replace('_', ' ')}`,
+        alt: imageAlt(productSlug, first.categorySlug, file.role),
         width: processed.width,
         height: processed.height,
         blur: processed.blurDataUrl,
@@ -393,7 +444,7 @@ export const executePlan = async (
     // time anything in that folder changed. Drive knows what a stone looks
     // like; it does not know what it costs or what it is called once a
     // human has named it.
-    const existingImages = parseStoredImages(existing?.images);
+    const existingImages = stored;
     const images = mergeProductImages(ordered, processedImages, existingImages);
 
     // Nothing processed this run, and the merged gallery is exactly what is

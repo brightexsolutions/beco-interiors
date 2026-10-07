@@ -4,6 +4,7 @@ import { resolveRole } from './roles';
 import { slugify, titleise, titleiseItem } from './slug';
 import type { ImageRole } from '@beco/types';
 import { detectMixedFolders, subjectOf, type MixedFolder } from './mixed';
+import { isSupplierFolder, namesSomething, withoutSupplier } from './supplier';
 
 /**
  * Turns a Drive listing into a plan: what to import, what to skip, and why.
@@ -17,6 +18,10 @@ import { detectMixedFolders, subjectOf, type MixedFolder } from './mixed';
  *   CATEGORY/SUB RANGE/PRODUCT/photographs       a range, its sub ranges, their products
  *   CATEGORY/SUB RANGE/one photograph per item   handles: each file IS an item
  *   CATEGORY/photographs                         loose: one umbrella product
+ *   CATEGORY/SUPPLIER/PRODUCT/photographs        read through: products file in CATEGORY
+ *
+ * A folder named for a supplier (`supplier.ts`) is never a sub range and
+ * never names anything on the site; see `throughSuppliers`.
  *
  * A folder is a PRODUCT when it holds photographs directly, and a CATEGORY
  * when it holds only folders. Two category levels from the Drive root is the
@@ -25,7 +30,10 @@ import { detectMixedFolders, subjectOf, type MixedFolder } from './mixed';
  */
 
 export interface CategoryNode {
-  /** The Drive folder path, verbatim. The category's IDENTITY in the database. */
+  /**
+   * The Drive folder path, verbatim, less any supplier folder read through.
+   * The category's IDENTITY in the database.
+   */
   path: string;
   slug: string;
   name: string;
@@ -91,6 +99,12 @@ export interface ImportPlan {
    * photograph is the product in `keptIn`, which may be `folder` itself.
    */
   copies: Array<{ folder: string; keptIn: string; count: number }>;
+  /**
+   * Supplier folders read through, D104 amended 7 October: `folder` is the
+   * Drive path, `into` the range its products file under, `products` how
+   * many products came out of it.
+   */
+  supplierFolders: Array<{ folder: string; into: string; products: number }>;
   /** Gallery and brand files, correctly loose, handled elsewhere. */
   galleryFiles: number;
   counts: ReturnType<typeof summarise>;
@@ -314,6 +328,27 @@ export const isItemFolder = (folderName: string, filenames: readonly string[]): 
   return subjects.size >= 2;
 };
 
+/**
+ * The category folders as the site shows them: a supplier folder below the
+ * range is read through, so what it holds files in the folder above it. The
+ * range itself is never dropped; a supplier folder at the top of Drive is
+ * reported and skipped before this is reached.
+ */
+export const throughSuppliers = (dirs: readonly string[]): string[] =>
+  dirs.filter((dir, index) => index === 0 || !isSupplierFolder(dir));
+
+/**
+ * The name of a product whose own folder is named for a supplier, which
+ * happens when Beco drop a supplier's photographs straight into a folder
+ * named after it (`DELFONE 12MM`). The supplier word goes; when nothing that
+ * names a thing is left ("12MM"), the product is called what one item in its
+ * range is called, "12mm Sintered Stone". Set on first import only, D54.
+ */
+export const supplierProductName = (folder: string, rangeFolder: string): string => {
+  const rest = withoutSupplier(folder);
+  return namesSomething(rest) ? titleise(rest) : singularNoun(rangeFolder);
+};
+
 const chainFor = (dirs: readonly string[]): CategoryNode[] =>
   dirs.map((_, index) => {
     const path = dirs.slice(0, index + 1).join('/');
@@ -347,6 +382,7 @@ export const buildPlan = (
 
   const retired = new Map<string, number>();
   const documents = new Map<string, number>();
+  const supplierTop = new Map<string, number>();
   const usable = listing.filter((f) => {
     if (IGNORE.test(f.path)) return false;
     const top = (f.path.split('/')[0] ?? '').toUpperCase();
@@ -355,6 +391,13 @@ export const buildPlan = (
       return false;
     }
     if (NON_PRODUCT_FOLDERS.has(top)) return true;
+    // A supplier folder at the top of Drive has no range above it to file
+    // its products in, and becoming a range would put the supplier on the
+    // site. Skipped and reported, never published under the supplier name.
+    if (f.path.includes('/') && isSupplierFolder(top)) {
+      supplierTop.set(top, (supplierTop.get(top) ?? 0) + 1);
+      return false;
+    }
     if (DOCUMENT.test(f.path)) {
       const dir = dirname(f.path) || '(root)';
       documents.set(dir, (documents.get(dir) ?? 0) + 1);
@@ -372,6 +415,15 @@ export const buildPlan = (
       reason:
         `Beco no longer sells this range, so the ${count} file(s) in "${folder}" are not ` +
         'imported. The folder can be archived in Drive; nothing on the site reads it.',
+    });
+  }
+  for (const [folder, count] of supplierTop) {
+    issues.push({
+      path: folder,
+      reason:
+        `"${folder}" is named for a supplier and sits at the top of Drive, so there is no range ` +
+        `to file its ${count} file(s) under without showing the supplier on the site. Not ` +
+        'imported. Move it inside the range it belongs to, where it is read through.',
     });
   }
   for (const [folder, count] of documents) {
@@ -515,6 +567,21 @@ export const buildPlan = (
   /** The first spelling seen of each item, per folder, so "GOLD BLACK 2"
       joins "BLACK GOLD" rather than becoming a second product. */
   const itemNameByKey = new Map<string, string>();
+  /** Supplier folders read through, with the range they file into and the
+      products that came out of each. */
+  const supplierRead = new Map<string, { into: string; products: Set<string> }>();
+  const noteSupplier = (folder: string, into: readonly string[], productPath: string): void => {
+    const entry = supplierRead.get(folder) ?? { into: into.join('/'), products: new Set<string>() };
+    entry.products.add(productPath);
+    supplierRead.set(folder, entry);
+  };
+  /** Records every supplier category folder `shown` read through. */
+  const noteReadThrough = (dirs: readonly string[], shown: readonly string[], productPath: string): void => {
+    if (shown.length === dirs.length) return;
+    dirs.forEach((dir, index) => {
+      if (index > 0 && isSupplierFolder(dir)) noteSupplier(dirs.slice(0, index + 1).join('/'), shown, productPath);
+    });
+  };
 
   const claimSlug = (wanted: string, productPath: string, parentFolder: string): string => {
     const owner = slugOwner.get(wanted);
@@ -579,25 +646,33 @@ export const buildPlan = (
     // named exactly as Beco typed it. The item's first photograph stands as
     // its own shot; a second file of the same item joins its gallery.
     if (itemDirs.has(dir)) {
-      if (dirs.length > MAX_CATEGORY_DEPTH) {
+      const shown = throughSuppliers(dirs);
+      if (shown.length > MAX_CATEGORY_DEPTH) {
         tooDeep.set(dir, (tooDeep.get(dir) ?? 0) + 1);
         continue;
       }
-      const chain = chainFor(dirs);
+      const chain = chainFor(shown);
       const leaf = chain[chain.length - 1]!;
       const key = `${dir}/${itemKeyOf(filename)}`;
       const itemName = itemNameByKey.get(key) ?? itemNameOf(filename);
       itemNameByKey.set(key, itemName);
       const productPath = `${dir}/${itemName}`;
-      const folderName = dirs[dirs.length - 1]!;
+      noteReadThrough(dirs, shown, productPath);
+      const folderName = shown[shown.length - 1]!;
       // A phone or export name (a UUID, IMG_1234) is never a product name.
       // It gets a placeholder, "Gold Handle 34D0", for Beco to rename in the
-      // dashboard. Every other item keeps the name its file gives it.
+      // dashboard. Every other item keeps the name its file gives it, less
+      // any supplier word in it.
       const exported = isExportName(filename);
+      const named = isSupplierFolder(itemName) ? withoutSupplier(itemName) : itemName;
       const productName = exported
-        ? exportItemName(folderName, itemNounFor(dirs), exportRef(filename))
-        : titleiseItem(itemName);
-      const productSlug = claimSlug(slugify(exported ? productName : itemName), productPath, folderName);
+        ? exportItemName(folderName, itemNounFor(shown), exportRef(filename))
+        : titleiseItem(namesSomething(named) ? named : `${singularNoun(folderName)} ${named}`);
+      const productSlug = claimSlug(
+        slugify(exported || named !== itemName ? productName : itemName),
+        productPath,
+        folderName,
+      );
       const seen = itemShotCount.get(productPath) ?? 0;
       itemShotCount.set(productPath, seen + 1);
       slabByProduct.set(productSlug, true);
@@ -623,13 +698,17 @@ export const buildPlan = (
     // sub range when it sits in a folder of phone photographs there.
     const photoNoun = dirs.length === 1 && perPhotoRanges.has(top)
       ? photoNounFor(top)
-      : perPhotoSubDirs.has(dir) ? singularNoun(dirs[1]!) : undefined;
+      : perPhotoSubDirs.has(dir)
+        ? isSupplierFolder(dirs[1]!) ? photoNounFor(top) : singularNoun(dirs[1]!)
+        : undefined;
     if (photoNoun) {
+      const shown = throughSuppliers(dirs);
       const ref = photoRef(filename);
       const productPath = `${dir}/${stem(filename).trim()}`;
+      noteReadThrough(dirs, shown, productPath);
       const productName = `${photoNoun} ${ref}`;
-      const productSlug = claimSlug(slugify(productName), productPath, dirs[dirs.length - 1]!);
-      const chain = chainFor(dirs);
+      const productSlug = claimSlug(slugify(productName), productPath, shown[shown.length - 1]!);
+      const chain = chainFor(shown);
       const leaf = chain[chain.length - 1]!;
       photoByFolder.set(dir, (photoByFolder.get(dir) ?? 0) + 1);
       if (!photoExample.has(dir)) photoExample.set(dir, productName);
@@ -709,7 +788,13 @@ export const buildPlan = (
     // file; everything above it is a category. Misnests (a folder nested
     // inside a product folder) were excluded above, so by here every folder
     // above the file is a category.
-    const categoryDirs = dirs.slice(0, -1);
+    // A supplier folder among the categories is read through, so its stones
+    // file in the range above it (D104, amended 7 October). The product's
+    // Drive path stays its identity, verbatim: that is how an existing
+    // product is found again, so moving the stones up a level on the site
+    // makes no second product.
+    const driveCategoryDirs = dirs.slice(0, -1);
+    const categoryDirs = throughSuppliers(driveCategoryDirs);
     const productFolder = dirs[dirs.length - 1]!;
     if (categoryDirs.length > MAX_CATEGORY_DEPTH) {
       tooDeep.set(dir, (tooDeep.get(dir) ?? 0) + 1);
@@ -719,7 +804,19 @@ export const buildPlan = (
     const leaf = chain[chain.length - 1]!;
     const role = resolveRole(filename, productFolder);
     const productPath = dir;
-    const productSlug = claimSlug(slugify(productFolder), productPath, categoryDirs[categoryDirs.length - 1]!);
+    noteReadThrough(driveCategoryDirs, categoryDirs, productPath);
+    // A product folder named for a supplier is still one product, its
+    // photographs together, but called something else.
+    const supplierProduct = isSupplierFolder(productFolder);
+    if (supplierProduct) noteSupplier(productPath, categoryDirs, productPath);
+    const productName = supplierProduct
+      ? supplierProductName(productFolder, categoryDirs[categoryDirs.length - 1]!)
+      : titleise(productFolder);
+    const productSlug = claimSlug(
+      slugify(supplierProduct ? productName : productFolder),
+      productPath,
+      categoryDirs[categoryDirs.length - 1]!,
+    );
 
     if (role === 'slab') slabByProduct.set(productSlug, true);
     if (!slabByProduct.has(productSlug)) slabByProduct.set(productSlug, false);
@@ -750,7 +847,7 @@ export const buildPlan = (
       categoryChain: chain,
       productPath,
       productSlug,
-      productName: titleise(productFolder),
+      productName,
       role,
     });
   }
@@ -857,6 +954,11 @@ export const buildPlan = (
     finishFolders: [...finishByFolder].map(([folder, count]) => ({ folder, count })),
     photoFolders: [...photoByFolder].map(([folder, count]) => ({ folder, count })),
     copies: [...copyCounts.values()],
+    supplierFolders: [...supplierRead].map(([folder, entry]) => ({
+      folder,
+      into: entry.into,
+      products: entry.products.size,
+    })),
     galleryFiles: [...looseByFolder]
       .filter(([f]) => NON_PRODUCT_FOLDERS.has(f.toUpperCase()))
       .reduce((n, [, c]) => n + c, 0),

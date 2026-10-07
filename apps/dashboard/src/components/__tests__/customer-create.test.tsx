@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import { CustomerCreate } from '../customer-create';
@@ -42,7 +42,7 @@ describe('CustomerCreate (D130)', () => {
     expect(form.get('clientType')).toBe('designer');
     expect(form.has('notes')).toBe(true);
     expect(onCreated).toHaveBeenCalledWith(customer);
-    expect(toastSuccess).toHaveBeenCalledWith('ZZ Wanjiku added.');
+    await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith('ZZ Wanjiku added.'));
   });
 
   it('puts a field refusal under that field, not in a toast, and keeps what was typed', async () => {
@@ -62,7 +62,7 @@ describe('CustomerCreate (D130)', () => {
     render(<CustomerCreate onCreated={vi.fn()} />);
     await fill(user);
     await user.click(screen.getByRole('button', { name: 'Add customer' }));
-    expect(toastError).toHaveBeenCalledWith('You do not have permission to add customers.');
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith('You do not have permission to add customers.'));
   });
 
   it('sends a duplicate number to the existing customer instead of creating a second', async () => {
@@ -77,7 +77,7 @@ describe('CustomerCreate (D130)', () => {
     await fill(user);
     await user.click(screen.getByRole('button', { name: 'Add customer' }));
     expect(await screen.findByText(/already on file for/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open Achieng' })).toHaveAttribute('href', '/customers/c1');
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Open Achieng' })).toHaveAttribute('href', '/customers/c1'));
     // No Use button where there is nothing to use them for.
     expect(screen.queryByRole('button', { name: 'Use Achieng' })).toBeNull();
     expect(onCreated).not.toHaveBeenCalled();

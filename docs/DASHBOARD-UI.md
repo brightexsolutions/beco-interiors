@@ -342,3 +342,27 @@ quote form closes, and the delete `ConfirmDialog` after the details form.
 Measured on the dev server at 390, 820 and 1280: no element past the right edge on the list,
 a customer's page, the new quote form with the picker open, and the Add new client dialog,
 whose submit stays inside an 844 high screen.
+
+## 7 October 2026, publishing a product from the top of the editor (D133)
+
+A record's state and the control that changes it sit together, at the top of its sheet, not
+as a field partway down the form. On the product editor the Draft or Published pill has the
+Publish button (primary) or Unpublish (outline) beside it, right aligned, wrapping under the
+pills on a phone. The "Published on the website" checkbox in Availability is gone: one place
+shows the state and one place changes it.
+
+- **One action, one write.** Publish with nothing unsaved writes the flag alone and leaves the
+  sheet open, so the pill can be seen to flip. Save never touches the flag.
+- **Unsaved edits are never dropped.** Once a field changes, the button says what it will do,
+  "Save and publish" or "Save and unpublish", and saves the form with the flag. It is not
+  disabled with a reason instead, because Save closes the sheet and staff would have to find
+  the product again to publish it.
+- **Taking something off the website is confirmed.** Unpublish goes through `ConfirmDialog`;
+  Publish does not, since it is the expected next step and is undone with one press.
+- **What is missing is said, not enforced.** "No photo yet." and "No price yet." sit under the
+  pill on a draft, in the button's description, and Publish stays enabled: Beco decides.
+- **A control whose meaning is not obvious gets a `Tooltip`**, never a `title` attribute: hover,
+  keyboard focus and a 44px info button for a phone, linked with `aria-describedby`.
+
+Seen on the dev server at 390 and 1280: create a draft, Publish, Unpublish through the dialog,
+Save and publish after an edit, the local row checked after each.

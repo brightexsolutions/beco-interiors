@@ -75,7 +75,7 @@ export default defineConfig({
         // automation to walk a journey.
         test: {
           name: 'integration',
-          include: ['apps/**/*.integration.test.ts', 'packages/**/*.integration.test.ts'],
+          include: ['apps/**/*.integration.test.ts', 'packages/**/*.integration.test.ts', 'tools/**/*.integration.test.ts'],
           environment: 'node',
           // Real network and real Postgres, so slower than the unit default.
           testTimeout: 20_000,
