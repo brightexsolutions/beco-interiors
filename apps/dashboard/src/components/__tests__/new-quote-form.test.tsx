@@ -222,7 +222,12 @@ describe('NewQuoteForm', () => {
     const row = screen.getByText('Amber Jade').closest('li');
     expect(row).toBeTruthy();
     expect(row?.className).toContain('py-3');
-    expect(row?.className).toMatch(/md:grid-cols-\[/);
+    // The row grid follows the list's own width, a container query, never the
+    // screen: beside the summary at 1280 the screen breakpoint left the item
+    // name 0px wide.
+    expect(row?.className).toMatch(/@3xl:grid-cols-\[/);
+    expect(row?.className).not.toMatch(/(^|\s)md:grid/);
+    expect(row?.closest('.\\@container')).not.toBeNull();
     expect(within(row as HTMLElement).queryByText('Qty')).toBeNull();
     expect(within(row as HTMLElement).getByRole('button', { name: 'Remove' })).toBeInTheDocument();
     expect(container.querySelector('.overflow-y-auto')).not.toBeNull();
