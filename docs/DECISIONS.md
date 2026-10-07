@@ -3311,12 +3311,14 @@ Ksh 65,000.00" (read only), plain, the figure to price from. Strike through is k
 price that differs from the catalogue. A line at 0 with no catalogue price still reads price on
 application, the custom line's own convention.
 
-**Not covered, for a decision.** The raw `quote_items_write_owner` RLS policy still lets the
-assigned salesperson or an admin insert, update or delete `quote_items` directly through
-PostgREST, whatever the quote's status. No screen uses it (D131), and the audit trigger records
-anything that goes through it, but it is a way around this lock. Closing it means narrowing that
-policy to open quotes, or dropping its write half since every line write now goes through a
-function; either is a policy change with its own tests, not part of this one.
+**Closed by migration 68, 7 October 2026.** The raw `quote_items_write_owner` RLS policy let
+the assigned salesperson or an admin insert, update or delete `quote_items` directly through
+PostgREST, whatever the quote's status, which was a way around this lock. Brown approved the
+lock, so its write half is dropped: every line write goes through a security definer function,
+and the dashboard only reads `quote_items` directly. `44_quote_items_functions_only.test.sql`
+proves the owner and an admin are refused a direct insert, update and delete, reading still
+works, and the functions still write. `10_quote_pricing_approval.test.sql` now writes its lines
+as the table owner, since it tests the approval trigger, not who may write.
 
 Migration 67, `43_closed_quote_lines.test.sql`, 92 assertions.
 

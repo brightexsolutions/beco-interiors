@@ -29,10 +29,9 @@ values
   (:quote_id::uuid,  'Achieng', '0722111111', :sales_id::uuid, :sales_id::uuid),
   (:quote2_id::uuid, 'Otieno',  '0722222222', :sales_id::uuid, :sales_id::uuid);
 
--- ---------- as the discounting salesperson ----------
-set local role authenticated;
-set local request.jwt.claims = '{"sub":"e1000000-0000-4000-8000-000000000002","role":"authenticated"}';
-
+-- Lines are written as the table owner. Since migration 68 only the line
+-- functions write quote_items, and this file tests the approval trigger,
+-- which fires for any writer; the salesperson's own powers are tested below.
 insert into quote_items (quote_id, product_id, description, quantity, list_price, unit_price)
 values (:quote_id::uuid, 'e1000000-0000-4000-8000-0000000000aa'::uuid, 'ZZ Test Slab', 2, 65000, 65000);
 
@@ -43,6 +42,10 @@ select is(
 
 update quote_items set unit_price = 55000
  where quote_id = :quote_id::uuid;
+
+-- ---------- as the discounting salesperson ----------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"e1000000-0000-4000-8000-000000000002","role":"authenticated"}';
 
 select is(
   (select requires_approval from quotes where id = :quote_id::uuid), true,
@@ -70,7 +73,8 @@ select throws_ok(
   'an unapproved discounted quote cannot be finalized, enforced at the database'
 );
 
--- unpriced and custom lines on the second quote
+-- unpriced and custom lines on the second quote, written as the owner
+reset role;
 insert into quote_items (quote_id, product_id, description, quantity, unit_price)
 values (:quote2_id::uuid, null, 'Bespoke edge profile', 1, 0);
 
@@ -113,7 +117,7 @@ select is(
 -- the finalized-requires-approval constraint on quotes itself then refuses.
 -- The line edit never lands, so a quote cannot be quietly re-discounted
 -- once it is out the door.
-set local request.jwt.claims = '{"sub":"e1000000-0000-4000-8000-000000000002","role":"authenticated"}';
+reset role;
 select throws_ok(
   $$update quote_items set unit_price = 50000
      where quote_id = 'e1000000-0000-4000-8000-000000000010'$$,
