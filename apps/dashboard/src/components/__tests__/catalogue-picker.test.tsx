@@ -341,8 +341,17 @@ describe('CataloguePicker', () => {
 
   it('says why the trigger is disabled', () => {
     render(<CataloguePicker onAdd={vi.fn()} disabled disabledHint="Save your line changes first." />);
-    expect(screen.getByRole('button', { name: 'Add from catalogue' })).toBeDisabled();
-    expect(screen.getByText('Save your line changes first.')).toBeInTheDocument();
+    const trigger = screen.getByRole('button', { name: 'Add from catalogue' });
+    expect(trigger).toBeDisabled();
+    const hint = screen.getByText('Save your line changes first.');
+    // The reason is tied to the control, so a screen reader hears it too.
+    expect(trigger).toHaveAttribute('aria-describedby', hint.id);
+  });
+
+  it('carries no describedby while enabled', () => {
+    render(<CataloguePicker onAdd={vi.fn()} disabledHint="Save your line changes first." />);
+    expect(screen.getByRole('button', { name: 'Add from catalogue' })).not.toHaveAttribute('aria-describedby');
+    expect(screen.queryByText('Save your line changes first.')).toBeNull();
   });
 
   it('is axe clean while open', async () => {

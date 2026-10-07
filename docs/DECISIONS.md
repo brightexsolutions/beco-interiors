@@ -3256,7 +3256,8 @@ order functions. Now `coalesce(..., false)`; see `docs/SECURITY.md`, 7 October 2
 **Not changed, for a decision.** `update_quote_lines` and the other line functions still accept
 quantity and price edits on a won or lost quote (only the D86 constraint stops some of them), and
 the screen still offers the steppers there. Remove follows the stricter rule the status functions
-already state. Whether quantity and price should lock the same way is Brown's call.
+already state. Whether quantity and price should lock the same way is Brown's call. *Decided
+7 October 2026: they do, see D132.*
 
 **Rejected.** A soft delete on `quote_items`: every reader would need a filter, and a line
 missed by one of them would print on a PDF. Reading the original request from `audit_log`: a
@@ -3266,3 +3267,58 @@ customer, and claim is one tap, now beside the lines.
 
 *Reverses if:* Beco wants a removed line greyed out on the quote rather than gone, at which point
 `quote_items` gains `deleted_at` and every reader is filtered.
+
+## D132, 7 October 2026: a closed quote's lines are fixed, and the quote's lines size to their own column
+
+**Decision.** Approved by Brown, 7 October 2026, settling what D131 left open. Every function
+that changes a quote's lines refuses a won quote ("A won quote is closed"), a lost one ("Reopen
+this quote to change its items") and one that became an order ("This quote is already an order.
+Its items are fixed."), with errcode `P0001`, exactly as `remove_quote_line` already did:
+`update_quote_lines`, `update_quote_line`, `add_custom_quote_line`, `add_catalogue_quote_line`,
+`add_catalogue_quote_lines` and `remove_quote_line` itself. The rule lives once, in
+`assert_quote_lines_open(status, converted_order_id)` (migration 67), an internal function no
+client role can execute, called by all six at the point `remove_quote_line` made its checks:
+after the stale lock and the permission, before any line is read. Nothing else in those
+functions changed: same signatures, permission rule, `PT409`, input checks, rounding and totals
+through `refresh_quote_money`. The before and after definitions were diffed from the local
+database and differ only by the status read and the call.
+
+On the quote page, a won, lost or converted quote shows the same reason line Remove already used,
+above the lines, and the steppers, price fields, Save, Add from catalogue and the custom line form
+are disabled and tied to it by `aria-describedby`. The reason repeats under Add from catalogue,
+because that control sits below the list. `closedBlock()` in `lib/quote-line-rules.ts` holds the
+wording; `removeBlock()` now starts from it, so the Remove reasons read "Its items are fixed."
+rather than "Nothing can be removed.". `QuantityStepper` in `@beco/ui` gained `disabled` and
+`describedBy`, rather than the quote page wrapping its own.
+
+**Layout.** The quote page's line rows switched to columns at the `md` screen width, but the
+lines sit beside the sidebar and the right rail, so the list was 544px wide at 1280 and the four
+fixed columns left the item name 80px: names truncated and "Catalogue Ksh 65,000.00" was clipped.
+The same fix as `/quotes/new` (45fcb05): the lines form is a Tailwind `@container`, rows and the
+header switch at `@3xl` (48rem of list, which leaves the item about 300px after 29rem of fixed
+columns and gaps), stacked below that. Remove keeps D131's place, under the line amount, never a
+fifth column. Measured on the local dev server, BEC-Q-01168, item name width before and after:
+390: 267 and 267 (stacked both); 820: 276 and 697 (list 740, now stacked); 1024: 176 and 597;
+1280: 80, clipped, and 501; 1440: 240 and 661; 1920: 488 and 488 (list 952, columns both). No
+horizontal scroll and nothing past the row's edge at any width, Remove inside the row at every
+width.
+
+**An unpriced line no longer reads as a discount.** A web line arrives at `unit_price = 0`, D86's
+"not priced yet", with the catalogue price it was asked at in `list_price`. The page struck that
+catalogue price through, as if it had been discounted to nothing. Now a line at 0 with a catalogue
+price reads "Not priced yet. Catalogue Ksh 65,000.00" (editable) or "1 × not priced yet, Catalogue
+Ksh 65,000.00" (read only), plain, the figure to price from. Strike through is kept for a real
+price that differs from the catalogue. A line at 0 with no catalogue price still reads price on
+application, the custom line's own convention.
+
+**Not covered, for a decision.** The raw `quote_items_write_owner` RLS policy still lets the
+assigned salesperson or an admin insert, update or delete `quote_items` directly through
+PostgREST, whatever the quote's status. No screen uses it (D131), and the audit trigger records
+anything that goes through it, but it is a way around this lock. Closing it means narrowing that
+policy to open quotes, or dropping its write half since every line write now goes through a
+function; either is a policy change with its own tests, not part of this one.
+
+Migration 67, `43_closed_quote_lines.test.sql`, 92 assertions.
+
+*Reverses if:* Beco wants a won quote corrected after the fact, say a quantity keyed wrong, at
+which point the route is a reopen for won quotes with its own audit, not loosening this rule.
