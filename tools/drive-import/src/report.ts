@@ -76,7 +76,8 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('FOLDERS WHERE EACH PHOTOGRAPH IS ITS OWN ITEM');
     L.push('--------------------------------------------');
     L.push('  Every file names an item, so each became a product under that folder as a');
-    L.push('  sub range. Prices are entered in the dashboard.');
+    L.push('  sub range. Prices are entered in the dashboard. Any earlier single product');
+    L.push('  holding the whole folder is unpublished.');
     L.push('');
     for (const { folder, items, files } of plan.itemFolders) {
       L.push(`  ${String(items).padStart(4)} item(s) from ${files} file(s)  ${folder}`);
@@ -102,9 +103,22 @@ export const renderReport = (plan: ImportPlan): string => {
     L.push('---------------------------------------');
     L.push('  Phone named photographs, so each became its own product in the range itself.');
     L.push('  Rename each photograph after what it shows, or name it in the dashboard.');
+    L.push('  Any earlier single product holding the whole folder is unpublished.');
     L.push('');
     for (const { folder, count } of plan.photoFolders) {
       L.push(`  ${String(count).padStart(4)} product(s)  ${folder}`);
+    }
+    L.push('');
+  }
+
+  if (plan.copies.length) {
+    L.push('COPIES OF ONE PHOTOGRAPH, IMPORTED ONCE');
+    L.push('---------------------------------------');
+    L.push('  The same file uploaded more than once. Each photograph becomes one product,');
+    L.push('  in the folder holding fewer photographs.');
+    L.push('');
+    for (const { folder, keptIn, count } of plan.copies) {
+      L.push(`  ${String(count).padStart(4)} copied file(s)  ${folder}, kept in ${keptIn === folder ? 'the same folder' : keptIn}`);
     }
     L.push('');
   }

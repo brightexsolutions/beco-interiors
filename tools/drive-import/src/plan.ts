@@ -80,8 +80,17 @@ export interface ImportPlan {
   itemFolders: Array<{ folder: string; items: number; files: number }>;
   /** Ranges whose loose photographs became one product each, sorted by finish. */
   finishFolders: Array<{ folder: string; count: number }>;
-  /** Ranges whose loose photographs became one product each, filed in the range itself. */
+  /**
+   * Ranges whose loose photographs became one product each, filed in the
+   * range itself, and sub ranges of phone photographs inside such a range.
+   */
   photoFolders: Array<{ folder: string; count: number }>;
+  /**
+   * Byte for byte copies of one photograph in ranges split per photograph,
+   * imported once: `count` files in `folder` were left out because the same
+   * photograph is the product in `keptIn`, which may be `folder` itself.
+   */
+  copies: Array<{ folder: string; keptIn: string; count: number }>;
   /** Gallery and brand files, correctly loose, handled elsewhere. */
   galleryFiles: number;
   counts: ReturnType<typeof summarise>;
@@ -151,6 +160,44 @@ export const SPLIT_BY_FINISH: ReadonlyMap<string, string> = new Map([
 export const SPLIT_PER_PHOTO: ReadonlyMap<string, string> = new Map([
   ['15MM SINTERED STONES', '15mm Sintered Stone'],
 ]);
+
+/**
+ * What one item in a range is called, from the range's own name: the last
+ * word made singular. "BAMBOO VENEER WALL PANELS" is "Bamboo Veneer Wall
+ * Panel", "OFFICE ACCESSORIES" is "Office Accessory", "Drawer rails" is
+ * "Drawer Rail". A placeholder only: Beco rename items in the dashboard.
+ */
+export const singularNoun = (folder: string): string => {
+  const words = titleise(folder).split(' ');
+  const last = words.pop() ?? '';
+  const single = /[^aeiou]ies$/i.test(last)
+    ? `${last.slice(0, -3)}y`
+    : /(x|ch|sh|ss)es$/i.test(last)
+      ? last.slice(0, -2)
+      : /[^su]s$/i.test(last)
+        ? last.slice(0, -1)
+        : last;
+  return [...words, single].join(' ');
+};
+
+/** The noun for a range split per photograph: listed, or derived from its name. */
+export const photoNounFor = (folder: string): string =>
+  SPLIT_PER_PHOTO.get(folder.toUpperCase()) ?? singularNoun(folder);
+
+/**
+ * Whether a range splits one product per photograph without being listed,
+ * 7 October. Decided per range, from everything under it, and only for a
+ * range: a range is a group of items, where a product folder may be one
+ * stone photographed from several angles, so a product folder is never
+ * split this way. It needs at least two loose photographs at its root, and
+ * every photograph anywhere under it must be a phone or export name. A
+ * stone range always carries role named files (SLAB, APP 1) and never
+ * qualifies; a range of named items is D104's item rule instead.
+ * `SPLIT_PER_PHOTO` still forces a range that also holds named files, and
+ * overrides the derived noun.
+ */
+export const isPerPhotoRange = (loose: readonly string[], all: readonly string[]): boolean =>
+  loose.length >= 2 && all.every((name) => isExportName(name));
 
 /**
  * A short, stable reference for a photograph with no name: the number a
@@ -351,6 +398,93 @@ export const buildPlan = (
     if (isItemFolder(folderName, names)) itemDirs.add(dir);
   }
 
+  // Ranges split one product per photograph: listed, or detected because
+  // every photograph under them is a phone name. A range split by finish is
+  // its own path and never also split here.
+  const underRange = new Map<string, { loose: string[]; all: string[] }>();
+  for (const f of usable) {
+    const segments = f.path.split('/');
+    if (segments.length < 2) continue;
+    const top = segments[0]!;
+    if (NON_PRODUCT_FOLDERS.has(top.toUpperCase()) || SPLIT_BY_FINISH.has(top.toUpperCase())) continue;
+    const entry = underRange.get(top) ?? { loose: [], all: [] };
+    const name = segments[segments.length - 1]!;
+    entry.all.push(name);
+    if (segments.length === 2) entry.loose.push(name);
+    underRange.set(top, entry);
+  }
+  const perPhotoRanges = new Set<string>();
+  for (const [top, entry] of underRange) {
+    if (SPLIT_PER_PHOTO.has(top.toUpperCase()) || isPerPhotoRange(entry.loose, entry.all)) perPhotoRanges.add(top);
+  }
+  // A folder of phone photographs inside such a range is a sub range of
+  // items in the same state ("KITCHEN ACCESSORIES/DRAWER RAILS"), so it
+  // splits the same way, filed in that sub range. One with a single file or
+  // any named file is a product folder, exactly as before.
+  const perPhotoSubDirs = new Set<string>();
+  for (const [dir, names] of filesByDir) {
+    const parts = dir.split('/');
+    if (parts.length !== 2 || !perPhotoRanges.has(parts[0]!) || itemDirs.has(dir)) continue;
+    if (names.length >= 2 && names.every((name) => isExportName(name))) perPhotoSubDirs.add(dir);
+  }
+
+  /** The folder a photograph is split per photograph in, or undefined. */
+  const splitFolderOf = (path: string): string | undefined => {
+    const dir = dirname(path);
+    if (!dir || itemDirs.has(dir)) return undefined;
+    if (!dir.includes('/') && (perPhotoRanges.has(dir) || SPLIT_BY_FINISH.has(dir.toUpperCase()))) return dir;
+    if (perPhotoSubDirs.has(dir)) return dir;
+    return undefined;
+  };
+
+  // One photograph is one product, however many times it was uploaded.
+  // Drive gives each copy its own id but the same md5: KITCHEN ACCESSORIES
+  // held every Drawer rails photograph again, some of them three times. A
+  // photograph is kept in the folder holding the fewest photographs, the
+  // narrower range Beco sorted it into, then by path; within a folder, the
+  // copy with the lowest id. Both are stable from run to run, so the
+  // product's slug does not move.
+  const splitFiles = usable.filter((f) => f.md5 && splitFolderOf(f.path) !== undefined);
+  const distinctIn = new Map<string, Set<string>>();
+  for (const f of splitFiles) {
+    const folder = splitFolderOf(f.path)!;
+    distinctIn.set(folder, (distinctIn.get(folder) ?? new Set<string>()).add(f.md5!));
+  }
+  const byContent = new Map<string, DriveFile[]>();
+  for (const f of splitFiles) byContent.set(f.md5!, [...(byContent.get(f.md5!) ?? []), f]);
+  const copyOf = new Map<string, { folder: string; keptIn: string }>();
+  for (const group of byContent.values()) {
+    if (group.length < 2) continue;
+    const kept = [...group].sort((a, b) => {
+      const fa = splitFolderOf(a.path)!;
+      const fb = splitFolderOf(b.path)!;
+      return distinctIn.get(fa)!.size - distinctIn.get(fb)!.size ||
+        (fa < fb ? -1 : fa > fb ? 1 : 0) ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    })[0]!;
+    const keptIn = splitFolderOf(kept.path)!;
+    for (const f of group) if (f !== kept) copyOf.set(f.id, { folder: splitFolderOf(f.path)!, keptIn });
+  }
+  const copyCounts = new Map<string, { folder: string; keptIn: string; count: number }>();
+  for (const c of copyOf.values()) {
+    const key = JSON.stringify([c.folder, c.keptIn]);
+    const entry = copyCounts.get(key) ?? { ...c, count: 0 };
+    entry.count += 1;
+    copyCounts.set(key, entry);
+  }
+  for (const { folder, keptIn, count } of copyCounts.values()) {
+    issues.push({
+      path: folder,
+      reason: folder === keptIn
+        ? `${count} file(s) in "${folder}" are exact copies of another photograph in the same ` +
+          'folder, so each photograph is imported once. The copies can be deleted in Drive.'
+        : `${count} photograph(s) in "${folder}" are exact copies of photographs in "${keptIn}", ` +
+          'the folder holding fewer photographs, so each is imported once, as a product there, ' +
+          'never as a second product here. If those items belong in this range too, file them ' +
+          'in the dashboard; the import never moves a product once it exists.',
+    });
+  }
+
   const classified = classify(usable, known);
   const files: PlannedFile[] = [];
   const slabByProduct = new Map<string, boolean>();
@@ -412,6 +546,8 @@ export const buildPlan = (
     const top = dirs[0] ?? '';
     const dir = dirs.join('/');
     const driveFileId = 'id' in c.file ? c.file.id : c.file.driveFileId;
+    // A copy of a photograph that is already a product elsewhere.
+    if (copyOf.has(driveFileId)) continue;
     const base = {
       driveFileId,
       md5: c.file.md5 ?? null,
@@ -483,20 +619,24 @@ export const buildPlan = (
     }
 
     // A range split per photograph with no finish sorting: each loose
-    // photograph is its own product, filed in the range itself.
-    const photoNoun = dirs.length === 1 ? SPLIT_PER_PHOTO.get(top.toUpperCase()) : undefined;
+    // photograph is its own product, filed in the range itself, or in its
+    // sub range when it sits in a folder of phone photographs there.
+    const photoNoun = dirs.length === 1 && perPhotoRanges.has(top)
+      ? photoNounFor(top)
+      : perPhotoSubDirs.has(dir) ? singularNoun(dirs[1]!) : undefined;
     if (photoNoun) {
       const ref = photoRef(filename);
-      const productPath = `${top}/${stem(filename).trim()}`;
+      const productPath = `${dir}/${stem(filename).trim()}`;
       const productName = `${photoNoun} ${ref}`;
-      const productSlug = claimSlug(slugify(productName), productPath, top);
+      const productSlug = claimSlug(slugify(productName), productPath, dirs[dirs.length - 1]!);
       const chain = chainFor(dirs);
-      photoByFolder.set(top, (photoByFolder.get(top) ?? 0) + 1);
-      if (!photoExample.has(top)) photoExample.set(top, productName);
+      const leaf = chain[chain.length - 1]!;
+      photoByFolder.set(dir, (photoByFolder.get(dir) ?? 0) + 1);
+      if (!photoExample.has(dir)) photoExample.set(dir, productName);
       files.push({
         ...base,
-        categorySlug: chain[0]!.slug,
-        categoryPath: top,
+        categorySlug: leaf.slug,
+        categoryPath: leaf.path,
         categoryChain: chain,
         productPath,
         productSlug,
@@ -646,7 +786,8 @@ export const buildPlan = (
         'is, except a phone or export name, which gets a placeholder such as "Gold Handle 34D0" to ' +
         'rename in the dashboard. Prices are entered in the dashboard. A second photograph of the ' +
         'same item joins it ' +
-        'when the filename repeats the name with a 2 after it.',
+        'when the filename repeats the name with a 2 after it. Any earlier single ' +
+        `"${titleise(dir.split('/').pop()!)}" product holding every photograph is unpublished.`,
     });
   }
 
@@ -666,15 +807,19 @@ export const buildPlan = (
   }
 
   for (const [folder, count] of photoByFolder) {
+    // What Beco would call one of them: "stone", "panel", "accessory".
+    const example = photoExample.get(folder)!;
+    const thing = (example.split(' ').slice(-2, -1)[0] ?? 'item').toLowerCase();
+    const leafName = titleise(folder.split('/').pop()!);
     issues.push({
       path: folder,
       reason:
         `The ${count} photograph(s) in "${folder}" carry phone names, so each is imported as its ` +
-        `own product, "${photoExample.get(folder)}" after its photo number, in ${titleise(folder)}. ` +
-        'Set each stone\'s name in the dashboard catalogue, which the import never undoes, and ' +
-        'delete repeat photographs of the same stone. (A photograph renamed in Drive after its ' +
-        `stone is also named after it on the next import.) The earlier single ` +
-        `"${titleise(folder)}" product is unpublished.`,
+        `own product, "${example}" after its photo number, in ${leafName}. ` +
+        `Set each ${thing}'s name in the dashboard catalogue, which the import never undoes, and ` +
+        `delete repeat photographs of the same ${thing}. (A photograph renamed in Drive after its ` +
+        `${thing} is also named after it on the next import.) The earlier single ` +
+        `"${leafName}" product is unpublished.`,
     });
   }
 
@@ -711,6 +856,7 @@ export const buildPlan = (
     })),
     finishFolders: [...finishByFolder].map(([folder, count]) => ({ folder, count })),
     photoFolders: [...photoByFolder].map(([folder, count]) => ({ folder, count })),
+    copies: [...copyCounts.values()],
     galleryFiles: [...looseByFolder]
       .filter(([f]) => NON_PRODUCT_FOLDERS.has(f.toUpperCase()))
       .reduce((n, [, c]) => n + c, 0),

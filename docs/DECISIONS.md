@@ -2308,6 +2308,20 @@ slug `gold-handle-34d0`, the way D122 names hinges. Every name Beco typed stays 
 typed: the import is Brightex's tool, and Beco rename items in the dashboard (Brown, 6 October).
 An existing row is never renamed (D54); a fresh environment gets the placeholder on first import.
 
+**Amended 7 October 2026: an item folder retires the umbrella it replaced.** Production still
+published `black-handles` (36 photographs), `gold-handles` (33), `knobs` (29) and `grey-handles`
+(19): single products the importer made of each whole folder before this decision, whose
+`source_path` is the folder itself. The item rule imported each handle and knob as its own
+product beside them, but only D122's finish and per photograph ranges retired the old umbrella.
+Now `umbrellaRetirements` in `run.ts` lists every folder the plan turns into several products,
+item folders included, and the run unpublishes the product whose `source_path` is that folder,
+never deletes it, with an issue recorded naming it. A folder with one file (`LEATHER HANDLES`)
+is not an item folder, stays one product and is left alone. The real Drive dry run on 7 October
+lists Black Handles (29 items from 36 files), Gold Handles (27 from 33), Grey Handles (17 from
+19) and Knobs (35 from 35), so the next import unpublishes those four. `WHITE HANDLES` holds
+`CODE: 711 WHITE` and `CODE: 761 WHITE`, which name one subject once the folder's words and
+the numbers are set aside, so it stays one product, as before.
+
 ## D105, 3 October 2026: the Drive import runs from the dashboard, through GitHub Actions
 
 Brown's instruction: the import had only ever been run by the agent on his own machine, and it
@@ -2870,6 +2884,48 @@ retires the hinge umbrella, and the issue asks Beco to name each stone in the da
 catalogue, where Beco manage their catalogue; the Drive import is Brightex's development tool.
 If a photograph is renamed in Drive after its stone, D104's item rule names the product after
 it and this path is not reached; a test holds that hand over. Name and category are set on first import only (D54).
+
+**Amended 7 October 2026: every range of phone photographs splits, and a copy imports once.**
+Brown found Bamboo Veneer Wall Panels live as one product with 31 photographs of different
+panels. Read from the real Drive, not assumed: six ranges were in the 15mm stones' state, every
+file a phone name and no subfolders, Bamboo Veneer Wall Panels (35 files), Kitchen Accessories
+(51), Office Accessories (27), Floating Shelf Accessories (25), Drawer rails (20) and Fluted Wall
+Panels (9). Rather than a seventh to twelfth entry in `SPLIT_PER_PHOTO`, `isPerPhotoRange` now
+splits a range unlisted when at least two photographs sit loose in it and every photograph
+anywhere under it is a phone or export name (`isExportName`). It only ever applies to a range:
+a range is a group of items, while a product folder can be one stone shot from several angles,
+so a product folder is never split by it, and a stone range always carries role named files.
+The noun comes from the range's name, `singularNoun`: "Bamboo Veneer Wall Panel 4580", slug
+`bamboo-veneer-wall-panel-4580`, "Kitchen Accessory 1011", "Drawer Rail 4160", filed directly in
+the range. `SPLIT_PER_PHOTO` stays to force a range that also holds named files and to set a
+noun. A range with a named file in it and no item folder stays one umbrella, as before.
+
+Finishes are not read for these. Drawer rails and floating shelf accessories are hardware, but
+finish sorting has been added a range at a time on Brown's go ahead (Hinges, then Door Locks and
+Furniture Legs), the reader still misreads mirror gold as silver, and drawer rails are near
+uniformly zinc, so a finish sub range would add a level holding one colour. Unsorted in the range
+is the safe default; adding either to `SPLIT_BY_FINISH` later moves only products not yet
+created, since an existing product's category is the dashboard's (D54).
+
+Kitchen Accessories holds every Drawer rails photograph again, byte identical (the same md5)
+under its own Drive id, uploaded on 22 September, a day before Beco made the Drawer rails folder,
+eleven of them two or three times. One photograph is now one product: among split folders, a
+photograph seen more than once is kept in the folder holding the fewest photographs, the
+narrower range Beco sorted it into, then by path, and within a folder the copy with the lowest
+Drive id, which is stable whatever order Drive lists files in. The other copies are left out and
+reported once per folder. Kitchen Accessories becomes 19 products, its 32 copies kept as the 20
+Drawer Rail products. Stone folders are never deduplicated. A folder of phone photographs nested
+inside a splitting range (`KITCHEN ACCESSORIES/DRAWER RAILS`) is a sub range split the same way,
+with the slug a top level folder would give, so moving the folder in Drive makes no second
+product; inside a range that does not split, or one with no loose photographs, it is a product
+folder, one product, as D104 has it.
+
+The real Drive dry run on 7 October, against the local stack's `import_files`: Bamboo Veneer
+Wall Panels 35 products, Kitchen Accessories 19, Office Accessories 27, Floating Shelf
+Accessories 25, Drawer rails 20, Fluted Wall Panels 9, 15mm Sintered Stones 5, each unpublishing
+its umbrella on the next import; 406 products in all, no slug claimed by two folders and no
+photograph in two products. Two photographs of one item still become two products, as for the
+hinges: the team deletes the repeat in the dashboard.
 
 ## D123, 5 October 2026: HEIC decodes on Linux, so the import button handles hardware
 

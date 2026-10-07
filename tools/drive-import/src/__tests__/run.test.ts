@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { finishPlacement, needsProcessing, productWriteFields, type ProductIdentity, type ProductPhotography } from '../run';
+import { finishPlacement, needsProcessing, productWriteFields, retirementReason, umbrellaRetirements, type ProductIdentity, type ProductPhotography } from '../run';
 import type { ImageEntry } from '../merge-images';
 
 /**
@@ -76,6 +76,27 @@ describe('finishPlacement, D122', () => {
       name: 'Hinge 1193',
       chain: [{ path: 'HINGES', slug: 'hinges', name: 'Hinges' }],
     });
+  });
+});
+
+describe('umbrellaRetirements and retirementReason', () => {
+  it('lists finish, per photograph and item folders, each with what replaced the umbrella', () => {
+    expect(umbrellaRetirements({
+      finishFolders: [{ folder: 'HINGES', count: 3 }],
+      photoFolders: [{ folder: 'BAMBOO VENEER WALL PANELS', count: 35 }],
+      itemFolders: [{ folder: 'HANDLES/KNOBS', items: 30, files: 35 }],
+    })).toEqual([
+      { folder: 'HINGES', replacedBy: 'photograph' },
+      { folder: 'BAMBOO VENEER WALL PANELS', replacedBy: 'photograph' },
+      { folder: 'HANDLES/KNOBS', replacedBy: 'item' },
+    ]);
+  });
+
+  it('names the product and the folder in the issue it records', () => {
+    const reason = retirementReason('Knobs', 'HANDLES/KNOBS', 'item');
+    expect(reason).toContain('"Knobs" held every photograph in "HANDLES/KNOBS" as one product');
+    expect(reason).toContain('Each item is now its own product, so it was unpublished');
+    expect(retirementReason('Hinges', 'HINGES', 'photograph')).toContain('Each photograph is now its own product');
   });
 });
 

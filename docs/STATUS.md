@@ -9,7 +9,7 @@ waiting on someone, `OPEN` known gap, deliberately named rather than rounded up.
 dashboard. Production was found running on the staging database and moved onto `beco-prod` the
 same day, D127. Live health: storefront and dashboard `/api/health` 200, database up. Since the
 release, on `dev`: one product per photograph for 15mm stones, dark metal finishes, export
-filenames, hardware wording (D122, D104 amendments), link previews (D126), the shop strip and
+filenames, hardware wording, every range of phone photographs split per photograph with copies imported once and the old handle umbrellas retired (D122, D104 amendments), link previews (D126), the shop strip and
 header across widths. **Open:** an end to end quote on production with its email, by Brown;
 `GITHUB_ACTIONS_TOKEN`; GitHub deploy secrets and the approval gate; staging reseed; the R2
 CORS and lifecycle rules; cron-job.org jobs; real phone QA.
@@ -224,7 +224,7 @@ below, unchanged: one product per folder, not one per real item.
 | Item | Asked | Blocks |
 |---|---|---|
 | Old beco.co.ke URL list | Not yet | M6 redirect map, **the largest ranking risk in the project** |
-| Eleven categories hold one umbrella product each rather than a real per-item catalogue, photos loose with no product subfolder: Door Locks, Furniture Legs, Kitchen Accessories, Hinges, Floating Shelf Accessories, Office Accessories, Bamboo Veneer Wall Panels, Drawer Rails, Fluted Wall Panels, Lights, 15mm Sintered Stones | Not yet | M4 breadth. Beco can now create a subfolder per real product directly, or ask Brightex; a subfolder rename is enough, no re-import needed beyond the next `drive:import` |
+| Eleven categories held one umbrella product each, photos loose with no product subfolder. On `dev` since 7 October every one now imports one product per photograph (D122 and its amendments), Lights stays retired (D103), and the old umbrellas, including the pre D104 handle ones, are unpublished on the next import. Production still shows the umbrellas until that import runs there | Not yet | M4 breadth. Beco can now create a subfolder per real product directly, or ask Brightex; a subfolder rename is enough, no re-import needed beyond the next `drive:import` |
 | `DELFONE 12MM` names 9 products inside one folder (Calacatta Macchia, Bosnia Grey, Bulgaria Black, Martha Brown, Staturio, Taj Mahal, Verde Lepanto, Verde, Statuario) and imports as one umbrella product | Not yet | M4 catalogue accuracy, and it is why Statuario and Taj Mahal read as unphotographed |
 | `HEIXIN 12MM` has 7 real product folders (Prada Green, Ink White, Hanting Jade, Appricot, Hermes Gold, Black Sandstone, Anakin) nested one level too deep, under `HEIXIN 12MM` instead of directly under the sintered stone category, so all 7 are skipped rather than imported wrong | Not yet | M4 catalogue accuracy across those 7 stones |
 | ~130 handle photographs (six real handle products already have their own folders) have filenames that do not say what they show, so every one imports with no role and sorts by filename rather than by shot type | Not yet | M4 catalogue accuracy across the Handles range |
