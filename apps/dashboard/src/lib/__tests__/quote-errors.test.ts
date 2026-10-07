@@ -21,6 +21,24 @@ describe('mutationMessage', () => {
     expect(mutationMessage({ code: 'P0002', message: 'Quote not found' })).toBe('That quote is no longer here.');
   });
 
+  it('says a line has gone, rather than that the quote has (D131)', () => {
+    expect(mutationMessage({ code: 'P0002', message: 'Line not found' })).toBe(
+      'That item is no longer on this quote. Reload to see the current list.',
+    );
+  });
+
+  it('passes the removal refusals through as written, they are already sentences (D131)', () => {
+    for (const message of [
+      'A quote needs at least one item. Mark it lost instead.',
+      'A won quote is closed',
+      'Reopen this quote to change its items',
+      'This quote is already an order. Its items are fixed.',
+      'Removing this item clears the approval. Move the quote back to reviewing first.',
+    ]) {
+      expect(mutationMessage({ code: 'P0001', message })).toBe(message);
+    }
+  });
+
   it('does not leak a permission-denied SQLSTATE as the UI copy', () => {
     expect(mutationMessage({ code: '42501', message: 'Not allowed' })).toMatch(/do not have permission/i);
   });

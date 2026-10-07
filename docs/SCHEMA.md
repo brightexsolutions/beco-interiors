@@ -239,6 +239,7 @@ the table only through `submit_quote`. `beco_editor` reads nothing. Tested in
 | `requires_approval` | boolean default false | D86. True when a line deviates from the catalogue (`unit_price <> list_price`) or is a priced custom line (`product_id is null`). Recomputed by a trigger on every `quote_items` change, never set by hand |
 | `approved_by`, `approved_at` | uuid FK users null, timestamptz null | Set only by `is_admin()`. Cleared automatically the moment the lines change again after approval |
 | `customer_id` | uuid FK customers null | D130. The client record. Set by `submit_quote`, `create_counter_quote` and `link_quote_customer`. The name, phone and email columns stay the quote's own snapshot and never follow the record |
+| `requested_items` | jsonb null | D131. What the website form submitted: `{source, at, lines: [{id, product_id, description, code, quantity}]}`, line ids matching the `quote_items` rows it wrote. Written once, in the insert, by `submit_quote`; the `quotes_keep_requested_items` trigger refuses any later change from every role, admins included. `source = 'backfill'` for web quotes submitted before migration 65: the lines as they stood on 7 October 2026, because no earlier edit was recorded. Null for a counter quote. A `check` holds the shape. Read through the quote's own RLS, so a salesperson sees it |
 
 **RLS.** Anonymous may `insert` only, through a rate limited server action. `beco_sales` reads
 all, writes only rows where it is `assigned_to` unless an admin reassigns. Reassignment is
@@ -267,6 +268,12 @@ the UI. See D86.
 Keeping `list_price` beside `unit_price` makes every discount measurable after the fact. D7
 still lets any `beco_sales` set any `unit_price`, so raising a quote never waits; D86 is what
 compares the two and gates FINALIZING one, not the pricing itself.
+
+**Removal is a hard delete** (no `deleted_at`: a soft deleted line would have to be filtered out
+of every total, PDF, email and convert). It goes through `remove_quote_line()` only in the
+dashboard, and the `quote_items_audit` trigger (migration 65, D131) writes the whole line into
+`audit_log.before`, so a removed line can always be read back and put back. The same trigger
+records every line insert and every quantity or price change, which nothing did before.
 
 ---
 
@@ -454,10 +461,12 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `is_brightex_user()` | D42: `role = 'brightex_admin'` **and** email in `settings.brightex_allowed_emails`. An explicit address list, not a domain suffix, because Brightex's addresses are gmail.com |
 | `current_user_role()` | Reads the caller's role for policies. Null for an inactive account |
 | `audit_trigger()` | Writes `audit_log` on insert, update and soft delete |
-| `submit_quote(...)` | The public quote write, one atomic transaction, `security definer`. Products, descriptions and prices resolved from the catalogue, never the request. Enforces the D68 half-slab rule per product. Links the quote to the customer with that phone, or creates one; never edits an existing customer (migration 64, D130) |
+| `submit_quote(...)` | The public quote write, one atomic transaction, `security definer`. Products, descriptions and prices resolved from the catalogue, never the request. Enforces the D68 half-slab rule per product. Links the quote to the customer with that phone, or creates one; never edits an existing customer (migration 64, D130). Writes `requested_items` with the lines in the same insert (migration 65, D131) |
 | `add_catalogue_quote_line(...)` | Dashboard. Adds a published product to an existing quote, snapshots name and `list_price`, optimistic lock. Unpublished or deleted products are refused |
 | `add_catalogue_quote_lines(...)` | Dashboard. Adds several published products under one lock so a second add cannot race `updated_at`. Unpublished or deleted products refuse the whole batch |
 | `update_quote_lines(...)` | Dashboard. Saves every dirty line in one lock so a second row cannot race `updated_at` |
+| `remove_quote_line(p_quote_id, p_line_id, p_expected_updated_at)` | Dashboard, D131. Takes one line off a quote and returns its description. Assigned salesperson or an admin, optimistic lock (`PT409`). Refuses a deleted quote, one that became an order, a won one ("A won quote is closed"), a lost one (reopen first), a line from another quote, and the last line ("A quote needs at least one item. Mark it lost instead."). On a quoted quote whose approval the removal would clear while it still deviates, refuses in words (D86). Totals from `refresh_quote_money`. Migration 65 |
+| `is_admin()` | True for an active `beco_admin` or `brightex_admin`. **False, never null**, for anyone else including a deactivated account (migration 66): a null here let a deactivated account past every `not is_admin()` guard |
 | `add_custom_quote_line(...)` | Dashboard. Adds a line with `product_id` null and a description snapshot |
 | `create_counter_quote(...)` | Dashboard. Walk-in or phone quote in one transaction. `created_by` and `assigned_to` are the salesperson. Refuses `web`. Takes `p_customer_id` since migration 64: with one, the quote snapshots that record's name, phone, email and company; without, the typed details are snapshotted and the quote links to or creates the customer with that number. A soft deleted customer is refused |
 | `claim_quote(...)` | Dashboard. Salesperson takes an unassigned quote. Optimistic lock |

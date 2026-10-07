@@ -9,6 +9,7 @@ import {
   setQuoteStatusSchema,
   updateQuoteLineSchema,
   updateQuoteLinesSchema,
+  removeQuoteLineSchema,
 } from '../dashboard-quote';
 
 const lock = {
@@ -181,5 +182,19 @@ describe('addCatalogueLinesSchema', () => {
         ],
       }).success,
     ).toBe(true);
+  });
+});
+
+describe('removeQuoteLineSchema', () => {
+  it('needs the line and the lock', () => {
+    expect(removeQuoteLineSchema.safeParse({ ...lock, lineId: '22222222-2222-4222-8222-222222222222' }).success).toBe(true);
+    expect(removeQuoteLineSchema.safeParse({ ...lock }).success).toBe(false);
+    expect(removeQuoteLineSchema.safeParse({ quoteId: lock.quoteId, updatedAt: '', lineId: lock.quoteId }).success).toBe(false);
+  });
+
+  it('refuses a line id that is not a uuid, with a sentence', () => {
+    const parsed = removeQuoteLineSchema.safeParse({ ...lock, lineId: 'line-1' });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) expect(parsed.error.issues[0]?.message).toBe('Pick the item to remove');
   });
 });

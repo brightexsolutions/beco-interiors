@@ -109,7 +109,12 @@ Adding a catalogue product or a custom line
 is blocked until those changes are saved. To add products that are already
 in the catalogue, open Add from catalogue, tick them, then add. That writes
 new lines through `add_catalogue_quote_lines` under one lock. Custom remains for something
-not listed. Assign to is a select: choosing a salesperson assigns
+not listed. Each row has a Remove (D131), confirmed in `ConfirmDialog`, written through
+`remove_quote_line`; on a phone it takes its own row under the price, on desktop it sits
+under the line amount rather than in a fifth column. When the lines cannot change, the
+reason is printed above them, never a silent read-only list: on an unassigned quote a
+salesperson is told to claim it, with Claim right there. A web quote whose lines differ
+from what the customer submitted carries a "Changed since the customer's request" note. Assign to is a select: choosing a salesperson assigns
 immediately. Do not add a Reassign button beside it. The list is Beco
 sales and Beco admin. A Brightex admin never appears. Status actions share
 one compact row. A lost quote offers Reopen, behind a ConfirmDialog, so a
