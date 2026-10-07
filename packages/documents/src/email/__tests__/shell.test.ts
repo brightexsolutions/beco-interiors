@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   attachmentNote,
@@ -238,6 +239,19 @@ describe('hero photograph (D109)', () => {
     process.env.STOREFRONT_URL = 'https://preview.example/';
     expect(emailHero('request').src).toBe('https://preview.example/email/hero-request.jpg');
     delete process.env.STOREFRONT_URL;
+  });
+
+  // The files themselves: a missing or oversized photograph shows as a broken
+  // image or a slow open in the customer's inbox, which no render test sees.
+  it.each(['request', 'quote', 'receipt'] as const)('ships hero-%s.jpg as a 1200 by 440 JPEG under 35KB', (kind) => {
+    const file = readFileSync(new URL(`../../../../../apps/storefront/public/email/hero-${kind}.jpg`, import.meta.url));
+    expect(file.length).toBeLessThan(35 * 1024);
+    expect(file.subarray(0, 2).toString('hex')).toBe('ffd8');
+    let i = 2;
+    while (i < file.length && !(file[i] === 0xff && file[i + 1]! >= 0xc0 && file[i + 1]! <= 0xc2)) {
+      i += 2 + file.readUInt16BE(i + 2);
+    }
+    expect([file.readUInt16BE(i + 7), file.readUInt16BE(i + 5)]).toEqual([1200, 440]);
   });
 });
 

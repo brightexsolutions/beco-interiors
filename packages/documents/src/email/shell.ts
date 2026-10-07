@@ -71,16 +71,16 @@ export interface EmailHero {
 
 /**
  * The photograph each template opens on. JPEG crops of the site's own
- * photography, 1200 by 440, under 35KB each, in `apps/storefront/public/email`.
+ * photography, each centred on the stone itself, 1200 by 440, under 35KB each, in `apps/storefront/public/email`.
  * Absolute, from the storefront's origin, because an email client cannot
  * resolve a relative path.
  */
 export const emailHero = (kind: 'request' | 'quote' | 'receipt'): EmailHero => {
   const site = siteUrl();
   const alts = {
-    request: 'A slatted wall panel behind a living room, finished by Beco',
-    quote: 'A charcoal sintered stone island in a Nairobi kitchen',
-    receipt: 'A floating vanity in bronze toned stone',
+    request: 'A pale stone bar counter meeting a grey stone worktop',
+    quote: 'A charcoal sintered stone island, its veined face close up',
+    receipt: 'A gold veined marble vanity top',
   };
   return { src: `${site}/email/hero-${kind}.jpg`, alt: alts[kind] };
 };
