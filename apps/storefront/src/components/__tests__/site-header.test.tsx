@@ -161,3 +161,15 @@ describe('SiteHeader wordmark', () => {
     expect(screen.getByText('Interiors', { selector: 'span' })).toHaveClass('sm:block', 'lg:hidden', 'xl:block');
   });
 });
+
+describe('SiteHeader About menu', () => {
+  it('sends Sintered stone to the Sintered Stone range page, not a sub range', () => {
+    mockPathname.mockReturnValue('/');
+    render(<SiteHeader />);
+    fireEvent.click(screen.getByRole('button', { name: /about/i }));
+    const items = screen.getAllByText(/^sintered stone$/i).map((el) => el.closest('a'));
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) expect(item).toHaveAttribute('href', '/shop/sintered-stone');
+  });
+});
+
