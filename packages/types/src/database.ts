@@ -1193,6 +1193,7 @@ export type Database = {
       }
       users: {
         Row: {
+          can_manage_users: boolean
           can_read_audit: boolean
           can_write_blog: boolean
           created_at: string
@@ -1212,6 +1213,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_manage_users?: boolean
           can_read_audit?: boolean
           can_write_blog?: boolean
           created_at?: string
@@ -1231,6 +1233,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_manage_users?: boolean
           can_read_audit?: boolean
           can_write_blog?: boolean
           created_at?: string
@@ -1396,6 +1399,7 @@ export type Database = {
       end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
       has_audit_read: { Args: never; Returns: boolean }
       has_blog_write: { Args: never; Returns: boolean }
+      has_staff_manage: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_brightex_user: { Args: never; Returns: boolean }
       link_quote_customer: {

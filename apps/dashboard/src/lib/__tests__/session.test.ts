@@ -67,7 +67,13 @@ describe('resolveSessionUser', () => {
       mustChangePassword: true,
       canWriteBlog: false,
       canReadAudit: false,
+      canManageUsers: false,
     });
+  });
+
+  it('carries the staff manage grant from the row (D135)', async () => {
+    const row = { role: 'beco_admin', is_active: true, must_change_password: false, email: 'i@beco.co.ke', can_manage_users: true };
+    expect((await resolveSessionUser(clientReturning(row), 'u1'))?.canManageUsers).toBe(true);
   });
 
   it('nulls the role for an inactive user, matching current_user_role() in Postgres', async () => {

@@ -10,8 +10,9 @@ import type { UserRole } from '@beco/types';
  * layer: it decides what a role SEES, never what it can touch.
  *
  * Blog / Studio is Brightex only (role plus the allowlist, D42). The
- * audit log is Brightex by default. A Brightex admin can assign
- * `can_read_audit` on another user; that grant travels on the session.
+ * audit log and the Users screen are Brightex by default. A Brightex admin
+ * can assign `can_read_audit` or `can_manage_users` (D135) on another user;
+ * those grants travel on the session.
  */
 
 const ADMINS = ['beco_admin', 'brightex_admin'] as const;
@@ -19,11 +20,12 @@ const ADMINS = ['beco_admin', 'brightex_admin'] as const;
 /** beco_admin or brightex_admin: the two roles that act above the counter (D110). */
 export const isAdminRole = (role: UserRole): boolean => (ADMINS as readonly UserRole[]).includes(role);
 
-export type StaffGrant = 'audit';
+export type StaffGrant = 'audit' | 'users';
 
 export interface AccessGrants {
   readonly canWriteBlog?: boolean;
   readonly canReadAudit?: boolean;
+  readonly canManageUsers?: boolean;
 }
 
 interface RouteRule {
@@ -53,7 +55,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/announcements', roles: [...ADMINS] },
   { prefix: '/reports', roles: [...ADMINS] },
   { prefix: '/leaderboard', roles: [...ADMINS] },
-  { prefix: '/users', roles: ['brightex_admin'] },
+  { prefix: '/users', roles: ['brightex_admin'], grant: 'users' },
   { prefix: '/settings', roles: [...ADMINS] },
   { prefix: '/launch', roles: ['brightex_admin'] },
   { prefix: '/studio', roles: ['brightex_admin'] },
@@ -96,6 +98,7 @@ export const ruleFor = (pathname: string): RouteRule | null => {
 
 const grantAllows = (rule: RouteRule, grants: AccessGrants): boolean => {
   if (rule.grant === 'audit') return Boolean(grants.canReadAudit);
+  if (rule.grant === 'users') return Boolean(grants.canManageUsers);
   return false;
 };
 
@@ -110,4 +113,5 @@ export const canAccess = (role: UserRole, pathname: string, grants: AccessGrants
 export const grantsFrom = (user: AccessGrants): AccessGrants => ({
   canWriteBlog: Boolean(user.canWriteBlog),
   canReadAudit: Boolean(user.canReadAudit),
+  canManageUsers: Boolean(user.canManageUsers),
 });

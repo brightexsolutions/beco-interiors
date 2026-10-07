@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { UserRole } from '@beco/types';
-import { ROLE_LANDING, canAccess, ruleFor } from '../access';
+import { ROLE_LANDING, canAccess, grantsFrom, ruleFor } from '../access';
 
 const ALL_ROLES: UserRole[] = [
   'beco_admin',
@@ -44,6 +44,19 @@ describe('canAccess: the dashboard route/role matrix', () => {
     expect(canAccess('beco_sales', '/studio/blog', { canWriteBlog: true })).toBe(false);
     expect(canAccess('beco_sales', '/audit', { canReadAudit: true })).toBe(true);
     expect(canAccess('beco_admin', '/audit')).toBe(false);
+  });
+
+  it('opens Users to a granted Beco person and nothing else besides (D135)', () => {
+    const grants = { canManageUsers: true };
+    expect(canAccess('beco_admin', '/users')).toBe(false);
+    expect(canAccess('beco_admin', '/users', grants)).toBe(true);
+    expect(canAccess('beco_sales', '/users/new', grants)).toBe(true);
+    expect(canAccess('beco_admin', '/audit', grants)).toBe(false);
+    expect(canAccess('beco_admin', '/products/import', grants)).toBe(false);
+    expect(canAccess('beco_admin', '/launch', grants)).toBe(false);
+    expect(canAccess('beco_admin', '/users', { canReadAudit: true })).toBe(false);
+    expect(grantsFrom({ canManageUsers: true }).canManageUsers).toBe(true);
+    expect(grantsFrom({}).canManageUsers).toBe(false);
   });
 
   it('does not match a prefix that is only a partial path segment', () => {

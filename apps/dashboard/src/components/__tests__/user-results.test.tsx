@@ -51,9 +51,9 @@ beforeEach(() => {
 describe('UserResults', () => {
   it('keeps the open user sheet mounted across an updatedAt change, every action in it bumps that (D117)', () => {
     editorMounts.mockClear();
-    const { rerender } = render(<UserResults users={[user()]} viewing={user()} creating={false} viewerId="brightex-1" />);
+    const { rerender } = render(<UserResults users={[user()]} viewing={user()} creating={false} viewerId="brightex-1" viewerRole="brightex_admin" />);
     const bumped = user({ updatedAt: '2026-10-04T12:00:00.000Z' });
-    rerender(<UserResults users={[bumped]} viewing={bumped} creating={false} viewerId="brightex-1" />);
+    rerender(<UserResults users={[bumped]} viewing={bumped} creating={false} viewerId="brightex-1" viewerRole="brightex_admin" />);
     expect(editorMounts).toHaveBeenCalledTimes(1);
   });
 
@@ -71,7 +71,7 @@ describe('UserResults', () => {
         ]}
         viewing={null}
         creating={false}
-        viewerId="brightex-1"
+        viewerId="brightex-1" viewerRole="brightex_admin"
       />,
     );
     expect(screen.getAllByRole('columnheader', { name: 'Actions' }).length).toBeGreaterThan(0);
@@ -82,7 +82,7 @@ describe('UserResults', () => {
   it('opens the detail sheet from the user query, not a quote-style card heading', () => {
     params = new URLSearchParams('user=11111111-1111-4111-8111-111111111111');
     render(
-      <UserResults users={[user()]} viewing={user()} creating={false} viewerId="brightex-1" />,
+      <UserResults users={[user()]} viewing={user()} creating={false} viewerId="brightex-1" viewerRole="brightex_admin" />,
     );
     expect(screen.getByRole('dialog', { name: 'Sam Odhiambo' })).toBeInTheDocument();
     expect(screen.getByText('Viewing Sam Odhiambo')).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe('UserResults', () => {
 
   it('has no accessibility violations', async () => {
     const { container } = render(
-      <UserResults users={[user()]} viewing={null} creating={false} viewerId="brightex-1" />,
+      <UserResults users={[user()]} viewing={null} creating={false} viewerId="brightex-1" viewerRole="brightex_admin" />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });

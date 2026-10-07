@@ -11,14 +11,14 @@ import {
   setStaffRoleSchema,
   uploadStaffPhotoSchema,
 } from '@beco/validation';
-import { requirePath } from '@/lib/session';
+import { requirePath, type ActiveSession } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { getServiceSupabase } from '@/lib/supabase-admin';
 import { processProductPhoto } from '@/lib/product-photo';
 import { readPhotoUpload } from '@/lib/photo-source';
 import { deleteProductDerivatives, isProductStorageConfigured, uploadProductDerivatives } from '@/lib/product-storage';
 import { revalidateStorefrontPaths } from '@/lib/storefront-revalidate';
-import { generateIssuedPassword, parseStaffPublicPhoto, userMutationMessage } from '@/lib/users';
+import { canManageAccount, generateIssuedPassword, parseStaffPublicPhoto, userMutationMessage } from '@/lib/users';
 
 export interface UserActionState {
   error?: string;
@@ -37,6 +37,22 @@ const refreshUsersAndTeam = async () => {
   await revalidateStorefrontPaths(['/team', '/']);
 };
 
+const BRIGHTEX_ONLY = 'Only Brightex manages a Brightex account.';
+
+/**
+ * D135: a Beco person holding the staff grant never acts on a Brightex
+ * account. RLS refuses the row write, but creating a login and reissuing a
+ * password go through the service role, which RLS never sees, so every
+ * action asks here first. Brightex itself skips the read.
+ */
+const refuseBrightexTarget = async (session: ActiveSession, userId: string): Promise<string | null> => {
+  if (session.role === 'brightex_admin') return null;
+  const supabase = await getSupabase();
+  const { data } = await supabase.from('users').select('role').eq('id', userId).maybeSingle();
+  if (!data) return 'That account is gone. Reload the list.';
+  return canManageAccount(session.role, data.role) ? null : BRIGHTEX_ONLY;
+};
+
 export async function createStaffUser(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
   const parsed = createStaffUserSchema.safeParse({
@@ -47,6 +63,8 @@ export async function createStaffUser(_prev: UserActionState, form: FormData): P
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Check the form, then try again.' };
   }
+  // Before the service role creates the login, which RLS never sees.
+  if (!canManageAccount(session.role, parsed.data.role)) return { error: BRIGHTEX_ONLY };
 
   const password = generateIssuedPassword();
   let admin;
@@ -98,6 +116,9 @@ export async function setStaffRole(_prev: UserActionState, form: FormData): Prom
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Reload and try again.' };
   if (parsed.data.userId === session.userId) return { error: 'You cannot change your own role.' };
+  if (!canManageAccount(session.role, parsed.data.role)) return { error: BRIGHTEX_ONLY };
+  const refused = await refuseBrightexTarget(session, parsed.data.userId);
+  if (refused) return { error: refused };
 
   const patch: { role: typeof parsed.data.role; updated_at: string; is_public?: boolean } = {
     role: parsed.data.role,
@@ -129,6 +150,8 @@ export async function setStaffActive(_prev: UserActionState, form: FormData): Pr
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Reload and try again.' };
   if (parsed.data.userId === session.userId) return { error: 'You cannot deactivate your own account.' };
+  const refused = await refuseBrightexTarget(session, parsed.data.userId);
+  if (refused) return { error: refused };
 
   const supabase = await getSupabase();
   const { data, error } = await supabase
@@ -167,6 +190,9 @@ export async function resetStaffPassword(_prev: UserActionState, form: FormData)
   if (parsed.data.userId === session.userId) {
     return { error: 'Change your own password from the account menu.' };
   }
+  // Before the service role reissues the password, which RLS never sees.
+  const refused = await refuseBrightexTarget(session, parsed.data.userId);
+  if (refused) return { error: refused };
 
   const password = generateIssuedPassword();
   let admin;
@@ -201,7 +227,7 @@ export async function resetStaffPassword(_prev: UserActionState, form: FormData)
 }
 
 export async function saveStaffPublicProfile(_prev: UserActionState, form: FormData): Promise<UserActionState> {
-  await requirePath('/users');
+  const session = await requirePath('/users');
   const parsed = saveStaffPublicProfileSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -210,6 +236,8 @@ export async function saveStaffPublicProfile(_prev: UserActionState, form: FormD
     publicPhone: formString(form, 'publicPhone'),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Check the form, then try again.' };
+  const refused = await refuseBrightexTarget(session, parsed.data.userId);
+  if (refused) return { error: refused };
 
   const supabase = await getSupabase();
   const current = await supabase
@@ -245,13 +273,15 @@ export async function saveStaffPublicProfile(_prev: UserActionState, form: FormD
 }
 
 export async function uploadStaffPhoto(_prev: UserActionState, form: FormData): Promise<UserActionState> {
-  await requirePath('/users');
+  const session = await requirePath('/users');
   const parsed = uploadStaffPhotoSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
     alt: formString(form, 'alt'),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Check the photograph, then try again.' };
+  const refused = await refuseBrightexTarget(session, parsed.data.userId);
+  if (refused) return { error: refused };
 
   const photo = await readPhotoUpload(form);
   if (photo.error !== undefined) return { error: photo.error };
@@ -315,12 +345,14 @@ export async function uploadStaffPhoto(_prev: UserActionState, form: FormData): 
 }
 
 export async function removeStaffPhoto(_prev: UserActionState, form: FormData): Promise<UserActionState> {
-  await requirePath('/users');
+  const session = await requirePath('/users');
   const parsed = removeStaffPhotoSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Reload and try again.' };
+  const refused = await refuseBrightexTarget(session, parsed.data.userId);
+  if (refused) return { error: refused };
 
   const supabase = await getSupabase();
   const current = await supabase

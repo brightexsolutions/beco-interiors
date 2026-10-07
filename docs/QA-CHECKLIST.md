@@ -548,7 +548,7 @@ Every operations role reads it: `beco_sales`, `beco_product_manager`, `beco_admi
 
 ### `/users`
 
-`brightex_admin` only (`beco.brightex.dev@gmail.com`). D38 lookup: reduced-column table plus a detail sheet, not quote-style cards. Product manager cannot load this route.
+`brightex_admin`, plus any Beco person Brightex has granted `can_manage_users` (D135), who works on Beco accounts only. D38 lookup: reduced-column table plus a detail sheet, not quote-style cards. Product manager cannot load this route.
 
 | Control | What it does | Status |
 |---|---|---|
@@ -566,6 +566,7 @@ Every operations role reads it: `beco_sales`, `beco_product_manager`, `beco_admi
 | Upload / replace photograph | JPEG, PNG or WebP up to 12MB, direct to R2 with a percentage on the button (D116). 400/800/1600 webp on R2. Preview loads from dashboard `/api/img`. Busts storefront `/team` | Test: `UserEditor`, `uploadStaffPhoto`, `readPhotoUpload`, img route |
 | Remove photograph | ConfirmDialog names the person. Deletes the R2 objects | Test: `UserEditor`, `removeStaffPhoto` |
 | Product manager at `/users` | Proxy bounces to `/products` | `access.test.ts`. **Server** still to walk as Aisha |
+| Granted Beco person at `/users` (D135) | Loads. Role select offers Beco roles only. A Brightex row opens read only: "Brightex manages this account.", no role select, no Deactivate, no Reset password, no website listing | Test: `UserEditor`, `UserCreate`, `access.test.ts`, holder cases in `users/actions.test.ts`; pgTAP `45`. **Server NOT WALKED** as a granted account |
 
 ### `/announcements`
 
@@ -633,6 +634,7 @@ D110: as `beco_admin` the Studio tab and the Brightex allowlist are absent and a
 | Save settings | Title row, right. Writes VAT, validity, SLA, bank, till, paybill, send money, terms, footer, WhatsApp, phone, recipients, Brightex allowlist | Test: `SettingsForm`, `saveDashboardSettings`. Integration against local Postgres |
 | Anniversary launch | Title row, right. Brightex only. Navigates to `/launch` | Test: `SettingsForm`. Irene does not see it |
 | Allow audit / Remove audit | Brightex only. ConfirmDialog names the person. Sets `can_read_audit` | Test: `SettingsGrants`. pgTAP `28` |
+| Allow staff / Remove staff (D135) | Brightex only. Not drawn on a Brightex row. ConfirmDialog names the person and says Brightex accounts stay out of reach. Sets `can_manage_users`; the Users item appears in their nav on the next load | Test: `SettingsGrants`, `setStaffGrant`; pgTAP `45`. **Server NOT WALKED** |
 | Product manager or sales at `/settings` | Proxy bounces | `access.test.ts`, `proxy.test.ts` |
 
 ### `/studio/blog`

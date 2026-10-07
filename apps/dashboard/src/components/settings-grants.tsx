@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { startTransition, useActionState, useState } from 'react';
 import { ConfirmDialog, FormSection, Spinner, useActionToast } from '@beco/ui';
 import { setStaffGrant, type SettingsActionState } from '@/app/(app)/settings/actions';
 import type { GrantStaffRow } from '@/lib/settings';
@@ -15,6 +15,15 @@ const GRANT_COPY = {
     removeTitle: 'Remove audit access',
     allowBody: (name: string) => `${name} will be able to read the audit log.`,
     removeBody: (name: string) => `${name} will no longer see the audit log.`,
+  },
+  can_manage_users: {
+    allow: 'Allow staff',
+    remove: 'Remove staff',
+    allowTitle: 'Allow staff management',
+    removeTitle: 'Remove staff management',
+    allowBody: (name: string) =>
+      `${name} will be able to add Beco staff, change their roles, deactivate them and reissue passwords. Brightex accounts and these permissions stay with Brightex.`,
+    removeBody: (name: string) => `${name} will no longer manage staff accounts.`,
   },
 } as const;
 
@@ -56,7 +65,8 @@ function GrantButton({
           form.set('userId', person.id);
           form.set('grant', grant);
           form.set('enabled', enabled ? 'false' : 'true');
-          submit(form);
+          // Inside a transition, so `pending` drives the spinner.
+          startTransition(() => submit(form));
         }}
       />
     </>
@@ -67,7 +77,7 @@ export function SettingsGrants({ staff, viewerId }: { staff: GrantStaffRow[]; vi
   const others = staff.filter((row) => row.id !== viewerId);
 
   return (
-    <FormSection hint="The audit log is Brightex by default. Assign read access to a named person. Studio stays Brightex only.">
+    <FormSection hint="Brightex by default. Audit reads the log. Staff adds and manages Beco accounts. Studio stays Brightex only.">
       {others.length === 0 ? (
         <p className="font-ui text-base text-neutral-500">No other active accounts to assign.</p>
       ) : (
@@ -80,6 +90,9 @@ export function SettingsGrants({ staff, viewerId }: { staff: GrantStaffRow[]; vi
               </div>
               <div className="flex flex-wrap items-center gap-1">
                 <GrantButton person={person} grant="can_read_audit" enabled={person.canReadAudit} />
+                {person.role === 'brightex_admin' ? null : (
+                  <GrantButton person={person} grant="can_manage_users" enabled={person.canManageUsers} />
+                )}
               </div>
             </li>
           ))}

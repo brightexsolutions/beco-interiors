@@ -25,6 +25,7 @@ export interface SessionUser {
   mustChangePassword: boolean;
   canWriteBlog: boolean;
   canReadAudit: boolean;
+  canManageUsers: boolean;
 }
 
 /** A signed-in user whose account is active: `role` is known to be set. */
@@ -45,7 +46,7 @@ export const resolveSessionUser = async (
 ): Promise<SessionUser | null> => {
   const { data } = await supabase
     .from('users')
-    .select('role, is_active, must_change_password, email, full_name, can_write_blog, can_read_audit')
+    .select('role, is_active, must_change_password, email, full_name, can_write_blog, can_read_audit, can_manage_users')
     .eq('id', userId)
     .maybeSingle();
   if (!data) return null;
@@ -59,6 +60,7 @@ export const resolveSessionUser = async (
     mustChangePassword: data.must_change_password,
     canWriteBlog: Boolean(data.can_write_blog),
     canReadAudit: Boolean(data.can_read_audit),
+    canManageUsers: Boolean(data.can_manage_users),
   };
 };
 

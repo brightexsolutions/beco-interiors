@@ -34,7 +34,7 @@ export function AppShell({
   newQuotes?: number;
   children: React.ReactNode;
 }) {
-  const grants = { canWriteBlog: user.canWriteBlog, canReadAudit: user.canReadAudit };
+  const grants = { canWriteBlog: user.canWriteBlog, canReadAudit: user.canReadAudit, canManageUsers: user.canManageUsers };
   const items = navItemsFor(user.role, grants);
   const groups = navGroupsFor(user.role, grants);
   const bottom = bottomNavFor(user.role, grants);

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import { Button, Field, FormSection, Input, Select, toast, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { createStaffUser, type UserActionState } from '@/app/(app)/users/actions';
+import type { UserRole } from '@beco/types';
 import { STAFF_ROLE_LABEL, STAFF_ROLES } from '@/lib/users';
 
 const INITIAL: UserActionState = {};
@@ -36,10 +37,10 @@ function IssuedSecret({ password }: { password: string }) {
   );
 }
 
-export function UserCreate() {
+export function UserCreate({ roles = STAFF_ROLES }: { roles?: readonly UserRole[] }) {
   const [state, create, pending] = useActionState(createStaffUser, INITIAL);
   const onCreateSubmit = useKeepValuesSubmit(create);
-  const [role, setRole] = useState<(typeof STAFF_ROLES)[number]>('beco_sales');
+  const [role, setRole] = useState<UserRole>('beco_sales');
   useActionToast(state);
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export function UserCreate() {
           </Field>
           <Field label="Role" htmlFor="new-role">
             <Select id="new-role" name="role" value={role} onChange={(event) => setRole(event.target.value as typeof role)}>
-              {STAFF_ROLES.map((value) => (
+              {roles.map((value) => (
                 <option key={value} value={value}>
                   {STAFF_ROLE_LABEL[value]}
                 </option>

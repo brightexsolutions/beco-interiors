@@ -24,6 +24,11 @@ describe('UserCreate', () => {
     expect(createStaffUser).toHaveBeenCalled();
   });
 
+  it('offers only the roles it is given, so a Beco holder never sees Brightex admin (D135)', () => {
+    render(<UserCreate roles={['beco_admin', 'beco_sales']} />);
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['Beco admin', 'Sales']);
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<UserCreate />);
     expect(await axe(container)).toHaveNoViolations();
