@@ -180,10 +180,11 @@ for a role that cannot use it.
 | Announcements, reports, the leaderboard | no | no | yes | yes |
 | Business identity, KRA, payment details, notifications | no | no | yes | yes |
 | **The Brightex allowlist** (D42) | no | no | **no** | yes |
-| Staff accounts: create, role, deactivate, reset | no | no | no | yes |
-| Grant blog or audit access to a Beco user | no | no | no | yes |
-| Audit log | no | no | if granted | yes |
-| Studio blog | no | no | if granted | yes |
+| Staff accounts: create, role, deactivate, reset, Beco accounts only (D135) | if granted | if granted | if granted | yes |
+| Create, edit or deactivate a Brightex account | no | no | **no, even if granted** | yes |
+| Grant audit or staff access to a Beco user | no | no | no | yes |
+| Audit log | if granted | if granted | if granted | yes |
+| Studio blog | no | no | no | yes |
 | Anniversary launch switch | no | no | no | yes |
 
 "own" means the quotes and orders assigned to that salesperson; the database functions check

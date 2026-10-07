@@ -55,6 +55,7 @@ export interface GrantStaffRow {
   role: string;
   canWriteBlog: boolean;
   canReadAudit: boolean;
+  canManageUsers: boolean;
 }
 
 export const settingText = (value: unknown): string => {
@@ -110,7 +111,7 @@ export async function fetchDashboardSettings(supabase: SupabaseClient): Promise<
 export async function fetchGrantStaff(supabase: SupabaseClient): Promise<GrantStaffRow[]> {
   const { data } = await supabase
     .from('users')
-    .select('id, email, full_name, role, can_write_blog, can_read_audit, is_active')
+    .select('id, email, full_name, role, can_write_blog, can_read_audit, can_manage_users, is_active')
     .eq('is_active', true)
     .order('full_name');
   return (data ?? []).map((row) => ({
@@ -120,6 +121,7 @@ export async function fetchGrantStaff(supabase: SupabaseClient): Promise<GrantSt
     role: row.role,
     canWriteBlog: row.can_write_blog,
     canReadAudit: row.can_read_audit,
+    canManageUsers: row.can_manage_users,
   }));
 }
 

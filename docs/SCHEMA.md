@@ -56,6 +56,7 @@ created them.
 | `is_public` | boolean default false | Storefront `/team` only. Check `users_only_sales_are_public` refuses the flag on any role but `beco_sales` |
 | `can_write_blog` | boolean default false | Kept on the row. Does not open Studio. Write is `is_brightex_user()` |
 | `can_read_audit` | boolean default false | Brightex assigns this. Role `brightex_admin` already reads `/audit` |
+| `can_manage_users` | boolean default false | Brightex assigns this (D135). Opens `/users` for Beco accounts only: add, role, deactivate, reset, /team listing. Never a Brightex row, never a grant |
 | `public_title`, `public_phone` | text null | Shown on `/team` |
 | `public_photo` | jsonb null | Catalogue stem plus alt, width, height, blur. Derivatives at 400/800/1600 webp on R2 |
 | `sort_order` | int | `/team` listing order |
@@ -547,6 +548,7 @@ See D46 and `docs/ARCHITECTURE.md` section 17.
   customers: soft delete is admins only, hard delete nobody (D130)
   +   reads all, writes only its own unless an admin reassigns
   Audit read also opens to a user Brightex has granted `can_read_audit`.
+  users writes also open to `has_staff_manage()` (D135): Beco rows only, a new row with no grant.
   Studio / blog write is `is_brightex_user()` only.
 ```
 

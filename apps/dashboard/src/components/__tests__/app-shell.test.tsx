@@ -16,6 +16,7 @@ const admin: ActiveSession = {
   mustChangePassword: false,
   canWriteBlog: false,
   canReadAudit: false,
+  canManageUsers: false,
 };
 
 describe('AppShell', () => {

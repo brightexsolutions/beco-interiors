@@ -91,4 +91,11 @@ describe('setStaffGrantSchema', () => {
     expect(parsed.success).toBe(true);
     if (parsed.success) expect(parsed.data.enabled).toBe(true);
   });
+
+  it('accepts staff management and refuses a grant that does not exist (D135)', () => {
+    const base = { userId: '11111111-1111-4111-8111-111111111111', enabled: 'true' };
+    expect(setStaffGrantSchema.safeParse({ ...base, grant: 'can_manage_users' }).success).toBe(true);
+    expect(setStaffGrantSchema.safeParse({ ...base, grant: 'role' }).success).toBe(false);
+    expect(setStaffGrantSchema.safeParse({ ...base, grant: 'can_write_blog' }).success).toBe(false);
+  });
 });

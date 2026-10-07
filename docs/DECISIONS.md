@@ -3530,3 +3530,36 @@ phone it moves to `right-2` and the line is inset 20px either side so the two ne
 *Reverses if:* Beco wants the full text of a long announcement readable without motion, at
 which point the answer is a shorter announcement or a page the call to action opens, not a taller
 bar.
+
+## D135, 7 October 2026: Brightex can grant a named Beco person staff management
+
+Asked by Brown: a way, as Brightex admin, to give a Beco user more access, naming Irene, to read
+the audit log and to add users. Audit read was already a grant (`can_read_audit`, migration 46,
+Settings, Permissions). Adding users was `brightex_admin` only, at the route, in RLS and in the
+actions.
+
+**A second grant, not a role.** `users.can_manage_users`, assigned by an allowlisted Brightex
+admin from the same Permissions tab, beside Allow audit. D110 held that a role is cheap to add and
+expensive to retire, and said a widened power should arrive as a grant like audit read. This is
+that case. Removing it is one switch, and the person keeps their own role.
+
+**What it opens.** `/users`, for Beco accounts: add one, change its role among the four Beco
+roles, deactivate or reactivate it, reissue its password, edit its /team listing and photograph.
+
+**What it never opens.** A Brightex account: the holder sees the row, so the list is whole, but it
+opens read only. Creating a Brightex admin or promoting anyone into Brightex. Assigning either
+grant, to anyone, themselves included. Changing their own role or deactivating themselves.
+Deleting an account, which nobody does.
+
+**Enforced three times.** RLS: `has_staff_manage()` drives a read policy, an insert policy that
+refuses a Brightex role or any grant on the new row, and an update policy that keeps a Brightex
+row out of reach both before and after. The guard trigger refuses grant changes from anyone but
+Brightex and now holds the self rules for every holder, because policies are OR'd and the
+manager policy would otherwise reach past the self pin. `end_user_sessions` accepts a holder for a
+Beco account only. In the actions: creating a login and reissuing a password go through the
+service role, which RLS never sees, so each action checks the target before that call. The route
+map gives `/users` a `users` grant, the way `/audit` has one.
+
+*Reverses if:* Beco wants a holder to manage Brightex accounts, which would mean Beco can lock
+Brightex out. The ownership split (`docs/OWNERSHIP.md`) puts the data on Beco's accounts, so that
+is a handover decision, not a permission switch.

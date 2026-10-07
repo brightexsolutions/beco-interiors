@@ -39,6 +39,7 @@ const user = (
   mustChangePassword: false,
   canWriteBlog: false,
   canReadAudit: false,
+  canManageUsers: false,
   ...over,
 });
 

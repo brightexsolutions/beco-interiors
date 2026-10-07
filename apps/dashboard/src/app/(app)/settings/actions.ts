@@ -113,11 +113,14 @@ export async function setStaffGrant(
     return { error: parsed.error.issues[0]?.message ?? 'Check the form, then try again.' };
   }
   if (parsed.data.userId === session.userId) {
-    return { error: 'Your own Brightex role already carries both permissions.' };
+    return { error: 'Your own Brightex role already carries every permission.' };
   }
 
   const supabase = await getSupabase();
-  const patch = { can_read_audit: parsed.data.enabled };
+  const patch =
+    parsed.data.grant === 'can_manage_users'
+      ? { can_manage_users: parsed.data.enabled }
+      : { can_read_audit: parsed.data.enabled };
   const { data, error } = await supabase
     .from('users')
     .update(patch)
@@ -129,6 +132,6 @@ export async function setStaffGrant(
 
   revalidatePath('/settings');
   const verb = parsed.data.enabled ? 'can' : 'can no longer';
-  const what = 'read the audit log';
+  const what = parsed.data.grant === 'can_manage_users' ? 'manage Beco staff accounts' : 'read the audit log';
   return { ok: `${data.full_name} ${verb} ${what}.` };
 }

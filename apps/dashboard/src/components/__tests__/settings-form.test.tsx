@@ -52,6 +52,7 @@ const sam: GrantStaffRow = {
   role: 'beco_sales',
   canWriteBlog: false,
   canReadAudit: false,
+  canManageUsers: false,
 };
 
 beforeEach(() => {
