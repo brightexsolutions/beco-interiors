@@ -103,6 +103,26 @@ export const needsProcessing = (file: Pick<PlannedFile, 'needsDownload'>, produc
   file.needsDownload || !productExists;
 
 /**
+ * Every Drive folder whose photographs the plan turns into several products,
+ * so any single product an earlier run made of that whole folder (its
+ * `source_path` is the folder itself) is unpublished. Ranges split by finish
+ * or per photograph, D122, and since 7 October item folders, D104: the
+ * `black-handles`, `gold-handles`, `grey-handles` and `knobs` umbrellas from
+ * before D104 were still published beside the handles that replaced them.
+ */
+export const umbrellaRetirements = (
+  plan: Pick<ImportPlan, 'finishFolders' | 'photoFolders' | 'itemFolders'>,
+): Array<{ folder: string; replacedBy: 'photograph' | 'item' }> => [
+  ...[...plan.finishFolders, ...plan.photoFolders].map(({ folder }) => ({ folder, replacedBy: 'photograph' as const })),
+  ...plan.itemFolders.map(({ folder }) => ({ folder, replacedBy: 'item' as const })),
+];
+
+/** The issue recorded against an umbrella product as it is unpublished. */
+export const retirementReason = (name: string, folder: string, replacedBy: 'photograph' | 'item'): string =>
+  `"${name}" held every photograph in "${folder}" as one product. Each ${replacedBy} is now its ` +
+  'own product, so it was unpublished. Delete it in the dashboard once the new products are checked.';
+
+/**
  * Creates every category folder the plan names, parents first, and returns
  * source_path to id. A new sub range whose derived slug is already taken by
  * another folder ("BLACK" under both HANDLES and KNOBS) gets its parent's
@@ -189,11 +209,12 @@ export const executePlan = async (
   // where a range is filed is the dashboard's decision once it exists.
   const catId = await ensureCategories(sb, plan.files.map((f) => f.categoryChain));
 
-  // A range now split by finish used to import as ONE product holding every
-  // photograph. That product is superseded, so it comes off the site rather
-  // than sitting beside the products that replace it. Unpublished, never
-  // deleted: the dashboard can bring it back, and nothing else is touched.
-  for (const { folder } of [...plan.finishFolders, ...plan.photoFolders]) {
+  // A folder now split into one product per photograph or per item used to
+  // import as ONE product holding every photograph. That product is
+  // superseded, so it comes off the site rather than sitting beside the
+  // products that replace it. Unpublished, never deleted: the dashboard can
+  // bring it back, and nothing else is touched.
+  for (const { folder, replacedBy } of umbrellaRetirements(plan)) {
     const { data: retired } = await sb
       .from('products')
       .update({ is_published: false })
@@ -204,12 +225,9 @@ export const executePlan = async (
       await sb.from('import_issues').insert({
         run_id: runId,
         path: folder,
-        reason:
-          `"${row.name as string}" held every photograph in "${folder}" as one product. Each ` +
-          'photograph is now its own product, so it was unpublished. Delete it in the dashboard ' +
-          'once the new products are checked.',
+        reason: retirementReason(row.name as string, folder, replacedBy),
       });
-      log(`  UNPUBLISHED  ${row.name as string}, replaced by one product per photograph`);
+      log(`  UNPUBLISHED  ${row.name as string}, replaced by one product per ${replacedBy}`);
     }
   }
 

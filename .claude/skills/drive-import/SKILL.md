@@ -52,8 +52,9 @@ never guessed into a role.**
 |---|---|
 | `CATEGORY/PRODUCT/photos` | A range and its products, the original convention |
 | `CATEGORY/SUB RANGE/PRODUCT/photos` | A sub range under the range, its products under it. `HEIXIN 12MM` |
-| `CATEGORY/SUB RANGE/one photo per item` | Every file names its own item (`B762 BLACK`, `HT-8350 BLACK GOLD`), so each becomes a product and the folder becomes a sub range. `BLACK HANDLES` |
-| `CATEGORY/photos` | Camera named files with no product folder: one umbrella product, reported |
+| `CATEGORY/SUB RANGE/one photo per item` | Every file names its own item (`B762 BLACK`, `HT-8350 BLACK GOLD`), so each becomes a product and the folder becomes a sub range. `BLACK HANDLES`. Any older single product of the whole folder is unpublished |
+| `CATEGORY/photos`, every file a phone name | D122, 7 October: each photograph is its own product, `Bamboo Veneer Wall Panel 4580`, filed in the range, the noun from the range name (`SPLIT_PER_PHOTO` overrides it). A folder of phone photographs inside such a range is a sub range split the same way. A byte identical copy (same md5) is imported once, in the folder holding fewer photographs. The old umbrella product is unpublished |
+| `CATEGORY/photos`, some named | Not every file a phone name and not an item folder: one umbrella product, reported |
 | `HINGES/photos`, `DOOR LOCKS/photos`, `FURNITURE LEGS/photos` | A range in `SPLIT_BY_FINISH`, D122: each camera named photo is its own product, `Hinge 1193`, filed under `Black Hinges`, `Silver Hinges` and so on by the finish `readFinish` reads from its pixels at run time. No clear finish stays in the range. The old umbrella product is unpublished |
 | Deeper than two folders below a range | Reported and skipped. The site shows three levels, no more |
 
