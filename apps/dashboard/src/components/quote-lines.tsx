@@ -1,12 +1,32 @@
 'use client';
 
-import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { Button, Field, Input, QuantityStepper, StatusPill, useActionToast, useKeepValuesSubmit } from '@beco/ui';
-import { addCatalogueLines, addCustomLine, updateQuoteLines, type QuoteActionState } from '@/app/(app)/quotes/actions';
+import { useActionState, useEffect, useId, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
+import {
+  Button,
+  ConfirmDialog,
+  Field,
+  Input,
+  QuantityStepper,
+  StatusPill,
+  useActionToast,
+  useKeepValuesSubmit,
+} from '@beco/ui';
+import type { QuoteStatus } from '@beco/types';
+import {
+  addCatalogueLines,
+  addCustomLine,
+  claimQuote,
+  removeQuoteLine,
+  updateQuoteLines,
+  type QuoteActionState,
+} from '@/app/(app)/quotes/actions';
 import { CataloguePicker, catalogueLineDraft } from '@/components/catalogue-picker';
 import { useQuoteDraftFlush } from '@/components/quote-draft-flush';
+import { QuoteRequestNote } from '@/components/quote-request-note';
 import type { CatalogueHit } from '@/lib/catalogue';
 import type { QuoteLine } from '@/lib/quote-detail';
+import { lineEditBlock, removeBlock } from '@/lib/quote-line-rules';
+import type { QuoteRequest } from '@/lib/quote-request';
 
 const INITIAL: QuoteActionState = {};
 
@@ -32,18 +52,54 @@ function LineAmount({ quantity, unitPrice }: { quantity: number; unitPrice: numb
   );
 }
 
+/**
+ * One per line, 44px tall, named for the item so a screen reader hears which
+ * line it removes (D131). Disabled, it points at the visible reason above the
+ * list rather than going quiet.
+ */
+function RemoveButton({
+  line,
+  reasonId,
+  disabled,
+  pending,
+  onRemove,
+}: {
+  line: QuoteLine;
+  reasonId: string | undefined;
+  disabled: boolean;
+  pending: boolean;
+  onRemove: (line: QuoteLine) => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      className="h-11 shrink-0 px-2 py-0"
+      aria-label={`Remove ${line.description}`}
+      aria-describedby={disabled ? reasonId : undefined}
+      disabled={disabled}
+      pending={pending}
+      onClick={() => onRemove(line)}
+    >
+      Remove
+    </Button>
+  );
+}
+
 function LineEditor({
   line,
   quantity,
   unitPrice,
   canMutate,
   onChange,
+  remove,
 }: {
   line: QuoteLine;
   quantity: number;
   unitPrice: string;
   canMutate: boolean;
   onChange: (patch: { quantity?: number; unitPrice?: string }) => void;
+  remove: ReactNode;
 }) {
   const step = line.unit === 'per slab' || line.productId === null ? 0.5 : 1;
   const min = step;
@@ -53,14 +109,17 @@ function LineEditor({
   if (!canMutate) {
     return (
       <div className="border-b border-neutral-100 py-3">
-        <p className="font-ui text-base text-charcoal">
-          {line.description}
-          {line.productId === null ? (
-            <span className="ml-2 text-sm text-neutral-500">
-              {line.removedFromCatalogue ? '(removed from catalogue)' : '(not listed)'}
-            </span>
-          ) : null}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 font-ui text-base text-charcoal">
+            {line.description}
+            {line.productId === null ? (
+              <span className="ml-2 text-sm text-neutral-500">
+                {line.removedFromCatalogue ? '(removed from catalogue)' : '(not listed)'}
+              </span>
+            ) : null}
+          </p>
+          {remove}
+        </div>
         {line.code ? <p className="font-ui text-sm tabular-nums text-neutral-500">Code {line.code}</p> : null}
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <span className="font-ui text-sm tabular-nums text-neutral-500">
@@ -140,6 +199,11 @@ function LineEditor({
           />
         </Field>
       </div>
+      {/* Its own row on a phone, so the price keeps the width it had before
+          Remove existed (measured at 390: beside it the price field was 66px).
+          Under the line amount on desktop: a fifth column left the item
+          column no width at all at 1280, where the right rail takes its share. */}
+      <div className="-mt-1 flex justify-end md:col-start-4 md:row-start-2 md:justify-self-end">{remove}</div>
     </div>
   );
 }
@@ -198,11 +262,26 @@ export function QuoteLines({
   quoteId,
   updatedAt,
   canMutate,
+  reference,
+  status = 'reviewing',
+  convertedOrderReference = null,
+  canClaim = false,
+  assignedToName = null,
+  request = null,
 }: {
   lines: QuoteLine[];
   quoteId: string;
   updatedAt: string;
   canMutate: boolean;
+  /** Named in the remove confirmation, "Remove X from BEC-Q-00012?". */
+  reference: string;
+  status?: QuoteStatus;
+  convertedOrderReference?: string | null;
+  /** The quote is unassigned, so this viewer can claim it to edit (D131). */
+  canClaim?: boolean;
+  assignedToName?: string | null;
+  /** What the website form submitted, D131. Null for a counter quote. */
+  request?: QuoteRequest | null;
 }) {
   const [customState, addCustom, adding] = useActionState(addCustomLine, INITIAL);
   const onAddCustomSubmit = useKeepValuesSubmit(addCustom);
@@ -234,6 +313,40 @@ export function QuoteLines({
     return [{ lineId: line.id, quantity: draft.quantity, unitPrice: Number(draft.unitPrice) }];
   });
   const dirty = dirtyItems.length > 0;
+
+  // D131: why this viewer cannot change the lines, or why a line cannot come
+  // off, always said on screen. The database decides; this explains.
+  const editBlock = lineEditBlock({ canMutate, canClaim, assignedToName });
+  const removeReason =
+    editBlock?.reason ?? removeBlock({ status, convertedOrderReference, lineCount: lines.length, dirty });
+  const reasonId = useId();
+  const [claimState, claim, claiming] = useActionState(claimQuote, INITIAL);
+  useActionToast(claimState);
+  const [removeTarget, setRemoveTarget] = useState<QuoteLine | null>(null);
+  const [removeResult, setRemoveResult] = useState<QuoteActionState>(INITIAL);
+  const [removing, startRemove] = useTransition();
+  useActionToast(removeResult);
+  // Resolves when the server has answered, so the dialog's Remove item
+  // button spins for the whole write (D117), then the dialog closes and the
+  // toast says what happened. The re-rendered list arrives with the answer.
+  const confirmRemove = () =>
+    new Promise<void>((resolve) => {
+      const target = removeTarget;
+      if (!target) {
+        resolve();
+        return;
+      }
+      const data = new FormData();
+      data.set('quoteId', quoteId);
+      data.set('updatedAt', updatedAt);
+      data.set('lineId', target.id);
+      startRemove(async () => {
+        const result = await removeQuoteLine({}, data);
+        setRemoveResult(result);
+        setRemoveTarget(null);
+        resolve();
+      });
+    });
   const dirtyRef = useRef(dirtyItems);
   dirtyRef.current = dirtyItems;
   const lockRef = useRef(updatedAt);
@@ -285,6 +398,27 @@ export function QuoteLines({
       {canMutate && lines.length > 0 && !dirty ? (
         <p className="mt-1 font-ui text-sm text-neutral-500">No changes to save.</p>
       ) : null}
+      {editBlock ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <p id={reasonId} className="font-ui text-base text-charcoal">
+            {editBlock.reason}
+          </p>
+          {editBlock.claim ? (
+            <form action={claim}>
+              <input type="hidden" name="quoteId" value={quoteId} />
+              <input type="hidden" name="updatedAt" value={updatedAt} />
+              <Button type="submit" variant="secondary" pending={claiming} className="h-11 py-0">
+                {claiming ? 'Claiming' : 'Claim quote'}
+              </Button>
+            </form>
+          ) : null}
+        </div>
+      ) : removeReason && lines.length > 0 ? (
+        <p id={reasonId} className="mt-1 font-ui text-sm text-neutral-500">
+          {removeReason}
+        </p>
+      ) : null}
+      <QuoteRequestNote request={request} lines={lines} />
       <form id="quote-lines-save" action={saveLines} className="mt-3">
         <input type="hidden" name="quoteId" value={quoteId} />
         <input type="hidden" name="updatedAt" value={updatedAt} />
@@ -314,6 +448,15 @@ export function QuoteLines({
             quantity={drafts[line.id]?.quantity ?? line.quantity}
             unitPrice={drafts[line.id]?.unitPrice ?? String(line.unitPrice)}
             canMutate={canMutate}
+            remove={
+              <RemoveButton
+                line={line}
+                reasonId={removeReason ? reasonId : undefined}
+                disabled={Boolean(removeReason) || removing}
+                pending={removing && removeTarget?.id === line.id}
+                onRemove={setRemoveTarget}
+              />
+            }
             onChange={(patch) =>
               setDrafts((current) => ({
                 ...current,
@@ -326,6 +469,24 @@ export function QuoteLines({
           />
         ))}
       </form>
+
+      <ConfirmDialog
+        open={removeTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !removing) setRemoveTarget(null);
+        }}
+        title={removeTarget ? `Remove ${removeTarget.description} from ${reference}?` : ''}
+        description={
+          removeTarget
+            ? `${removeTarget.description}, quantity ${removeTarget.quantity}, comes off the quote and the total is worked out again.${
+                request ? ' What the customer first asked for stays on record.' : ''
+              }`
+            : ''
+        }
+        confirmLabel="Remove item"
+        destructive
+        onConfirm={confirmRemove}
+      />
 
       {canMutate ? (
         <>

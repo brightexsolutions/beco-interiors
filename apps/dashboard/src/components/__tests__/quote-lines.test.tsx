@@ -2,15 +2,25 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
-import { addCatalogueLines, addCustomLine, updateQuoteLines } from '@/app/(app)/quotes/actions';
+import { addCatalogueLines, addCustomLine, claimQuote, removeQuoteLine, updateQuoteLines } from '@/app/(app)/quotes/actions';
 import { QuoteLines } from '../quote-lines';
 import type { QuoteLine } from '@/lib/quote-detail';
+import type { QuoteRequest } from '@/lib/quote-request';
 
 vi.mock('@/app/(app)/quotes/actions', () => ({
   updateQuoteLines: vi.fn(async () => ({ ok: 'Items saved.' })),
   addCustomLine: vi.fn(async () => ({})),
   addCatalogueLines: vi.fn(async () => ({ ok: 'Items added to the quote.' })),
+  claimQuote: vi.fn(async () => ({ ok: 'This quote is now yours.' })),
+  removeQuoteLine: vi.fn(async () => ({ ok: 'Removed ZZ Seed Jatoba Brown. Total updated.' })),
 }));
+
+// The toast is what tells the user the removal landed (D117).
+const actionToast = vi.fn();
+vi.mock('@beco/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@beco/ui')>();
+  return { ...actual, useActionToast: (state: { ok?: string; error?: string }) => actionToast(state) };
+});
 
 vi.mock('@/lib/catalogue', () => ({
   loadPickerCatalogue: vi.fn(async () => ({
@@ -64,7 +74,7 @@ const jatoba = line({
 describe('QuoteLines', () => {
   it('in read-only mode, a discount is struck through against the catalogue price', () => {
     render(
-      <QuoteLines
+      <QuoteLines reference="BEC-Q-00012"
         lines={[line({ unitPrice: 55000, lineTotal: 55000 })]}
         quoteId="q"
         updatedAt="t"
@@ -80,20 +90,20 @@ describe('QuoteLines', () => {
 
   it('prints the product code under the item, read-only and editable alike (D124)', () => {
     const { rerender } = render(
-      <QuoteLines lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate={false} />,
+      <QuoteLines reference="BEC-Q-00012" lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate={false} />,
     );
     expect(screen.getByText('Code H-301')).toBeInTheDocument();
-    rerender(<QuoteLines lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate />);
+    rerender(<QuoteLines reference="BEC-Q-00012" lines={[line({ description: 'Soft close hinge', code: 'H-301' })]} quoteId="q" updatedAt="t" canMutate />);
     // Editable rows are narrow: the code alone on one line, "Code" for screen readers.
     const code = screen.getByTitle('Code H-301');
     expect(code).toHaveTextContent('Code H-301');
     expect(code.className).toContain('whitespace-nowrap');
-    rerender(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    rerender(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
     expect(screen.queryByText(/^Code /)).toBeNull();
   });
 
   it('keeps Save disabled until a line actually changes, and says why', () => {
-    render(<QuoteLines lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate />);
+    render(<QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate />);
     expect(screen.queryByRole('button', { name: 'Update' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     expect(screen.getByText('No changes to save.')).toBeInTheDocument();
@@ -103,7 +113,7 @@ describe('QuoteLines', () => {
   it('marks a changed row and enables one Save for every dirty line', async () => {
     const user = userEvent.setup();
     render(
-      <QuoteLines
+      <QuoteLines reference="BEC-Q-00012"
         lines={[line(), jatoba]}
         quoteId="11111111-1111-4111-8111-111111111111"
         updatedAt="lock"
@@ -114,7 +124,8 @@ describe('QuoteLines', () => {
     expect(screen.getByText('Unsaved')).toBeInTheDocument();
     expect(screen.getByText('Changed')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
-    expect(screen.getByText('Save your line changes first.')).toBeInTheDocument();
+    // Once on the catalogue add, once as the reason Remove is held (D131).
+    expect(screen.getAllByText('Save your line changes first.')).toHaveLength(2);
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(updateQuoteLines).toHaveBeenCalled());
     const form = vi.mocked(updateQuoteLines).mock.calls.at(-1)?.[1];
@@ -125,7 +136,7 @@ describe('QuoteLines', () => {
 
   it('opens the catalogue dialog and adds every checked product in one write', async () => {
     const user = userEvent.setup();
-    render(<QuoteLines lines={[line()]} quoteId="11111111-1111-4111-8111-111111111111" updatedAt="lock" canMutate />);
+    render(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="11111111-1111-4111-8111-111111111111" updatedAt="lock" canMutate />);
     await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
     const dialog = await screen.findByRole('dialog', { name: 'Add from catalogue' });
     expect(within(dialog).getByRole('searchbox', { name: /search/i })).toHaveFocus();
@@ -142,7 +153,7 @@ describe('QuoteLines', () => {
   });
 
   it('pins item, qty, unit and line to one desktop row so they sit under the headers', () => {
-    render(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    render(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
     const row = screen.getByText('Amber Jade').closest('[data-dirty]');
     expect(row).toBeTruthy();
     expect(row?.className).toContain('md:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem]');
@@ -150,6 +161,9 @@ describe('QuoteLines', () => {
     expect(row?.innerHTML).toContain('md:col-start-2 md:row-start-1');
     expect(row?.innerHTML).toContain('md:col-start-3 md:row-start-1');
     expect(row?.innerHTML).toContain('md:col-start-4 md:row-start-1');
+    // Remove sits under the line amount, not in a fifth column (D131): measured
+    // at 1280, a fifth column left the item column no width at all.
+    expect(row?.innerHTML).toContain('md:col-start-4 md:row-start-2');
     expect(row?.innerHTML).not.toContain('md:col-start-5');
     const header = screen.getByText('Item').closest('div');
     expect(header).toBeTruthy();
@@ -161,7 +175,7 @@ describe('QuoteLines', () => {
 
   it('labels a deleted catalogue line instead of crashing', () => {
     render(
-      <QuoteLines
+      <QuoteLines reference="BEC-Q-00012"
         lines={[line({ productId: null, removedFromCatalogue: true })]}
         quoteId="q"
         updatedAt="t"
@@ -173,7 +187,7 @@ describe('QuoteLines', () => {
 
   it('keeps a refused custom line to fix, and empties the form once one is added', async () => {
     const user = userEvent.setup();
-    render(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    render(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
     const description = screen.getByLabelText('What to quote');
     const add = screen.getByRole('button', { name: 'Add' });
 
@@ -192,10 +206,224 @@ describe('QuoteLines', () => {
 
   it('is axe clean in both treatments', async () => {
     const { container, rerender } = render(
-      <QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate={false} />,
+      <QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate={false} />,
     );
     expect(await axe(container)).toHaveNoViolations();
-    rerender(<QuoteLines lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+    rerender(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  describe('Remove (D131)', () => {
+    it('gives every line its own 44px Remove, named for the item', () => {
+      render(<QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate />);
+      const remove = screen.getByRole('button', { name: 'Remove Amber Jade' });
+      expect(remove).toBeEnabled();
+      expect(remove.className).toContain('h-11');
+      expect(remove).toHaveAttribute('type', 'button');
+      expect(screen.getByRole('button', { name: 'Remove ZZ Seed Jatoba Brown' })).toBeEnabled();
+    });
+
+    it('confirms through ConfirmDialog naming the item and the quote, then removes it under the lock', async () => {
+      const user = userEvent.setup();
+      vi.mocked(removeQuoteLine).mockClear();
+      render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line(), jatoba]}
+          quoteId="11111111-1111-4111-8111-111111111111"
+          updatedAt="lock"
+          canMutate
+        />,
+      );
+      await user.click(screen.getByRole('button', { name: 'Remove ZZ Seed Jatoba Brown' }));
+      const dialog = screen.getByRole('alertdialog', { name: 'Remove ZZ Seed Jatoba Brown from BEC-Q-00012?' });
+      expect(within(dialog).getByText(/quantity 3, comes off the quote/)).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();
+      expect(removeQuoteLine).not.toHaveBeenCalled();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Remove item' }));
+      await waitFor(() => expect(removeQuoteLine).toHaveBeenCalledTimes(1));
+      const form = vi.mocked(removeQuoteLine).mock.calls[0]?.[1] as FormData;
+      expect(form.get('lineId')).toBe(jatoba.id);
+      expect(form.get('quoteId')).toBe('11111111-1111-4111-8111-111111111111');
+      expect(form.get('updatedAt')).toBe('lock');
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+      expect(actionToast).toHaveBeenCalledWith({ ok: 'Removed ZZ Seed Jatoba Brown. Total updated.' });
+    });
+
+    it('shows a refusal as a toast and closes, rather than leaving the dialog spinning', async () => {
+      const user = userEvent.setup();
+      vi.mocked(removeQuoteLine).mockResolvedValueOnce({
+        error: 'This quote changed while you were editing. Reload and try again.',
+      });
+      render(<QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="stale" canMutate />);
+      await user.click(screen.getByRole('button', { name: 'Remove Amber Jade' }));
+      await user.click(screen.getByRole('button', { name: 'Remove item' }));
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+      expect(actionToast).toHaveBeenCalledWith({
+        error: 'This quote changed while you were editing. Reload and try again.',
+      });
+    });
+
+    it('Cancel removes nothing', async () => {
+      const user = userEvent.setup();
+      vi.mocked(removeQuoteLine).mockClear();
+      render(<QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate />);
+      await user.click(screen.getByRole('button', { name: 'Remove Amber Jade' }));
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(screen.queryByRole('alertdialog')).toBeNull();
+      expect(removeQuoteLine).not.toHaveBeenCalled();
+    });
+
+    it('cannot remove the last line, and says so on screen', () => {
+      render(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
+      const remove = screen.getByRole('button', { name: 'Remove Amber Jade' });
+      expect(remove).toBeDisabled();
+      const reason = screen.getByText('A quote needs at least one item. Mark it lost instead.');
+      expect(remove).toHaveAttribute('aria-describedby', reason.id);
+    });
+
+    it('follows the quote state: won, lost and converted quotes say why nothing can come off', () => {
+      const { rerender } = render(
+        <QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate status="won" />,
+      );
+      expect(screen.getByRole('button', { name: 'Remove Amber Jade' })).toBeDisabled();
+      expect(screen.getByText('A won quote is closed. Nothing can be removed.')).toBeInTheDocument();
+      rerender(
+        <QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate status="lost" />,
+      );
+      expect(screen.getByText('Reopen this quote to remove items.')).toBeInTheDocument();
+      rerender(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line(), jatoba]}
+          quoteId="q"
+          updatedAt="t"
+          canMutate
+          status="won"
+          convertedOrderReference="BEC-O-00004"
+        />,
+      );
+      expect(screen.getByText('This quote became order BEC-O-00004. Nothing can be removed.')).toBeInTheDocument();
+    });
+
+    it('asks for unsaved line changes to be saved first, so a removal cannot throw them away', async () => {
+      const user = userEvent.setup();
+      render(<QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate />);
+      await user.click(screen.getByRole('button', { name: /increase quantity of amber jade/i }));
+      expect(screen.getByRole('button', { name: 'Remove ZZ Seed Jatoba Brown' })).toBeDisabled();
+      expect(screen.getAllByText('Save your line changes first.')).toHaveLength(2);
+    });
+  });
+
+  describe('who can change the items (D131)', () => {
+    it('tells a salesperson on an unassigned web quote to claim it, with Claim right there', async () => {
+      const user = userEvent.setup();
+      render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line(), jatoba]}
+          quoteId="11111111-1111-4111-8111-111111111111"
+          updatedAt="lock"
+          canMutate={false}
+          canClaim
+          status="new"
+        />,
+      );
+      const reason = screen.getByText('Claim this quote to change its items.');
+      const remove = screen.getByRole('button', { name: 'Remove Amber Jade' });
+      expect(remove).toBeDisabled();
+      expect(remove).toHaveAttribute('aria-describedby', reason.id);
+      await user.click(screen.getByRole('button', { name: 'Claim quote' }));
+      await waitFor(() => expect(claimQuote).toHaveBeenCalled());
+      const form = vi.mocked(claimQuote).mock.calls.at(-1)?.[1] as FormData;
+      expect(form.get('quoteId')).toBe('11111111-1111-4111-8111-111111111111');
+      expect(form.get('updatedAt')).toBe('lock');
+    });
+
+    it('names the owner when the quote is a colleague\'s, with no Claim', () => {
+      render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line(), jatoba]}
+          quoteId="q"
+          updatedAt="t"
+          canMutate={false}
+          assignedToName="Ken Mutiso"
+        />,
+      );
+      expect(screen.getByText('Assigned to Ken Mutiso. Only they or an admin can change its items.')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Claim quote' })).toBeNull();
+      expect(screen.getByRole('button', { name: 'Remove Amber Jade' })).toBeDisabled();
+    });
+  });
+
+  describe("the customer's request (D131)", () => {
+    const request: QuoteRequest = {
+      source: 'submission',
+      at: '2026-10-06T08:00:00+00:00',
+      lines: [
+        { id: line().id, description: 'Amber Jade', code: null, quantity: 2 },
+        { id: jatoba.id, description: 'ZZ Seed Jatoba Brown', code: 'JB-3', quantity: 3 },
+      ],
+    };
+
+    it('lists what was removed or changed since the customer asked', () => {
+      render(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate request={request} />);
+      const note = screen.getByRole('region', { name: "Changed since the customer's request" });
+      expect(within(note).getByText(/ZZ Seed Jatoba Brown \(JB-3\), 3 asked/)).toBeInTheDocument();
+      expect(within(note).getByText(/Amber Jade, 2 asked, now/)).toBeInTheDocument();
+    });
+
+    it('draws nothing when the quote still matches the request', () => {
+      render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line({ quantity: 2 }), jatoba]}
+          quoteId="q"
+          updatedAt="t"
+          canMutate
+          request={request}
+        />,
+      );
+      expect(screen.queryByText(/Changed since/)).toBeNull();
+    });
+
+    it('dates a backfilled request instead of calling it the customer\'s own words', () => {
+      render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line({ quantity: 2 })]}
+          quoteId="q"
+          updatedAt="t"
+          canMutate
+          request={{ ...request, source: 'backfill', at: '2026-10-07T06:00:00+00:00' }}
+        />,
+      );
+      expect(screen.getByRole('region', { name: 'Changed since 7 Oct 2026' })).toBeInTheDocument();
+      expect(screen.getByText('Earlier edits were not recorded.')).toBeInTheDocument();
+    });
+
+    it('is axe clean with the claim prompt, the note and the dialog open', async () => {
+      const user = userEvent.setup();
+      const { container, rerender } = render(
+        <QuoteLines
+          reference="BEC-Q-00012"
+          lines={[line()]}
+          quoteId="q"
+          updatedAt="t"
+          canMutate={false}
+          canClaim
+          request={request}
+        />,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+      rerender(
+        <QuoteLines reference="BEC-Q-00012" lines={[line(), jatoba]} quoteId="q" updatedAt="t" canMutate request={request} />,
+      );
+      await user.click(screen.getByRole('button', { name: 'Remove Amber Jade' }));
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      expect(await axe(container)).toHaveNoViolations();
+    });
   });
 });

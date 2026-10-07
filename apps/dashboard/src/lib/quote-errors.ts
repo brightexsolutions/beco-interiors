@@ -18,7 +18,10 @@ export function mutationMessage(error: { message?: string; code?: string } | nul
   if (/customer is no longer on file/i.test(message)) {
     return 'That customer is no longer on file. Pick another.';
   }
-  if (code === 'P0002' || /Quote not found|Line not found/i.test(message)) {
+  if (/Line not found/i.test(message)) {
+    return 'That item is no longer on this quote. Reload to see the current list.';
+  }
+  if (code === 'P0002' || /Quote not found/i.test(message)) {
     return 'That quote is no longer here.';
   }
   if (/schema cache|could not find the function/i.test(message)) {

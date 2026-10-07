@@ -3185,3 +3185,84 @@ PIN.
 *Reverses if:* Beco wants two people sharing one phone (a couple, a company switchboard) as
 separate clients, at which point the identity moves from the phone to the record and the unique
 index becomes a warning.
+
+## D131, 7 October 2026: a line can come off a quote, and the customer's request stays on file
+
+**Decision.** `remove_quote_line()` (migration 65) takes one line off a quote: the assigned
+salesperson or an admin, under the quote's lock, refused on a deleted quote, a quote that became
+an order, a won quote, a lost quote (reopen it first) and the last line ("A quote needs at least
+one item. Mark it lost instead."). The line is hard deleted and a new `quote_items_audit` trigger
+writes the whole line into `audit_log`. What the website form submitted is kept on the quote in
+`quotes.requested_items`, written once by `submit_quote` and never changed by anyone, and the
+quote page shows "Changed since the customer's request" with what was removed, changed or added.
+Each line gets a 44px Remove confirmed through `ConfirmDialog` ("Remove item"). When the lines
+cannot change, the screen says why: a salesperson on an unassigned quote reads "Claim this quote
+to change its items." with Claim beside it.
+
+**Why.** Brown, 6 October 2026: a customer who submitted items on the website phoned back to drop
+one, and the person handling the quote could not. Two causes, both checked in the code:
+
+- **No removal existed anywhere.** `update_quote_lines` moves quantity and price only; no
+  function, action or control deleted a line, for any role. An admin could change a quantity but
+  never take an item off.
+- **A web quote arrives unassigned, and a salesperson's screen went silently read-only.** The
+  page computes `canMutate = isAdmin || assignedTo === userId`, so for `beco_sales` an
+  unassigned web quote rendered its lines as plain text with no reason beside them. The only hint
+  was "Unassigned. Claim it to edit." in the Actions rail, which on a phone sits above the lines
+  and reads as status, not as the answer to "why can I not change this?".
+
+**How the pieces fit.**
+
+- **Same rules as its siblings, checked not invented.** The permission and lock are
+  `update_quote_lines`'s. The stale edit raises `PT409`, not `40001`: migration 56 moved every
+  quote write off `40001` because PostgREST retries it forever, and pgTAP 32 refuses a function
+  that raises it. Won is closed (`set_quote_status`, `reissue_quote`), lost needs a reopen
+  (`set_quote_status`, `reopen_quote`), a converted quote's lines are what the order copied. On a
+  quoted quote, removing a line clears the approval (D86); if the rest still deviates from the
+  catalogue the `check` constraint would refuse, so the function says so in words: move it back
+  to reviewing first. The totals come from `refresh_quote_money`, the one place the money maths
+  lives.
+- **The last line stays.** `create_counter_quote`, `submit_quote` and `convert_quote_to_order`
+  all refuse a quote with no items; a quote the customer no longer wants is marked lost, which
+  keeps it on the record with a reason.
+- **Hard delete, full audit.** `quote_items` has no `deleted_at`, and adding one would mean
+  filtering it out of every total, the PDF, the email, convert and the money triggers. The audit
+  trigger every other commercial table has had since migration 3 was simply missing here; it now
+  records inserts, quantity and price changes and deletes, so a removed line can be read back
+  and put back, and a discount has a trail.
+- **The original request is a snapshot, not an audit query.** The audit log could not serve this
+  on its own: it is readable only by Brightex and granted Beco admins, never by a salesperson,
+  and line edits were not audited before this migration, so no quote already on file has a
+  history to reconstruct from. A column on the quote is readable through the quote's own RLS by
+  everyone who can read the quote, costs one jsonb per web quote, and is matched to the live
+  lines by id. `submit_quote` works the lines out once, before the quote row, so the snapshot and
+  the inserted lines share ids and the quote is born with its request; a guard trigger then
+  refuses any change, admins included.
+- **Quotes already on file.** Web quotes submitted before migration 65 are backfilled from their
+  lines as they stood when it ran, marked `source = 'backfill'`, because nothing recorded an
+  earlier edit. The screen reads "Changed since 7 Oct 2026" and "Earlier edits were not
+  recorded." for those, rather than calling them the customer's own words.
+- **Unsaved edits block a removal.** Removing re-renders the lines from the server, which would
+  discard a typed but unsaved quantity or price, so Remove waits for Save, the same rule the
+  catalogue add already follows.
+- **Layout, measured.** A Remove beside the price narrowed the price field to 66px at 390, so on
+  a phone it has its own row. A fifth desktop column left the item column no width at all at
+  1280, where the right rail takes its share, so on desktop it sits under the line amount.
+
+**Found on the way, fixed separately (migration 66).** `is_admin()` returned null, not false, for
+a deactivated account, which let it past every `... and not is_admin()` guard in the quote and
+order functions. Now `coalesce(..., false)`; see `docs/SECURITY.md`, 7 October 2026.
+
+**Not changed, for a decision.** `update_quote_lines` and the other line functions still accept
+quantity and price edits on a won or lost quote (only the D86 constraint stops some of them), and
+the screen still offers the steppers there. Remove follows the stricter rule the status functions
+already state. Whether quantity and price should lock the same way is Brown's call.
+
+**Rejected.** A soft delete on `quote_items`: every reader would need a filter, and a line
+missed by one of them would print on a PDF. Reading the original request from `audit_log`: a
+salesperson cannot read it, and quotes on file have no line history. Letting a salesperson edit
+an unassigned quote without claiming: ownership is what tells the team who is handling the
+customer, and claim is one tap, now beside the lines.
+
+*Reverses if:* Beco wants a removed line greyed out on the quote rather than gone, at which point
+`quote_items` gains `deleted_at` and every reader is filtered.
