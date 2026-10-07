@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createProductSchema,
   deleteProductSchema,
+  setProductPublishedSchema,
   isValidStockAmount,
   slugifyProductName,
   specsFromRecord,
@@ -105,10 +106,43 @@ describe('updateProductSchema', () => {
     if (blank.success) expect(blank.data.sku).toBeNull();
   });
 
-  it('reads the published checkbox from form strings', () => {
+  it('reads an explicit published flag from form strings', () => {
     const parsed = updateProductSchema.safeParse({ ...base, isPublished: 'on' });
     expect(parsed.success).toBe(true);
     if (parsed.success) expect(parsed.data.isPublished).toBe(true);
+    const off = updateProductSchema.safeParse({ ...base, isPublished: 'false' });
+    expect(off.success).toBe(true);
+    if (off.success) expect(off.data.isPublished).toBe(false);
+  });
+
+  it('leaves the published flag undefined when the form does not send one, so Save cannot unpublish', () => {
+    for (const isPublished of [undefined, null, '']) {
+      const parsed = updateProductSchema.safeParse({ ...base, isPublished });
+      expect(parsed.success).toBe(true);
+      if (parsed.success) expect(parsed.data.isPublished).toBeUndefined();
+    }
+  });
+});
+
+describe('setProductPublishedSchema', () => {
+  const lock = { productId: base.productId, updatedAt: '2026-10-07T09:00:00.000Z' };
+
+  it('reads true and false from form strings', () => {
+    const on = setProductPublishedSchema.safeParse({ ...lock, published: 'true' });
+    const off = setProductPublishedSchema.safeParse({ ...lock, published: 'false' });
+    expect(on.success && on.data.published).toBe(true);
+    expect(off.success && off.data.published).toBe(false);
+  });
+
+  it('refuses anything that is not an explicit true or false', () => {
+    for (const published of ['', 'on', 'yes', null, undefined, 1]) {
+      expect(setProductPublishedSchema.safeParse({ ...lock, published }).success).toBe(false);
+    }
+  });
+
+  it('needs a uuid and the lock token', () => {
+    expect(setProductPublishedSchema.safeParse({ ...lock, productId: 'nope', published: 'true' }).success).toBe(false);
+    expect(setProductPublishedSchema.safeParse({ ...lock, updatedAt: '', published: 'true' }).success).toBe(false);
   });
 });
 
