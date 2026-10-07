@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { FocusEvent, Ref, RefObject } from 'react';
 import Link from 'next/link';
 import type { AnnouncementBarItem } from '@/lib/announcements';
 
@@ -12,7 +13,10 @@ export type { AnnouncementBarItem };
  * Above the header, full width, RENDERED ON THE SERVER with its height part of
  * the first paint. A bar that appears after paint and pushes the page down is
  * a direct CLS failure, and CLS is in the performance budget. The height is a
- * fixed single line whatever is showing, so a rotation never shifts the page.
+ * FIXED single line, `h-12`, whatever is showing: the label, the body and the
+ * call to action always share one row, so neither a rotation nor a long
+ * announcement nor the ticker starting can move the page. That 3rem is also
+ * what `.beco-hero-bleed` in tokens.css assumes the bar to be.
  *
  * It cycles through every live announcement plus Beco's phone and email, so a
  * quiet week still has something in the slot and the way to get in touch is
@@ -20,16 +24,33 @@ export type { AnnouncementBarItem };
  * job: the RLS policy only returns rows that are active and inside their
  * window, so a mid year sale appears and retires on its own. See D36 and D49.
  *
+ * A line that FITS sits still and centred. A line that does not, measured
+ * with a ResizeObserver rather than guessed from its length, becomes a ticker:
+ * a seamless loop of two copies moving left at a constant 48px a second, so
+ * a longer line takes longer rather than moving faster. The second copy is
+ * `aria-hidden` and `inert`, so a screen reader hears the announcement once
+ * and the tab order holds one link. It pauses under the pointer and while
+ * focus is inside it, and if keyboard focus lands on a link the ticker has
+ * carried out of view, it stops and brings that link back in. While a ticker
+ * is running, the rotation waits for it to finish a full pass rather than
+ * cutting it off mid sentence.
+ *
+ * Under `prefers-reduced-motion` there is no ticker. The line stays on one row
+ * with the BODY truncated by an ellipsis, while the label and the call to
+ * action stay whole, so the link is always visible and reachable. Wrapping
+ * instead would grow the bar and break the fixed height the hero is laid out
+ * against. The full body is still in the DOM, so a screen reader reads all of
+ * it, and the whole line is in the row's `title` for a pointer. The same truncated layout is what the
+ * server sends, so the first paint is a clean single row before any script.
+ *
  * A clearance item turns the whole bar Warm Red for the seconds it is up, so
  * it reads as genuinely different from the site chrome. Everything else is
  * charcoal, which keeps Warm Red rationed.
  *
- * Client component, because the rotation is a timer. It still server renders
- * its first item, so the slot is filled and sized on first paint. Under
- * `prefers-reduced-motion`, or with only one item, it does not rotate: it
- * shows the first item and stays there. It also pauses while the pointer is
- * over it or a link inside it holds focus, so a reader is never robbed of the
- * line mid sentence.
+ * Client component, because the rotation is a timer and the overflow is a
+ * measurement. Under `prefers-reduced-motion`, or with only one item, it does
+ * not rotate. It also pauses while the pointer is over it or a link inside it
+ * holds focus, so a reader is never robbed of the line mid sentence.
  *
  * Sits BELOW the header in z-order (`z-30`). The header is `z-50` and its own
  * stacking context, so the mobile menu panel inside it stays above this.
@@ -54,19 +75,38 @@ const TONE = {
 const ROTATE_MS = 5500;
 const DISMISS_KEY = 'beco-announcement-dismissed';
 
-/** One announcement line: label, then its body, then its call to action. */
+/** Ticker pace in pixels per second. Constant whatever the length. */
+export const TICKER_PX_PER_S = 48;
+/** The seam between one copy of the line and the next: `pr-16`. */
+export const TICKER_GAP_PX = 64;
+
+/** One announcement line: label, then its body, then its call to action.
+
+    `fit` is the still layout: one row, and if that row is wider than the bar
+    the body truncates while the label and the call to action stay whole.
+    Without `fit` nothing truncates, which is the ticker's copy. `copy` marks
+    the ticker's duplicate, whose links are taken out of the tab order. */
 function Line({
   item,
+  fit,
+  copy = false,
   className,
+  lineRef,
+  bodyRef,
   onAnimationEnd,
 }: {
   item: AnnouncementBarItem;
+  fit: boolean;
+  copy?: boolean;
   className?: string;
+  lineRef?: Ref<HTMLParagraphElement>;
+  bodyRef?: Ref<HTMLSpanElement>;
   onAnimationEnd?: () => void;
 }) {
+  const tab = copy ? -1 : undefined;
   const body = item.text ? (
     item.href && !item.cta ? (
-      <Link href={item.href} className="underline underline-offset-4 hover:no-underline">
+      <Link href={item.href} tabIndex={tab} className="underline underline-offset-4 hover:no-underline">
         {item.text}
       </Link>
     ) : (
@@ -76,26 +116,102 @@ function Line({
 
   return (
     <p
+      ref={lineRef}
+      // The whole line, on the whole row, so a pointer can read what an
+      // ellipsis cut wherever it lands, even where the body has no width left.
+      title={fit && !copy && item.text ? `${item.label}: ${item.text}` : undefined}
       onAnimationEnd={onAnimationEnd}
-      className={`flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm${
-        className ? ` ${className}` : ''
-      }`}
+      className={`flex items-baseline gap-x-3 whitespace-nowrap font-ui text-sm ${
+        fit ? 'min-w-0 max-w-full' : 'shrink-0'
+      }${className ? ` ${className}` : ''}`}
     >
-      <span className="font-semibold uppercase tracking-[0.12em]">{item.label}</span>
+      <span className={`font-semibold uppercase tracking-[0.12em]${fit ? ' min-w-0 truncate' : ''}`}>
+        {item.label}
+      </span>
       {body ? (
-        // A bare contact line has no label to fall back on when the screen is
-        // narrow, so it always shows. An announcement body is the first to drop.
-        <span className={item.key === 'email' || item.key === 'call' ? 'inline' : 'hidden sm:inline'}>
+        <span
+          ref={bodyRef}
+          className={fit ? 'min-w-0 shrink-[1000] truncate' : undefined}
+        >
           {body}
         </span>
       ) : null}
       {item.cta && item.href ? (
-        <Link href={item.href} className="font-semibold underline underline-offset-4 hover:no-underline">
+        <Link
+          href={item.href}
+          tabIndex={tab}
+          className="shrink-0 font-semibold underline underline-offset-4 hover:no-underline"
+        >
           {item.cta}
         </Link>
       ) : null}
     </p>
   );
+}
+
+const prefersReducedMotion = (): boolean => {
+  try {
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Whether the current line is wider than the bar, and how long one loop of
+ * it takes at the ticker's constant pace.
+ *
+ * The natural width is the line's own width plus whatever its truncated body
+ * is hiding, which gives the same answer in the still layout and in the
+ * ticker one, so the bar cannot flip between the two on its own measurement.
+ * A layout effect, so a rotation into a line of a different length is
+ * measured before it paints rather than one frame after.
+ */
+function useOverflow(
+  viewport: RefObject<HTMLDivElement | null>,
+  line: RefObject<HTMLParagraphElement | null>,
+  body: RefObject<HTMLSpanElement | null>,
+  lineKey: string,
+) {
+  const [state, setState] = useState({ overflows: false, loopMs: 0 });
+
+  useLayoutEffect(() => {
+    const v = viewport.current;
+    const l = line.current;
+    if (!v || !l) return;
+
+    const measure = () => {
+      const b = body.current;
+      const hidden = b ? Math.max(0, b.scrollWidth - b.clientWidth) : 0;
+      const natural = l.offsetWidth + hidden;
+      // One pixel of slack, so sub pixel rounding never starts a ticker.
+      const overflows = natural > v.clientWidth + 1;
+      const loopMs = overflows
+        ? Math.round(((natural + TICKER_GAP_PX) / TICKER_PX_PER_S) * 1000)
+        : 0;
+      setState((prev) =>
+        prev.overflows === overflows && prev.loopMs === loopMs ? prev : { overflows, loopMs },
+      );
+    };
+
+    measure();
+    let ro: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => measure());
+      ro.observe(v);
+      ro.observe(l);
+    }
+    // A web font swapping in changes the width without necessarily resizing
+    // the clamped line box, so measure once more when the fonts are ready.
+    let live = true;
+    document.fonts?.ready.then(() => { if (live) measure(); }).catch(() => {});
+    return () => {
+      live = false;
+      ro?.disconnect();
+    };
+  }, [viewport, line, body, lineKey]);
+
+  return state;
 }
 
 /** Removed from `<body>` on dismissal too: it is what the hero's own fixed
@@ -119,6 +235,16 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
   const [leaving, setLeaving] = useState<number | null>(null);
   const paused = useRef(false);
   const [dismissed, setDismissed] = useState(false);
+  // False on the server and on the first client render, so hydration agrees;
+  // corrected once mounted, and kept in step if the setting changes.
+  const [reduce, setReduce] = useState(false);
+  // How far the ticker is held to the left while keyboard focus sits on a
+  // link it had carried out of view. Null when focus is not doing that.
+  const [focusShift, setFocusShift] = useState<number | null>(null);
+
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const lineRef = useRef<HTMLParagraphElement>(null);
+  const bodyRef = useRef<HTMLSpanElement>(null);
 
   // Starts false, matching what the server sent, then checks sessionStorage
   // once mounted: reading it in a state initializer instead would make the
@@ -136,6 +262,19 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
     }
   }, []);
 
+  useEffect(() => {
+    setReduce(prefersReducedMotion());
+    let mq: MediaQueryList | undefined;
+    try {
+      mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    } catch {
+      return;
+    }
+    const onChange = (e: MediaQueryListEvent) => setReduce(e.matches);
+    mq?.addEventListener?.('change', onChange);
+    return () => mq?.removeEventListener?.('change', onChange);
+  }, []);
+
   const dismiss = () => {
     setDismissed(true);
     clearAnnouncementSpacing();
@@ -147,31 +286,71 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
     }
   };
 
-  useEffect(() => {
-    if (clean.length < 2) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return;
-    let drop = 0;
-    const id = window.setInterval(() => {
-      if (!paused.current && document.visibilityState === 'visible') {
-        setIndex((n) => {
-          setLeaving(n);
-          return (n + 1) % clean.length;
-        });
-        window.clearTimeout(drop);
-        drop = window.setTimeout(() => setLeaving(null), 700);
-      }
-    }, ROTATE_MS);
-    return () => {
-      window.clearInterval(id);
-      window.clearTimeout(drop);
-    };
-  }, [clean.length]);
+  const i = Math.min(index, Math.max(clean.length - 1, 0));
+  const item = clean[i];
+  const { overflows, loopMs } = useOverflow(
+    viewportRef,
+    lineRef,
+    bodyRef,
+    `${i}:${item?.key ?? ''}:${dismissed}`,
+  );
+  const ticking = overflows && !reduce;
+  const rotates = clean.length >= 2 && !reduce;
 
-  if (clean.length === 0 || dismissed) return null;
-  const i = Math.min(index, clean.length - 1);
-  const item = clean[i]!;
+  const advance = () => {
+    setFocusShift(null);
+    setIndex((n) => {
+      setLeaving(n);
+      return (n + 1) % clean.length;
+    });
+  };
+
+  // The roll's outgoing layer is dropped after the roll, by timer as well as
+  // by its own animationend, since reduced motion never fires the latter.
+  useEffect(() => {
+    if (leaving === null) return;
+    const id = window.setTimeout(() => setLeaving(null), 700);
+    return () => window.clearTimeout(id);
+  }, [leaving]);
+
+  // A still line rotates on a timer. A ticking one rotates when its loop
+  // completes instead, see `onAnimationIteration` below, so a long line is
+  // always read to the end and a pause under the pointer is honoured.
+  useEffect(() => {
+    if (!rotates || ticking) return;
+    let id = 0;
+    const arm = () => {
+      id = window.setTimeout(() => {
+        if (paused.current || document.visibilityState !== 'visible') arm();
+        else advance();
+      }, ROTATE_MS);
+    };
+    arm();
+    return () => window.clearTimeout(id);
+    // `i` re-arms the full interval after every change of line.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rotates, ticking, i]);
+
+  if (!item || dismissed) return null;
   const tone = TONE[item.tone ?? 'charcoal'];
+
+  // Keyboard focus on a link the ticker has carried out of view: stop the
+  // ticker and hold the line so the link's right edge sits inside the bar.
+  // A link already in view only needs the CSS pause on `:focus-within`.
+  const onTickerFocus = (e: FocusEvent<HTMLDivElement>) => {
+    const v = viewportRef.current;
+    const target = e.target as HTMLElement;
+    if (!ticking || !v || !(target instanceof HTMLElement)) return;
+    const vr = v.getBoundingClientRect();
+    const tr = target.getBoundingClientRect();
+    if (tr.left >= vr.left && tr.right <= vr.right) return;
+    setFocusShift(Math.max(0, target.offsetLeft + target.offsetWidth - v.clientWidth));
+  };
+  const onTickerBlur = (e: FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocusShift(null);
+  };
+
+  const held = focusShift !== null;
 
   return (
     <aside
@@ -190,24 +369,67 @@ export function AnnouncementBar({ items }: { items: AnnouncementBarItem[] }) {
         paused.current = false;
       }}
     >
-      {/* Clipped and fixed height, so the roll never spills or moves the page.
-          The reduced-motion reset in tokens.css collapses both animations, and
-          the rotation itself does not arm under reduced motion anyway. */}
-      <div className="relative mx-auto flex min-h-[2.75rem] max-w-[1380px] items-center justify-center overflow-hidden px-8 sm:px-24 lg:px-40 py-2.5 sm:py-3">
-        <Line key={i} item={item} className="beco-bar-in relative" />
-        {leaving !== null && leaving !== i ? (
-          <Line
-            key={`leaving-${leaving}`}
-            item={clean[Math.min(leaving, clean.length - 1)]!}
-            className="beco-bar-out absolute inset-x-6"
-            onAnimationEnd={() => setLeaving(null)}
-          />
-        ) : null}
+      {/* Fixed height and clipped, so neither the roll, a long line nor the
+          ticker can spill or move the page. */}
+      <div className="relative mx-auto flex h-12 max-w-[1380px] items-center px-8 sm:px-24 lg:px-40">
+        {/* `overflow-clip`, not `overflow-hidden`: a hidden box can still be
+            scrolled by focus, which would knock the ticker out of register
+            the moment a link inside it took focus. The phone inset keeps
+            the line clear of the close button on the right, and mirrors it
+            on the left so a still line stays truly centred. */}
+        <div
+          ref={viewportRef}
+          data-testid="announcement-viewport"
+          onFocus={onTickerFocus}
+          onBlur={onTickerBlur}
+          className={`beco-ticker relative mx-5 flex h-full min-w-0 flex-1 items-center overflow-clip sm:mx-0 ${
+            ticking ? 'justify-start' : 'justify-center'
+          }`}
+        >
+          <div className={`beco-bar-in flex ${ticking ? 'shrink-0' : 'min-w-0 max-w-full'}`} key={i}>
+            <div
+              data-testid="announcement-track"
+              data-ticking={ticking && !held ? '' : undefined}
+              onAnimationIteration={() => {
+                if (rotates && !paused.current) advance();
+              }}
+              style={
+                ticking
+                  ? held
+                    ? { transform: `translateX(-${focusShift}px)` }
+                    : { animationDuration: `${loopMs}ms` }
+                  : undefined
+              }
+              className={`beco-ticker-track relative flex ${ticking ? 'w-max' : 'min-w-0 max-w-full'}`}
+            >
+              <div className={ticking ? 'shrink-0 pr-16' : 'flex min-w-0 max-w-full'}>
+                <Line item={item} fit={!ticking} lineRef={lineRef} bodyRef={bodyRef} />
+              </div>
+              {ticking ? (
+                <div aria-hidden="true" inert data-testid="announcement-loop-copy" className="shrink-0 pr-16">
+                  <Line item={item} fit={false} copy />
+                </div>
+              ) : null}
+            </div>
+          </div>
+          {leaving !== null && leaving !== i ? (
+            <div aria-hidden="true" inert className="absolute inset-0 flex items-center justify-center">
+              <Line
+                key={`leaving-${leaving}`}
+                item={clean[Math.min(leaving, clean.length - 1)]!}
+                fit
+                copy
+                className="beco-bar-out"
+                onAnimationEnd={() => setLeaving(null)}
+              />
+            </div>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={dismiss}
           aria-label="Dismiss announcement"
-          className="absolute right-6 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center sm:right-8 lg:right-12"
+          className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center sm:right-8 lg:right-12"
         >
           <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 stroke-current" fill="none" strokeWidth="1.8">
             <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />

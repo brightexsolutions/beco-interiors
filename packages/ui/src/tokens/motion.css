@@ -108,6 +108,38 @@
     to   { opacity: 0; transform: translateY(-85%); }
   }
 
+  /* --- The announcement bar's ticker, for a line wider than the bar.
+         The track holds two identical copies of the line, each with the
+         same trailing gap, so moving it by exactly half its own width lands
+         the second copy where the first began and the loop has no seam.
+         Linear, because constant motion that eases reads as stuttering.
+
+         The duration here is only a fallback: AnnouncementBar sets
+         `animation-duration` inline from the measured width, so the pace
+         is a constant 48px a second whatever the length. The delay gives
+         the first words a beat to be read where they sit.
+
+         This is the same approach the range rail's row once ran on, a CSS
+         translateX keyframe off the main thread, before D59 moved the rail
+         to `scrollLeft` for its arrows. The bar has no arrows, so the CSS
+         version is still the right tool here. Paused under the pointer and
+         on focus within, as the rail is. Absent entirely under reduced
+         motion, where the bar truncates the line instead. --- */
+  .beco-ticker-track[data-ticking] {
+    animation: beco-ticker 30s linear 1500ms infinite;
+    will-change: transform;
+  }
+
+  .beco-ticker:hover .beco-ticker-track,
+  .beco-ticker:focus-within .beco-ticker-track {
+    animation-play-state: paused;
+  }
+
+  @keyframes beco-ticker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
   /* --- Photographs settle out of an oversized crop rather than fading.
          The frame never moves, so this costs no layout. --- */
   .beco-zoom[data-inview] > img,

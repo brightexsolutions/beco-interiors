@@ -13,8 +13,8 @@ export { sendQuoteConfirmation, sendPricedQuote, sendReceipt } from './email/sen
 export type { SendResult } from './email/send';
 export { formatKes } from './email/money-format';
 export type { EmailLine } from './email/shell';
-export { buildOpsAlertEmail, sendOpsAlert, DEFAULT_OPS_ALERT_EMAIL } from './email/ops-alert';
-export type { OpsAlert, OpsAlertApp, OpsAlertContext } from './email/ops-alert';
+export { buildOpsAlertEmail, sendOpsAlert, opsAlertDelivery, DEFAULT_OPS_ALERT_EMAIL } from './email/ops-alert';
+export type { OpsAlert, OpsAlertApp, OpsAlertContext, OpsAlertSendResult } from './email/ops-alert';
 export { renderQuotePdf, renderReceiptPdf, renderReportPdf } from './pdf/render';
 export { QuoteDocument } from './pdf/quote-document';
 export { ReportDocument, summaryCopy, personCopy, catalogueCopy, categoryCopy } from './pdf/report-document';
