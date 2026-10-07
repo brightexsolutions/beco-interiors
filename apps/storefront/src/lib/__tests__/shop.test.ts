@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogueProduct, CategoryGroup } from '../products';
 import {
-  applyCatalogueFilters, finishFacetsOf, isFilteredView, legacyShopRedirect, rangeChips, rangeSummary,
+  applyCatalogueFilters, finishFacetsOf, isFilteredView, legacyShopRedirect, rangeChips, rangeSummary, readFace,
 } from '../shop';
 
 const product = (over: Partial<CatalogueProduct>): CatalogueProduct =>
@@ -84,5 +84,29 @@ describe('legacyShopRedirect', () => {
 
   it('answers null for a bare /shop', () => {
     expect(legacyShopRedirect({})).toBeNull();
+  });
+});
+
+describe('the bookmatched filter', () => {
+  const stones = [
+    product({ slug: 'pair', name: 'Bianco Fendi', face_type: 'book_match' }),
+    product({ slug: 'single', name: 'Limestone Beige', face_type: 'one_face' }),
+    product({ slug: 'unset', name: 'Etereo', face_type: null }),
+  ];
+
+  it('keeps only stones sold as a bookmatched pair', () => {
+    expect(applyCatalogueFilters(stones, { face: 'bookmatched' }).map((p) => p.slug)).toEqual(['pair']);
+  });
+
+  it('leaves the list whole without it, and combines with search', () => {
+    expect(applyCatalogueFilters(stones, {}).length).toBe(3);
+    expect(applyCatalogueFilters(stones, { face: 'bookmatched', q: 'beige' })).toEqual([]);
+  });
+
+  it('accepts only the one known value, and counts as a filtered view', () => {
+    expect(readFace('bookmatched')).toBe('bookmatched');
+    expect(readFace('anything-else')).toBeUndefined();
+    expect(readFace('')).toBeUndefined();
+    expect(isFilteredView({ face: 'bookmatched' })).toBe(true);
   });
 });

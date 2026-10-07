@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { SlabToSurface } from '../slab-to-surface';
 import type { CatalogueProduct } from '@/lib/products';
 
@@ -24,4 +24,13 @@ describe('SlabToSurface', () => {
     expect(frame).not.toBeNull();
     expect(frame).toHaveClass('rounded-card', 'overflow-hidden', 'isolate');
   });
+
+  it('sends "All bookmatched stone" to the bookmatched stones, not the whole shop', () => {
+    render(<SlabToSurface product={product} />);
+    expect(screen.getByRole('link', { name: 'All bookmatched stone' })).toHaveAttribute(
+      'href',
+      '/shop/sintered-stone?face=bookmatched',
+    );
+  });
 });
+
