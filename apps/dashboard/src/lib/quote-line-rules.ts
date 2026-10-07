@@ -26,18 +26,32 @@ export function lineEditBlock({ canMutate, canClaim, assignedToName }: LineAcces
   };
 }
 
-export interface RemoveInput {
+export interface ClosedInput {
   status: QuoteStatus;
   convertedOrderReference: string | null;
+}
+
+/**
+ * Null while the quote is open; otherwise why none of its lines can change,
+ * quantity, price, an added item or a removal alike (D132). Same order as
+ * assert_quote_lines_open() in migration 67: converted, won, lost.
+ */
+export function closedBlock({ status, convertedOrderReference }: ClosedInput): string | null {
+  if (convertedOrderReference) return `This quote became order ${convertedOrderReference}. Its items are fixed.`;
+  if (status === 'won') return 'A won quote is closed. Its items are fixed.';
+  if (status === 'lost') return 'Reopen this quote to change its items.';
+  return null;
+}
+
+export interface RemoveInput extends ClosedInput {
   lineCount: number;
   dirty: boolean;
 }
 
 /** Null when a line can come off; otherwise why not. Same order as remove_quote_line's checks. */
 export function removeBlock({ status, convertedOrderReference, lineCount, dirty }: RemoveInput): string | null {
-  if (convertedOrderReference) return `This quote became order ${convertedOrderReference}. Nothing can be removed.`;
-  if (status === 'won') return 'A won quote is closed. Nothing can be removed.';
-  if (status === 'lost') return 'Reopen this quote to remove items.';
+  const closed = closedBlock({ status, convertedOrderReference });
+  if (closed) return closed;
   if (lineCount <= 1) return 'A quote needs at least one item. Mark it lost instead.';
   if (dirty) return 'Save your line changes first.';
   return null;

@@ -60,6 +60,8 @@ export const CataloguePicker = forwardRef<
   const searchId = useId();
   const rangeId = `${searchId}-range`;
   const listId = `${searchId}-results`;
+  const hintId = `${searchId}-hint`;
+  const showHint = Boolean(disabled && disabledHint);
   const searchRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -133,6 +135,7 @@ export const CataloguePicker = forwardRef<
         type="button"
         variant="outline"
         disabled={disabled}
+        aria-describedby={showHint ? hintId : undefined}
         className="h-11 w-full py-0 sm:w-auto"
         onClick={() => {
           setOpen(true);
@@ -141,8 +144,10 @@ export const CataloguePicker = forwardRef<
       >
         Add from catalogue
       </Button>
-      {disabled && disabledHint ? (
-        <p className="mt-2 font-ui text-sm text-neutral-500">{disabledHint}</p>
+      {showHint ? (
+        <p id={hintId} className="mt-2 font-ui text-sm text-neutral-500">
+          {disabledHint}
+        </p>
       ) : null}
 
       <Dialog

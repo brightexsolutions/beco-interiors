@@ -25,16 +25,24 @@ import { useQuoteDraftFlush } from '@/components/quote-draft-flush';
 import { QuoteRequestNote } from '@/components/quote-request-note';
 import type { CatalogueHit } from '@/lib/catalogue';
 import type { QuoteLine } from '@/lib/quote-detail';
-import { lineEditBlock, removeBlock } from '@/lib/quote-line-rules';
+import { closedBlock, lineEditBlock, removeBlock } from '@/lib/quote-line-rules';
 import type { QuoteRequest } from '@/lib/quote-request';
 
 const INITIAL: QuoteActionState = {};
 
-/** Same axes as `/quotes/new`. Save lives on the section heading. */
-const LINE_COLS = 'md:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem]';
+/**
+ * Same axes as `/quotes/new`. Save lives on the section heading.
+ *
+ * Switched on the list's own width, not the screen's: on the quote page the
+ * lines share the screen with the sidebar and the right rail, so at 1280 a
+ * screen breakpoint gave the item column about 80px. The fixed columns and
+ * gaps take 29rem, so at 48rem of list the item name keeps about 300px;
+ * below that the rows stack, as on a phone. The same fix as new-quote-form.
+ */
+const LINE_COLS = '@3xl:grid-cols-[minmax(0,1fr)_10rem_8.5rem_7.5rem]';
 const LINE_GRID = [
   'flex flex-col gap-2 py-3',
-  `md:grid ${LINE_COLS} md:items-center md:gap-x-4 md:py-2`,
+  `@3xl:grid ${LINE_COLS} @3xl:items-center @3xl:gap-x-4 @3xl:py-2`,
 ].join(' ');
 const TABLE_FIELD = '[&>label]:sr-only [&>div]:mt-0';
 
@@ -50,6 +58,24 @@ function LineAmount({ quantity, unitPrice }: { quantity: number; unitPrice: numb
       {money(quantity * unitPrice)}
     </span>
   );
+}
+
+type CatalogueReference =
+  | { kind: 'none' }
+  | { kind: 'discount'; listPrice: number }
+  | { kind: 'unpriced'; listPrice: number };
+
+/**
+ * How a line's catalogue price reads beside it. A price of 0 is "not priced
+ * yet" (D86), so against it the catalogue price is a reference to price from,
+ * shown plainly; only a real price that differs from the catalogue is a
+ * discount or markup, struck through.
+ */
+function catalogueReference(listPrice: number | null, unitPrice: number): CatalogueReference {
+  if (listPrice == null || !(listPrice > 0)) return { kind: 'none' };
+  if (!(unitPrice > 0)) return { kind: 'unpriced', listPrice };
+  if (unitPrice !== listPrice) return { kind: 'discount', listPrice };
+  return { kind: 'none' };
 }
 
 /**
@@ -91,6 +117,7 @@ function LineEditor({
   quantity,
   unitPrice,
   canMutate,
+  lockedBy,
   onChange,
   remove,
 }: {
@@ -98,12 +125,15 @@ function LineEditor({
   quantity: number;
   unitPrice: string;
   canMutate: boolean;
+  /** Id of the visible reason a closed quote's lines cannot change (D132), or undefined while open. */
+  lockedBy: string | undefined;
   onChange: (patch: { quantity?: number; unitPrice?: string }) => void;
   remove: ReactNode;
 }) {
   const step = line.unit === 'per slab' || line.productId === null ? 0.5 : 1;
   const min = step;
-  const discounted = line.listPrice != null && Number(unitPrice) !== line.listPrice;
+  const locked = lockedBy !== undefined;
+  const reference = catalogueReference(line.listPrice, Number(unitPrice));
   const dirty = quantity !== line.quantity || Number(unitPrice) !== line.unitPrice;
 
   if (!canMutate) {
@@ -123,8 +153,10 @@ function LineEditor({
         {line.code ? <p className="font-ui text-sm tabular-nums text-neutral-500">Code {line.code}</p> : null}
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <span className="font-ui text-sm tabular-nums text-neutral-500">
-            {line.quantity} × {line.unitPrice > 0 ? money(line.unitPrice) : 'price on application'}
-            {discounted ? <span className="ml-2 line-through">{money(line.listPrice!)}</span> : null}
+            {line.quantity} ×{' '}
+            {line.unitPrice > 0 ? money(line.unitPrice) : reference.kind === 'unpriced' ? 'not priced yet' : 'price on application'}
+            {reference.kind === 'discount' ? <span className="ml-2 line-through">{money(reference.listPrice)}</span> : null}
+            {reference.kind === 'unpriced' ? <span className="ml-2">Catalogue {money(reference.listPrice)}</span> : null}
           </span>
           <span className="font-ui text-base font-semibold tabular-nums text-charcoal">
             {line.unitPrice > 0 ? money(line.lineTotal) : 'POA'}
@@ -141,8 +173,8 @@ function LineEditor({
       className={`${LINE_GRID} border-b border-neutral-100 last:border-0`}
       data-dirty={dirty ? 'true' : 'false'}
     >
-      <div className="flex items-center justify-between gap-3 md:contents">
-        <div className="min-w-0 flex-1 md:col-start-1 md:row-start-1">
+      <div className="flex items-center justify-between gap-3 @3xl:contents">
+        <div className="min-w-0 flex-1 @3xl:col-start-1 @3xl:row-start-1">
           <p className="min-w-0 truncate font-ui text-base text-charcoal">
             {line.description}
             {line.unit ? <span className="ml-2 text-neutral-500">{line.unit}</span> : null}
@@ -162,18 +194,25 @@ function LineEditor({
               {line.code}
             </p>
           ) : null}
-          {line.listPrice != null && Number(unitPrice) !== line.listPrice ? (
+          {/* Struck through only against a real price: an unpriced line (0,
+              the "not priced yet" state, D86) shows the catalogue price
+              plainly, as the figure to price from, not as a discount. */}
+          {reference.kind === 'discount' ? (
             <p className="mt-0.5 font-ui text-sm text-neutral-500">
-              Catalogue <span className="line-through">{money(line.listPrice)}</span>
+              Catalogue <span className="line-through">{money(reference.listPrice)}</span>
+            </p>
+          ) : reference.kind === 'unpriced' ? (
+            <p className="mt-0.5 font-ui text-sm text-neutral-500">
+              Not priced yet. Catalogue {money(reference.listPrice)}
             </p>
           ) : null}
         </div>
-        <div className="shrink-0 whitespace-nowrap md:col-start-4 md:row-start-1 md:justify-self-end">
+        <div className="shrink-0 whitespace-nowrap @3xl:col-start-4 @3xl:row-start-1 @3xl:justify-self-end">
           <LineAmount quantity={quantity} unitPrice={Number.isFinite(priceValue) ? priceValue : 0} />
         </div>
       </div>
-      <div className="flex items-center gap-2 md:contents">
-        <div className="shrink-0 md:col-start-2 md:row-start-1">
+      <div className="flex items-center gap-2 @3xl:contents">
+        <div className="shrink-0 @3xl:col-start-2 @3xl:row-start-1">
           <QuantityStepper
             className="flex-nowrap"
             value={quantity}
@@ -181,10 +220,12 @@ function LineEditor({
             label={line.description}
             step={step}
             min={min}
+            disabled={locked}
+            describedBy={lockedBy}
           />
         </div>
         <Field
-          className={`min-w-0 flex-1 md:col-start-3 md:row-start-1 md:min-w-0 ${TABLE_FIELD}`}
+          className={`min-w-0 flex-1 @3xl:col-start-3 @3xl:row-start-1 @3xl:min-w-0 ${TABLE_FIELD}`}
           label="Unit price"
           htmlFor={`price-${line.id}`}
         >
@@ -195,6 +236,8 @@ function LineEditor({
             min={0}
             step="0.01"
             value={unitPrice}
+            disabled={locked}
+            aria-describedby={lockedBy}
             onChange={(e) => onChange({ unitPrice: e.target.value })}
           />
         </Field>
@@ -203,7 +246,7 @@ function LineEditor({
           Remove existed (measured at 390: beside it the price field was 66px).
           Under the line amount on desktop: a fifth column left the item
           column no width at all at 1280, where the right rail takes its share. */}
-      <div className="-mt-1 flex justify-end md:col-start-4 md:row-start-2 md:justify-self-end">{remove}</div>
+      <div className="-mt-1 flex justify-end @3xl:col-start-4 @3xl:row-start-2 @3xl:justify-self-end">{remove}</div>
     </div>
   );
 }
@@ -212,10 +255,12 @@ function CatalogueAdd({
   quoteId,
   updatedAt,
   disabled,
+  disabledHint,
 }: {
   quoteId: string;
   updatedAt: string;
   disabled?: boolean;
+  disabledHint?: string;
 }) {
   const [state, addProducts, adding] = useActionState(addCatalogueLines, INITIAL);
   const [, startAdd] = useTransition();
@@ -251,7 +296,7 @@ function CatalogueAdd({
       <CataloguePicker
         onAdd={pick}
         disabled={Boolean(adding || disabled)}
-        {...(disabled ? { disabledHint: 'Save your line changes first.' } : {})}
+        {...(disabled && disabledHint ? { disabledHint } : {})}
       />
     </div>
   );
@@ -317,6 +362,11 @@ export function QuoteLines({
   // D131: why this viewer cannot change the lines, or why a line cannot come
   // off, always said on screen. The database decides; this explains.
   const editBlock = lineEditBlock({ canMutate, canClaim, assignedToName });
+  // D132: a won, lost or converted quote takes no line change at all, so its
+  // steppers, prices, Save and the adds are off, and the same reason line
+  // Remove points at says why. Never a silent read-only screen.
+  const closedReason = canMutate ? closedBlock({ status, convertedOrderReference }) : null;
+  const editable = canMutate && closedReason === null;
   const removeReason =
     editBlock?.reason ?? removeBlock({ status, convertedOrderReference, lineCount: lines.length, dirty });
   const reasonId = useId();
@@ -353,7 +403,7 @@ export function QuoteLines({
   lockRef.current = updatedAt;
 
   useEffect(() => {
-    if (!canMutate) {
+    if (!editable) {
       register(null);
       return;
     }
@@ -372,7 +422,7 @@ export function QuoteLines({
       return result.updatedAt ? { ok: true, updatedAt: result.updatedAt } : { ok: true };
     });
     return () => register(null);
-  }, [canMutate, quoteId, register]);
+  }, [editable, quoteId, register]);
 
   return (
     <section className="min-w-0">
@@ -386,16 +436,17 @@ export function QuoteLines({
             <Button
               type="submit"
               form="quote-lines-save"
-              disabled={!dirty}
+              disabled={!dirty || !editable}
               pending={saving}
-              title={!dirty ? 'No changes to save.' : 'Save changed items'}
+              title={closedReason ?? (!dirty ? 'No changes to save.' : 'Save changed items')}
+              aria-describedby={closedReason ? reasonId : undefined}
             >
               {saving ? 'Saving' : 'Save'}
             </Button>
           </div>
         ) : null}
       </div>
-      {canMutate && lines.length > 0 && !dirty ? (
+      {editable && lines.length > 0 && !dirty ? (
         <p className="mt-1 font-ui text-sm text-neutral-500">No changes to save.</p>
       ) : null}
       {editBlock ? (
@@ -419,13 +470,13 @@ export function QuoteLines({
         </p>
       ) : null}
       <QuoteRequestNote request={request} lines={lines} />
-      <form id="quote-lines-save" action={saveLines} className="mt-3">
+      <form id="quote-lines-save" action={saveLines} className="@container mt-3">
         <input type="hidden" name="quoteId" value={quoteId} />
         <input type="hidden" name="updatedAt" value={updatedAt} />
         <input type="hidden" name="items" value={JSON.stringify(dirtyItems)} />
         {canMutate && lines.length > 0 ? (
           <div
-            className={`sticky top-0 z-10 hidden border-b border-neutral-200 bg-neutral-50 py-2 md:grid ${LINE_COLS} md:items-center md:gap-x-4`}
+            className={`sticky top-0 z-10 hidden border-b border-neutral-200 bg-neutral-50 py-2 @3xl:grid ${LINE_COLS} @3xl:items-center @3xl:gap-x-4`}
           >
             <span className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
               Item
@@ -448,6 +499,7 @@ export function QuoteLines({
             quantity={drafts[line.id]?.quantity ?? line.quantity}
             unitPrice={drafts[line.id]?.unitPrice ?? String(line.unitPrice)}
             canMutate={canMutate}
+            lockedBy={closedReason ? reasonId : undefined}
             remove={
               <RemoveButton
                 line={line}
@@ -490,7 +542,12 @@ export function QuoteLines({
 
       {canMutate ? (
         <>
-          <CatalogueAdd quoteId={quoteId} updatedAt={updatedAt} disabled={dirty} />
+          <CatalogueAdd
+            quoteId={quoteId}
+            updatedAt={updatedAt}
+            disabled={dirty || !editable}
+            disabledHint={closedReason ?? 'Save your line changes first.'}
+          />
           <form ref={customFormRef} onSubmit={onAddCustomSubmit} className="mt-6 space-y-3 border-t border-neutral-200 pt-6">
             <div>
               <h3 className="font-ui text-sm font-semibold text-charcoal">Not in the catalogue</h3>
@@ -509,7 +566,8 @@ export function QuoteLines({
                 defaultValue={defaults.description}
                 maxLength={300}
                 placeholder="20mm Nero Marquina, sample set"
-                disabled={dirty}
+                disabled={dirty || !editable}
+                aria-describedby={closedReason ? reasonId : undefined}
               />
             </Field>
             <div className="flex flex-wrap items-end gap-3">
@@ -523,7 +581,8 @@ export function QuoteLines({
                   step={0.5}
                   defaultValue={defaults.quantity}
                   className="w-28"
-                  disabled={dirty}
+                  disabled={dirty || !editable}
+                  aria-describedby={closedReason ? reasonId : undefined}
                 />
               </Field>
               <Field label="Price" htmlFor="custom-price">
@@ -536,10 +595,18 @@ export function QuoteLines({
                   step="0.01"
                   defaultValue={defaults.unitPrice}
                   className="w-28"
-                  disabled={dirty}
+                  disabled={dirty || !editable}
+                  aria-describedby={closedReason ? reasonId : undefined}
                 />
               </Field>
-              <Button type="submit" variant="outline" disabled={dirty} pending={adding} className="shrink-0">
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={dirty || !editable}
+                aria-describedby={closedReason ? reasonId : undefined}
+                pending={adding}
+                className="shrink-0"
+              >
                 {adding ? 'Adding' : 'Add'}
               </Button>
             </div>

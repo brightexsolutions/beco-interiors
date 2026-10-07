@@ -1334,6 +1334,13 @@ export type Database = {
         Args: { p_expected_updated_at: string; p_quote_id: string }
         Returns: undefined
       }
+      assert_quote_lines_open: {
+        Args: {
+          p_converted_order_id: string
+          p_status: Database["public"]["Enums"]["quote_status"]
+        }
+        Returns: undefined
+      }
       assign_quote: {
         Args: {
           p_assignee_id: string

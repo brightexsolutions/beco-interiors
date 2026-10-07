@@ -79,6 +79,10 @@ export default defineConfig({
           environment: 'node',
           // Real network and real Postgres, so slower than the unit default.
           testTimeout: 20_000,
+          // One file at a time: every file writes to the same database, and a
+          // test that counts rows (fetchNewQuoteCount) failed whenever another
+          // file created a web quote in the same instant.
+          fileParallelism: false,
         },
         // No `@` alias here: it cannot point at both apps at once, so code
         // an integration test reaches imports relatively. `server-only` is

@@ -113,7 +113,11 @@ not listed. Each row has a Remove (D131), confirmed in `ConfirmDialog`, written 
 `remove_quote_line`; on a phone it takes its own row under the price, on desktop it sits
 under the line amount rather than in a fifth column. When the lines cannot change, the
 reason is printed above them, never a silent read-only list: on an unassigned quote a
-salesperson is told to claim it, with Claim right there. A web quote whose lines differ
+salesperson is told to claim it, with Claim right there; on a won, lost or converted quote
+(D132) the steppers, prices, Save and both adds are disabled and point at the same reason. The
+rows switch to columns on the list's own width (`@container`, `@3xl`), not the screen's, since
+the list shares the screen with the rail; below that they stack. An unpriced line shows its
+catalogue price plainly as "Not priced yet", never struck through. A web quote whose lines differ
 from what the customer submitted carries a "Changed since the customer's request" note. Assign to is a select: choosing a salesperson assigns
 immediately. Do not add a Reassign button beside it. The list is Beco
 sales and Beco admin. A Brightex admin never appears. Status actions share

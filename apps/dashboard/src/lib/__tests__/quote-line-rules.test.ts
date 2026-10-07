@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lineEditBlock, removeBlock } from '../quote-line-rules';
+import { closedBlock, lineEditBlock, removeBlock } from '../quote-line-rules';
 
 describe('lineEditBlock', () => {
   it('is null for someone who can edit', () => {
@@ -24,6 +24,24 @@ describe('lineEditBlock', () => {
   });
 });
 
+describe('closedBlock (D132)', () => {
+  it('is null on every open status', () => {
+    for (const status of ['new', 'reviewing', 'quoted'] as const) {
+      expect(closedBlock({ status, convertedOrderReference: null })).toBeNull();
+    }
+  });
+
+  it('closes won, lost and converted quotes for every line change, in the database order', () => {
+    expect(closedBlock({ status: 'won', convertedOrderReference: null })).toBe('A won quote is closed. Its items are fixed.');
+    expect(closedBlock({ status: 'lost', convertedOrderReference: null })).toBe('Reopen this quote to change its items.');
+    // Converted answers first, whatever the status says.
+    expect(closedBlock({ status: 'won', convertedOrderReference: 'BEC-O-00012' })).toBe(
+      'This quote became order BEC-O-00012. Its items are fixed.',
+    );
+    expect(closedBlock({ status: 'reviewing', convertedOrderReference: 'BEC-O-00012' })).toMatch(/^This quote became order/);
+  });
+});
+
 describe('removeBlock', () => {
   const open = { status: 'reviewing' as const, convertedOrderReference: null, lineCount: 2, dirty: false };
 
@@ -35,10 +53,10 @@ describe('removeBlock', () => {
 
   it('follows the database: converted, won, lost, last line', () => {
     expect(removeBlock({ ...open, status: 'won', convertedOrderReference: 'BEC-O-00012' })).toBe(
-      'This quote became order BEC-O-00012. Nothing can be removed.',
+      'This quote became order BEC-O-00012. Its items are fixed.',
     );
-    expect(removeBlock({ ...open, status: 'won' })).toBe('A won quote is closed. Nothing can be removed.');
-    expect(removeBlock({ ...open, status: 'lost' })).toBe('Reopen this quote to remove items.');
+    expect(removeBlock({ ...open, status: 'won' })).toBe('A won quote is closed. Its items are fixed.');
+    expect(removeBlock({ ...open, status: 'lost' })).toBe('Reopen this quote to change its items.');
     expect(removeBlock({ ...open, lineCount: 1 })).toBe('A quote needs at least one item. Mark it lost instead.');
   });
 
