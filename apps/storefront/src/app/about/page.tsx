@@ -647,16 +647,10 @@ export default async function AboutPage() {
               rather than an authenticated account, clearly placeholder
               until Beco supplies real names, titles and photographs.
 
-              Irene Oketch is real, given by name as Head of Brand and
-              Marketing; the three agents beside her are placeholders
-              standing in the shape a sales team card takes, not claims
-              about who specifically works the counter. Every photo slot is
-              the same charcoal name plate `/team` itself uses for a real
-              agent with no photograph yet, since none of these have one
-              either. Standard section padding now that "How it works" sits
-              directly above it: the earlier special top padding compensated
-              for sitting right under the RotatingStatement band with no
-              section of its own between them, which is no longer the case.
+              The section once ended on name plates for Irene and three
+              placeholder sales seats; Beco asked for them to come off on 7
+              October 2026, so it is the heading, the intro and the four role
+              cards.
 
               The intro paragraph below draws on the profile's own "Our
               team" section: a growing team with different responsibilities
@@ -706,76 +700,10 @@ export default async function AboutPage() {
           ))}
         </ul>
 
-        <p className="mt-12 font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-          Who you would meet today
-        </p>
-
-        {/* Redesigned off a uniform four-up grid, on request: Irene is a
-            real, named, senior hire and the three sales seats beside her
-            are not, so a row of four visually identical plates overstated
-            the second group and undersold the first. Irene now gets a
-            featured card of her own weight, the same "one large tile
-            against smaller ones" rule the home page's own range section
-            already uses, and the three open seats sit together as a
-            clearly related, visually lighter set rather than pretending to
-            be three distinct people. Each seat's plate carries its role,
-            "Sales, Urban Square", never an invented name standing in for
-            one, the same honesty the previous "Sales agent" name plate
-            was reaching for but undercut by putting a fake-sounding label
-            in the exact display font and position a real name takes. */}
-        <div className="mt-6 grid gap-8 lg:grid-cols-12">
-          <Reveal className="lg:col-span-5">
-            <article className="flex h-full flex-col">
-              <div className="beco-clip relative aspect-[4/5] w-full overflow-hidden rounded-card bg-charcoal lg:aspect-auto lg:min-h-[24rem]">
-                <div className="beco-wipe absolute inset-0 flex flex-col justify-end p-7 sm:p-8">
-                  <span aria-hidden className="mb-4 block h-px w-8 bg-warm-red" />
-                  <p className="font-display text-4xl leading-[1.05] text-high-vis-white sm:text-5xl">
-                    Irene Oketch
-                  </p>
-                </div>
-                <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/15" />
-              </div>
-              <p className="mt-5 font-ui text-sm font-semibold uppercase tracking-[0.1em] text-charcoal">
-                Head of Brand and Marketing
-              </p>
-            </article>
-          </Reveal>
-
-          <div className="lg:col-span-7">
-            <p className="font-ui text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              The sales team
-            </p>
-            <div className="mt-5 grid h-[calc(100%-2rem)] gap-6 sm:grid-cols-3">
-              {[
-                'Sales, Urban Square',
-                'Sales, Urban Square',
-                'Sales, field',
-              ].map((seat, i) => (
-                // PLACEHOLDER: standing in for real sales agents pending
-                // real names, titles and photographs from Beco. Not the
-                // same three fictional accounts supabase/seed.sql uses for
-                // local and staging sign-in, kept deliberately distinct so
-                // this content is never mistaken for real, published
-                // `/team` data.
-                <Reveal key={`${seat}-${i}`} delay={(i + 1) * 60} className="h-full">
-                  <article className="flex h-full flex-col">
-                    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card bg-neutral-100 lg:aspect-auto lg:min-h-[13rem]">
-                      <div className="absolute inset-0 flex items-end p-5">
-                        <p className="font-display text-xl leading-tight text-neutral-500">
-                          {seat}
-                        </p>
-                      </div>
-                      <span aria-hidden className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-charcoal/10" />
-                    </div>
-                    <p className="mt-3 font-ui text-xs font-semibold uppercase tracking-[0.1em] text-neutral-400">
-                      Sales person
-                    </p>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* The staff name plates ("Who you would meet today": a plate for
+            Irene and three placeholder sales seats) were removed on 7 October
+            2026 at Beco's request, through Irene. The role cards above say
+            who does what without picturing anyone. */}
       </section>
 
       {/* --- The showroom, against real installations. --- */}
