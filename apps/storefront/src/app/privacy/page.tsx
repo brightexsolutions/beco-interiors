@@ -15,12 +15,12 @@ export const revalidate = 3600;
  *
  * States what actually happens rather than a generic template. Rewritten 6
  * October 2026 when analytics went live (D128) and production moved onto
- * beco-prod (D127): it now names the service providers that hold or carry
- * personal data and where, since quotes sit in Supabase in Ireland (EU), not
- * in Kenya, and Kenya's Data Protection Act 2019 expects that disclosed; what
- * Google Analytics reads and how to refuse it; how long things are kept; and
- * the reader's rights, including a complaint to the Office of the Data
- * Protection Commissioner. Short sections in Beco's own voice, as before.
+ * beco-prod (D127): it says that service providers hold or carry personal
+ * data, some of it outside Kenya, as Kenya's Data Protection Act 2019 expects
+ * disclosed; what Google Analytics reads and how to refuse it; how long things
+ * are kept; and the reader's rights. On Brown's instruction, 7 October 2026,
+ * providers and hosting locations are described, not named, and the page does
+ * not point readers to the regulator. Short sections in Beco's own voice.
  * Beco should have a lawyer read it; it is accurate to the system, not legal
  * advice. Update it the day any of it stops being true.
  */
@@ -72,14 +72,15 @@ export default function PrivacyPage() {
             </p>
           </LegalSection>
 
-          <LegalSection title="Who handles it for us, and where">
+          <LegalSection title="Who handles it for us">
             <p>
-              Only Beco staff who need your details to do their job can see them. A few companies
-              run parts of this site for us and handle data only on our instructions: Supabase
-              stores quotes and orders in Ireland, in the EU; Vercel hosts the site; Resend sends
-              our emails; Cloudflare serves our domain and product photographs; Google provides
-              the analytics below; and Brightex Solutions builds and maintains the site. If an order needs delivering, we share your name, phone number and address
-              with whoever is making that delivery.
+              Only Beco staff who need your details to do their job can see them. We use trusted
+              service providers to host this site, store our records, send our emails and
+              measure how the site is used, and the team that builds and maintains the site for
+              us. They handle your details only on our instructions and to keep the site running,
+              and some of them store data outside Kenya, with safeguards to protect it. If an
+              order needs delivering, we share your name, phone number and address with whoever
+              is making that delivery.
             </p>
           </LegalSection>
 
@@ -87,7 +88,7 @@ export default function PrivacyPage() {
             <p>
               We use Google Analytics to see how the site is used. It sets cookies and reads your
               device, browser and approximate location from your IP address; Google keeps this for
-              no more than 14 months. Vercel&apos;s analytics counts visits without cookies. We
+              no more than 14 months. We also count visits in a way that sets no cookies. We
               also count calls, WhatsApp messages and quote requests by the page they started
               from. None of this records your name, number or what you asked for, and none of it
               is used for advertising.
@@ -117,12 +118,7 @@ export default function PrivacyPage() {
               <a href={`mailto:${SITE.email}`} className={link}>
                 {SITE.email}
               </a>{' '}
-              and we will do it, keeping only what we must for our accounting records. If you are
-              not happy with how we handle your details, you can complain to the{' '}
-              <a href="https://www.odpc.go.ke" className={link} rel="noopener noreferrer" target="_blank">
-                Office of the Data Protection Commissioner
-              </a>
-              .
+              and we will do it, keeping only what we must for our accounting records.
             </p>
           </LegalSection>
         </div>
