@@ -3665,3 +3665,49 @@ and Catalogue shows live, drafts, low stock and price on request as four linked 
 only on low stock when it is non zero. The sidebar draws each section's glyph beside its word, the
 same glyph the phone bar uses, from one `NavGlyph`; the word stays. No gradient blob, no sparkline
 tiles, no dark sidebar: the ban on those stands.
+
+## D143, 12 October 2026: the dashboard gets an admin surface of its own, on the same components
+
+Brown, with three screenshots: the dashboard still read as low fidelity, "looks like no aspect of
+design put in mind"; use a font common to dashboards, look at how stride-app and Dreamville are
+put together, consider shadcn, and leave the storefront alone. Three directions were drawn as a
+design canvas (A Studio, B Ledger, C Showroom); Brown chose A with C's big card, "well styled
+with gradient and pattern in the background".
+
+What was decided. The dashboard is an operations tool used all day on a laptop, so it gets a
+surface of its own on top of the one @beco/ui: `data-surface="admin"` on its root, and a block in
+`tokens.css` that overrides the variables under it and nothing else. Geist for UI and display
+(self hosted through next/font, the shop keeps Titillium and Cormorant); a 13/14/15 type scale
+with the 16px floor kept on every phone input; 10px controls and 14px cards; a cool grey ground
+so the white panels read as cards; tinted tokens for success, warning, info and danger; a ring
+token that is Warm Red on the shop and charcoal here. Two hooks carry the brand's tracked
+uppercase and red focus ring: `beco-case` and `beco-ring`, on by default, off under the admin
+surface. One component set, two looks, no fork.
+
+The shell: a white sidebar with the mark, a command K search (sections, "Search quotes for
+...", guide topics), the sections as glyph and word grouped by job, the signed in person at the
+foot; a 64px top bar with where the reader is, the guide, the new quote bell, appearance,
+settings, the account and New quote. Home: the focus card keeps its two columns and takes the
+Showroom treatment, charcoal with a red bloom and a fine vein pattern (`.beco-veins`), the red
+edge only on a breached target; each month tile carries a glyph in a tinted chip and its trend
+beside the figure. Lists sit in panels with a tinted table header band; detail screens frame
+their main column and rail in panels; the confirm dialog opens with a glyph tile, danger tinted
+when destructive; tabs underline in Warm Red.
+
+Two things the harness found while clicking through, not the unit tests: Dialog and
+ConfirmDialog now portal to the body, because rendered inside the sticky sidebar the palette's
+overlay was painted over by the main column (sticky and relative ancestors each form a stacking
+context no z-index escapes); and the HEIC decoder's worker, built from a blob URL, was refused by
+`worker-src 'self'`, so every iPhone photo failed with the Most Compatible advice. `blob:` is
+allowed and pinned by a test. The same policy never named the R2 host in `connect-src`, so in
+production the browser's direct PUT was refused outright and every photograph took the form post
+fallback, which is the "direct upload failed and 9.5MB is too large to send the slow way" error
+Brown reported. `connect-src` now carries the account's own R2 host from `R2_ACCOUNT_ID`.
+`R2_ENDPOINT`, local only, points the S3 client at a stand in so the whole upload path runs
+without the real bucket.
+
+What was not done: no shadcn install. Its construction is already the pattern here (Radix
+behind Tabs, plain elements elsewhere so jsdom can test them); its default look is what Brown
+asked us to move past. The storefront's bytes are untouched except the shared components' class
+names, which resolve to the same values there.
+

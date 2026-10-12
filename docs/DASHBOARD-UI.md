@@ -389,3 +389,34 @@ its own branch; nothing on main moved.
 
 Rules unchanged: tokens, type floor, 44px targets, no browser dialog, no dark sidebar, the
 storefront untouched except the product page's Sizes list.
+
+## 12 October 2026, later: the admin surface (D143)
+
+Brown's second round: the result of D136 to D142 was still "basic design, low fidelity". Three
+directions were drawn, Brown chose A (Studio) with C's hero card.
+
+- **One component set, two looks.** `data-surface="admin"` on the dashboard root. The admin
+  block in `tokens.css` overrides fonts (Geist), scale (13/14/15, 16px on phone inputs), radii
+  (10 control, 14 card and panel), ground (`neutral-50` cool grey), shadows and the ring colour.
+  `beco-case` and `beco-ring` hooks turn the tracked uppercase and the red focus ring off here.
+  Nothing in `apps/storefront` changed.
+- **Shell.** Sidebar: mark, command K search, grouped glyph and word rows (active on the tint,
+  glyph in Warm Red), the person at the foot. Top bar: crumb, guide, bell with a red dot when
+  quotes are new, appearance, settings, account, New quote. Screens sit on the ground with no
+  wrapper panel; each card draws its own edge. Phone: the header card keeps the showroom still
+  (D85) behind it, the band now the card's own height; bottom bar labels at 13px.
+- **Home.** The focus card on `.beco-veins`, red edge only on a breach. Month tiles with a
+  tinted glyph chip (won green, conversion blue, invoiced neutral, leads danger, catalogue
+  warning) and the trend beside the figure in the success or danger tint. Panels with the soft
+  shadow. Latest quotes rows lead with initials.
+- **Lists and details.** Tinted table header band, plain captions, rows at 14px with more air.
+  Users, audit and announcements in the same Panel and TableToolbar frame as the rest. Quote,
+  order and customer details frame main column and rail in panels.
+- **Dialogs.** Dialog and ConfirmDialog portal to the body. ConfirmDialog opens with a glyph
+  tile, danger tinted when destructive. Tabs underline in Warm Red. Toasts expand so several
+  refusals at once each stay readable.
+- **Checked, not assumed.** Every screen shot at 1440, 1024 and 390 through the harness with a
+  horizontal overflow probe (one found and fixed: the phone's docked save bars bled by the old
+  panel padding). The upload path walked with a real HEIC, a 3200px JPEG, a PNG, a 41MB file and a
+  PDF against a fake bucket: the HEIC worker was being refused by the CSP, fixed and pinned.
+
