@@ -137,6 +137,11 @@ export function StatCard({
   // and a long figure holds at 24px, which is what a five column row at
   // 1440px and the two column phone grid both fit without touching an edge.
   const longFigure = String(value).length > 8;
+  // Intl's currency output joins "Ksh" to the number with a non breaking
+  // space, so a long figure could never wrap and spilled out of a phone
+  // tile (360px, two across). A plain space lets it break there when it
+  // must, which the comment above already allows for.
+  const figure = String(value).replace(/\u00a0/g, ' ');
 
   return (
     <div
@@ -183,11 +188,11 @@ export function StatCard({
           className={cn(
             // Lining figures: Cormorant's default old-style "1" reads as "I".
             '[overflow-wrap:normal] font-display font-semibold leading-none tracking-[-0.02em] tabular-nums lining-nums',
-            compact ? 'text-lg sm:text-xl' : longFigure ? 'text-2xl' : 'text-3xl sm:text-4xl',
+            compact ? 'text-lg sm:text-xl' : longFigure ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl',
             t.value,
           )}
         >
-          {value}
+          {figure}
         </p>
         {delta && icon ? (
           <span

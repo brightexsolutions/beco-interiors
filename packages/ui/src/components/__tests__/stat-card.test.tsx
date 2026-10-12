@@ -150,6 +150,11 @@ describe('StatCard figures never wrap', () => {
     expect(figure.className).toContain('text-2xl');
   });
 
+  it('turns the non breaking space in a currency figure into one that can wrap on a narrow tile', () => {
+    render(<StatCard label="Invoiced" value={'Ksh\u00a02,210,000'} />);
+    expect(screen.getByText('Ksh 2,210,000').textContent).not.toContain('\u00a0');
+  });
+
   it('keeps the full size for a short figure', () => {
     render(<StatCard label="Products live" value="24" />);
     expect(screen.getByText('24').className).toContain('text-3xl');

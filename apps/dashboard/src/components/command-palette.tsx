@@ -135,7 +135,7 @@ export function CommandPalette({
         <span className="flex-1">Search</span>
         <kbd className="rounded-control border border-neutral-200 bg-high-vis-white px-1.5 py-0.5 font-ui text-xs text-neutral-500">⌘K</kbd>
       </button>
-      <Dialog open={open} onOpenChange={setOpen} title="Search" initialFocusRef={inputRef} className="sm:h-auto sm:min-h-[22rem] sm:max-h-[min(80dvh,34rem)] sm:max-w-[36rem]">
+      <Dialog open={open} onOpenChange={setOpen} title="Search" initialFocusRef={inputRef} className="sm:mt-20 sm:h-auto sm:max-h-[min(70dvh,32rem)] sm:max-w-[36rem] sm:self-start">
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="border-b border-neutral-200 px-4 py-3 sm:px-5">
             <label htmlFor="palette-input" className="sr-only">
@@ -171,7 +171,7 @@ export function CommandPalette({
               />
             </div>
           </div>
-          <ul id="palette-results" role="listbox" aria-label="Results" className="min-h-0 flex-1 overflow-y-auto p-2">
+          <ul id="palette-results" role="listbox" aria-label="Results" className="min-h-0 overflow-y-auto p-2">
             {commands.length === 0 ? (
               <li className="px-3 py-6 text-center font-ui text-sm text-neutral-500">Nothing matches. Try a section name or a customer.</li>
             ) : (
