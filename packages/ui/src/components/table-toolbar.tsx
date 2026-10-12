@@ -24,7 +24,7 @@ export function TableToolbar({
 }) {
   return (
     <div className={cn('flex flex-col gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5 xl:flex-row xl:items-end xl:justify-between', className)}>
-      <div className="flex min-w-0 flex-1 flex-col gap-3 xl:flex-row xl:items-end">
+      <div data-tour="filters" className="flex min-w-0 flex-1 flex-col gap-3 xl:flex-row xl:items-end">
         {search ? <div className="min-w-0 xl:w-80">{search}</div> : null}
         {filters ? <div className="min-w-0 flex-1">{filters}</div> : null}
       </div>
