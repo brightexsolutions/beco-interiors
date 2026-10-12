@@ -3711,3 +3711,13 @@ behind Tabs, plain elements elsewhere so jsdom can test them); its default look 
 asked us to move past. The storefront's bytes are untouched except the shared components' class
 names, which resolve to the same values there.
 
+## D144, 12 October 2026: the sidebar groups fold
+
+Brown, walking the D143 shell on a laptop: the sidebar scrolled before it showed Admin. Each group
+heading now folds its rows. Home and Sales, the day's work, open on a first visit and the rest are
+folded; the group holding the current screen always opens, so the reader can always see where they
+are; what someone opens or folds is kept in their own browser (`beco-dashboard-side-nav`), a
+convenience that falls back to the defaults when storage is blocked. A folded Sales carries the
+new quote count on its heading so the count is never hidden. The phone bar is unchanged.
+
+*Reverses if:* the sections fit a laptop screen again, at which point the fold is noise.
