@@ -41,7 +41,7 @@ export function SettingsDocumentPreview({ values }: { values: DocumentPreviewVal
 
   return (
     <figure aria-label="As printed on a quote" className="font-ui">
-      <figcaption className="mb-2 text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+      <figcaption className="mb-2 beco-case font-ui text-xs font-semibold text-neutral-500">
         As printed on a quote
       </figcaption>
       <div className="border border-neutral-200 bg-high-vis-white">
@@ -52,7 +52,7 @@ export function SettingsDocumentPreview({ values }: { values: DocumentPreviewVal
         <div aria-hidden className="h-[3px] bg-warm-red" />
         <div className="space-y-4 px-4 py-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">From</p>
+            <p className="beco-case font-ui text-xs font-semibold text-neutral-500">From</p>
             <p data-testid="preview-from-name" className="mt-1 text-base font-semibold text-charcoal">
               {from.name}
             </p>

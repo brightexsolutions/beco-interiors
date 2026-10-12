@@ -122,7 +122,7 @@ export function CatalogueRanges({
   return (
     <section aria-labelledby="ranges-heading" className="mb-8">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 id="ranges-heading" className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+        <h2 id="ranges-heading" className="beco-case font-ui text-xs font-semibold text-neutral-500">
           Browse
         </h2>
         <Link href={newHref(null)} className={buttonClasses({ variant: 'ghost' })}>

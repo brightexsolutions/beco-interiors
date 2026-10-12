@@ -54,7 +54,7 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
       <PageHeading eyebrow="Storefront" title="Announcements" actions={<NewAnnouncementFab />} />
       <section aria-labelledby="on-site-now" className="mb-8 rounded-panel border border-neutral-200 bg-neutral-50 p-4 sm:p-5">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="on-site-now" className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
+          <h2 id="on-site-now" className="beco-case font-ui text-xs font-semibold text-neutral-500">
             On the site now
           </h2>
           {showing.length > 1 ? (

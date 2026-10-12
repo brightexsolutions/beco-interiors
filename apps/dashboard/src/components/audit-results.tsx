@@ -73,7 +73,7 @@ function AuditFields({ title, value }: { title: string; value: unknown }) {
         <dl className="space-y-3">
           {fields.map((field) => (
             <div key={field.label}>
-              <dt className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              <dt className="beco-case font-ui text-xs font-semibold text-neutral-500">
                 {field.label}
               </dt>
               <dd className="mt-1 font-ui text-base text-charcoal">{field.text}</dd>

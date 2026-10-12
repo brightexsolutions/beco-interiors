@@ -71,7 +71,7 @@ export function ImportRunner({
         ) : null}
 
         <div>
-          <p className="mb-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">What</p>
+          <p className="mb-2 beco-case font-ui text-xs font-semibold text-neutral-500">What</p>
           <ChipGroup
             label="What the import should do"
             options={IMPORT_MODES.map((m) => ({ value: m, label: IMPORT_MODE_LABEL[m] }))}
@@ -82,7 +82,7 @@ export function ImportRunner({
         </div>
 
         <div>
-          <p className="mb-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">Where</p>
+          <p className="mb-2 beco-case font-ui text-xs font-semibold text-neutral-500">Where</p>
           <ChipGroup
             label="Which site"
             options={targets}

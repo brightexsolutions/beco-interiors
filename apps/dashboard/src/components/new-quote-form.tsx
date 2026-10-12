@@ -195,16 +195,16 @@ export function NewQuoteForm() {
                 <li
                   className={`sticky top-0 z-10 hidden border-b border-neutral-200 bg-neutral-50 py-2 @3xl:grid ${LINE_COLS} @3xl:items-center @3xl:gap-4 @3xl:px-5`}
                 >
-                <span className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+                <span className="beco-case font-ui text-xs font-semibold text-neutral-500">
                   Item
                 </span>
-                <span className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+                <span className="beco-case font-ui text-xs font-semibold text-neutral-500">
                   Qty
                 </span>
-                <span className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+                <span className="beco-case font-ui text-xs font-semibold text-neutral-500">
                   Unit
                 </span>
-                <span className="text-right font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+                <span className="text-right beco-case font-ui text-xs font-semibold text-neutral-500">
                   Line
                 </span>
                 <span className="sr-only">Remove</span>
@@ -224,7 +224,7 @@ export function NewQuoteForm() {
 
         <Panel
           title={
-            <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
+            <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">
               Customer
             </h2>
           }
@@ -251,7 +251,7 @@ export function NewQuoteForm() {
             </Field>
 
             <div className="flex items-baseline justify-between border-t border-neutral-200 pt-4">
-              <p className="font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+              <p className="beco-case font-ui text-xs font-semibold text-neutral-500">
                 Total
               </p>
               <p className="font-ui text-xl font-semibold tabular-nums text-charcoal">

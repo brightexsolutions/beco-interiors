@@ -77,13 +77,13 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
         {expired ? <StatusPill label="Expired" tone="muted" /> : null}
       </div>
 
-      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_20rem] xl:grid-rows-[auto_1fr] xl:gap-y-0">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:grid-rows-[auto_1fr]">
         {/* What someone acts on, first on a phone: status actions and the
             one-tap ways to reach the customer come before the line editor.
             On desktop it is the top of the right hand rail. */}
-        <aside className="min-w-0 space-y-4 border-b border-neutral-200 pb-6 xl:col-start-2 xl:row-start-1 xl:border-b-0 xl:border-l xl:pb-0 xl:pl-8">
+        <aside className="min-w-0 space-y-5 rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel xl:col-start-2 xl:row-start-1">
           <div>
-            <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">
               Actions
             </h2>
             <div className="mt-2">
@@ -108,7 +108,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
           </div>
 
           <div>
-            <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">
               Customer
             </h2>
             <dl className="mt-2 space-y-1 break-words font-ui text-sm text-charcoal">
@@ -135,7 +135,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
 
           {quote.fulfilment === 'delivery' || quote.wantsInstallation || quote.wantsSamples ? (
             <div>
-              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+              <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">
                 Requested
               </h2>
               {/* Captured on submission, priced separately: these are not
@@ -157,7 +157,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
           ) : null}
 
         </aside>
-        <div className="min-w-0 xl:col-start-1 xl:row-span-2 xl:row-start-1">
+        <div className="min-w-0 rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel sm:p-6 xl:col-start-1 xl:row-span-2 xl:row-start-1">
           <QuoteLines
             lines={quote.lines}
             quoteId={quote.id}
@@ -172,7 +172,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
           />
 
           <div className="mt-6 flex justify-end">
-            <dl className="w-full border border-neutral-200 border-l-4 border-l-charcoal bg-neutral-50 px-5 py-4 font-ui sm:max-w-sm">
+            <dl className="w-full rounded-card border border-neutral-200 border-l-4 border-l-charcoal bg-neutral-50 px-5 py-4 font-ui sm:max-w-sm">
               {totals.isPriced ? (
                 <>
                   <div className="flex items-baseline justify-between gap-4 text-sm text-neutral-500">
@@ -184,13 +184,13 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
                     <dd className="tabular-nums">{money(totals.vat)}</dd>
                   </div>
                   <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-neutral-200 pt-3">
-                    <dt className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">Total</dt>
-                    <dd className="font-display text-2xl leading-none tabular-nums text-charcoal sm:text-3xl">{money(totals.gross)}</dd>
+                    <dt className="beco-case font-ui text-xs font-semibold text-neutral-500">Total</dt>
+                    <dd className="font-display text-2xl font-semibold leading-none tabular-nums text-charcoal sm:text-3xl">{money(totals.gross)}</dd>
                   </div>
                 </>
               ) : (
                 <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">Total</dt>
+                  <dt className="beco-case font-ui text-xs font-semibold text-neutral-500">Total</dt>
                   <dd className="text-base text-neutral-700">Pricing on application</dd>
                 </div>
               )}
@@ -199,7 +199,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
 
           {quote.projectDetails ? (
             <div className="mt-8">
-              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+              <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">
                 Project details
               </h2>
               <p className="mt-2 max-w-[68ch] font-ui text-base text-neutral-700">{quote.projectDetails}</p>
@@ -208,7 +208,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
 
           {quote.status === 'lost' && quote.lostReason ? (
             <div className="mt-8">
-              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+              <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">
                 Lost reason
               </h2>
               <p className="mt-2 font-ui text-base text-neutral-700">{quote.lostReason}</p>
@@ -216,8 +216,9 @@ export default async function QuoteDetailPage({ params }: { params: Promise<Para
           ) : null}
         </div>
 
-        <aside className="min-w-0 space-y-4 border-t border-neutral-200 pt-6 xl:col-start-2 xl:row-start-2 xl:border-l xl:border-t-0 xl:pl-8 xl:pt-6">          <div>
-            <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+        <aside className="min-w-0 space-y-5 rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel xl:col-start-2 xl:row-start-2">
+          <div>
+            <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">
               Ownership
             </h2>
             <dl className="mt-2 space-y-1 font-ui text-sm">

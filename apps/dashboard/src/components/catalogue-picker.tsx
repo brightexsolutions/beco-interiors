@@ -252,7 +252,7 @@ export const CataloguePicker = forwardRef<
             {hitGroups.map((group) => (
               <li key={group.name} className="mb-2">
                 {range ? null : (
-                  <h3 className="sticky top-0 z-10 bg-high-vis-white px-3 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+                  <h3 className="sticky top-0 z-10 bg-high-vis-white px-3 py-2 beco-case font-ui text-xs font-semibold text-neutral-500">
                     {group.name}
                   </h3>
                 )}

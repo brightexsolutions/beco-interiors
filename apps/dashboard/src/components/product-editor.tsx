@@ -250,7 +250,7 @@ export function ProductEditor({
           className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5"
         >
           <div className="min-w-0 border border-neutral-200 px-4 py-4">
-            <p className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            <p className="beco-case font-ui text-xs font-semibold text-neutral-500">
               Website
             </p>
             <p className="mt-2 font-ui text-lg font-semibold text-charcoal">{name.trim() || 'Unnamed product'}</p>
