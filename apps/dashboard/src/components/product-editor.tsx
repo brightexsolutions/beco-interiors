@@ -18,7 +18,7 @@ import {
   useActionToast,
   useKeepValuesSubmit,
 } from '@beco/ui';
-import { PRODUCT_UNITS, stockStepFor } from '@beco/validation';
+import { PRODUCT_UNITS, slugifyProductName, stockStepFor } from '@beco/validation';
 import type { Availability, PriceDisplayMode, ProductSize } from '@beco/types';
 import {
   deleteProduct,
@@ -26,6 +26,7 @@ import {
   updateProduct,
   type ProductActionState,
 } from '@/app/(app)/products/actions';
+import { PageUrl } from '@/components/page-url';
 import { ProductImages } from '@/components/product-images';
 import { groupCategoryOptions, type CatalogueProduct, type ProductCategoryOption } from '@/lib/products';
 
@@ -222,6 +223,10 @@ export function ProductEditor({
     startTransition(() => publish(payload));
   };
 
+  // The address follows the name: the saved slug while the name is as saved
+  // (an imported slug may differ from the name's own), the name's slug once it
+  // changes. Old links keep working through the slug history.
+  const derivedSlug = name.trim() === product.name.trim() ? product.slug : slugifyProductName(name) || product.slug;
   const busy = saving || removing || publishing;
   const publishPending = publishing || (saving && saveIntent !== 'save');
   const stockQuantity = asNumber(stockInput);
@@ -337,9 +342,7 @@ export function ProductEditor({
               <Field label="SKU" htmlFor="sku" hint="Supplier code. Shown on the product page">
                 <Input id="sku" name="sku" defaultValue={product.sku ?? ''} className="min-w-0" />
               </Field>
-              <Field label="Page URL" htmlFor="slug" hint="Old links still work">
-                <Input id="slug" name="slug" defaultValue={product.slug} required className="min-w-0" />
-              </Field>
+              <PageUrl prefix="/product" slug={derivedSlug} renamed={derivedSlug !== product.slug} />
               <Field label="Range" htmlFor="categoryId">
                 <Select id="categoryId" name="categoryId" defaultValue={product.categoryId ?? ''}>
                   <option value="">None</option>

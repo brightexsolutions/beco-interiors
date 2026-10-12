@@ -442,8 +442,11 @@ tested):
 | Save (range) | Writes name, slug, parent, description, SEO overrides, published, sort order. Busts the storefront `/shop` pages for the range, its former slug and its parent. Closes the sheet on success | Test: `updateCategory` action, integration against local Postgres. Sheet close: `category-editor.test.tsx` |
 | Delete range | `ConfirmDialog` names the range. Disabled when products or child ranges are still filed under it, with the reason on its own line beneath ("Empty it first: 2 ranges filed under it.") and wired by `aria-describedby`, so the label stays two words and fits a phone. Refused server side too if reached anyway. Closes the sheet | Test: `CategoryEditor` plus `deleteCategory` action |
 
-Page URL fields (both products and ranges) carry the hint "Old links still work", not a
-"redirect" mention: the person using this screen is a product manager, not a developer.
+Page URL (both products and ranges) is not a field since 12 October: it is made from the name
+and shown read only with the reason, "Made from the name", and "Old links still work" rather
+than a "redirect" mention, because the person using this screen is a product manager, not a
+developer. A rename moves the page on Save; the slug history keeps every old link working. The
+new product form shows the address forming as the name is typed.
 
 **Product list and filters:**
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { slugifyCategoryName } from '@beco/validation';
+
 import { useActionState, useEffect, useState } from 'react';
 import {
   Button,
@@ -14,6 +16,7 @@ import {
   useActionToast,
   useKeepValuesSubmit,
 } from '@beco/ui';
+import { PageUrl } from '@/components/page-url';
 import { deleteCategory, updateCategory, type CategoryActionState } from '@/app/(app)/categories/actions';
 import type { CategoryParentOption, CategoryRow } from '@/lib/categories';
 
@@ -59,6 +62,9 @@ export function CategoryEditor({
 
   const busy = saving || removing;
   const isGroup = category.parentId == null;
+  // The address follows the name, as on a product. Old links keep working
+  // through the category slug history (migration 49).
+  const derivedSlug = name.trim() === category.name.trim() ? category.slug : slugifyCategoryName(name) || category.slug;
   const blockedBy =
     category.childCount > 0
       ? `${category.childCount} ${category.childCount === 1 ? 'range' : 'ranges'} filed under it`
@@ -112,9 +118,7 @@ export function CategoryEditor({
                   className="min-w-0"
                 />
               </Field>
-              <Field label="Page URL" htmlFor="cat-slug" hint="Old links still work">
-                <Input id="cat-slug" name="slug" defaultValue={category.slug} required className="min-w-0" />
-              </Field>
+              <PageUrl prefix="/shop" slug={derivedSlug} renamed={derivedSlug !== category.slug} />
               <Field
                 label="File under"
                 htmlFor="cat-parent"

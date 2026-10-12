@@ -21,11 +21,13 @@ const categories = [
 ];
 
 describe('ProductCreate', () => {
-  it('fills the slug from the name until the slug is edited', async () => {
+  it('makes the page URL from the name, shown read only and posted as the slug', async () => {
     const user = userEvent.setup();
-    render(<ProductCreate categories={categories} returnTo="/products" />);
+    const { container } = render(<ProductCreate categories={categories} returnTo="/products" />);
     await user.type(screen.getByLabelText('Product name'), 'Calacatta Gold');
-    expect(screen.getByLabelText(/page url/i)).toHaveValue('calacatta-gold');
+    expect(screen.getByText('calacatta-gold')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/page url/i)).toBeNull();
+    expect((container.querySelector('input[name="slug"]') as HTMLInputElement).value).toBe('calacatta-gold');
   });
 
   it('submits Create product', async () => {
