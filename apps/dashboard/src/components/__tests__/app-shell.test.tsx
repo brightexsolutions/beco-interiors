@@ -120,6 +120,18 @@ describe('AppShell', () => {
     expect(within(main).queryByRole('link', { name: 'Users' })).toBeNull();
   });
 
+  it('keeps the desktop top bar in view while the page scrolls, and names its height for what pins under it (D146)', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const bar = container.querySelector('[data-top-bar]');
+    expect(bar).toHaveClass('sticky', 'top-0', 'z-20');
+    expect(container.firstElementChild?.className).toMatch(/lg:\[--shell-top:4rem\]/);
+    expect(container.firstElementChild?.className).toMatch(/\[--shell-top:0px\]/);
+  });
+
   it('names where the reader is in the desktop top bar and the phone header alike', () => {
     render(
       <AppShell user={admin}>
@@ -168,7 +180,7 @@ describe('AppShell', () => {
     expect(bar).toBeDefined();
     // backdrop-blur makes the bar a stacking context; without its own z-index
     // the later <main> paints over it and the menu inside it.
-    expect(bar).toHaveClass('relative', 'z-20');
+    expect(bar).toHaveClass('sticky', 'z-20');
     const main = container.querySelector('main')!;
     expect(main.className).not.toMatch(/\bz-(2|3|4|5)\d\b/);
   });

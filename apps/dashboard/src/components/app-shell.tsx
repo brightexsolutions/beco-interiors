@@ -68,8 +68,8 @@ export function AppShell({
       <div
         className={
           bottom.items.length > 0
-            ? 'min-h-screen bg-neutral-50 [--dock:calc(3.5625rem+env(safe-area-inset-bottom,0px))] lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:[--dock:0px]'
-            : 'min-h-screen bg-neutral-50 [--dock:0px] lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]'
+            ? 'min-h-screen bg-neutral-50 [--dock:calc(3.5625rem+env(safe-area-inset-bottom,0px))] [--shell-top:0px] lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:[--dock:0px] lg:[--shell-top:4rem]'
+            : 'min-h-screen bg-neutral-50 [--dock:0px] [--shell-top:0px] lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:[--shell-top:4rem]'
         }
       >
         {/* Desktop sidebar */}
@@ -139,10 +139,12 @@ export function AppShell({
           </div>
 
           {/* Desktop top bar */}
-          {/* relative z-20: backdrop-blur makes this bar its own stacking
-              context, so without a z-index of its own the main panel below
-              painted over it and hid the account menu that opens from it. */}
-          <div className="relative z-20 hidden h-16 items-center justify-between gap-4 border-b border-neutral-200 bg-high-vis-white/85 px-8 backdrop-blur lg:flex">
+          {/* z-20: backdrop-blur makes this bar its own stacking context, so
+              without a z-index of its own the main panel below painted over
+              it and hid the account menu that opens from it. Sticky, D146:
+              it stays in view while the page scrolls, and its height is
+              --shell-top, which anything else pinned to the top sits under. */}
+          <div data-top-bar className="sticky top-0 z-20 hidden h-16 items-center justify-between gap-4 border-b border-neutral-200 bg-high-vis-white/85 px-8 backdrop-blur lg:flex">
             <div className="flex min-w-0 items-center gap-3">
               <TopBarCrumb />
               <ViewOnlyMark readOnlyPrefixes={readOnlyPrefixes} />

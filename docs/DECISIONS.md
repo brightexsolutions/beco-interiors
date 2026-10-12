@@ -3728,3 +3728,11 @@ Brown, scrolling the cards: the range pills scrolled off, so changing range mean
 up. From a tablet up the Browse section is sticky at the top of the screen on the ground fill, and
 the list slides under it. On a phone it scrolls as before: the pills wrap to four rows there and
 pinned they would cover a third of the screen.
+
+## D146, 12 October 2026: the top bar stays
+
+Brown: the dashboard header should not scroll off. From a laptop up the top bar is sticky, so New
+quote, the guide and the account are always one click away. Its height is `--shell-top` on the
+shell root (0 under `lg`, where there is no bar), and anything else pinned to the top of the page
+sits under it: the catalogue ranges (D145), the blog editor's rail and the new quote customer rail.
+Sticky headers inside their own scrolling boxes are unaffected.

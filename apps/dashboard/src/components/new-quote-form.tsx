@@ -228,7 +228,7 @@ export function NewQuoteForm() {
               Customer
             </h2>
           }
-          className="xl:sticky xl:top-4"
+          className="xl:sticky xl:top-[calc(var(--shell-top)+1rem)]"
         >
           <div className="grid gap-4 p-5">
             {customer ? (

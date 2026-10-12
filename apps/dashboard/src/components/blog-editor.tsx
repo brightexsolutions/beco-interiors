@@ -190,7 +190,7 @@ export function BlogEditor({
             </FormSection>
           </form>
 
-          <aside className="space-y-6 xl:sticky xl:top-4">
+          <aside className="space-y-6 xl:sticky xl:top-[calc(var(--shell-top)+1rem)]">
             <form onSubmit={onGenerateSubmit} className="space-y-4 rounded-panel border border-neutral-200 p-5">
               <FormSection title="Generate">
                 <Field label="Brief" htmlFor="blog-brief">

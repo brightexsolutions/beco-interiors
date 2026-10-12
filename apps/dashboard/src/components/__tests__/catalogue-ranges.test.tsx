@@ -85,7 +85,7 @@ describe('CatalogueRanges, the range browser (D114)', () => {
   it('pins the ranges to the top from a tablet up, on the ground fill, and leaves a phone scrolling (D145)', () => {
     render(<CatalogueRanges tree={deep()} groupOptions={[]} editing={null} creating={false} selectedId={null} />);
     const section = screen.getByRole('region', { name: 'Browse' });
-    expect(section).toHaveClass('md:sticky', 'md:top-0', 'md:z-10', 'md:bg-neutral-50');
+    expect(section).toHaveClass('md:sticky', 'md:top-[var(--shell-top)]', 'md:z-10', 'md:bg-neutral-50');
     expect(section).not.toHaveClass('sticky');
   });
 
