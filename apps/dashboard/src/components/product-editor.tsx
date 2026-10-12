@@ -5,6 +5,7 @@ import {
   AvailabilityBadge,
   Button,
   ConfirmDialog,
+  cn,
   Field,
   FormSection,
   Icon,
@@ -249,7 +250,7 @@ export function ProductEditor({
           onChange={markDirty}
           className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5"
         >
-          <div className="min-w-0 border border-neutral-200 px-4 py-4">
+          <div className="min-w-0 rounded-card border border-neutral-200 bg-neutral-50 px-4 py-4">
             <p className="beco-case font-ui text-xs font-semibold text-neutral-500">
               Website
             </p>
@@ -433,9 +434,9 @@ export function ProductEditor({
               {sizes.length === 0 ? (
                 <p className="font-ui text-base text-neutral-500">One size. Add sizes if the counter has to pick one.</p>
               ) : (
-                <ul className="space-y-3">
+                <ul className="divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200">
                   {sizes.map((row, index) => (
-                    <li key={index} className="grid min-w-0 grid-cols-1 gap-2 rounded-card border border-neutral-200 p-3 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                    <li key={index} className="grid min-w-0 grid-cols-1 gap-2 p-3 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
                       <Field label="Size" htmlFor={`size-label-${index}`}>
                         <Input
                           id={`size-label-${index}`}
@@ -636,20 +637,27 @@ export function ProductEditor({
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-neutral-200 bg-high-vis-white px-5 py-3 sm:flex-row sm:justify-between">
-          <Button type="button" variant="ghost" onClick={() => setConfirmOpen(true)} disabled={busy}>
-            <Icon name="trash" />
-            Delete product
-          </Button>
-          <Button
-            type="submit"
-            form="product-editor"
-            variant="primary"
-            disabled={busy}
-            pending={saving && saveIntent === 'save'}
-          >
-            {saving && saveIntent === 'save' ? 'Saving' : 'Save'}
-          </Button>
+        <div className="flex shrink-0 flex-col gap-3 border-t border-neutral-200 bg-high-vis-white px-5 py-3 sm:flex-row sm:items-center">
+          {/* The dot says whether Save has anything to do, before anyone presses it. */}
+          <p aria-live="polite" className="flex items-center gap-2 font-ui text-sm text-neutral-500">
+            <span aria-hidden className={cn('h-2 w-2 rounded-full', dirty ? 'bg-warning' : 'bg-success')} />
+            {dirty ? 'Unsaved changes' : 'All saved'}
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:ml-auto sm:flex-row">
+            <Button type="button" variant="ghost" onClick={() => setConfirmOpen(true)} disabled={busy}>
+              <Icon name="trash" />
+              Delete product
+            </Button>
+            <Button
+              type="submit"
+              form="product-editor"
+              variant="primary"
+              disabled={busy}
+              pending={saving && saveIntent === 'save'}
+            >
+              {saving && saveIntent === 'save' ? 'Saving' : 'Save'}
+            </Button>
+          </div>
         </div>
       </div>
 

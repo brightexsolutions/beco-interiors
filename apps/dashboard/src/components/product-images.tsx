@@ -278,141 +278,231 @@ export function ProductImages({
         ? 'Upload photographs'
         : `Upload ${waiting.length} photographs`;
 
+  const [selected, setSelected] = useState(0);
+  const currentIndex = rows.length === 0 ? -1 : Math.min(selected, rows.length - 1);
+  const current = currentIndex >= 0 ? rows[currentIndex]! : null;
+  const roomLeft = rows.length < MAX_PER_PRODUCT;
+
   return (
     <FormSection
       title="Photographs"
-      hint="First shot is the shop card. Name the stone in the alt text, that is what a screen reader speaks."
+      hint="The first shot is the website card. Tap a photograph to change its shot, alt text or order."
     >
-      {rows.length === 0 ? (
-        <p className="font-ui text-base text-neutral-500">No photographs yet. The website card stays empty until you add one.</p>
-      ) : (
-        <ul className="space-y-3">
-          {rows.map((image, index) => (
-            <li key={image.path} className="min-w-0 rounded-card border border-neutral-200 p-3">
-              <div className="flex min-w-0 gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={productImageUrl(image.path, 400)}
-                  alt={image.alt || image.role}
-                  width={72}
-                  height={72}
-                  className="h-[72px] w-[72px] shrink-0 rounded-control object-cover"
-                />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <Field label="Shot" htmlFor={`role-${index}`}>
-                    <Select
-                      id={`role-${index}`}
-                      value={image.role}
-                      disabled={busy}
-                      onChange={(event) => {
-                        const role = event.target.value as ImageRole;
-                        persist(rows.map((row, i) => (i === index ? { ...row, role } : row)));
-                      }}
-                    >
-                      {IMAGE_ROLES.map((role) => (
-                        <option key={role} value={role}>
-                          {IMAGE_ROLE_LABEL[role]}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Alt text" htmlFor={`alt-${index}`} hint="Spoken on the product page">
-                    <Input
-                      id={`alt-${index}`}
-                      defaultValue={image.alt}
-                      disabled={busy}
-                      onBlur={(event) => {
-                        const alt = event.target.value.trim();
-                        if (alt === image.alt) return;
-                        persist(rows.map((row, i) => (i === index ? { ...row, alt } : row)));
-                      }}
-                    />
-                  </Field>
+      <div className="min-w-0 space-y-3">
+        <p className="font-ui text-sm text-neutral-500">
+          {rows.length === 0 ? 'No photographs yet. The website card stays empty until you add one.' : `${rows.length} of ${MAX_PER_PRODUCT}`}
+        </p>
+
+        {/* The grid: what is stored, then what is on its way, then the Add tile. */}
+        <ul aria-label="Product photographs" className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+          {rows.map((image, index) => {
+            const active = index === currentIndex;
+            return (
+              <li key={image.path} className="min-w-0">
+                <button
+                  type="button"
+                  aria-pressed={active}
+                  disabled={busy}
+                  onClick={() => setSelected(index)}
+                  aria-label={`${IMAGE_ROLE_LABEL[image.role]}${index === 0 ? ', cover' : ''}: ${image.alt || 'no alt text yet'}`}
+                  className={cn(
+                    'relative block aspect-square w-full overflow-hidden rounded-control bg-neutral-100 outline-none transition-shadow',
+                    active ? 'ring-2 ring-charcoal ring-offset-2' : 'hover:ring-2 hover:ring-neutral-300 hover:ring-offset-2',
+                    'focus-visible:ring-2 focus-visible:ring-charcoal focus-visible:ring-offset-2 disabled:opacity-60',
+                  )}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={productImageUrl(image.path, 400)} alt="" width={400} height={400} className="h-full w-full object-cover" />
+                  <span
+                    aria-hidden
+                    className="absolute bottom-1.5 left-1.5 inline-flex max-w-[calc(100%-0.75rem)] items-center truncate rounded-full bg-charcoal/85 px-2 py-0.5 font-ui text-xs font-semibold text-high-vis-white"
+                  >
+                    {IMAGE_ROLE_LABEL[image.role]}
+                    {index === 0 ? ' · cover' : ''}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          {queue.map((item) => {
+            const inFlight = item.status === 'preparing' || item.status === 'uploading' || item.status === 'processing';
+            return (
+              // Presentational: the row below carries the same file's name, fields and status for assistive tech.
+              <li key={item.id} aria-hidden className="min-w-0">
+                <div
+                  className={cn(
+                    'relative aspect-square w-full overflow-hidden rounded-control bg-neutral-100',
+                    item.status === 'failed' ? 'ring-2 ring-error ring-offset-2' : null,
+                    item.status === 'queued' ? 'opacity-60' : null,
+                  )}
+                >
+                  {item.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center font-ui text-xs font-semibold text-neutral-500">
+                      {isHeicFile(item.file) ? 'HEIC' : 'Photo'}
+                    </span>
+                  )}
+                  {item.status === 'uploading' ? (
+                    <span className="absolute inset-x-2 bottom-8 h-1 overflow-hidden rounded-full bg-high-vis-white/60">
+                      <span className="block h-full bg-warm-red-deep transition-[width] duration-200" style={{ width: `${Math.round(item.progress * 100)}%` }} />
+                    </span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      'absolute bottom-1.5 left-1.5 inline-flex max-w-[calc(100%-0.75rem)] items-center gap-1 truncate rounded-full px-2 py-0.5 font-ui text-xs font-semibold',
+                      item.status === 'done'
+                        ? 'bg-success-soft text-success-deep'
+                        : item.status === 'failed'
+                          ? 'bg-danger-soft text-danger'
+                          : 'bg-high-vis-white/90 text-charcoal',
+                    )}
+                  >
+                    {item.status === 'done' ? <Icon name="check" className="h-3 w-3" /> : null}
+                    {item.status === 'uploading'
+                      ? `Uploading ${Math.round(item.progress * 100)}%`
+                      : inFlight
+                        ? (item.detail ?? STATUS_WORD[item.status])
+                        : STATUS_WORD[item.status]}
+                  </span>
                 </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button type="button" variant="ghost" disabled={busy || index === 0} onClick={() => move(index, -1)} aria-label="Move photograph up">
+              </li>
+            );
+          })}
+          {roomLeft ? (
+            <li className="min-w-0">
+              <label
+                htmlFor={inputId}
+                className={cn(
+                  'flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-control border-[1.5px] border-dashed border-neutral-300 px-2 text-center text-neutral-500 transition-colors',
+                  'hover:border-charcoal hover:text-charcoal focus-within:border-charcoal focus-within:ring-2 focus-within:ring-charcoal focus-within:ring-offset-2',
+                  busy && 'pointer-events-none opacity-50',
+                )}
+              >
+                <Icon name="upload" className="h-5 w-5" />
+                <span className="sr-only">Photographs, choose files.</span>
+                <span className="font-ui text-xs font-semibold">Add photos</span>
+                <span className="font-ui text-xs">HEIC ok, 40MB</span>
+                <input
+                  ref={fileRef}
+                  id={inputId}
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                  disabled={busy}
+                  onChange={onPick}
+                  className="sr-only"
+                />
+              </label>
+            </li>
+          ) : null}
+        </ul>
+        <p className="font-ui text-sm text-neutral-500">
+          JPEG, PNG, WebP or iPhone HEIC. Up to 40MB each, several at once. Each photo is resized to 2400px on this device before it uploads, so a phone photo sends in seconds; the website gets 400, 800 and 1600px copies.
+        </p>
+        {!roomLeft ? (
+          <p className="font-ui text-sm font-semibold text-charcoal">Twelve photographs is the most a product can carry. Remove one to add another.</p>
+        ) : null}
+
+        {/* The selected photograph: its shot, alt text and place in the order. */}
+        {current ? (
+          <div className="min-w-0 rounded-card border border-neutral-200 bg-neutral-50 p-3 sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-ui text-sm font-semibold text-charcoal">
+                Photograph {currentIndex + 1} of {rows.length}
+                {currentIndex === 0 ? ', the website card' : ''}
+              </p>
+              <div className="flex flex-wrap items-center gap-1">
+                <Button type="button" variant="ghost" size="small" disabled={busy || currentIndex === 0} onClick={() => { move(currentIndex, -1); setSelected(currentIndex - 1); }} aria-label="Move photograph up">
                   <Icon name="chevron-up" />
                   Up
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
-                  disabled={busy || index === rows.length - 1}
-                  onClick={() => move(index, 1)}
+                  size="small"
+                  disabled={busy || currentIndex === rows.length - 1}
+                  onClick={() => { move(currentIndex, 1); setSelected(currentIndex + 1); }}
                   aria-label="Move photograph down"
                 >
                   <Icon name="chevron-down" />
                   Down
                 </Button>
-                <Button type="button" variant="ghost" disabled={busy} onClick={() => setPendingPath(image.path)}>
+                <Button type="button" variant="ghost" size="small" disabled={busy} onClick={() => setPendingPath(current.path)}>
                   <Icon name="trash" />
                   Remove photograph
                 </Button>
               </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="min-w-0 space-y-3 rounded-card border border-dashed border-neutral-300 p-4">
-        <div className="flex items-center gap-2 text-charcoal">
-          <Icon name="photo" className="h-5 w-5" />
-          <p className="font-ui text-sm font-semibold text-charcoal">Add photographs</p>
-        </div>
-        <Field
-          label="Photographs"
-          htmlFor={inputId}
-          hint="JPEG, PNG, WebP or iPhone HEIC. Up to 40MB each, several at once"
-        >
-          <Input
-            ref={fileRef}
-            id={inputId}
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-            disabled={busy || rows.length >= MAX_PER_PRODUCT}
-            onChange={onPick}
-            className="min-w-0 max-w-full"
-          />
-        </Field>
-        <p className="font-ui text-sm text-neutral-500">
-          Each photo is resized to 2400px on this device before it uploads, so a phone photo sends in seconds. The website gets 400, 800 and 1600px copies.
-        </p>
-        {rows.length >= MAX_PER_PRODUCT ? (
-          <p className="font-ui text-sm font-semibold text-charcoal">Twelve photographs is the most a product can carry. Remove one to add another.</p>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <Field label="Shot" htmlFor={`role-${currentIndex}`}>
+                <Select
+                  id={`role-${currentIndex}`}
+                  value={current.role}
+                  disabled={busy}
+                  onChange={(event) => {
+                    const role = event.target.value as ImageRole;
+                    persist(rows.map((row, i) => (i === currentIndex ? { ...row, role } : row)));
+                  }}
+                >
+                  {IMAGE_ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {IMAGE_ROLE_LABEL[role]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Alt text" htmlFor={`alt-${currentIndex}`} hint="Spoken on the product page">
+                <Input
+                  key={current.path}
+                  id={`alt-${currentIndex}`}
+                  defaultValue={current.alt}
+                  disabled={busy}
+                  onBlur={(event) => {
+                    const alt = event.target.value.trim();
+                    if (alt === current.alt) return;
+                    persist(rows.map((row, i) => (i === currentIndex ? { ...row, alt } : row)));
+                  }}
+                />
+              </Field>
+            </div>
+          </div>
         ) : null}
 
+        {/* What is on its way: each file's shot and alt text, then one Upload. */}
         {queue.length > 0 ? (
-          <ul aria-label="Photographs to upload" className="space-y-3">
+          <ul aria-label="Photographs to upload" className="divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200">
             {queue.map((item) => (
-              <li
-                key={item.id}
-                className={cn(
-                  'min-w-0 rounded-card border p-3',
-                  item.status === 'failed' ? 'border-error' : item.status === 'done' ? 'border-success/40' : 'border-neutral-200',
-                )}
-              >
-                <div className="flex min-w-0 gap-3">
-                  <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-control bg-neutral-100 text-neutral-500">
+              <li key={item.id} className={cn('min-w-0 p-3', item.status === 'failed' && 'bg-danger-soft/40')}>
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-control bg-neutral-100 text-neutral-500">
                     {item.previewUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.previewUrl} alt="" width={72} height={72} className="h-full w-full object-cover" />
+                      <img src={item.previewUrl} alt="" width={48} height={48} className="h-full w-full object-cover" />
                     ) : (
-                      <span className="font-ui text-xs font-semibold uppercase tracking-[0.1em]">{isHeicFile(item.file) ? 'HEIC' : 'Photo'}</span>
+                      <span className="font-ui text-xs font-semibold">{isHeicFile(item.file) ? 'HEIC' : 'Photo'}</span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1 space-y-2">
-                    <p className="min-w-0 truncate font-ui text-sm text-neutral-500">
-                      {item.file.name} · {megabytes(item.file.size)}
-                    </p>
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <p className="min-w-0 truncate font-ui text-sm text-neutral-500">
+                        {item.file.name} · {megabytes(item.file.size)}
+                      </p>
+                      {item.status === 'done' ? null : (
+                        <Button type="button" variant="ghost" size="small" disabled={busy} onClick={() => dropFromQueue(item.id)} aria-label={`Remove ${item.file.name} from the upload`}>
+                          <Icon name="x" />
+                          Remove
+                        </Button>
+                      )}
+                    </div>
                     {item.status === 'done' ? (
-                      <p className="flex items-center gap-1.5 font-ui text-base font-semibold text-success">
+                      <p className="flex items-center gap-1.5 font-ui text-sm font-semibold text-success-deep">
                         <Icon name="check" />
                         Added
                       </p>
                     ) : (
-                      <>
+                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
                         <Field label="Shot" htmlFor={`queued-role-${item.id}`}>
                           <Select
                             id={`queued-role-${item.id}`}
@@ -439,7 +529,7 @@ export function ProductImages({
                             onChange={(event) => patch(item.id, { alt: event.target.value, altTouched: true })}
                           />
                         </Field>
-                      </>
+                      </div>
                     )}
                     {item.status === 'preparing' || item.status === 'uploading' || item.status === 'processing' ? (
                       <div role="status" className="space-y-1">
@@ -464,14 +554,6 @@ export function ProductImages({
                     ) : null}
                   </div>
                 </div>
-                {item.status === 'done' ? null : (
-                  <div className="mt-3">
-                    <Button type="button" variant="ghost" disabled={busy} onClick={() => dropFromQueue(item.id)} aria-label={`Remove ${item.file.name} from the upload`}>
-                      <Icon name="x" />
-                      Remove
-                    </Button>
-                  </div>
-                )}
               </li>
             ))}
           </ul>

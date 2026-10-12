@@ -1,4 +1,5 @@
 import { MAX_PHOTO_INPUT_BYTES, PHOTO_JPEG_QUALITY, PHOTO_LONG_EDGE, PHOTO_REENCODE_BYTES } from '@beco/validation';
+import { megabytes } from '@/lib/file-size';
 
 /**
  * Make a phone photograph small before it leaves the phone, D139.
@@ -61,7 +62,7 @@ export const photoInputProblem = (file: unknown): string | null => {
   return null;
 };
 
-export const megabytes = (bytes: number): string => `${(bytes / 1048576).toFixed(1)}MB`;
+
 
 /** The scaled size: long edge capped, aspect kept, never enlarged. */
 export const fitWithin = (width: number, height: number, longEdge: number): { width: number; height: number } => {
@@ -190,3 +191,5 @@ export async function prepareImage(
     decoded.close?.();
   }
 }
+
+export { megabytes };

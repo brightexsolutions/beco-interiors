@@ -229,9 +229,12 @@ export function ProductResults({
   const sheetTitle = creating ? 'New product' : (editing?.name ?? 'Product');
   const sheetDescription = creating
     ? 'Unpublished draft. Photographs and availability come next.'
-    : editing?.isPublished
-      ? 'On the website'
-      : 'Draft, hidden on the website';
+    : [editing?.categoryName, editing?.sku, editing?.isPublished ? 'On the website' : 'Draft, hidden on the website']
+        .filter(Boolean)
+        .join(' · ');
+  const sheetLeading = editing ? (
+    <ProductThumb name={editing.name} path={editing.images[0]?.path} size="sm" className="rounded-control" />
+  ) : null;
 
   const sheet = (
     <Sheet
@@ -239,6 +242,7 @@ export function ProductResults({
       onOpenChange={(open) => !open && closeSheet()}
       title={sheetTitle}
       description={sheetDescription}
+      leading={sheetLeading}
     >
       {creating ? (
         <ProductCreate categories={categories} returnTo={withParam('new', null)} />

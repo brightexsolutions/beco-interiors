@@ -412,6 +412,11 @@ directions were drawn, Brown chose A (Studio) with C's hero card.
 - **Lists and details.** Tinted table header band, plain captions, rows at 14px with more air.
   Users, audit and announcements in the same Panel and TableToolbar frame as the rest. Quote,
   order and customer details frame main column and rail in panels.
+- **Editor.** The product sheet follows the A Studio editor: thumbnail, range, code and state in
+  the header, the Website card tinted, photographs as a tile grid with the cover badged, queued
+  files as tiles with their state and an Add photos tile at the end, a tap on a tile opening its
+  shot, alt text, order and Remove under the grid, sizes as one bordered list, and the footer
+  saying Unsaved changes or All saved beside Delete and Save.
 - **Dialogs.** Dialog and ConfirmDialog portal to the body. ConfirmDialog opens with a glyph
   tile, danger tinted when destructive. Tabs underline in Warm Red. Toasts expand so several
   refusals at once each stay readable.

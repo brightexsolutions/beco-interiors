@@ -1,4 +1,5 @@
 import type { UploadArea } from '@beco/validation';
+import { megabytes } from '@/lib/file-size';
 import { photoUploadProblem } from '@/lib/photo-upload';
 
 /**
@@ -45,9 +46,7 @@ export type StagedPhoto =
   | { kind: 'fallback' }
   | { kind: 'error'; error: string };
 
-/** "4.2MB", or "640KB" under a megabyte, so a small file never reads as 0.0MB. */
-export const megabytes = (bytes: number): string =>
-  bytes < 1048576 ? `${Math.max(1, Math.round(bytes / 1024))}KB` : `${(bytes / 1048576).toFixed(1)}MB`;
+export { megabytes };
 
 /**
  * Stage one file. Returns the key to send instead of the file, or `fallback`
