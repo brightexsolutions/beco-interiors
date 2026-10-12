@@ -7,21 +7,20 @@ import type { NavGroup } from '@/lib/nav-items';
 import { NavGlyph } from './nav-glyph';
 
 /**
- * The desktop sidebar: sections grouped by job, the current one filled
- * charcoal with a short Warm Red tick at its edge, the rest quiet text with
- * the section's glyph beside it (D142), the same glyph the phone bar
- * draws. The word stays: every label is one a salesperson already uses.
- * The new quote count rides on Quotes.
+ * The desktop sidebar, D143: sections grouped by job, each row a glyph and
+ * a word, 40px tall and rounded. The current section sits on the tint with
+ * its glyph in Warm Red; the rest are quiet grey that darkens on hover.
+ * The new quote count rides on Quotes as a red pill.
  */
 export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuotes?: number }) {
   const pathname = usePathname();
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`));
 
   return (
-    <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-2">
+    <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-1">
       {groups.map((group) => (
-        <div key={group.label} className="py-3">
-          <p className="px-3 pb-1.5 font-ui text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">{group.label}</p>
+        <div key={group.label} className="py-2.5">
+          <p className="px-3 pb-1.5 font-ui text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">{group.label}</p>
           <ul className="space-y-0.5">
             {group.items.map((item) => {
               const active = isActive(item.href);
@@ -31,24 +30,21 @@ export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuot
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'group relative flex min-h-11 items-center justify-between gap-2 rounded-card px-3 font-ui text-base transition-colors',
+                      'group flex min-h-10 items-center gap-3 rounded-control px-3 font-ui text-base transition-colors',
                       active
-                        ? 'bg-charcoal font-semibold text-high-vis-white'
-                        : 'text-neutral-700 hover:bg-neutral-100 hover:text-charcoal',
+                        ? 'bg-neutral-100 font-semibold text-charcoal'
+                        : 'font-medium text-neutral-700 hover:bg-neutral-50 hover:text-charcoal',
                     )}
                   >
-                    {active ? <span aria-hidden className="absolute -left-3 top-1/2 h-5 w-0.5 -translate-y-1/2 bg-warm-red" /> : null}
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <NavGlyph href={item.href} className={cn('h-5 w-5', active ? 'text-high-vis-white' : 'text-neutral-500 group-hover:text-charcoal')} />
-                      <span className="truncate">{item.label}</span>
-                    </span>
+                    <NavGlyph
+                      href={item.href}
+                      className={cn('h-[18px] w-[18px]', active ? 'text-warm-red-deep' : 'text-neutral-500 group-hover:text-charcoal')}
+                    />
+                    <span className="truncate">{item.label}</span>
                     {item.href === '/quotes' && newQuotes > 0 ? (
                       <span
                         aria-label={`${newQuotes} new`}
-                        className={cn(
-                          'inline-flex min-w-[1.375rem] items-center justify-center rounded-full px-1.5 font-ui text-xs font-semibold leading-5',
-                          active ? 'bg-high-vis-white text-charcoal' : 'bg-warm-red text-high-vis-white',
-                        )}
+                        className="ml-auto inline-flex min-w-[1.375rem] items-center justify-center rounded-full bg-warm-red-deep px-1.5 font-ui text-xs font-semibold leading-5 text-high-vis-white"
                       >
                         {newQuotes}
                       </span>

@@ -3,7 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import type { ActiveSession } from '@/lib/session';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/', useSearchParams: () => new URLSearchParams() }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+}));
 
 const { AppShell } = await import('../app-shell');
 
@@ -59,7 +63,7 @@ describe('AppShell', () => {
     );
     expect(container.firstElementChild?.className).toContain('[--dock:calc(3.5625rem+env(safe-area-inset-bottom,0px))]');
     expect(container.firstElementChild?.className).toContain('lg:[--dock:0px]');
-    expect(container.querySelector('main')?.className).toContain('pb-[calc(var(--dock)+1rem)]');
+    expect(container.querySelector('main')?.className).toContain('pb-[calc(var(--dock)+1.25rem)]');
   });
 
   it('keeps the white header in flow. The breadcrumb is not part of that header', () => {

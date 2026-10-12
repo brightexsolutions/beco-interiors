@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './button';
 import { useScrollLock } from '../lib/use-scroll-lock';
 
@@ -101,7 +102,9 @@ export function ConfirmDialog({
     }
   };
 
-  return (
+  // Portalled to the body for the same reason as Dialog: no ancestor's
+  // stacking context may paint the page over the overlay.
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center p-4 sm:items-center">
       <div
         aria-hidden
@@ -135,6 +138,7 @@ export function ConfirmDialog({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

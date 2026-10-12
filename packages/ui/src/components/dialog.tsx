@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../lib/cn';
 import { useScrollLock } from '../lib/use-scroll-lock';
 import { useVisualViewport } from '../lib/use-visual-viewport';
@@ -72,7 +73,10 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
 
   if (!open) return null;
 
-  return (
+  // Portalled to the body: a sticky sidebar or a positioned main would
+  // otherwise paint over the overlay, since each makes its own stacking
+  // context and z-index cannot escape one.
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center sm:items-center sm:p-6"
       style={fitToKeyboard}
@@ -105,6 +109,7 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
         </div>
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
