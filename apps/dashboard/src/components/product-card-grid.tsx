@@ -95,7 +95,7 @@ function ProductCardItem({ product, href }: { product: CatalogueProduct; href: s
               {product.name}
             </Link>
           </h3>
-          <span aria-hidden className="inline-flex shrink-0 items-center gap-1 font-ui text-xs font-semibold text-neutral-500 group-hover:text-charcoal">
+          <span aria-hidden className="hidden shrink-0 items-center gap-1 font-ui text-xs font-semibold text-neutral-500 group-hover:text-charcoal sm:inline-flex">
             <Icon name="pencil" className="h-3.5 w-3.5" />
             Edit
           </span>
