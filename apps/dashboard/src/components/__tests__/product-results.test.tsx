@@ -46,6 +46,7 @@ const product = (over: Partial<CatalogueProduct> = {}): CatalogueProduct => ({
   metaTitle: null,
   metaDescription: null,
   specs: [],
+  sizes: [],
   images: [],
   unit: 'per slab',
   stockQuantity: 4,
@@ -179,5 +180,43 @@ describe('ProductResults', () => {
     expect(nav).toHaveTextContent(/9.9 of 17/);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(push).toHaveBeenCalledWith('/products?category=handles&page=3');
+  });
+});
+
+describe('ProductResults cards view, D138', () => {
+  it('shows every product as a card with its photograph, a line of detail and an Edit link, and no table', () => {
+    render(
+      <ProductResults
+        view="cards"
+        products={[
+          product({
+            shortDescription: 'A soft ivory slab for quiet kitchens.',
+            images: [{ role: 'slab', path: '12mm-sintered-stones/limestone-ivory/slab-ab12', alt: 'Slab', width: 1600, height: 900, sort: 0 }, { role: 'application', path: 'x/y/app-1', alt: 'In use', width: 1600, height: 900, sort: 1 }],
+            sizes: [{ label: '96mm', price: null, sku: null }, { label: '128mm', price: 950, sku: null }],
+          }),
+          product({ id: '22222222-2222-4222-8222-222222222222', name: 'Amber Jade', slug: 'amber-jade', isPublished: false, images: [] }),
+        ]}
+        editing={null}
+        creating={false}
+        categories={[]}
+      />,
+    );
+    expect(screen.queryByRole('table')).toBeNull();
+    const grid = screen.getByRole('list', { name: 'Products' });
+    expect(grid.querySelectorAll('li').length).toBe(2);
+    expect(grid.querySelector('img')).toHaveAttribute('src', expect.stringContaining('limestone-ivory/slab-ab12-800.webp'));
+    expect(screen.getByText('A soft ivory slab for quiet kitchens.')).toBeInTheDocument();
+    expect(screen.getByText('No photograph yet')).toBeInTheDocument();
+    expect(screen.getByText('2 sizes')).toBeInTheDocument();
+    expect(screen.getByText('Draft')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Limestone Ivory' })).toHaveAttribute('href', '/products?edit=limestone-ivory');
+    expect(screen.getByRole('link', { name: 'Edit Amber Jade' })).toHaveAttribute('href', '/products?edit=amber-jade');
+  });
+
+  it('has no accessibility violations as cards', async () => {
+    const { container } = render(
+      <ProductResults view="cards" products={[product()]} editing={null} creating={false} categories={[]} />,
+    );
+    expect(await axe(container)).toHaveNoViolations();
   });
 });

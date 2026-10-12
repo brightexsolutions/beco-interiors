@@ -23,7 +23,13 @@ export type IconName =
   | 'link'
   | 'sun'
   | 'moon'
-  | 'info';
+  | 'info'
+  | 'grid'
+  | 'rows'
+  | 'help'
+  | 'check'
+  | 'offline'
+  | 'search';
 
 const PATH: Record<IconName, string> = {
   plus: 'M12 5v14M5 12h14',
@@ -46,6 +52,12 @@ const PATH: Record<IconName, string> = {
   sun: 'M12 4V2M12 22v-2M4.93 4.93 3.51 3.51M20.49 20.49l-1.42-1.42M4 12H2M22 12h-2M4.93 19.07l-1.42 1.42M20.49 3.51l-1.42 1.42M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z',
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z M12 11v5 M12 8h.01',
   moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4 7 7 0 0 0 20 14.5Z',
+  grid: 'M4 4h7v7H4ZM13 4h7v7h-7ZM4 13h7v7H4ZM13 13h7v7h-7Z',
+  rows: 'M4 6h16M4 12h16M4 18h16',
+  help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7 M12 17h.01',
+  check: 'M5 12.5l4.5 4.5L19 7.5',
+  offline: 'M3 3l18 18M8.5 8.7A9 9 0 0 0 5 11.5M2 8.5a13 13 0 0 1 4.3-2.9M12 5a13 13 0 0 1 10 3.5M8.5 15a5 5 0 0 1 7 0M12 19h.01',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4',
 };
 
 export function Icon({ name, className }: { name: IconName; className?: string | undefined }) {
