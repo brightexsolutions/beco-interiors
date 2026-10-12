@@ -64,6 +64,9 @@ export default defineConfig({
           alias: {
             '@': fileURLToPath(new URL('./apps/dashboard/src', import.meta.url)),
             'server-only': SERVER_ONLY_STUB,
+            // next/font builds the Geist face at compile time; under Vitest the
+            // root layout only needs the class name it hands to <html>.
+            'geist/font/sans': fileURLToPath(new URL('./apps/dashboard/src/test/geist-stub.ts', import.meta.url)),
           },
         },
       },
