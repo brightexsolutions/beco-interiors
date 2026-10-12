@@ -20,7 +20,7 @@ describe('the guide, D140', () => {
       for (const step of topic.steps) {
         expect(step.do.length).toBeGreaterThan(3);
         expect(step.where.length).toBeGreaterThan(10);
-        expect(`${step.do}${step.where}`).not.toContain('—');
+        expect(`${step.do}${step.where}`).not.toContain(String.fromCharCode(8212));
       }
     }
   });
