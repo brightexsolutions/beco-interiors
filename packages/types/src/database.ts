@@ -829,6 +829,7 @@ export type Database = {
           price: number | null
           price_display_mode: Database["public"]["Enums"]["price_display_mode"]
           short_description: string | null
+          sizes: Json
           sku: string | null
           slug: string
           sort_order: number
@@ -857,6 +858,7 @@ export type Database = {
           price?: number | null
           price_display_mode?: Database["public"]["Enums"]["price_display_mode"]
           short_description?: string | null
+          sizes?: Json
           sku?: string | null
           slug: string
           sort_order?: number
@@ -885,6 +887,7 @@ export type Database = {
           price?: number | null
           price_display_mode?: Database["public"]["Enums"]["price_display_mode"]
           short_description?: string | null
+          sizes?: Json
           sku?: string | null
           slug?: string
           sort_order?: number
@@ -1204,6 +1207,7 @@ export type Database = {
           is_active: boolean
           is_public: boolean
           last_login_at: string | null
+          module_grants: string[]
           must_change_password: boolean
           public_phone: string | null
           public_photo: Json | null
@@ -1224,6 +1228,7 @@ export type Database = {
           is_active?: boolean
           is_public?: boolean
           last_login_at?: string | null
+          module_grants?: string[]
           must_change_password?: boolean
           public_phone?: string | null
           public_photo?: Json | null
@@ -1244,6 +1249,7 @@ export type Database = {
           is_active?: boolean
           is_public?: boolean
           last_login_at?: string | null
+          module_grants?: string[]
           must_change_password?: boolean
           public_phone?: string | null
           public_photo?: Json | null
@@ -1397,7 +1403,10 @@ export type Database = {
       customer_phone_key: { Args: { p_phone: string }; Returns: string }
       dashboard_summary: { Args: never; Returns: Json }
       end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
+      can_grant_module: { Args: { p_module: string }; Returns: boolean }
       has_audit_read: { Args: never; Returns: boolean }
+      has_module: { Args: { p_module: string }; Returns: boolean }
+      module_keys: { Args: never; Returns: string[] }
       has_blog_write: { Args: never; Returns: boolean }
       has_staff_manage: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }

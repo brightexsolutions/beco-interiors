@@ -10,6 +10,9 @@ vi.mock('@/app/(app)/settings/actions', () => ({
   saveDashboardSettings: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
+vi.mock('@/app/(app)/users/actions', () => ({ setModuleGrants: vi.fn(async () => ({ ok: 'Saved.' })) }));
+
 const { SettingsGrants } = await import('../settings-grants');
 
 const sam: GrantStaffRow = {
@@ -20,6 +23,8 @@ const sam: GrantStaffRow = {
   canWriteBlog: false,
   canReadAudit: false,
   canManageUsers: false,
+  moduleGrants: [],
+  updatedAt: '2026-10-12T08:00:00.000Z',
 };
 
 describe('SettingsGrants', () => {

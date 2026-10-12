@@ -4,6 +4,7 @@ import { NewUserFab } from '@/components/new-user';
 import { UserFilters } from '@/components/user-filters';
 import { UserResults } from '@/components/user-results';
 import { QueryNavigationProvider } from '@/lib/use-query-navigation';
+import { grantableModules, grantsFrom } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { fetchUserById, fetchUsers, type StaffUserFilters } from '@/lib/users';
@@ -48,7 +49,14 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           <UserFilters count={`${users.length} ${users.length === 1 ? 'user' : 'users'}`} />
         </div>
         <div className="pb-24">
-          <UserResults users={users} viewing={viewing} creating={creating} viewerId={session.userId} viewerRole={session.role} />
+          <UserResults
+            users={users}
+            viewing={viewing}
+            creating={creating}
+            viewerId={session.userId}
+            viewerRole={session.role}
+            grantable={grantableModules(session.role, grantsFrom(session))}
+          />
         </div>
       </QueryNavigationProvider>
     </>

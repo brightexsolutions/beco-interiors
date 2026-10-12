@@ -23,6 +23,7 @@ import {
   uploadStaffPhoto,
   type UserActionState,
 } from '@/app/(app)/users/actions';
+import { ModuleAccessEditor, ModuleAccessSummary } from '@/components/module-access';
 import { usePhotoUpload } from '@/components/use-photo-upload';
 import { IssuedSecret } from '@/components/user-create';
 import {
@@ -32,7 +33,7 @@ import {
   staffPhotoUrl,
   type StaffUser,
 } from '@/lib/users';
-import type { UserRole } from '@beco/types';
+import type { DashboardModule, UserRole } from '@beco/types';
 
 const INITIAL: UserActionState = {};
 
@@ -41,6 +42,7 @@ export function UserEditor({
   viewerId,
   roles = STAFF_ROLES,
   canManage = true,
+  grantable = [],
 }: {
   user: StaffUser;
   viewerId: string;
@@ -48,6 +50,8 @@ export function UserEditor({
   roles?: readonly UserRole[];
   /** False for a Brightex account seen by a Beco holder of the grant: shown, never editable. */
   canManage?: boolean;
+  /** The modules the viewer may grant, D136. Empty hides the editor. */
+  grantable?: readonly DashboardModule[] | undefined;
 }) {
   const router = useRouter();
   const isSelf = user.id === viewerId;
@@ -143,6 +147,20 @@ export function UserEditor({
           )}
         </FormSection>
 
+        <FormSection
+          title="Dashboard access"
+          hint={
+            user.role === 'brightex_admin'
+              ? 'A Brightex admin reaches every section by role.'
+              : 'What the role shows, plus any section granted on top. Granted sections are read only.'
+          }
+        >
+          <ModuleAccessSummary person={user} />
+          {isSelf || !canManage || user.role === 'brightex_admin' ? null : (
+            <ModuleAccessEditor person={user} grantable={grantable} disabled={busy} onSaved={() => router.refresh()} />
+          )}
+        </FormSection>
+
         {canManage ? (
           <FormSection
             title="On the website"
@@ -219,12 +237,12 @@ export function UserEditor({
                   {user.publicPhoto ? 'Replace photograph' : 'Add a photograph'}
                 </p>
               </div>
-              <Field label="Photograph" htmlFor="staff-photo" hint="JPEG, PNG or WebP. 12MB max">
+              <Field label="Photograph" htmlFor="staff-photo" hint="JPEG, PNG, WebP or an iPhone HEIC, up to 40MB. Resized before upload">
                 <Input
                   id="staff-photo"
                   name="photo"
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                   required
                   disabled={busy}
                   className="min-w-0 max-w-full"

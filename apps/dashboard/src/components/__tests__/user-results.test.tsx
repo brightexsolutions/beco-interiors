@@ -40,6 +40,9 @@ const user = (over: Partial<StaffUser> = {}): StaffUser => ({
   lastLoginAt: '2026-09-18T07:00:00.000Z',
   createdAt: '2026-09-01T07:00:00.000Z',
   updatedAt: '2026-09-18T07:00:00.000Z',
+  canReadAudit: false,
+  canManageUsers: false,
+  moduleGrants: [],
   ...over,
 });
 

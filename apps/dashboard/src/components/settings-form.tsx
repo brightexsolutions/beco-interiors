@@ -30,6 +30,7 @@ import {
 import { PageHeading } from './page-heading';
 import { SettingsDocumentPreview, type DocumentPreviewValues } from './settings-document-preview';
 import { SettingsGrants } from './settings-grants';
+import type { DashboardModule } from '@beco/types';
 
 const INITIAL: SettingsActionState = {};
 
@@ -54,12 +55,19 @@ export function SettingsForm({
   settings,
   tab,
   canGrant,
+  canAssignStaffGrants = canGrant,
+  grantable = [],
   staff = [],
   viewerId,
 }: {
   settings: DashboardSettings;
   tab: SettingsTab;
+  /** Whether the Permissions tab is shown at all: Brightex, or a staff manager (D136). */
   canGrant: boolean;
+  /** Whether the audit and staff grants may be assigned: Brightex only (D135). */
+  canAssignStaffGrants?: boolean | undefined;
+  /** The modules the viewer may grant, D136. */
+  grantable?: readonly DashboardModule[] | undefined;
   staff?: GrantStaffRow[];
   viewerId?: string;
 }) {
@@ -70,7 +78,7 @@ export function SettingsForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
-  const [current, setCurrent] = useState(() => parseSettingsTab(tab, canGrant));
+  const [current, setCurrent] = useState(() => parseSettingsTab(tab, canGrant, canAssignStaffGrants));
   const [preview, setPreview] = useState(() => previewFrom((key) => settings[key]));
   const [dirty, setDirty] = useState(false);
   const keyboardOpen = useVisualViewport()?.keyboardOpen ?? false;
@@ -88,11 +96,11 @@ export function SettingsForm({
   };
 
   useEffect(() => {
-    setCurrent(parseSettingsTab(tab, canGrant));
-  }, [tab, canGrant]);
+    setCurrent(parseSettingsTab(tab, canGrant, canAssignStaffGrants));
+  }, [tab, canGrant, canAssignStaffGrants]);
 
   const setTab = (next: string) => {
-    const parsed = parseSettingsTab(next, canGrant);
+    const parsed = parseSettingsTab(next, canGrant, canAssignStaffGrants);
     setCurrent(parsed);
     const params = new URLSearchParams(searchParams.toString());
     if (parsed === 'quotes') params.delete('tab');
@@ -126,7 +134,7 @@ export function SettingsForm({
           <TabsTrigger value="business">Business</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          {canGrant ? <TabsTrigger value="studio">Studio</TabsTrigger> : null}
+          {canAssignStaffGrants ? <TabsTrigger value="studio">Studio</TabsTrigger> : null}
           {canGrant ? <TabsTrigger value="permissions">Permissions</TabsTrigger> : null}
         </TabsList>
 
@@ -353,7 +361,7 @@ export function SettingsForm({
 
       {canGrant && viewerId ? (
         <TabsContent value="permissions">
-          <SettingsGrants staff={staff} viewerId={viewerId} />
+          <SettingsGrants staff={staff} viewerId={viewerId} canAssignStaffGrants={canAssignStaffGrants} grantable={grantable} />
         </TabsContent>
       ) : null}
     </Tabs>

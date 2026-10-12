@@ -68,7 +68,15 @@ describe('resolveSessionUser', () => {
       canWriteBlog: false,
       canReadAudit: false,
       canManageUsers: false,
+      moduleGrants: [],
     });
+  });
+
+  it('carries module grants from the row and reads a missing column as none (D136)', async () => {
+    const row = { role: 'beco_sales', is_active: true, must_change_password: false, email: 's@beco.co.ke', module_grants: ['reports', 'quotes'] };
+    expect((await resolveSessionUser(clientReturning(row), 'u1'))?.moduleGrants).toEqual(['reports', 'quotes']);
+    const bare = { role: 'beco_sales', is_active: true, must_change_password: false, email: 's@beco.co.ke' };
+    expect((await resolveSessionUser(clientReturning(bare), 'u1'))?.moduleGrants).toEqual([]);
   });
 
   it('carries the staff manage grant from the row (D135)', async () => {

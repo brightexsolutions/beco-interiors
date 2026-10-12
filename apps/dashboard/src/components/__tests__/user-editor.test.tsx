@@ -19,6 +19,7 @@ vi.mock('@/app/(app)/users/actions', () => ({
   saveStaffPublicProfile: (...a: Parameters<typeof saveStaffPublicProfile>) => saveStaffPublicProfile(...a),
   uploadStaffPhoto: (...a: Parameters<typeof uploadStaffPhoto>) => uploadStaffPhoto(...a),
   removeStaffPhoto: (...a: Parameters<typeof removeStaffPhoto>) => removeStaffPhoto(...a),
+  setModuleGrants: vi.fn(async () => ({ ok: 'Saved.' })),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -45,6 +46,9 @@ const person: StaffUser = {
   lastLoginAt: null,
   createdAt: '2026-09-01T07:00:00.000Z',
   updatedAt: '2026-09-18T07:00:00.000Z',
+  canReadAudit: false,
+  canManageUsers: false,
+  moduleGrants: [],
 };
 
 describe('UserEditor', () => {
