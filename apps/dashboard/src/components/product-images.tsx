@@ -484,9 +484,9 @@ export function ProductImages({
                       <span className="font-ui text-xs font-semibold">{isHeicFile(item.file) ? 'HEIC' : 'Photo'}</span>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1 space-y-2">
+                  <div className="min-w-0 flex-1 space-y-2.5">
                     <div className="flex min-w-0 items-center justify-between gap-2">
-                      <p className="min-w-0 truncate font-ui text-sm text-neutral-500">
+                      <p className="min-w-0 truncate font-ui text-sm font-medium text-charcoal">
                         {item.file.name} · {megabytes(item.file.size)}
                       </p>
                       {item.status === 'done' ? null : (
@@ -502,7 +502,7 @@ export function ProductImages({
                         Added
                       </p>
                     ) : (
-                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                      <div className="grid gap-2 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)] sm:items-end">
                         <Field label="Shot" htmlFor={`queued-role-${item.id}`}>
                           <Select
                             id={`queued-role-${item.id}`}
@@ -520,7 +520,7 @@ export function ProductImages({
                             ))}
                           </Select>
                         </Field>
-                        <Field label="Alt text" htmlFor={`queued-alt-${item.id}`} hint="Uses the product name until you edit it">
+                        <Field label="Alt text" htmlFor={`queued-alt-${item.id}`}>
                           <Input
                             id={`queued-alt-${item.id}`}
                             value={item.alt}
@@ -557,6 +557,9 @@ export function ProductImages({
               </li>
             ))}
           </ul>
+        ) : null}
+        {queue.some((item) => item.status !== 'done') ? (
+          <p className="font-ui text-sm text-neutral-500">Alt text uses the product name until you edit it. It is what a screen reader speaks on the product page.</p>
         ) : null}
 
         {queue.length > 0 ? (
