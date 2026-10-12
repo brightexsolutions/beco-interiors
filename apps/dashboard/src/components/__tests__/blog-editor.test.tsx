@@ -92,7 +92,7 @@ describe('BlogEditor', () => {
       expect(dialog).toHaveTextContent('Publish Sintered Stone in Kenya?');
       await user.click(within(dialog).getByRole('button', { name: 'Publish article' }));
       expect(saveBlogPost).toHaveBeenCalled();
-      const sent = saveBlogPost.mock.calls.at(-1)?.[1] as unknown as FormData;
+      const sent = (saveBlogPost.mock.calls.at(-1) as unknown[] | undefined)?.[1] as FormData;
       expect(sent.get('status')).toBe('published');
     });
 
