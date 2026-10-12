@@ -3,7 +3,7 @@
 -- hold, on a Beco account, never on themselves. Every refusal is tried from
 -- the seat that would benefit.
 begin;
-select plan(30);
+select plan(31);
 
 \set bx_id      '''aaaaaaaa-0046-0000-0000-000000000001'''
 \set pm_id      '''aaaaaaaa-0046-0000-0000-000000000002'''
@@ -27,7 +27,8 @@ from (values
   (:holder_id::uuid, 'zz46-holder@beco.test'),
   (:editor_id::uuid, 'zz46-editor@beco.test'),
   (:lapsed_id::uuid, 'zz46-lapsed@beco.test'),
-  (:bx2_id::uuid,    'zz46-bx2@brightex.test')
+  (:bx2_id::uuid,    'zz46-bx2@brightex.test'),
+  ('aaaaaaaa-0046-0000-0000-000000000008'::uuid, 'zz46-launch@beco.test')
 ) as t(id, email);
 
 -- The product manager holds quotes by grant, the editor reports, a lapsed
@@ -60,8 +61,11 @@ values (:order_id::uuid, 'ZZ Mod Customer', '0799460001', :sales_id::uuid);
 -- ---------- structure ----------
 select has_column('users', 'module_grants', 'users carries module_grants');
 
+-- On an insert, where the users guard trigger stands aside, so the refusal
+-- can only be the constraint's. An update meets the trigger first.
 select throws_ok(
-  $$update users set module_grants = '{launch}' where id = 'aaaaaaaa-0046-0000-0000-000000000003'$$,
+  $$insert into users (id, email, full_name, role, is_active, module_grants)
+    values ('aaaaaaaa-0046-0000-0000-000000000008', 'zz46-launch@beco.test', 'ZZ Launch', 'beco_sales', true, '{launch}')$$,
   '23514', null,
   'a module outside the known list is refused by the check constraint'
 );
@@ -147,10 +151,12 @@ select is_empty(
   'a salesperson without staff manage cannot reach another row'
 );
 
+-- The guard trigger runs before the self pin's WITH CHECK, so its sentence
+-- is the one the salesperson meets.
 select throws_ok(
   $$update users set module_grants = '{reports}' where id = 'aaaaaaaa-0046-0000-0000-000000000003'$$,
-  '42501', null,
-  'and cannot widen their own access past the self pin'
+  'P0001', 'Only Brightex can assign those permissions',
+  'and cannot widen their own access'
 );
 
 -- ---------- a staff manager hands on only what they hold ----------
