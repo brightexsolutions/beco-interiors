@@ -24,11 +24,23 @@ const credentials = () => {
   return { accountId, accessKeyId, secretAccessKey, bucket };
 };
 
+/**
+ * R2's S3 endpoint for the account. `R2_ENDPOINT` overrides it for local
+ * development against an S3 compatible stand in (MinIO, or the test
+ * harness), where keys are path style. Never set in production.
+ */
+export const storageEndpoint = (accountId: string): { endpoint: string; forcePathStyle: boolean } => {
+  const override = process.env.R2_ENDPOINT;
+  return override
+    ? { endpoint: override, forcePathStyle: true }
+    : { endpoint: `https://${accountId}.r2.cloudflarestorage.com`, forcePathStyle: false };
+};
+
 const client = () => {
   const { accountId, accessKeyId, secretAccessKey } = credentials();
   return new S3Client({
     region: 'auto',
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    ...storageEndpoint(accountId),
     credentials: { accessKeyId, secretAccessKey },
   });
 };

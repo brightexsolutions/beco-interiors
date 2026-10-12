@@ -52,10 +52,13 @@ const csp = [
   // There is no fonts.gstatic.com entry and there should never be one.
   "font-src 'self'",
   `img-src 'self' data: blob: ${imageOrigins}`,
-  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''}`,
+  // The browser PUTs photographs straight to R2 (D116); a local stand in
+  // replaces that host when R2_ENDPOINT is set.
+  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} ${process.env.R2_ENDPOINT ?? 'https://*.r2.cloudflarestorage.com'}`,
   // pdf.js paints quote, receipt, and sales-review pages onto canvas. The
   // worker is copied into public/ from pdfjs-dist at config load.
-  "worker-src 'self'",
+  // heic-to decodes iPhone photographs in a Web Worker it builds from a blob URL, D139.
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",

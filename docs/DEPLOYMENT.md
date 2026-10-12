@@ -744,7 +744,11 @@ post under `/_vercel` on the site's own origin, so `'self'` covers them; in deve
 
 Dashboard and studio use the same headers plus `X-Robots-Tag: noindex, nofollow`, and drop the
 Google Tag Manager and Analytics entries, since neither is loaded there. The dashboard also
-sets `worker-src 'self'` so pdf.js can paint quote, receipt, and sales-review pages onto canvas.
+sets `worker-src 'self' blob:` so pdf.js can paint quote, receipt, and sales-review pages onto
+canvas and the HEIC decoder (D139) can run the worker it builds from a blob URL, and
+`'wasm-unsafe-eval'` for that decoder's WebAssembly. `connect-src` names the R2 S3 host so the
+browser can PUT a photograph straight to the bucket (D116); `R2_ENDPOINT` replaces it in local
+development against an S3 compatible stand in, never in production.
 
 `'unsafe-inline'` on `script-src` is a known compromise for Next.js inline bootstrap scripts.
 Tighten it to a nonce based policy once the app is stable, and record that as a follow up

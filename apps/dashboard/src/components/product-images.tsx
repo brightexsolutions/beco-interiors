@@ -274,7 +274,9 @@ export function ProductImages({
       : 'Uploading'
     : waiting.length === 1
       ? 'Upload 1 photograph'
-      : `Upload ${waiting.length} photographs`;
+      : waiting.length === 0
+        ? 'Upload photographs'
+        : `Upload ${waiting.length} photographs`;
 
   return (
     <FormSection

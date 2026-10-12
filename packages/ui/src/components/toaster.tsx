@@ -103,6 +103,9 @@ export function Toaster({
     <SonnerToaster
       position={position}
       visibleToasts={3}
+      // Several refusals at once (a batch of photographs) each stay readable,
+      // instead of stacking behind the first one.
+      expand
       offset={offset}
       mobileOffset={mobileOffset ?? offset}
       toastOptions={{

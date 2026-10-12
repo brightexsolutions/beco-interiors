@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DIRECT_UPLOAD_FALLBACK_BYTES, putFile, stagePhoto, type PresignPhoto } from '../direct-upload';
+import { DIRECT_UPLOAD_FALLBACK_BYTES, megabytes, putFile, stagePhoto, type PresignPhoto } from '../direct-upload';
 
 const jpeg = (bytes: number) => new File([new Uint8Array(bytes)], 'slab.jpg', { type: 'image/jpeg' });
 const signed: PresignPhoto = vi.fn(async () => ({ key: 'uploads/0123456789abcdef0123456789abcdef', url: 'https://r2.example/put' }));
@@ -120,5 +120,14 @@ describe('stagePhoto retry, D139', () => {
     });
     expect(await stagePhoto(jpeg(10), 'products', signed, () => {}, put)).toEqual({ kind: 'fallback' });
     expect(put).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('megabytes', () => {
+  it('reads in kilobytes under a megabyte, so a 45KB photo never shows as 0.0MB', () => {
+    expect(megabytes(45269)).toBe('44KB');
+    expect(megabytes(10)).toBe('1KB');
+    expect(megabytes(4 * 1048576)).toBe('4.0MB');
+    expect(megabytes(9.5 * 1048576)).toBe('9.5MB');
   });
 });
