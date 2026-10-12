@@ -48,6 +48,7 @@ export {
   StatCard,
   type StatCardProps,
   type StatCardTone,
+  type StatCardIconTone,
   type StatCardDelta,
   type StatCardMeter,
   type StatCardSegment,

@@ -57,6 +57,26 @@ describe('StatCard', () => {
 });
 
 describe('StatCard visuals and link', () => {
+  it('draws the icon in a tinted chip, hidden from assistive tech, and keeps the delta beside the figure (D143)', () => {
+    const { container } = render(
+      <StatCard
+        label="Won"
+        value="5"
+        icon={<svg data-testid="glyph" />}
+        iconTone="positive"
+        delta={{ direction: 'down', label: '-1', sentiment: 'bad' }}
+      />,
+    );
+    const chip = screen.getByTestId('glyph').parentElement;
+    expect(chip).toHaveAttribute('aria-hidden', 'true');
+    expect(chip?.className).toContain('bg-success-soft');
+    const delta = screen.getByText('-1');
+    expect(delta.className).toContain('text-danger');
+    // The figure and the delta share one row, under the label and chip.
+    expect(delta.parentElement).toBe(screen.getByText('5').parentElement);
+    expect(container.querySelector('path[d="M6 9l6 6 6-6"]')).not.toBeNull();
+  });
+
   it('shows a trend chip with its direction and label', () => {
     const { container } = render(
       <StatCard label="Won" value="5" delta={{ direction: 'up', label: '+2', sentiment: 'good' }} />,

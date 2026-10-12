@@ -5,6 +5,7 @@ import { EmptyState, Icon, StatCard, buttonClasses, cn } from '@beco/ui';
 import { HomeActivity } from '@/components/home-activity';
 import { HomeCatalogue } from '@/components/home-catalogue';
 import { HomeFocus } from '@/components/home-focus';
+import { HOME_GLYPH_TONE, HomeStatGlyph } from '@/components/home-stat-glyph';
 import { HomeTeam } from '@/components/home-team';
 import { PageHeading } from '@/components/page-heading';
 import { RecentQuotes } from '@/components/recent-quotes';
@@ -91,12 +92,14 @@ export default async function DashboardHome() {
 
       <HomeFocus focus={focus} approvals={approvals} />
 
-      <h2 className="mb-3 mt-8 font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">This month</h2>
+      <h2 className="mb-3 mt-8 font-ui text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">This month</h2>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
-        {cards.map(({ href, actionLabel, ...card }, index) => (
+        {cards.map(({ href, actionLabel, glyph, ...card }, index) => (
           <StatCard
             key={card.label}
             {...card}
+            icon={<HomeStatGlyph glyph={glyph} />}
+            iconTone={HOME_GLYPH_TONE[glyph]}
             // Won this month leads; on a phone it spans the row so the
             // two-column grid below it stays even.
             className={index === 0 ? 'col-span-2 xl:col-span-1' : undefined}

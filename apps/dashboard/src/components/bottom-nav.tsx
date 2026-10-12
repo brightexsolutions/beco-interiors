@@ -30,7 +30,7 @@ function BarItem({ item, active, badge }: { item: NavItem; active: boolean; badg
       href={item.href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 pt-1.5 pb-1 font-ui text-sm font-semibold leading-none transition-colors',
+        'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 pt-1.5 pb-1 font-ui text-xs font-semibold leading-none transition-colors',
         active ? 'text-charcoal' : 'text-neutral-500 hover:text-charcoal',
       )}
     >
@@ -100,7 +100,7 @@ export function BottomNav({
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                   </Link>
-                  <span aria-hidden className="mt-1 font-ui text-sm font-semibold leading-none text-charcoal">New quote</span>
+                  <span aria-hidden className="mt-1 font-ui text-xs font-semibold leading-none text-charcoal">New quote</span>
                 </li>
               );
             }
@@ -113,7 +113,7 @@ export function BottomNav({
                     aria-haspopup="dialog"
                     aria-expanded={moreOpen}
                     className={cn(
-                      'relative flex min-h-14 w-full flex-col items-center justify-center gap-1 px-1 pt-1.5 pb-1 font-ui text-sm font-semibold leading-none transition-colors',
+                      'relative flex min-h-14 w-full flex-col items-center justify-center gap-1 px-1 pt-1.5 pb-1 font-ui text-xs font-semibold leading-none transition-colors',
                       moreActive ? 'text-charcoal' : 'text-neutral-500 hover:text-charcoal',
                     )}
                   >
