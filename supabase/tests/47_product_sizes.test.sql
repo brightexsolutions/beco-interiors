@@ -36,13 +36,13 @@ select throws_ok(
 );
 
 select is(
-  (select price from product_size_price((select p from products p where id = 'a4700000-0000-4000-8000-0000000000aa'), '128mm')),
+  (select size_price from product_size_price((select p from products p where id = 'a4700000-0000-4000-8000-0000000000aa'), '128mm')),
   950::numeric,
   'product_size_price finds a priced size'
 );
 
 select is(
-  (select found from product_size_price((select p from products p where id = 'a4700000-0000-4000-8000-0000000000aa'), '200mm')),
+  (select size_found from product_size_price((select p from products p where id = 'a4700000-0000-4000-8000-0000000000aa'), '200mm')),
   false,
   'and reports a size the product does not come in'
 );

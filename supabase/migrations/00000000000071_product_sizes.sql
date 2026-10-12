@@ -14,26 +14,27 @@ alter table products
   check (jsonb_typeof(sizes) = 'array' and jsonb_array_length(sizes) <= 40);
 
 -- The price a size carries, or null when it falls back to the product's.
--- Null when the label is not one of the product's sizes, which the caller
--- treats as a refusal.
-create or replace function product_size_price(p_product products, p_size text, out found boolean, out price numeric)
+-- size_found is false when the label is not one of the product's sizes,
+-- which the caller treats as a refusal. Not named `found`: that is
+-- PL/pgSQL's own FOUND, and the two collide.
+create or replace function product_size_price(p_product products, p_size text, out size_found boolean, out size_price numeric)
 language plpgsql
 immutable
 as $$
 declare
   v_row jsonb;
 begin
-  found := false;
-  price := null;
+  size_found := false;
+  size_price := null;
   if p_size is null or p_size = '' then
     return;
   end if;
   for v_row in select value from jsonb_array_elements(p_product.sizes)
   loop
     if v_row->>'label' = p_size then
-      found := true;
+      size_found := true;
       if jsonb_typeof(v_row->'price') = 'number' then
-        price := (v_row->>'price')::numeric;
+        size_price := (v_row->>'price')::numeric;
       end if;
       return;
     end if;
@@ -45,6 +46,8 @@ $$;
 -- per item. The line's description carries the size so the quote reads
 -- "HT-8350 Black Gold, 128mm"; the list price is the size's own when it has
 -- one, so a priced-away line is measured against the right figure.
+-- Everything else is migration 67's function unchanged: the stale lock is
+-- PT409 and a won, lost or converted quote takes no new lines.
 create or replace function add_catalogue_quote_lines(
   p_quote_id uuid,
   p_items jsonb,
@@ -60,6 +63,8 @@ declare
   v_assigned uuid;
   v_updated timestamptz;
   v_deleted timestamptz;
+  v_status quote_status;
+  v_order uuid;
   v_item jsonb;
   v_product_id uuid;
   v_quantity numeric;
@@ -88,8 +93,8 @@ begin
     raise exception 'Too many products at once' using errcode = '22023';
   end if;
 
-  select assigned_to, updated_at, deleted_at
-    into v_assigned, v_updated, v_deleted
+  select assigned_to, updated_at, deleted_at, status, converted_order_id
+    into v_assigned, v_updated, v_deleted, v_status, v_order
     from quotes
    where id = p_quote_id
      for update;
@@ -98,11 +103,12 @@ begin
     raise exception 'Quote not found' using errcode = 'P0002';
   end if;
   if v_updated is distinct from p_expected_updated_at then
-    raise exception 'This quote changed while you were editing' using errcode = '40001';
+    raise exception 'This quote changed while you were editing' using errcode = 'PT409';
   end if;
   if not is_admin() and v_assigned is distinct from v_uid then
     raise exception 'Not allowed' using errcode = '42501';
   end if;
+  perform assert_quote_lines_open(v_status, v_order);
 
   select coalesce(max(sort_order), -1)
     into v_sort
@@ -136,7 +142,9 @@ begin
     v_description := v_product.name;
     v_list := v_product.price;
     if v_size is not null then
-      select found, price into v_size_found, v_size_price from product_size_price(v_product, v_size);
+      select s.size_found, s.size_price
+        into v_size_found, v_size_price
+        from product_size_price(v_product, v_size) s;
       if not v_size_found then
         raise exception 'That size is not one this product comes in' using errcode = '22023';
       end if;
