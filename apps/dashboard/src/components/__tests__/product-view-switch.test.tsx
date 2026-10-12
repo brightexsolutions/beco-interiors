@@ -11,7 +11,8 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => params,
 }));
 
-const { ProductViewSwitch, parseCatalogueView } = await import('../product-view-switch');
+const { ProductViewSwitch } = await import('../product-view-switch');
+const { parseCatalogueView } = await import('@/lib/catalogue-view');
 
 beforeEach(() => {
   push.mockReset();

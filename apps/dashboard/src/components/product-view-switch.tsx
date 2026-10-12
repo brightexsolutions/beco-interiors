@@ -2,11 +2,8 @@
 
 import { useOptimistic } from 'react';
 import { Icon, cn } from '@beco/ui';
+import type { CatalogueView } from '@/lib/catalogue-view';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
-
-export type CatalogueView = 'list' | 'cards';
-
-export const parseCatalogueView = (raw: string | undefined): CatalogueView => (raw === 'cards' ? 'cards' : 'list');
 
 /**
  * List or cards, D138. The list is the scanning table (and rows on a phone);

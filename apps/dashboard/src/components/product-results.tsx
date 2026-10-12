@@ -17,7 +17,7 @@ import {
 } from '@beco/ui';
 import { ProductCardGrid } from '@/components/product-card-grid';
 import { ProductEditor } from '@/components/product-editor';
-import type { CatalogueView } from '@/components/product-view-switch';
+import type { CatalogueView } from '@/lib/catalogue-view';
 import { ProductCreate } from '@/components/product-create';
 import { ProductThumb } from '@/components/product-thumb';
 import { BusyRegion } from '@/components/list-rows';
