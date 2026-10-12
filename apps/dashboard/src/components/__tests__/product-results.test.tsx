@@ -184,7 +184,7 @@ describe('ProductResults', () => {
 });
 
 describe('ProductResults cards view, D138', () => {
-  it('shows every product as a card with its photograph, a line of detail and an Edit link, and no table', () => {
+  it('shows every product as a card with its photograph, name, code, price and sizes, an Edit link, no description and no table', () => {
     render(
       <ProductResults
         view="cards"
@@ -205,7 +205,8 @@ describe('ProductResults cards view, D138', () => {
     const grid = screen.getByRole('list', { name: 'Products' });
     expect(grid.querySelectorAll('li').length).toBe(2);
     expect(grid.querySelector('img')).toHaveAttribute('src', expect.stringContaining('limestone-ivory/slab-ab12-800.webp'));
-    expect(screen.getByText('A soft ivory slab for quiet kitchens.')).toBeInTheDocument();
+    // Name, code, price and sizes only: the description stays in the editor.
+    expect(screen.queryByText('A soft ivory slab for quiet kitchens.')).toBeNull();
     expect(screen.getByText('No photograph yet')).toBeInTheDocument();
     expect(screen.getByText('2 sizes')).toBeInTheDocument();
     expect(screen.getByText('Draft')).toBeInTheDocument();
