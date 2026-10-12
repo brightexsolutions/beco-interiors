@@ -71,6 +71,16 @@ describe('ProductResults', () => {
     expect(editorMounts).toHaveBeenCalledTimes(1);
   });
 
+  it('cases the phone row Edit hint through beco-case, so the admin surface reads it as Edit, not EDIT', () => {
+    render(<ProductResults products={[product()]} editing={null} creating={false} categories={[]} />);
+    const hints = screen.getAllByText('Edit', { selector: 'span' });
+    expect(hints.length).toBeGreaterThan(0);
+    for (const hint of hints) {
+      expect(hint).toHaveClass('beco-case');
+      expect(hint).not.toHaveClass('uppercase');
+    }
+  });
+
   it('gives every product an explicit Edit action, not a click-anywhere row', () => {
     render(
       <ProductResults

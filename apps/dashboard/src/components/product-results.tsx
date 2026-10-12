@@ -131,7 +131,7 @@ function ProductCard({ product, href }: { product: CatalogueProduct; href: strin
         <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 break-words font-ui text-base font-semibold text-charcoal">{product.name}</p>
-          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
+          <span className="beco-case inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold text-charcoal">
             <Icon name="pencil" />
             Edit
           </span>
