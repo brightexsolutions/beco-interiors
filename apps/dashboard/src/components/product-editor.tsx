@@ -18,7 +18,7 @@ import {
   useKeepValuesSubmit,
 } from '@beco/ui';
 import { PRODUCT_UNITS, stockStepFor } from '@beco/validation';
-import type { Availability, PriceDisplayMode } from '@beco/types';
+import type { Availability, PriceDisplayMode, ProductSize } from '@beco/types';
 import {
   deleteProduct,
   setProductPublished,
@@ -39,6 +39,25 @@ export const UNPUBLISH_TIP =
 
 /** What a Save was started by, so only the control that was pressed spins. D117. */
 type SaveIntent = 'save' | 'publish' | 'unpublish';
+
+/** A size row as the form holds it: every field a string, so a half typed price is not thrown away. */
+interface SizeRow {
+  label: string;
+  price: string;
+  sku: string;
+}
+
+const toSizeRow = (size: ProductSize): SizeRow => ({
+  label: size.label,
+  price: size.price == null ? '' : String(size.price),
+  sku: size.sku ?? '',
+});
+
+const fromSizeRow = (row: SizeRow) => ({
+  label: row.label.trim(),
+  price: row.price.trim() === '' ? null : Number(row.price),
+  sku: row.sku.trim() === '' ? null : row.sku.trim(),
+});
 
 const asNumber = (value: string): number | null => {
   if (value.trim() === '') return null;
@@ -67,6 +86,7 @@ export function ProductEditor({
   const [deleteState, remove, removing] = useActionState(deleteProduct, INITIAL);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [specs, setSpecs] = useState(product.specs);
+  const [sizes, setSizes] = useState<SizeRow[]>(() => product.sizes.map(toSizeRow));
   const [name, setName] = useState(product.name);
   const [availability, setAvailability] = useState<Availability>(product.availability);
   const [stockInput, setStockInput] = useState(
@@ -108,6 +128,7 @@ export function ProductEditor({
 
   useEffect(() => {
     setSpecs(product.specs);
+    setSizes(product.sizes.map(toSizeRow));
     setName(product.name);
     setAvailability(product.availability);
     setStockInput(product.stockQuantity == null ? '' : String(product.stockQuantity));
@@ -120,6 +141,7 @@ export function ProductEditor({
     product.id,
     product.updatedAt,
     product.specs,
+    product.sizes,
     product.name,
     product.availability,
     product.stockQuantity,
@@ -153,6 +175,18 @@ export function ProductEditor({
   const removeSpec = (index: number) => {
     setDirty(true);
     setSpecs((current) => current.filter((_, i) => i !== index));
+  };
+  const addSize = () => {
+    setDirty(true);
+    setSizes((current) => [...current, { label: '', price: '', sku: '' }]);
+  };
+  const updateSize = (index: number, patch: Partial<SizeRow>) => {
+    setDirty(true);
+    setSizes((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  };
+  const removeSize = (index: number) => {
+    setDirty(true);
+    setSizes((current) => current.filter((_, i) => i !== index));
   };
   // Fields sit inside and outside the <form>, tied to it with `form=`, so the
   // test is the field's form owner, not where it is in the DOM. Photograph
@@ -286,6 +320,7 @@ export function ProductEditor({
             <input type="hidden" name="productId" value={product.id} />
             <input type="hidden" name="updatedAt" value={product.updatedAt} />
             <input type="hidden" name="specs" value={JSON.stringify(specs)} />
+            <input type="hidden" name="sizes" value={JSON.stringify(sizes.map(fromSizeRow))} />
 
             <FormSection title="Name" hint="The name customers see on the product page and in search.">
               <Field label="Product name" htmlFor="name">
@@ -389,6 +424,65 @@ export function ProductEditor({
                   ))}
                 </div>
               </div>
+            </FormSection>
+
+            <FormSection
+              title="Sizes"
+              hint="For a product that comes in several sizes, a handle in three lengths for example. Blank price uses the product price."
+            >
+              {sizes.length === 0 ? (
+                <p className="font-ui text-base text-neutral-500">One size. Add sizes if the counter has to pick one.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {sizes.map((row, index) => (
+                    <li key={index} className="grid min-w-0 grid-cols-1 gap-2 rounded-card border border-neutral-200 p-3 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                      <Field label="Size" htmlFor={`size-label-${index}`}>
+                        <Input
+                          id={`size-label-${index}`}
+                          value={row.label}
+                          onChange={(event) => updateSize(index, { label: event.target.value })}
+                          placeholder="128mm"
+                          maxLength={40}
+                          className="min-w-0"
+                        />
+                      </Field>
+                      <Field label="Price" htmlFor={`size-price-${index}`} hint="KES">
+                        <Input
+                          id={`size-price-${index}`}
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          step="0.01"
+                          value={row.price}
+                          onChange={(event) => updateSize(index, { price: event.target.value })}
+                          className={NUMBER_INPUT}
+                        />
+                      </Field>
+                      <Field label="Code" htmlFor={`size-sku-${index}`} hint="Optional">
+                        <Input
+                          id={`size-sku-${index}`}
+                          value={row.sku}
+                          onChange={(event) => updateSize(index, { sku: event.target.value })}
+                          className="min-w-0"
+                        />
+                      </Field>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => removeSize(index)}
+                        aria-label={`Remove size ${row.label || index + 1}`}
+                      >
+                        <Icon name="trash" />
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button type="button" variant="outline" onClick={addSize}>
+                <Icon name="plus" />
+                Add size
+              </Button>
             </FormSection>
 
             <FormSection

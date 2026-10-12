@@ -82,6 +82,7 @@ const product: CatalogueProduct = {
   metaTitle: null,
   metaDescription: null,
   specs: [],
+  sizes: [],
   images: [],
   unit: 'per slab',
   stockQuantity: 4,

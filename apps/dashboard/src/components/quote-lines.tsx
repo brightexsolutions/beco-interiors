@@ -275,7 +275,7 @@ function CatalogueAdd({
       JSON.stringify(
         hits.map((hit) => {
           const draft = catalogueLineDraft(hit);
-          return { productId: hit.id, quantity: draft.quantity, unitPrice: draft.unitPrice };
+          return { productId: hit.id, quantity: draft.quantity, unitPrice: draft.unitPrice, ...(hit.size ? { size: hit.size } : {}) };
         }),
       ),
     );

@@ -37,7 +37,15 @@ vi.mock('@/lib/products', async (importOriginal) => {
     ...actual,
     getProductBySlug: vi.fn(async (slug: string) =>
       slug === 'hinge-1187'
-        ? product('hinge-1187', 'Black Hinge 1187', { name: 'Black Hinges', slug: 'black-hinges' })
+        ? {
+            ...product('hinge-1187', 'Black Hinge 1187', { name: 'Black Hinges', slug: 'black-hinges' }),
+            price: 850,
+            price_display_mode: 'fixed' as const,
+            sizes: [
+              { label: '96mm', price: null, sku: 'BH-96' },
+              { label: '128mm', price: 950, sku: null },
+            ],
+          }
         : product('beverly-gold', 'Beverly Gold', { name: 'Heixin 12mm', slug: 'heixin-12mm' })),
     getRelatedProducts: vi.fn(async () => []),
     getCategoryWithTree: vi.fn(async (slug: string) =>
@@ -79,5 +87,24 @@ describe('product page wording by material', () => {
     // is a storage path and not copy.
     container.querySelectorAll('script').forEach((s) => s.remove());
     expect(container.textContent).not.toMatch(/slab/i);
+  });
+});
+
+describe('product sizes, D137', () => {
+  it('lists each size with its own price, or the product price when it has none', async () => {
+    const { container } = await renderPage('hinge-1187');
+    const section = screen.getByRole('region', { name: 'Sizes' });
+    expect(section).toHaveTextContent('96mm');
+    expect(section).toHaveTextContent('BH-96');
+    expect(section).toHaveTextContent('128mm');
+    const rows = section.querySelectorAll('li');
+    expect(rows[0]?.textContent).toMatch(/850/);
+    expect(rows[1]?.textContent).toMatch(/950/);
+    container.querySelectorAll('script').forEach((s) => s.remove());
+  });
+
+  it('shows no sizes block on a product with one size', async () => {
+    await renderPage('beverly-gold');
+    expect(screen.queryByRole('region', { name: 'Sizes' })).toBeNull();
   });
 });

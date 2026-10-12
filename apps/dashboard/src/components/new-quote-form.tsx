@@ -16,7 +16,7 @@ import {
 } from '@beco/ui';
 import { roundMoney } from '@beco/validation';
 import { createCounterQuote, type QuoteActionState } from '@/app/(app)/quotes/actions';
-import { CataloguePicker, catalogueLineDraft } from '@/components/catalogue-picker';
+import { CataloguePicker, catalogueLineDraft, catalogueLineName } from '@/components/catalogue-picker';
 import { CustomerCard } from '@/components/customer-card';
 import { CustomerCreate } from '@/components/customer-create';
 import { CustomerPicker } from '@/components/customer-picker';
@@ -91,7 +91,7 @@ export function NewQuoteForm() {
         return {
           key: crypto.randomUUID(),
           productId: hit.id,
-          description: hit.name,
+          description: catalogueLineName(hit),
           quantity: draft.quantity,
           unitPrice: draft.unitPrice,
           unit: hit.unit,
