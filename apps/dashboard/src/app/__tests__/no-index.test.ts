@@ -10,7 +10,7 @@ vi.mock('node:fs', async (importOriginal) => {
 });
 
 // The policy names the account's own R2 host, so one must be configured to see it.
-process.env.R2_ACCOUNT_ID = 'acct';
+process.env.R2_ACCOUNT_ID = '0123456789abcdef0123456789abcdef';
 
 const { metadata } = await import('../layout');
 const { default: robots } = await import('../robots');

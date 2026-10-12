@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
+import { r2ConnectOrigin } from './src/lib/r2-connect';
 
 // Dashboard CSP. No analytics, no tag manager: neither is loaded here.
 
@@ -45,9 +46,11 @@ const scriptSrc = [
 ].join(' ');
 
 // The browser PUTs photographs straight to R2 (D116): the account's own host,
-// never a wildcard. R2_ENDPOINT, local only, stands in for it.
-const r2Connect =
-  process.env.R2_ENDPOINT ?? (process.env.R2_ACCOUNT_ID ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : '');
+// never a wildcard, and never a masked placeholder (D150).
+const r2Connect = r2ConnectOrigin({ R2_ENDPOINT: process.env.R2_ENDPOINT, R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID });
+if (!r2Connect && !isDev) {
+  console.warn('R2_ACCOUNT_ID is missing or not a readable account ID at build: photographs will take the form post, not the direct PUT. See D150.');
+}
 
 const csp = [
   "default-src 'self'",

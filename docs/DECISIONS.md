@@ -3791,3 +3791,22 @@ sections, New quote, and Guide itself.
 The written guide stays, one tap away: Full guide on the tour card opens it, and Take the tour in
 it starts the tour again. The tour does not start by itself on a first visit; that is a choice
 for Beco once they have seen it.
+
+## D150, 12 October 2026: the CSP's R2 host is read at build, so the account ID must not be Sensitive
+
+Found checking the deploy, not by a test. The dashboard project holds `R2_ACCOUNT_ID`,
+`R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` as Sensitive. The deploy workflows build in GitHub
+Actions after `vercel pull`, and `vercel pull` hands a Sensitive variable over as the placeholder
+`[sensitive]`, so the build saw an account ID of `[sensitive]` and D143's `connect-src` fix would
+have named `https://[sensitive].r2.cloudflarestorage.com`, a host no browser matches: the direct
+PUT would still have been refused. The keys are fine as they are, since they are read at run time,
+where Vercel supplies the real values.
+
+`r2ConnectOrigin` now writes the host only for a 32 character hex account ID and leaves anything
+else out, and the build says so in its log. Without the host a photograph takes the form post,
+which D139's resize keeps under its limit, so nothing breaks; the direct PUT waits on one setting.
+
+**To do in Vercel, by a person who holds the value:** in `beco-dashboard`, Settings, Environment
+Variables, remove `R2_ACCOUNT_ID` and add it again for Production as a plain, not Sensitive,
+variable. An account ID is not a secret: it is in every R2 URL. The two keys stay Sensitive. The
+next production build then carries the host, and the build log's D150 warning goes away.

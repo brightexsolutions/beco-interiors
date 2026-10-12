@@ -753,6 +753,11 @@ and fell back to the form post, which is where "the direct upload failed and 9.5
 to send the slow way" came from. `R2_ENDPOINT` replaces the host in local development against an
 S3 compatible stand in, never in production.
 
+**`R2_ACCOUNT_ID` must be a plain variable, not Sensitive (D150).** The CSP is built at build
+time in GitHub Actions after `vercel pull`, which hands a Sensitive variable over as
+`[sensitive]`. The build then leaves the host out and logs a D150 warning, and photographs take
+the slower form post. The access key and secret stay Sensitive: they are read at run time.
+
 `'unsafe-inline'` on `script-src` is a known compromise for Next.js inline bootstrap scripts.
 Tighten it to a nonce based policy once the app is stable, and record that as a follow up
 rather than forgetting it.
