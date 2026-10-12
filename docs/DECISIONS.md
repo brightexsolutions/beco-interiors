@@ -3721,3 +3721,10 @@ convenience that falls back to the defaults when storage is blocked. A folded Sa
 new quote count on its heading so the count is never hidden. The phone bar is unchanged.
 
 *Reverses if:* the sections fit a laptop screen again, at which point the fold is noise.
+
+## D145, 12 October 2026: the catalogue ranges stay in view
+
+Brown, scrolling the cards: the range pills scrolled off, so changing range meant scrolling back
+up. From a tablet up the Browse section is sticky at the top of the screen on the ground fill, and
+the list slides under it. On a phone it scrolls as before: the pills wrap to four rows there and
+pinned they would cover a third of the screen.

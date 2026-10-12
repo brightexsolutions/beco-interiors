@@ -82,6 +82,13 @@ describe('CatalogueRanges, the range browser (D114)', () => {
     expect(editorMounts).toHaveBeenCalledTimes(1);
   });
 
+  it('pins the ranges to the top from a tablet up, on the ground fill, and leaves a phone scrolling (D145)', () => {
+    render(<CatalogueRanges tree={deep()} groupOptions={[]} editing={null} creating={false} selectedId={null} />);
+    const section = screen.getByRole('region', { name: 'Browse' });
+    expect(section).toHaveClass('md:sticky', 'md:top-0', 'md:z-10', 'md:bg-neutral-50');
+    expect(section).not.toHaveClass('sticky');
+  });
+
   it('opens on the major categories alone, each counting its whole subtree', () => {
     render(<CatalogueRanges tree={deep()} groupOptions={[]} editing={null} creating={false} selectedId={null} />);
     const categories = screen.getByRole('group', { name: 'Categories' });
