@@ -9,6 +9,9 @@ vi.mock('node:fs', async (importOriginal) => {
   return { ...actual, copyFileSync: vi.fn(), mkdirSync: vi.fn() };
 });
 
+// The policy names the account's own R2 host, so one must be configured to see it.
+process.env.R2_ACCOUNT_ID = 'acct';
+
 const { metadata } = await import('../layout');
 const { default: robots } = await import('../robots');
 const { default: nextConfig } = await import('../../../next.config');

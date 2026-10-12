@@ -44,6 +44,11 @@ const scriptSrc = [
   ...(isDev ? ["'unsafe-eval'"] : []),
 ].join(' ');
 
+// The browser PUTs photographs straight to R2 (D116): the account's own host,
+// never a wildcard. R2_ENDPOINT, local only, stands in for it.
+const r2Connect =
+  process.env.R2_ENDPOINT ?? (process.env.R2_ACCOUNT_ID ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : '');
+
 const csp = [
   "default-src 'self'",
   `script-src ${scriptSrc}`,
@@ -52,9 +57,7 @@ const csp = [
   // There is no fonts.gstatic.com entry and there should never be one.
   "font-src 'self'",
   `img-src 'self' data: blob: ${imageOrigins}`,
-  // The browser PUTs photographs straight to R2 (D116); a local stand in
-  // replaces that host when R2_ENDPOINT is set.
-  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} ${process.env.R2_ENDPOINT ?? 'https://*.r2.cloudflarestorage.com'}`,
+  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} ${r2Connect}`,
   // pdf.js paints quote, receipt, and sales-review pages onto canvas. The
   // worker is copied into public/ from pdfjs-dist at config load.
   // heic-to decodes iPhone photographs in a Web Worker it builds from a blob URL, D139.
