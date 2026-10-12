@@ -63,10 +63,10 @@ describe('Tabs', () => {
     );
   });
 
-  it('the active tab is charcoal, not a muted shadcn pill', () => {
+  it('the active tab is underlined in Warm Red, not a muted shadcn pill (D143)', () => {
     render(<Views />);
     const sales = screen.getByRole('tab', { name: 'Sales' });
-    expect(sales.className).toContain('data-[state=active]:border-charcoal');
+    expect(sales.className).toContain('data-[state=active]:border-warm-red');
     expect(sales.className).toContain('min-h-11');
     expect(sales.className).not.toContain('rounded-md');
     expect(screen.getByRole('tablist').className).not.toContain('bg-muted');

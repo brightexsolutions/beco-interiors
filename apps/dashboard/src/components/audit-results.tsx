@@ -149,7 +149,7 @@ export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: Aud
           getRowKey={(row) => row.id}
         />
       </div>
-      <ListRows busy={isPending} label="Audit events" className="border-y border-neutral-200">
+      <ListRows busy={isPending} label="Audit events" className="border-b border-neutral-200">
         {paged.items.map((row) => (
           <ListRowLink
             key={row.id}

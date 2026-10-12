@@ -182,9 +182,9 @@ export function UserResults({
           <caption className="sr-only">{`${paged.total} users`}</caption>
           <thead>
             <tr className="border-b border-neutral-200">
-              <th className="py-3 pr-4 font-ui text-sm font-semibold text-neutral-500">Name</th>
-              <th className="py-3 pr-4 font-ui text-sm font-semibold text-neutral-500">Status</th>
-              <th className="py-3 text-right font-ui text-sm font-semibold text-neutral-500">Actions</th>
+              <th className="beco-case py-3 pr-4 font-ui text-xs font-semibold text-neutral-500">Name</th>
+              <th className="beco-case py-3 pr-4 font-ui text-xs font-semibold text-neutral-500">Status</th>
+              <th className="beco-case py-3 text-right font-ui text-xs font-semibold text-neutral-500">Actions</th>
             </tr>
           </thead>
           <tbody>

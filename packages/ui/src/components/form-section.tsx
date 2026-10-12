@@ -23,7 +23,7 @@ export function FormSection({
   return (
     <section className={cn('min-w-0', className)}>
       {title ? (
-        <h3 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+        <h3 className="beco-case font-ui text-xs font-semibold text-neutral-500">
           {title}
         </h3>
       ) : null}

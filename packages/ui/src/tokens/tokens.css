@@ -48,6 +48,8 @@
      Pure warm-red is for FILLS, RULES and BADGES. Anything with white text
      on it uses warm-red-deep, which measures 5.88:1. Verified, not assumed. */
   --color-warm-red-deep: #c81419;
+  /* The focus ring. Warm Red on the shop; the admin surface pins it to charcoal, D143. */
+  --color-ring: #ed1c24;
   --color-charcoal: #101820;
   /* True charcoal and paper. They never invert when the dashboard is dark,
      so a showroom wash and type sitting on it stay legible. */
@@ -167,6 +169,7 @@
    so iOS never zooms the page on focus.
    ============================================================ */
 [data-surface="admin"] {
+  --color-ring: #101820;
   --font-ui: var(--font-geist-sans, 'Geist'), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: var(--font-geist-sans, 'Geist'), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --text-xs: 0.8125rem;

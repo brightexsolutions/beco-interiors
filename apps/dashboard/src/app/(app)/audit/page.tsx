@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Panel, TableToolbar } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { AuditFilters } from '@/components/audit-filters';
 import { AuditResults } from '@/components/audit-results';
@@ -32,13 +33,19 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       <PageHeading eyebrow="Studio" title="Audit" />
       {/* One transition for the filters and the list. D117. */}
       <QueryNavigationProvider>
-        <div className="mb-4">
+        <Panel>
           {/* The log query stops at 200 rows, so the count says "latest" there. */}
-          <AuditFilters
-            count={rows.length >= 200 ? `Latest ${rows.length} events` : `${rows.length} ${rows.length === 1 ? 'event' : 'events'}`}
+          <TableToolbar
+            filters={
+              <AuditFilters
+                count={rows.length >= 200 ? `Latest ${rows.length} events` : `${rows.length} ${rows.length === 1 ? 'event' : 'events'}`}
+              />
+            }
           />
-        </div>
-        <AuditResults rows={rows} viewing={viewing} />
+          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+            <AuditResults rows={rows} viewing={viewing} />
+          </div>
+        </Panel>
       </QueryNavigationProvider>
     </>
   );

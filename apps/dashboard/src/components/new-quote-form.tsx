@@ -272,7 +272,7 @@ export function NewQuoteForm() {
       <div
         data-testid="quote-action-bar"
         className={cn(
-          'sticky bottom-[var(--dock,0px)] z-20 -mx-6 mt-6 border-t border-neutral-200 bg-high-vis-white px-6 py-3 shadow-dock sm:hidden',
+          'sticky bottom-[var(--dock,0px)] z-20 -mx-4 mt-6 border-t border-neutral-200 bg-high-vis-white px-4 py-3 shadow-dock sm:hidden',
           keyboardOpen ? 'hidden' : null,
         )}
       >

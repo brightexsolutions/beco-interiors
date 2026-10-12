@@ -182,7 +182,7 @@ export function ProductGallery({ images, slab = true, className }: ProductGaller
                     'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
                     fan && 'hover:!rotate-0',
                     i === active
-                      ? cn('ring-warm-red -translate-y-2', fan && '!rotate-0')
+                      ? cn('ring-ring -translate-y-2', fan && '!rotate-0')
                       : 'ring-charcoal/15 opacity-85 hover:opacity-100',
                   )}
                 >

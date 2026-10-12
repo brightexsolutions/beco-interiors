@@ -231,7 +231,7 @@ function RangePill({
       aria-pressed={active}
       className={cn(
         'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-control border px-3.5 font-ui text-sm font-semibold transition-colors duration-200',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
         active
           ? 'border-charcoal bg-charcoal text-high-vis-white'
           : draft

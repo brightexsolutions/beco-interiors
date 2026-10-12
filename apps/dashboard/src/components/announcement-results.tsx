@@ -181,7 +181,7 @@ export function AnnouncementResults({
         />
       </div>
 
-      <ListRows busy={isPending} label="Announcements" className="border-y border-neutral-200">
+      <ListRows busy={isPending} label="Announcements" className="border-b border-neutral-200">
         {paged.items.map((row) => (
           <AnnouncementRow key={row.id} row={row} href={editHref(row.id)} />
         ))}

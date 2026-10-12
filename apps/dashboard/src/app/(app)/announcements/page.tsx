@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Panel, TableToolbar } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { AnnouncementFilters } from '@/components/announcement-filters';
 import { AnnouncementPreview } from '@/components/announcement-preview';
@@ -73,14 +74,18 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
       </section>
       {/* One transition for the filters and the list. D117. */}
       <QueryNavigationProvider>
-        <div className="mb-4">
-          <AnnouncementFilters
-            count={`${announcements.length} ${announcements.length === 1 ? 'announcement' : 'announcements'}`}
+        <Panel className="mb-24">
+          <TableToolbar
+            filters={
+              <AnnouncementFilters
+                count={`${announcements.length} ${announcements.length === 1 ? 'announcement' : 'announcements'}`}
+              />
+            }
           />
-        </div>
-        <div className="pb-24">
-          <AnnouncementResults announcements={announcements} editing={editing} creating={creating} />
-        </div>
+          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+            <AnnouncementResults announcements={announcements} editing={editing} creating={creating} />
+          </div>
+        </Panel>
       </QueryNavigationProvider>
     </>
   );
