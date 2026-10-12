@@ -1,7 +1,7 @@
 'use client';
 
 import { useOptimistic } from 'react';
-import { Icon, cn } from '@beco/ui';
+import { SegmentedControl } from '@beco/ui';
 import type { CatalogueView } from '@/lib/catalogue-view';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
 
@@ -22,30 +22,16 @@ export function ProductViewSwitch({ view }: { view: CatalogueView }) {
     setParam('view', next === 'cards' ? 'cards' : '', () => show(next));
   };
 
-  const option = (value: CatalogueView, label: string, icon: 'rows' | 'grid') => {
-    const active = shown === value;
-    return (
-      <button
-        type="button"
-        aria-pressed={active}
-        aria-label={label}
-        onClick={() => choose(value)}
-        className={cn(
-          'inline-flex h-11 min-w-11 items-center justify-center gap-2 px-3 font-ui text-sm font-semibold transition-colors',
-          active ? 'bg-charcoal text-high-vis-white' : 'text-neutral-700 hover:bg-neutral-100 hover:text-charcoal',
-        )}
-      >
-        <Icon name={icon} className="h-[1.1rem] w-[1.1rem]" />
-        <span aria-hidden className="hidden sm:inline">{label}</span>
-      </button>
-    );
-  };
-
   return (
-    <div role="group" aria-label="View" className="inline-flex overflow-hidden rounded-control border border-neutral-300">
-      {option('list', 'List', 'rows')}
-      <span aria-hidden className="w-px bg-neutral-300" />
-      {option('cards', 'Cards', 'grid')}
-    </div>
+    <SegmentedControl
+      label="View"
+      value={shown}
+      onChange={choose}
+      compactOnPhone
+      options={[
+        { value: 'list', label: 'List', icon: 'rows' },
+        { value: 'cards', label: 'Cards', icon: 'grid' },
+      ]}
+    />
   );
 }

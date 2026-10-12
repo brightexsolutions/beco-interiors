@@ -28,6 +28,7 @@ export {
 export { EmptyState, LoadingState, ErrorState } from './components/states';
 export { Skeleton, SkeletonScreen } from './components/skeleton';
 export { Panel } from './components/panel';
+export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from './components/segmented-control';
 export { Pagination } from './components/pagination';
 export { paginate, DASHBOARD_LIST_PAGE_SIZE } from './lib/paginate';
 export { Reveal, type RevealProps } from './components/reveal';
