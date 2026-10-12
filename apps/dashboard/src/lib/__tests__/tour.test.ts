@@ -44,7 +44,7 @@ describe('tourFor, D149', () => {
       for (const step of tourFor(path, null)) {
         expect(step.title.split(' ').length).toBeLessThanOrEqual(4);
         expect(step.body.split('. ').length).toBeLessThanOrEqual(2);
-        expect(step.body).not.toMatch(/—/);
+        expect(step.body).not.toMatch(/\u2014/);
       }
     }
   });
