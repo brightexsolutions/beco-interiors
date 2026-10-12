@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Dialog, Icon, cn } from '@beco/ui';
-import type { GuideTopic } from '@/lib/guide';
+import { currentGuideTopic, type GuideTopic } from '@/lib/guide';
+import { availableSteps, tourFor, type TourStep } from '@/lib/tour';
+import { Tour } from './tour';
 
 /**
  * The guide, D140: a Help control in the shell that opens a Dialog with the
@@ -28,6 +30,7 @@ export function GuideButton({
   const pathname = usePathname();
   const ordered = useMemo(() => orderForPath(topics, pathname), [topics, pathname]);
   const [current, setCurrent] = useState<string | null>(null);
+  const [tour, setTour] = useState<TourStep[] | null>(null);
 
   // A fresh screen opens the guide on its own topic.
   useEffect(() => {
@@ -37,13 +40,26 @@ export function GuideButton({
   if (topics.length === 0) return null;
   const topic = ordered.find((item) => item.id === current) ?? ordered[0]!;
 
+  // The Guide control starts the screen tour, D149; the written guide is a
+  // step away from it, and from there the tour can be started again.
+  const startTour = () => {
+    const steps = availableSteps(tourFor(pathname, currentGuideTopic(pathname, topics)));
+    if (steps.length === 0) {
+      setOpen(true);
+      return;
+    }
+    setOpen(false);
+    setTour(steps);
+  };
+
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        data-tour="guide"
+        onClick={startTour}
         aria-haspopup="dialog"
-        aria-expanded={open}
+        aria-expanded={open || tour !== null}
         aria-label={compact ? 'Guide' : undefined}
         className={cn(
           'inline-flex h-11 items-center justify-center gap-2 rounded-full font-ui text-sm font-semibold text-neutral-700 hover:bg-neutral-100 hover:text-charcoal',
@@ -84,9 +100,18 @@ export function GuideButton({
             </ul>
           </nav>
           <article aria-labelledby={`guide-${topic.id}`} className="min-w-0">
-            <h3 id={`guide-${topic.id}`} className="font-display text-2xl leading-tight text-charcoal">
-              {topic.title}
-            </h3>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <h3 id={`guide-${topic.id}`} className="font-display text-2xl leading-tight text-charcoal">
+                {topic.title}
+              </h3>
+              <button
+                type="button"
+                onClick={startTour}
+                className="beco-ring inline-flex h-11 items-center gap-2 rounded-control border border-neutral-300 px-3 font-ui text-sm font-semibold text-charcoal hover:bg-neutral-100"
+              >
+                Take the tour
+              </button>
+            </div>
             <p className="mt-2 max-w-[60ch] font-ui text-base text-neutral-700">{topic.purpose}</p>
             <ol className="mt-5 space-y-4">
               {topic.steps.map((step, index) => (
@@ -117,6 +142,16 @@ export function GuideButton({
           </article>
         </div>
       </Dialog>
+      {tour ? (
+        <Tour
+          steps={tour}
+          onClose={() => setTour(null)}
+          onOpenGuide={() => {
+            setTour(null);
+            setOpen(true);
+          }}
+        />
+      ) : null}
     </>
   );
 }

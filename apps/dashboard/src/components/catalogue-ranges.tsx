@@ -126,6 +126,7 @@ export function CatalogueRanges({
     <section
       aria-labelledby="ranges-heading"
       data-sticky-ranges
+      data-tour="ranges"
       className="mb-8 md:mb-5 md:sticky md:top-[var(--shell-top)] md:z-10 md:-mt-3 md:bg-neutral-50 md:pb-3 md:pt-3"
     >
       <div className="mb-3 flex items-center justify-between gap-3">

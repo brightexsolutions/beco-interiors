@@ -90,10 +90,12 @@ export default async function DashboardHome() {
         }
       />
 
-      <HomeFocus focus={focus} approvals={approvals} />
+      <div data-tour="focus">
+        <HomeFocus focus={focus} approvals={approvals} />
+      </div>
 
       <h2 className="mb-3 mt-8 font-ui text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">This month</h2>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
+      <div data-tour="month" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
         {cards.map(({ href, actionLabel, glyph, ...card }, index) => (
           <StatCard
             key={card.label}
@@ -108,7 +110,7 @@ export default async function DashboardHome() {
         ))}
       </div>
 
-      <div className="mt-8">
+      <div data-tour="activity" className="mt-8">
         <HomeActivity points={toQuotePoints(weeks)} stages={toStages(pipeline, focus.breached)} quiet={!hasActivity(weeks)} />
       </div>
 
@@ -117,7 +119,7 @@ export default async function DashboardHome() {
         <HomeCatalogue catalogue={summary.catalogue} />
       </div>
 
-      <div className="mt-8">
+      <div data-tour="latest" className="mt-8">
         <RecentQuotes quotes={recent} />
       </div>
     </>

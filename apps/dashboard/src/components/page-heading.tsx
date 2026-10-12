@@ -28,14 +28,14 @@ export function PageHeading({
         data-heading-row
         className="mt-1 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
       >
-        <h1 className="min-w-0 font-display text-4xl font-bold leading-[1.15] tracking-[-0.02em] text-charcoal [overflow-wrap:anywhere]">{title}</h1>
+        <h1 data-tour="heading" className="min-w-0 font-display text-4xl font-bold leading-[1.15] tracking-[-0.02em] text-charcoal [overflow-wrap:anywhere]">{title}</h1>
         {lede ? (
           <p className="order-2 max-w-[60ch] font-ui text-base text-neutral-500 sm:order-none sm:col-start-1 sm:row-start-2">
             {lede}
           </p>
         ) : null}
         {actions ? (
-          <div className="order-3 flex flex-col gap-2 [&>*]:w-full sm:order-none sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:[&>*]:w-auto">
+          <div data-tour="actions" className="order-3 flex flex-col gap-2 [&>*]:w-full sm:order-none sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:[&>*]:w-auto">
             {actions}
           </div>
         ) : null}

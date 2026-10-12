@@ -82,7 +82,7 @@ export function AppShell({
                 <span className="-mt-0.5 block font-ui text-xs text-neutral-500">Operations</span>
               </span>
             </Link>
-            <div className="mt-4">
+            <div data-tour="search" className="mt-4">
               <CommandPalette items={items} topics={guide} canRaiseQuotes={raisesQuotes} />
             </div>
           </div>
@@ -180,7 +180,7 @@ export function AppShell({
               ) : null}
               <AccountMenu name={name} />
               {raisesQuotes ? (
-                <Link href="/quotes/new" className={cn(buttonClasses({ variant: 'primary' }), 'ml-2 h-10 gap-2')}>
+                <Link href="/quotes/new" data-tour="new-quote" className={cn(buttonClasses({ variant: 'primary' }), 'ml-2 h-10 gap-2')}>
                   <Icon name="plus" />
                   New quote
                 </Link>

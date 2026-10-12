@@ -83,6 +83,7 @@ export function BottomNav({
   return (
     <>
       <nav
+        data-tour="bottom-nav"
         aria-label="Sections"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200 bg-high-vis-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-6px_24px_-16px_rgba(16,24,32,0.35)] backdrop-blur lg:hidden"
       >

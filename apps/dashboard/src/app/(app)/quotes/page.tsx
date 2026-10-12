@@ -115,11 +115,11 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
             </div>
           ) : null}
           {view === 'board' ? (
-            <div className="px-4 pt-3 sm:px-5 xl:px-0">
+            <div data-tour="results" className="px-4 pt-3 sm:px-5 xl:px-0">
               <QuoteBoard quotes={quotes} viewerId={user.userId} isAdmin={isAdmin} />
             </div>
           ) : (
-            <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+            <div data-tour="results" className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
               <QuoteResults quotes={quotes} />
             </div>
           )}

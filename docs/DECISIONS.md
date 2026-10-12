@@ -3775,3 +3775,19 @@ elsewhere is refused rather than overwritten.
 
 *Reverses if:* the board needs to reorder within a column, which would need a sort column the
 quotes table does not have.
+
+## D149, 12 October 2026: the guide becomes a tour of the screen
+
+Brown, with a screenshot of the D140 guide: not the guide asked for; the one where the reader
+presses Next and another part of the screen lights up with a short description. Guide now starts
+a tour of the screen being looked at. The page dims, the part the step is about is cut out of the
+dimming with a white edge, and a card beside it, never over it, gives a title and one sentence,
+how far through the reader is, Back, Next and Skip. A step names a `data-tour` mark on the real
+element, so the tour follows the component if it moves; a mark not on screen at this width (the
+sidebar on a phone, the bottom bar on a laptop) drops its step. Each screen opens on its heading
+with the first sentence of its written guide topic, then its own parts, then the shell: search,
+sections, New quote, and Guide itself.
+
+The written guide stays, one tap away: Full guide on the tour card opens it, and Take the tour in
+it starts the tour again. The tour does not start by itself on a first visit; that is a choice
+for Beco once they have seen it.

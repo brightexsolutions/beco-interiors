@@ -49,7 +49,7 @@ export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuot
   };
 
   return (
-    <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-1">
+    <nav aria-label="Main" data-tour="nav" className="flex-1 overflow-y-auto px-3 py-1">
       {groups.map((group, index) => {
         const expanded = open.has(group.label);
         const listId = `${baseId}-group-${index}`;

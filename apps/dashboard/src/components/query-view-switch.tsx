@@ -23,12 +23,14 @@ export function QueryViewSwitch<T extends string>({
   const fallback = options[0]?.value;
 
   return (
-    <SegmentedControl
-      label="View"
-      value={shown}
-      compactOnPhone
-      options={options}
-      onChange={(next) => setParam('view', next === fallback ? '' : next, () => show(next))}
-    />
+    <span data-tour="view-switch" className="inline-flex">
+      <SegmentedControl
+        label="View"
+        value={shown}
+        compactOnPhone
+        options={options}
+        onChange={(next) => setParam('view', next === fallback ? '' : next, () => show(next))}
+      />
+    </span>
   );
 }
