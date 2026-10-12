@@ -57,6 +57,7 @@ created them.
 | `can_write_blog` | boolean default false | Kept on the row. Does not open Studio. Write is `is_brightex_user()` |
 | `can_read_audit` | boolean default false | Brightex assigns this. Role `brightex_admin` already reads `/audit` |
 | `can_manage_users` | boolean default false | Brightex assigns this (D135). Opens `/users` for Beco accounts only: add, role, deactivate, reset, /team listing. Never a Brightex row, never a grant |
+| `module_grants` | text[] default '{}' | D136. Sections opened to read beside the role, from `module_keys()`. Brightex grants any; a staff manager only what they hold, on a Beco row, never their own. `has_module()` drives the read policies; writes never widen |
 | `public_title`, `public_phone` | text null | Shown on `/team` |
 | `public_photo` | jsonb null | Catalogue stem plus alt, width, height, blur. Derivatives at 400/800/1600 webp on R2 |
 | `sort_order` | int | `/team` listing order |
@@ -135,6 +136,7 @@ Slug history for categories, the same job `product_slugs` does for products: a r
 | `badge` | product_badge null | |
 | `images` | jsonb | Role structured, below |
 | `specs` | jsonb | Object of label to value, `{ "Finish": "Silky" }` |
+| `sizes` | jsonb | D137. Ordered array of `{ "label": "128mm", "price": 950 \| null, "sku": "HT-128" \| null }`, empty for a product with one size. A null price takes the product's. `add_catalogue_quote_lines` takes a size per item |
 | `meta_title`, `meta_description` | text | |
 | `is_published` | boolean | |
 | `sort_order` | int | |

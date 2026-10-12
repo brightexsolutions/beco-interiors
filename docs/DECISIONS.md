@@ -3563,3 +3563,105 @@ map gives `/users` a `users` grant, the way `/audit` has one.
 *Reverses if:* Beco wants a holder to manage Brightex accounts, which would mean Beco can lock
 Brightex out. The ownership split (`docs/OWNERSHIP.md`) puts the data on Beco's accounts, so that
 is a handover decision, not a permission switch.
+
+## D136, 12 October 2026: a module grant opens a section to read, beside the role
+
+Asked by Brown: a way, as Brightex or as a person given the right, to let another member see a
+given module. The roles were fixed lists, and the two staff grants (audit read, staff
+management, D135) each opened one door with its writes attached.
+
+**Module grants, per account.** `users.module_grants text[]`, one key per dashboard section
+(`quotes`, `orders`, `customers`, `products`, `announcements`, `reports`, `users`, `settings`,
+`audit`), the list held once in `module_keys()` and once in `DASHBOARD_MODULES`, asserted equal
+by test. A grant opens the screen (the route map carries the module on its rule, so the proxy,
+the nav, the bottom bar and the guide all agree) and the reads behind it (`has_module()` drives
+a select policy on quotes, quote lines, orders, order lines, customers and analytics events;
+`has_audit_read()` now counts the audit module). **Writes never widen:** the policies that
+change rows are untouched, and the shell draws a View only pill on a section a person reaches
+by grant alone, so a refused save is never the first they hear of it.
+
+**Who grants.** Brightex, anything. A holder of the staff grant, only what they reach
+themselves, on a Beco account, never their own row: `can_grant_module()` and the users guard
+trigger refuse the rest with a sentence, and the action says the same thing before the write.
+One editor, `ModuleAccessEditor`, on the user's own sheet and on the Permissions tab, which a
+staff manager who is an admin now also sees for module access alone.
+
+Studio, the Drive import and the launch control have no module: they stay Brightex only.
+
+*Reverses if:* Beco wants a grant to carry writes. That is a role, and D110's reasoning about
+roles being cheap to add and expensive to retire applies.
+
+## D137, 12 October 2026: a product can come in several sizes
+
+Feedback from the counter: handles come in three lengths, profiles in two, and each was either a
+separate product or a spec line nobody could quote from.
+
+`products.sizes` is an ordered array of `{ label, price, sku }`. The editor has a Sizes section
+(label, optional price, optional code); the list and cards say "3 sizes"; the storefront product
+page lists each size with its own price, or the product's when it has none. The quote picker
+lists one row per size, "HT-8350 Black Gold, 128mm", priced by the size, and
+`add_catalogue_quote_lines` takes the size, puts it in the line's description and sets the list
+price from it, refusing a size the product does not carry. A product with no sizes is exactly
+what it was.
+
+*Reverses if:* sizes need their own stock counts, at which point they are variants with rows of
+their own, not a column.
+
+## D138, 12 October 2026: the catalogue has a cards view beside the list
+
+Brown, with two concept screenshots: the catalogue should be viewable as a list or as large
+cards that show the photograph and a line of detail, the full record opening when one is picked.
+The 18 September lock said never cards on desktop; that held while the only card was a phone
+substitute for the table. This is a different thing: a view chosen from the toolbar, for
+checking what a product looks like rather than what it costs.
+
+`?view=cards` through the shared transition, twelve to a page, four across on a wide screen.
+Each card: the first photograph in a fixed 4:3 frame with the Published or Draft pill and a
+photo count over it, name, code and range, two lines of the short description, price and unit,
+availability and stock, then Low stock, Out of stock and the size count. The whole card opens the
+editor. The list stays the default and the table stays the desktop list.
+
+## D139, 12 October 2026: photographs are made small on the device, several at once, HEIC included
+
+The upload that kept failing, reported with a screenshot: "The direct upload failed and 9.5MB is
+too large to send the slow way." A camera roll JPEG, a dropped PUT on mobile data, and a fallback
+capped at 4MB by Vercel. The server resized to 1600px anyway, so the slowest part of the trip
+carried bytes that were thrown away on arrival.
+
+Now the browser prepares each file: an iPhone HEIC is decoded by libheif in WebAssembly
+(`heic-to`, loaded only when a HEIC is picked, with `'wasm-unsafe-eval'` in the CSP), the long
+edge is capped at 2400px and a JPEG is encoded. A 12MB HEIC becomes about a megabyte, goes direct
+in seconds and fits the fallback when it does not; the direct PUT is also tried twice. The input
+takes several files at once, up to 40MB each; every file gets a shot guessed from its name and
+alt text from the product name, and one Upload sends them one after another, each saying
+Preparing, Uploading with a percentage, Saving, Added, a failure staying on its row with the reason
+while the rest carry on. Each add hands back the row's new lock token for the next. The team photo
+and the blog cover take HEIC through the same hook.
+
+## D140, 12 October 2026: the guide lives in the shell
+
+A Guide control in the top bar and the phone header opens a dialog with the current screen's
+walkthrough first, every other screen the person can reach beside it, each a purpose and numbered
+steps: what to do, then where and what happens. The topics are filtered by the access map, so the
+guide never describes a screen the reader cannot open. `docs/STAFF-GUIDE.md` stays the written
+copy for Beco; the in-app guide is the one beside the screen.
+
+## D141, 12 October 2026: the connection and the next screen both say so
+
+Brown: the user should never sit there wondering what could possibly be going on. D117 covered
+buttons, lists and saves. Two gaps remained. A lost connection: `ConnectionStatus` listens to the
+browser and draws a charcoal bar, "You are offline. Nothing will save until the connection is
+back.", announced assertively, with a toast when it returns. A tap on a nav link: `RouteProgress`
+draws a thin Warm Red bar across the top from the click until the URL changes, creeping so it
+reads as alive, giving up after twenty seconds so a link that opened nothing cannot leave it on
+screen.
+
+## D142, 12 October 2026: home carries the team and the catalogue, and the sidebar its glyphs
+
+Brown's concept dashboard against the current one: ours read as minimal and basic. What changed,
+inside the brand system: the greeting carries a lede and two actions (Catalogue, New quote); under
+the charts, The team this month ranks the salespeople by value won from the leaderboard function,
+and Catalogue shows live, drafts, low stock and price on request as four linked figures, Warm Red
+only on low stock when it is non zero. The sidebar draws each section's glyph beside its word, the
+same glyph the phone bar uses, from one `NavGlyph`; the word stays. No gradient blob, no sparkline
+tiles, no dark sidebar: the ban on those stands.

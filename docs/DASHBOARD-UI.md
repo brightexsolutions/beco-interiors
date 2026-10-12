@@ -366,3 +366,26 @@ shows the state and one place changes it.
 
 Seen on the dev server at 390 and 1280: create a draft, Publish, Unpublish through the dialog,
 Save and publish after an edit, the local row checked after each.
+
+## 12 October 2026, access, sizes, cards, uploads, the guide, and the shell that says so (D136 to D142)
+
+Brown's round of feedback with the client live on main. Everything below is additive and on
+its own branch; nothing on main moved.
+
+- **Module access.** A person can be let into a section beyond their role, read only, from Edit
+  access on their sheet or on the Permissions tab. The shell says View only there. Brightex
+  grants anything; a staff manager what they hold. D136.
+- **Sizes.** A Sizes section in the product editor; the picker lists one row per size and the
+  quote line names it. D137.
+- **List or cards.** A toolbar switch on the catalogue. Cards are four across, photograph first,
+  a line of detail, the card opens the editor. The list stays the default. D138.
+- **Photographs.** Several at once, HEIC included, made small on the device first, each file
+  saying what it is doing. The 9.5MB failure cannot happen: what travels is a megabyte. D139.
+- **Guide.** In the top bar and the phone header, the current screen first. D140.
+- **Status everywhere.** Offline bar, route progress bar, and the upload queue's per file state,
+  on top of D117's pending buttons, Busy rows and toasts. Nobody sits wondering. D141.
+- **Home and the sidebar.** The team this month and the catalogue's four figures under the
+  charts; two actions on the greeting; glyphs beside the sidebar words. D142.
+
+Rules unchanged: tokens, type floor, 44px targets, no browser dialog, no dark sidebar, the
+storefront untouched except the product page's Sizes list.

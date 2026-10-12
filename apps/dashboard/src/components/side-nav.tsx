@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@beco/ui';
 import type { NavGroup } from '@/lib/nav-items';
+import { NavGlyph } from './nav-glyph';
 
 /**
  * The desktop sidebar: sections grouped by job, the current one filled
- * charcoal with a short Warm Red tick at its edge, the rest quiet text. The
- * new quote count rides on Quotes. Text, not icons: every label is a word a
- * salesperson already uses.
+ * charcoal with a short Warm Red tick at its edge, the rest quiet text with
+ * the section's glyph beside it (D142), the same glyph the phone bar
+ * draws. The word stays: every label is one a salesperson already uses.
+ * The new quote count rides on Quotes.
  */
 export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuotes?: number }) {
   const pathname = usePathname();
@@ -29,14 +31,17 @@ export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuot
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'group relative flex min-h-10 items-center justify-between gap-2 rounded-card px-3 font-ui text-base transition-colors',
+                      'group relative flex min-h-11 items-center justify-between gap-2 rounded-card px-3 font-ui text-base transition-colors',
                       active
                         ? 'bg-charcoal font-semibold text-high-vis-white'
                         : 'text-neutral-700 hover:bg-neutral-100 hover:text-charcoal',
                     )}
                   >
                     {active ? <span aria-hidden className="absolute -left-3 top-1/2 h-5 w-0.5 -translate-y-1/2 bg-warm-red" /> : null}
-                    <span className="truncate">{item.label}</span>
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <NavGlyph href={item.href} className={cn('h-5 w-5', active ? 'text-high-vis-white' : 'text-neutral-500 group-hover:text-charcoal')} />
+                      <span className="truncate">{item.label}</span>
+                    </span>
                     {item.href === '/quotes' && newQuotes > 0 ? (
                       <span
                         aria-label={`${newQuotes} new`}

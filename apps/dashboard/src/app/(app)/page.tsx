@@ -1,15 +1,18 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { EmptyState, StatCard } from '@beco/ui';
+import { EmptyState, Icon, StatCard, buttonClasses, cn } from '@beco/ui';
 import { HomeActivity } from '@/components/home-activity';
+import { HomeCatalogue } from '@/components/home-catalogue';
 import { HomeFocus } from '@/components/home-focus';
+import { HomeTeam } from '@/components/home-team';
 import { PageHeading } from '@/components/page-heading';
 import { RecentQuotes } from '@/components/recent-quotes';
 import { ROLE_LANDING } from '@/lib/access';
 import { fetchActivitySeries, fetchPipeline, hasActivity, toQuotePoints, toStages } from '@/lib/activity';
 import { fetchDashboardSummary, toFocus, toStatCards } from '@/lib/dashboard-summary';
 import { fetchApprovalCount, fetchQuotes } from '@/lib/quotes';
+import { fetchLeaderboard } from '@/lib/reports';
 import { requireUser } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -56,19 +59,35 @@ export default async function DashboardHome() {
   }
 
   const supabase = await getSupabase();
-  const [summary, approvals, recent, weeks, pipeline] = await Promise.all([
+  const [summary, approvals, recent, weeks, pipeline, team] = await Promise.all([
     fetchDashboardSummary(supabase),
     fetchApprovalCount(supabase),
     fetchQuotes(supabase, user.userId, { owner: 'all', limit: 6 }),
     fetchActivitySeries(supabase, 8),
     fetchPipeline(supabase),
+    fetchLeaderboard(supabase, { period: 'this_month', from: null, to: null }),
   ]);
   const focus = toFocus(summary);
   const cards = toStatCards(summary);
 
   return (
     <>
-      <PageHeading eyebrow={todayInNairobi()} title={`Good to see you, ${firstName(user.fullName) || 'there'}`} />
+      <PageHeading
+        eyebrow={todayInNairobi()}
+        title={`Good to see you, ${firstName(user.fullName) || 'there'}`}
+        lede="What needs someone today, how the month is going, and what just came in."
+        actions={
+          <>
+            <Link href="/products" className={cn(buttonClasses({ variant: 'outline' }), 'gap-2')}>
+              Catalogue
+            </Link>
+            <Link href="/quotes/new" className={cn(buttonClasses({ variant: 'secondary' }), 'gap-2')}>
+              <Icon name="plus" />
+              New quote
+            </Link>
+          </>
+        }
+      />
 
       <HomeFocus focus={focus} approvals={approvals} />
 
@@ -88,6 +107,11 @@ export default async function DashboardHome() {
 
       <div className="mt-8">
         <HomeActivity points={toQuotePoints(weeks)} stages={toStages(pipeline, focus.breached)} quiet={!hasActivity(weeks)} />
+      </div>
+
+      <div className="mt-8 grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <HomeTeam people={team.people} />
+        <HomeCatalogue catalogue={summary.catalogue} />
       </div>
 
       <div className="mt-8">

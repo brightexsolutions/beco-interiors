@@ -1,11 +1,18 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { ROUTE_RULES, accessLevel, grantsFrom } from '@/lib/access';
+import { guideTopicsFor } from '@/lib/guide';
 import type { ActiveSession } from '@/lib/session';
 import { bottomNavFor, navGroupsFor, navItemsFor } from '@/lib/nav-items';
 import { AccountMenu } from './account-menu';
 import { BottomNav } from './bottom-nav';
+import { ConnectionStatus } from './connection-status';
+import { GuideButton } from './guide';
+import { RouteProgress } from './route-progress';
 import { ShellContext, ShellPageLabelProvider, TopBarCrumb } from './shell-context';
 import { SideNav } from './side-nav';
 import { ThemeToggle } from './theme-toggle';
+import { ViewOnlyMark } from './view-only-mark';
 
 /**
  * The signed-in dashboard frame, D106.
@@ -34,15 +41,27 @@ export function AppShell({
   newQuotes?: number;
   children: React.ReactNode;
 }) {
-  const grants = { canWriteBlog: user.canWriteBlog, canReadAudit: user.canReadAudit, canManageUsers: user.canManageUsers };
+  const grants = grantsFrom(user);
   const items = navItemsFor(user.role, grants);
   const groups = navGroupsFor(user.role, grants);
   const bottom = bottomNavFor(user.role, grants);
   const hasSettings = items.some((i) => i.href === '/settings');
+  // The sections this person reaches by module grant alone, D136, so the
+  // shell can say View only on them once rather than every page checking.
+  const readOnlyPrefixes = ROUTE_RULES.filter((rule) => accessLevel(user.role, rule.prefix, grants) === 'read').map(
+    (rule) => rule.prefix,
+  );
   const name = user.fullName || user.email;
+  // The guide's topics, already cut to what this person can reach (D140),
+  // in guide order; the button puts the current screen's first.
+  const guide = guideTopicsFor(user.role, grants, '/');
 
   return (
     <ShellPageLabelProvider>
+      <Suspense fallback={null}>
+        <RouteProgress />
+      </Suspense>
+      <ConnectionStatus />
       <div
         className={
           bottom.items.length > 0
@@ -95,10 +114,12 @@ export function AppShell({
                   <span className="hidden sm:inline">Beco</span>
                 </Link>
                 <span aria-hidden className="h-6 w-px shrink-0 bg-neutral-200" />
-                <div className="min-w-0 flex-1 px-1">
+                <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
                   <TopBarCrumb />
+                  <ViewOnlyMark readOnlyPrefixes={readOnlyPrefixes} />
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
+                  <GuideButton topics={guide} compact />
                   <ThemeToggle />
                   <AccountMenu name={name} />
                 </div>
@@ -111,8 +132,12 @@ export function AppShell({
               context, so without a z-index of its own the main panel below
               painted over it and hid the account menu that opens from it. */}
           <div className="relative z-20 hidden items-center justify-between gap-4 border-b border-neutral-200 bg-high-vis-white/80 px-8 py-3 backdrop-blur lg:flex">
-            <TopBarCrumb />
+            <div className="flex min-w-0 items-center gap-3">
+              <TopBarCrumb />
+              <ViewOnlyMark readOnlyPrefixes={readOnlyPrefixes} />
+            </div>
             <div className="flex shrink-0 items-center gap-1.5">
+              <GuideButton topics={guide} />
               <ThemeToggle />
               {hasSettings ? (
                 <Link

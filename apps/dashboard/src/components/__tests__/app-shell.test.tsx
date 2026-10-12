@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import type { ActiveSession } from '@/lib/session';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/' }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/', useSearchParams: () => new URLSearchParams() }));
 
 const { AppShell } = await import('../app-shell');
 
@@ -17,6 +17,7 @@ const admin: ActiveSession = {
   canWriteBlog: false,
   canReadAudit: false,
   canManageUsers: false,
+  moduleGrants: [],
 };
 
 describe('AppShell', () => {
@@ -122,6 +123,26 @@ describe('AppShell', () => {
       </AppShell>,
     );
     for (const crumb of screen.getAllByRole('list', { name: 'You are here' })) expect(crumb).toHaveTextContent('Overview');
+  });
+
+  it('offers the guide in the phone header and the desktop bar, and says nothing about the connection while it is up (D140, D141)', () => {
+    render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Guide' })).toHaveLength(2);
+    expect(screen.queryByText(/You are offline/)).toBeNull();
+  });
+
+  it('marks a section open by module grant alone as View only, and nothing else (D136)', () => {
+    render(
+      <AppShell user={{ ...admin, role: 'beco_product_manager', moduleGrants: ['quotes'] }}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    // The pathname is '/', which is never read only, so nothing is marked.
+    expect(screen.queryByText('View only')).toBeNull();
   });
 
   it('has no accessibility violations', async () => {
