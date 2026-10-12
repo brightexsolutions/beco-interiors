@@ -3736,3 +3736,15 @@ quote, the guide and the account are always one click away. Its height is `--she
 shell root (0 under `lg`, where there is no bar), and anything else pinned to the top of the page
 sits under it: the catalogue ranges (D145), the blog editor's rail and the new quote customer rail.
 Sticky headers inside their own scrolling boxes are unaffected.
+
+## D147, 12 October 2026: a view switch is a segmented control, and the article editor is framed
+
+Brown, on the article editor: Edit, Preview and Save draft sat in one row as three buttons, the
+chosen view filled charcoal like an action, and every field lay on the ground with nothing
+framing it. `SegmentedControl` in @beco/ui draws a view choice as one tray with the chosen option
+raised on white; the catalogue's List and Cards switch moved onto it, and Table and Board on
+quotes will use it. The article editor gets a bar: Edit or Preview and the Draft or Published
+pill on the left, Publish or Unpublish and Save on the right, pinned under the top bar from a
+laptop up. Publish moved out of the Cover section, where it had been easy to miss. The fields sit
+in panels, Article, Body, Generate, Search and Cover, the same frame the quote and product
+screens use.

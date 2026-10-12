@@ -6,9 +6,11 @@ import {
   Button,
   ConfirmDialog,
   Field,
-  FormSection,
   Icon,
   Input,
+  Panel,
+  SegmentedControl,
+  StatusPill,
   Textarea,
   useActionToast,
   useKeepValuesSubmit,
@@ -119,80 +121,141 @@ export function BlogEditor({
     return form;
   };
 
+  const published = post?.status === 'published';
+  const panelTitle = (text: string, note?: string) => (
+    <div>
+      <h2 className="font-ui text-base font-semibold text-charcoal">{text}</h2>
+      {note ? <p className="font-ui text-sm text-neutral-500">{note}</p> : null}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button type="button" variant={view === 'edit' ? 'secondary' : 'ghost'} onClick={() => setView('edit')}>
-          Edit
-        </Button>
-        <Button type="button" variant={view === 'preview' ? 'secondary' : 'ghost'} onClick={() => setView('preview')}>
-          Preview
-        </Button>
-        <Button type="submit" form="blog-save" pending={savePending}>
-          {savePending ? 'Saving' : 'Save draft'}
-        </Button>
+      {/* The editor's bar, D147: how you are looking at the article on the
+          left, what you can do to it on the right. Pinned under the top bar
+          from a laptop up so Save is never a scroll away; on a phone it
+          wraps to two rows and stays at the head of the page. */}
+      <div data-editor-bar className="-my-2 bg-neutral-50 py-2 lg:sticky lg:top-[var(--shell-top)] lg:z-10">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border border-neutral-200 bg-high-vis-white px-3 py-2.5 shadow-panel sm:px-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <SegmentedControl
+              label="Mode"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'edit', label: 'Edit', icon: 'pencil' },
+                { value: 'preview', label: 'Preview', icon: 'eye' },
+              ]}
+            />
+            <StatusPill
+              label={published ? 'Published' : 'Draft'}
+              tone={published ? 'positive' : 'muted'}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {post ? (
+              published ? (
+                <Button type="button" variant="outline" onClick={() => setConfirmUnpublish(true)}>
+                  Unpublish
+                </Button>
+              ) : (
+                <Button type="button" variant="outline" onClick={() => setConfirmPublish(true)}>
+                  Publish
+                </Button>
+              )
+            ) : null}
+            <Button type="submit" form="blog-save" pending={savePending}>
+              {savePending ? 'Saving' : published ? 'Save' : 'Save draft'}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {view === 'preview' ? (
-        <BlogLivePreview
-          title={title}
-          body={body}
-          excerpt={excerpt}
-          category={category}
-          author={author}
-          coverSrc={coverSrc}
-          coverAlt={coverAlt}
-          readingTime={body ? readingTimeMinutes(body) : null}
-        />
+        <div className="rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel sm:p-8">
+          <BlogLivePreview
+            title={title}
+            body={body}
+            excerpt={excerpt}
+            category={category}
+            author={author}
+            coverSrc={coverSrc}
+            coverAlt={coverAlt}
+            readingTime={body ? readingTimeMinutes(body) : null}
+          />
+        </div>
       ) : (
-        <div className="grid min-w-0 items-start gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <form id="blog-save" onSubmit={onSaveSubmit} className="min-w-0 space-y-6">
             {hidden}
-            <input type="hidden" name="status" value={post?.status === 'published' ? 'published' : 'draft'} />
+            <input type="hidden" name="status" value={published ? 'published' : 'draft'} />
             <input type="hidden" name="targetTerm" value={targetTerm} />
-            <FormSection title="Copy">
-              <Field label="Title" htmlFor="blog-title">
-                <Input
-                  id="blog-title"
-                  name="title"
-                  required
-                  value={title}
-                  onChange={(event) => {
-                    setTitle(event.target.value);
-                    if (!post) setSlug(slugFromTitle(event.target.value));
-                  }}
-                />
-              </Field>
-              <Field label="Slug" htmlFor="blog-slug">
-                <Input id="blog-slug" name="slug" required value={slug} onChange={(event) => setSlug(event.target.value)} />
-              </Field>
-              <Field label="Excerpt" htmlFor="blog-excerpt" hint="Optional">
-                <Textarea
-                  id="blog-excerpt"
-                  name="excerpt"
-                  rows={3}
-                  value={excerpt}
-                  onChange={(event) => setExcerpt(event.target.value)}
-                />
-              </Field>
-              <Field label="Body" htmlFor="blog-body">
-                <BlogBodyEditor id="blog-body" name="body" value={body} onChange={setBody} />
-              </Field>
-              <Field label="Author" htmlFor="blog-author">
-                <Input
-                  id="blog-author"
-                  name="author"
-                  required
-                  value={author}
-                  onChange={(event) => setAuthor(event.target.value)}
-                />
-              </Field>
-            </FormSection>
+            <Panel title={panelTitle('Article', 'The headline, its address and who wrote it.')}>
+              <div className="grid gap-5 p-5 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Field label="Title" htmlFor="blog-title">
+                    <Input
+                      id="blog-title"
+                      name="title"
+                      required
+                      value={title}
+                      onChange={(event) => {
+                        setTitle(event.target.value);
+                        if (!post) setSlug(slugFromTitle(event.target.value));
+                      }}
+                    />
+                  </Field>
+                </div>
+                <Field label="Slug" htmlFor="blog-slug">
+                  <Input
+                    id="blog-slug"
+                    name="slug"
+                    required
+                    value={slug}
+                    onChange={(event) => setSlug(event.target.value)}
+                  />
+                </Field>
+                <Field label="Author" htmlFor="blog-author">
+                  <Input
+                    id="blog-author"
+                    name="author"
+                    required
+                    value={author}
+                    onChange={(event) => setAuthor(event.target.value)}
+                  />
+                </Field>
+                <div className="sm:col-span-2">
+                  <Field label="Excerpt" htmlFor="blog-excerpt" hint="Optional">
+                    <Textarea
+                      id="blog-excerpt"
+                      name="excerpt"
+                      rows={3}
+                      value={excerpt}
+                      onChange={(event) => setExcerpt(event.target.value)}
+                    />
+                  </Field>
+                </div>
+              </div>
+            </Panel>
+            <Panel>
+              <div className="p-5">
+                <Field
+                  label="Body"
+                  htmlFor="blog-body"
+                  hint={body ? `${readingTimeMinutes(body)} min read` : undefined}
+                >
+                  <BlogBodyEditor id="blog-body" name="body" value={body} onChange={setBody} />
+                </Field>
+              </div>
+            </Panel>
           </form>
 
-          <aside className="space-y-6 xl:sticky xl:top-[calc(var(--shell-top)+1rem)]">
-            <form onSubmit={onGenerateSubmit} className="space-y-4 rounded-panel border border-neutral-200 p-5">
-              <FormSection title="Generate">
+          <aside className="space-y-6 xl:sticky xl:top-[calc(var(--shell-top)+5.5rem)]">
+            <Panel
+              title={panelTitle('Generate', 'A first draft from a brief.')}
+              className="bg-neutral-50"
+            >
+              <form onSubmit={onGenerateSubmit} className="grid gap-4 p-5">
                 <Field label="Brief" htmlFor="blog-brief">
                   <Textarea
                     id="blog-brief"
@@ -219,91 +282,115 @@ export function BlogEditor({
                   <Icon name="sparkles" />
                   {genPending ? 'Generating' : 'Generate'}
                 </Button>
-              </FormSection>
-            </form>
+              </form>
+            </Panel>
 
-            <FormSection title="Search">
-              <Field label="Category" htmlFor="blog-category" hint="Optional">
-                <Input
-                  id="blog-category"
-                  name="category"
-                  form="blog-save"
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value)}
-                />
-              </Field>
-              <Field label="Tags" htmlFor="blog-tags" hint="Comma separated">
-                <Input
-                  id="blog-tags"
-                  name="tags"
-                  form="blog-save"
-                  value={tags}
-                  onChange={(event) => setTags(event.target.value)}
-                />
-              </Field>
-              <Field label="Meta title" htmlFor="blog-meta-title" hint="Optional">
-                <Input
-                  id="blog-meta-title"
-                  name="metaTitle"
-                  form="blog-save"
-                  value={metaTitle}
-                  onChange={(event) => setMetaTitle(event.target.value)}
-                />
-              </Field>
-              <Field label="Meta description" htmlFor="blog-meta-description" hint="Optional">
-                <Textarea
-                  id="blog-meta-description"
-                  name="metaDescription"
-                  form="blog-save"
-                  rows={3}
-                  value={metaDescription}
-                  onChange={(event) => setMetaDescription(event.target.value)}
-                />
-              </Field>
-            </FormSection>
+            <Panel title={panelTitle('Search', 'How it reads in Google.')}>
+              <div className="grid gap-4 p-5">
+                <Field label="Category" htmlFor="blog-category" hint="Optional">
+                  <Input
+                    id="blog-category"
+                    name="category"
+                    form="blog-save"
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                  />
+                </Field>
+                <Field label="Tags" htmlFor="blog-tags" hint="Comma separated">
+                  <Input
+                    id="blog-tags"
+                    name="tags"
+                    form="blog-save"
+                    value={tags}
+                    onChange={(event) => setTags(event.target.value)}
+                  />
+                </Field>
+                <Field label="Meta title" htmlFor="blog-meta-title" hint="Optional">
+                  <Input
+                    id="blog-meta-title"
+                    name="metaTitle"
+                    form="blog-save"
+                    value={metaTitle}
+                    onChange={(event) => setMetaTitle(event.target.value)}
+                  />
+                </Field>
+                <Field label="Meta description" htmlFor="blog-meta-description" hint="Optional">
+                  <Textarea
+                    id="blog-meta-description"
+                    name="metaDescription"
+                    form="blog-save"
+                    rows={3}
+                    value={metaDescription}
+                    onChange={(event) => setMetaDescription(event.target.value)}
+                  />
+                </Field>
+              </div>
+            </Panel>
 
-            <FormSection title="Cover" hint="Beco photography only. Alt is required before publish.">
-              <Field label="Cover alt" htmlFor="blog-cover-alt" hint="Optional until publish">
-                <Input
-                  id="blog-cover-alt"
-                  name="coverImageAlt"
-                  form="blog-save"
-                  value={coverAlt}
-                  onChange={(event) => setCoverAlt(event.target.value)}
-                />
-              </Field>
-              {post ? (
-                <form onSubmit={upload.onSubmit} className="space-y-4">
-                  <input type="hidden" name="postId" value={post.id} />
-                  <input type="hidden" name="coverImageAlt" value={coverAlt} />
-                  <Field label="Cover photograph" htmlFor="blog-cover-file" hint="JPEG, PNG, WebP or HEIC, up to 40MB. Resized before upload">
-                    <Input id="blog-cover-file" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" />
-                  </Field>
-                  <div className="flex flex-col gap-2">
-                    <Button type="submit" variant="outline" pending={coverPending || upload.phase !== 'idle'}>
-                      <Icon name="upload" />
-                      {upload.label ?? 'Upload cover'}
-                    </Button>
-                    {post.coverImage ? (
-                      <Button type="button" variant="ghost" onClick={() => setConfirmRemoveCover(true)}>
-                        Remove cover
+            <Panel
+              title={panelTitle('Cover', 'Beco photography only. Alt is required before publish.')}
+            >
+              <div className="grid gap-4 p-5">
+                {coverSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={coverSrc}
+                    alt=""
+                    className="aspect-[16/9] w-full rounded-control border border-neutral-200 object-cover"
+                  />
+                ) : null}
+                <Field label="Cover alt" htmlFor="blog-cover-alt" hint="Optional until publish">
+                  <Input
+                    id="blog-cover-alt"
+                    name="coverImageAlt"
+                    form="blog-save"
+                    value={coverAlt}
+                    onChange={(event) => setCoverAlt(event.target.value)}
+                  />
+                </Field>
+                {post ? (
+                  <form onSubmit={upload.onSubmit} className="grid gap-4">
+                    <input type="hidden" name="postId" value={post.id} />
+                    <input type="hidden" name="coverImageAlt" value={coverAlt} />
+                    <Field
+                      label="Cover photograph"
+                      htmlFor="blog-cover-file"
+                      hint="JPEG, PNG, WebP or HEIC, up to 40MB. Resized before upload"
+                    >
+                      <Input
+                        id="blog-cover-file"
+                        name="file"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                      />
+                    </Field>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        pending={coverPending || upload.phase !== 'idle'}
+                      >
+                        <Icon name="upload" />
+                        {upload.label ?? 'Upload cover'}
                       </Button>
-                    ) : null}
-                    {post.status === 'published' ? (
-                      <Button type="button" variant="outline" onClick={() => setConfirmUnpublish(true)}>
-                        Unpublish
-                      </Button>
-                    ) : (
-                      <Button type="button" onClick={() => setConfirmPublish(true)}>
-                        Publish
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              ) : (
-                <p className="font-ui text-base text-neutral-500">Save the draft before adding a cover.</p>
-              )}
-            </FormSection>
+                      {post.coverImage ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setConfirmRemoveCover(true)}
+                        >
+                          Remove cover
+                        </Button>
+                      ) : null}
+                    </div>
+                  </form>
+                ) : (
+                  <p className="font-ui text-base text-neutral-500">
+                    Save the draft before adding a cover.
+                  </p>
+                )}
+              </div>
+            </Panel>
           </aside>
         </div>
       )}
