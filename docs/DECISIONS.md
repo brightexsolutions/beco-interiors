@@ -3760,9 +3760,16 @@ what `set_quote_status` and the `quotes_finalized_requires_approval` constraint 
 only, won only from quoted, won and lost closed, a quote waiting on approval held to reviewing),
 and the quote screen's status buttons now read the same function, so the two cannot drift. While a
 card is dragged only its legal columns accept a drop. Won and Lost ask first through
-ConfirmDialog, Lost with the reason the record keeps, as on the quote screen. Every card carries a
-Move to select with the same moves, because native drag and drop does not work by touch or
-keyboard. The card moves at once (`useOptimistic`) and the server's answer settles it or puts it
+ConfirmDialog, Lost with the reason the record keeps, as on the quote screen.
+
+Drag and drop is the way a card moves, by pointer events rather than the browser's native drag,
+which does nothing on a phone: with a mouse the card lifts once it moves five pixels; on a phone it
+lifts after a 300ms hold, so a quick swipe still scrolls the columns, the page is held still while
+a finger carries it, and the board scrolls along near its edge; from the keyboard each card's grip
+lifts it with Space, the arrows choose among the legal columns, Space drops and Escape puts it
+back, each step announced. The click after a drop is swallowed so a release does not open a quote.
+A Move to select on every card was tried first and dropped on Brown's word: it made every card a
+form. The card moves at once (`useOptimistic`) and the server's answer settles it or puts it
 back with the reason in a toast; the lock token travels with the move, so a quote changed
 elsewhere is refused rather than overwritten.
 

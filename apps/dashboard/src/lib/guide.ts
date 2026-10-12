@@ -47,7 +47,7 @@ export const GUIDE_TOPICS: readonly GuideTopic[] = [
     purpose: 'Every quotation, from a website request to one raised at the counter. The quotation is the product: raise, price and issue it faster than paper.',
     steps: [
       { do: 'Find a quote.', where: 'Search by customer name, phone or reference at the top. The filters narrow by status, source and owner, and the count beside them changes as you do.' },
-      { do: 'See them by stage.', where: 'Board beside Table lays the quotes out as columns, New to Lost. Drag a card to the next column, or use Move to on the card. Won and Lost ask first.' },
+      { do: 'See them by stage.', where: 'Board beside Table lays the quotes out as columns, New to Lost. Drag a card to the next column; on a phone press and hold it first. Won and Lost ask first.' },
       { do: 'Claim a website request.', where: 'Open it and press Claim. It is assigned to you and moves to Reviewing.' },
       { do: 'Price the lines.', where: 'Change quantity or unit price on each row, then press Save on the Line items heading. Unsaved rows are marked until you do.' },
       { do: 'Add products.', where: 'Add from catalogue opens the published list: search, tick several, Add. A product in several sizes lists one row per size. Custom item is for something not listed.' },

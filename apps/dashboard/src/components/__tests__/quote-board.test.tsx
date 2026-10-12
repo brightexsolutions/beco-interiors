@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createEvent, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { QuoteListItem } from '@/lib/quotes';
@@ -44,21 +44,27 @@ const column = (status: string) => document.querySelector(`[data-column="${statu
 const card = (reference: string) => document.querySelector(`[data-quote="${reference}"]`) as HTMLElement;
 const columnOf = (reference: string) => (card(reference).closest('[data-column]') as HTMLElement).dataset.column;
 
-/** jsdom has no DataTransfer; the board only reads and writes text/plain. */
+/**
+ * jsdom does no layout, so the column under the pointer is whatever
+ * elementsFromPoint is told it is: the target column the test names.
+ */
+let under: HTMLElement | null = null;
+Object.defineProperty(document, 'elementsFromPoint', {
+  configurable: true,
+  value: () => (under ? [under] : []),
+});
+
+/** A mouse drag: press on the card, move past the slop onto a column, release. */
 function drag(from: HTMLElement, to: HTMLElement) {
-  const store: Record<string, string> = {};
-  const dataTransfer = {
-    setData: (k: string, v: string) => (store[k] = v),
-    getData: (k: string) => store[k] ?? '',
-    dropEffect: 'none',
-    effectAllowed: 'all',
-  };
-  fireEvent.dragStart(from, { dataTransfer });
-  const over = createEvent.dragOver(to, { dataTransfer });
-  fireEvent(to, over);
-  fireEvent.drop(to, { dataTransfer });
-  fireEvent.dragEnd(from, { dataTransfer });
-  return over.defaultPrevented;
+  under = null;
+  fireEvent.pointerDown(from, { pointerId: 1, button: 0, pointerType: 'mouse', clientX: 10, clientY: 10 });
+  fireEvent.pointerMove(window, { pointerId: 1, pointerType: 'mouse', clientX: 40, clientY: 12 });
+  under = to;
+  fireEvent.pointerMove(window, { pointerId: 1, pointerType: 'mouse', clientX: 300, clientY: 20 });
+  const over = to.dataset.over === 'true';
+  fireEvent.pointerUp(window, { pointerId: 1, pointerType: 'mouse', clientX: 300, clientY: 20 });
+  under = null;
+  return over;
 }
 
 beforeEach(() => {
@@ -123,7 +129,7 @@ describe('QuoteBoard, D148', () => {
   it('asks why before marking lost, refuses an empty reason, then sends it', async () => {
     const user = userEvent.setup();
     render(<QuoteBoard viewerId={ME} isAdmin={false} quotes={[quote({ status: 'reviewing' })]} />);
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Move BEC-Q-00001 to' }), 'lost');
+    drag(card('BEC-Q-00001'), column('lost'));
     const dialog = await screen.findByRole('alertdialog');
     await user.click(within(dialog).getByRole('button', { name: 'Mark lost' }));
     expect(toastError).toHaveBeenCalledWith('Say why this quote was lost.');
@@ -136,14 +142,71 @@ describe('QuoteBoard, D148', () => {
     expect(form.get('lostReason')).toBe('Went with a cheaper quartz');
   });
 
-  it('offers only the legal moves in the Move control, for a phone and the keyboard', async () => {
+  it('moves from the keyboard: Space lifts, arrows choose among the legal columns, Space drops', async () => {
     const user = userEvent.setup();
     render(<QuoteBoard viewerId={ME} isAdmin={false} quotes={[quote()]} />);
-    const select = screen.getByRole('combobox', { name: 'Move BEC-Q-00001 to' });
-    const options = within(select).getAllByRole('option').map((o) => o.textContent);
-    expect(options).toEqual(['Move to', 'Reviewing', 'Quoted']);
-    await user.selectOptions(select, 'quoted');
+    const grip = screen.getByRole('button', { name: 'Move BEC-Q-00001' });
+    grip.focus();
+    await user.keyboard(' ');
+    expect(grip).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('Picked up BEC-Q-00001. Reviewing.');
+    expect(column('reviewing').dataset.over).toBe('true');
+    await user.keyboard('{ArrowRight}');
+    expect(column('quoted').dataset.over).toBe('true');
+    expect(screen.getByRole('status')).toHaveTextContent('Quoted');
+    // Only two legal columns, so the arrows wrap rather than reaching Won.
+    await user.keyboard('{ArrowRight}');
+    expect(column('reviewing').dataset.over).toBe('true');
+    await user.keyboard('{ArrowLeft} ');
     await waitFor(() => expect((setQuoteStatus.mock.calls[0]?.[1] as FormData).get('status')).toBe('quoted'));
+  });
+
+  it('puts a lifted card back on Escape without asking the server', async () => {
+    const user = userEvent.setup();
+    render(<QuoteBoard viewerId={ME} isAdmin={false} quotes={[quote()]} />);
+    screen.getByRole('button', { name: 'Move BEC-Q-00001' }).focus();
+    await user.keyboard(' {ArrowRight}{Escape}');
+    expect(screen.getByRole('status')).toHaveTextContent('BEC-Q-00001 put back in New.');
+    expect(setQuoteStatus).not.toHaveBeenCalled();
+    expect(column('quoted').dataset.over).toBeUndefined();
+  });
+
+  it('draws the lifted card under the pointer while a mouse carries it, and only after it moves', () => {
+    render(<QuoteBoard viewerId={ME} isAdmin={false} quotes={[quote()]} />);
+    fireEvent.pointerDown(card('BEC-Q-00001'), { pointerId: 1, button: 0, pointerType: 'mouse', clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(window, { pointerId: 1, pointerType: 'mouse', clientX: 12, clientY: 11 });
+    expect(document.querySelector('[data-lifted]')).toBeNull();
+    fireEvent.pointerMove(window, { pointerId: 1, pointerType: 'mouse', clientX: 60, clientY: 30 });
+    expect(document.querySelector('[data-lifted]')).not.toBeNull();
+    expect(document.querySelector('[data-quote-board]')).toHaveAttribute('data-dragging', 'true');
+    fireEvent.pointerUp(window, { pointerId: 1, pointerType: 'mouse', clientX: 60, clientY: 30 });
+    expect(document.querySelector('[data-lifted]')).toBeNull();
+    expect(setQuoteStatus).not.toHaveBeenCalled();
+  });
+
+  it('lifts on a phone only after a press is held, and lets a quick swipe scroll instead', () => {
+    vi.useFakeTimers();
+    try {
+      render(<QuoteBoard viewerId={ME} isAdmin={false} quotes={[quote()]} />);
+      // A swipe: moving before the hold completes is a scroll.
+      fireEvent.pointerDown(card('BEC-Q-00001'), { pointerId: 2, button: 0, pointerType: 'touch', clientX: 10, clientY: 10 });
+      fireEvent.pointerMove(window, { pointerId: 2, pointerType: 'touch', clientX: 60, clientY: 10 });
+      act(() => vi.advanceTimersByTime(400));
+      expect(document.querySelector('[data-lifted]')).toBeNull();
+      fireEvent.pointerUp(window, { pointerId: 2, pointerType: 'touch' });
+
+      // A hold: still for 300ms, then the card is in the hand.
+      fireEvent.pointerDown(card('BEC-Q-00001'), { pointerId: 3, button: 0, pointerType: 'touch', clientX: 10, clientY: 10 });
+      act(() => vi.advanceTimersByTime(320));
+      expect(document.querySelector('[data-lifted]')).not.toBeNull();
+      under = column('reviewing');
+      fireEvent.pointerMove(window, { pointerId: 3, pointerType: 'touch', clientX: 300, clientY: 20 });
+      fireEvent.pointerUp(window, { pointerId: 3, pointerType: 'touch', clientX: 300, clientY: 20 });
+      under = null;
+    } finally {
+      vi.useRealTimers();
+    }
+    expect((setQuoteStatus.mock.calls[0]?.[1] as FormData).get('status')).toBe('reviewing');
   });
 
   it('lets a salesperson move only their own quotes, and nobody move a closed one', () => {
@@ -157,9 +220,12 @@ describe('QuoteBoard, D148', () => {
         ]}
       />,
     );
-    expect(card('BEC-Q-00002')).toHaveAttribute('draggable', 'false');
-    expect(screen.queryByRole('combobox', { name: 'Move BEC-Q-00002 to' })).toBeNull();
-    expect(screen.queryByRole('combobox', { name: 'Move BEC-Q-00003 to' })).toBeNull();
+    expect(card('BEC-Q-00002')).not.toHaveAttribute('data-movable');
+    expect(screen.queryByRole('button', { name: 'Move BEC-Q-00002' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Move BEC-Q-00003' })).toBeNull();
+    // A press on a card that cannot move lifts nothing.
+    expect(drag(card('BEC-Q-00002'), column('reviewing'))).toBe(false);
+    expect(setQuoteStatus).not.toHaveBeenCalled();
     expect(within(card('BEC-Q-00002')).getByText('Assigned to Grace Wanjiru')).toBeInTheDocument();
   });
 
@@ -171,10 +237,9 @@ describe('QuoteBoard, D148', () => {
         quotes={[quote({ requiresApproval: true, approvedAt: null, assignedTo: 'someone-else' })]}
       />,
     );
-    const options = within(screen.getByRole('combobox', { name: 'Move BEC-Q-00001 to' }))
-      .getAllByRole('option')
-      .map((o) => o.textContent);
-    expect(options).toEqual(['Move to', 'Reviewing']);
+    // Already in New, it may go to Reviewing and nowhere further until approved.
+    expect(drag(card('BEC-Q-00001'), column('quoted'))).toBe(false);
+    expect(drag(card('BEC-Q-00001'), column('reviewing'))).toBe(true);
     expect(screen.getByText('Needs approval')).toBeInTheDocument();
   });
 
