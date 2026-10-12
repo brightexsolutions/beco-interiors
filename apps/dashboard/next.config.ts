@@ -38,6 +38,9 @@ const scriptSrc = [
   // Next.js inlines a small bootstrap script. Tighten to a nonce once the app
   // is stable, and record that as a follow up rather than forgetting it.
   "'unsafe-inline'",
+  // libheif, compiled to WebAssembly, decodes an iPhone HEIC in the browser
+  // before upload (D139). This allows WebAssembly alone, never eval.
+  "'wasm-unsafe-eval'",
   ...(isDev ? ["'unsafe-eval'"] : []),
 ].join(' ');
 

@@ -276,8 +276,8 @@ export function BlogEditor({
                 <form onSubmit={upload.onSubmit} className="space-y-4">
                   <input type="hidden" name="postId" value={post.id} />
                   <input type="hidden" name="coverImageAlt" value={coverAlt} />
-                  <Field label="Cover photograph" htmlFor="blog-cover-file">
-                    <Input id="blog-cover-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" />
+                  <Field label="Cover photograph" htmlFor="blog-cover-file" hint="JPEG, PNG, WebP or HEIC, up to 40MB. Resized before upload">
+                    <Input id="blog-cover-file" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" />
                   </Field>
                   <div className="flex flex-col gap-2">
                     <Button type="submit" variant="outline" pending={coverPending || upload.phase !== 'idle'}>

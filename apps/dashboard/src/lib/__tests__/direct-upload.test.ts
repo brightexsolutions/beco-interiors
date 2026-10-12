@@ -43,7 +43,7 @@ describe('stagePhoto', () => {
     });
     const result = await stagePhoto(jpeg(DIRECT_UPLOAD_FALLBACK_BYTES + 1), 'products', signed, () => {}, put);
     expect(result.kind).toBe('error');
-    if (result.kind === 'error') expect(result.error).toMatch(/4\.0MB is too large to send the slow way/);
+    if (result.kind === 'error') expect(result.error).toMatch(/failed twice and 4\.0MB is too large to send the slow way/);
   });
 });
 
@@ -99,5 +99,26 @@ describe('putFile', () => {
     await expect(putFile('https://r2.example/put', jpeg(10), () => {})).rejects.toThrow(/failed/);
     FakeXhr.status = 200;
     vi.unstubAllGlobals();
+  });
+});
+
+describe('stagePhoto retry, D139', () => {
+  it('tries the direct PUT a second time before falling back, and succeeds when the retry does', async () => {
+    let calls = 0;
+    const put = vi.fn(async () => {
+      calls += 1;
+      if (calls === 1) throw new Error('dropped');
+    });
+    const result = await stagePhoto(jpeg(10), 'products', signed, () => {}, put);
+    expect(result).toEqual({ kind: 'staged', key: 'uploads/0123456789abcdef0123456789abcdef' });
+    expect(put).toHaveBeenCalledTimes(2);
+  });
+
+  it('falls back only after both attempts failed', async () => {
+    const put = vi.fn(async () => {
+      throw new Error('dropped');
+    });
+    expect(await stagePhoto(jpeg(10), 'products', signed, () => {}, put)).toEqual({ kind: 'fallback' });
+    expect(put).toHaveBeenCalledTimes(2);
   });
 });

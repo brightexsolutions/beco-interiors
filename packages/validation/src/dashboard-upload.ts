@@ -11,6 +11,19 @@ import { z } from 'zod';
  */
 export const MAX_PHOTO_BYTES = 12 * 1024 * 1024;
 
+/**
+ * What the browser will take from the camera roll before it resizes, D139.
+ * A phone photograph is 4 to 12MB and a HEIC burst can be more; the browser
+ * decodes it, scales it to `PHOTO_LONG_EDGE` and sends a JPEG of a megabyte
+ * or two, so this is the ceiling on what it will attempt, not on what
+ * travels. `MAX_PHOTO_BYTES` above is what travels.
+ */
+export const MAX_PHOTO_INPUT_BYTES = 40 * 1024 * 1024;
+export const PHOTO_LONG_EDGE = 2400;
+/** Above this the browser re-encodes even a file that is already small enough on its long edge. */
+export const PHOTO_REENCODE_BYTES = 1536 * 1024;
+export const PHOTO_JPEG_QUALITY = 0.86;
+
 export const ALLOWED_PHOTO_TYPES: ReadonlySet<string> = new Set([
   'image/jpeg',
   'image/png',
