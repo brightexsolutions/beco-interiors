@@ -29,6 +29,8 @@ export interface QuoteListItem {
   validUntil: string | null;
   requiresApproval: boolean;
   approvedAt: string | null;
+  /** The lock token a move on the board sends back. */
+  updatedAt: string;
   assignedTo: string | null;
   assignedToName: string | null;
   createdBy: string | null;
@@ -43,6 +45,10 @@ export interface QuoteListItem {
   isPriced: boolean;
   itemCount: number;
 }
+
+/** A quote's value in shillings, whole, as the list and the board show it. */
+export const quoteMoney = (n: number): string =>
+  new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
 
 /** The label and tone for a quote's lifecycle status, per StatusPill. */
 export const QUOTE_STATUS: Record<QuoteStatus, { label: string; tone: StatusTone }> = {
@@ -121,6 +127,7 @@ interface QuoteRow {
   valid_until: string | null;
   requires_approval: boolean;
   approved_at: string | null;
+  updated_at: string;
   created_by: string | null;
   assigned_to: string | null;
   assigned_user: { full_name: string } | { full_name: string }[] | null;
@@ -146,6 +153,7 @@ const toListItem = (row: QuoteRow): QuoteListItem => {
     validUntil: row.valid_until,
     requiresApproval: row.requires_approval,
     approvedAt: row.approved_at,
+    updatedAt: row.updated_at,
     assignedTo: row.assigned_to,
     assignedToName: oneName(row.assigned_user),
     createdBy: row.created_by,
@@ -171,7 +179,7 @@ export async function fetchQuotes(
     .from('quotes')
     .select(
       `id, reference_number, customer_name, customer_phone, status, source, created_at,
-       valid_until, requires_approval, approved_at, created_by, assigned_to,
+       valid_until, requires_approval, approved_at, updated_at, created_by, assigned_to,
        assigned_user:users!quotes_assigned_to_fkey(full_name),
        created_user:users!quotes_created_by_fkey(full_name),
        quote_items(unit_price, line_total)`,

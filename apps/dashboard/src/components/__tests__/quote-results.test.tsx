@@ -25,6 +25,7 @@ const quote = (patch: Partial<QuoteListItem> = {}): QuoteListItem => ({
   validUntil: null,
   requiresApproval: false,
   approvedAt: null,
+  updatedAt: '2026-10-01T09:00:00.000Z',
   assignedTo: 'sales-1',
   assignedToName: 'Ken Mutiso',
   createdBy: 'sales-1',

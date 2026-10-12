@@ -3748,3 +3748,23 @@ pill on the left, Publish or Unpublish and Save on the right, pinned under the t
 laptop up. Publish moved out of the Cover section, where it had been easy to miss. The fields sit
 in panels, Article, Body, Generate, Search and Cover, the same frame the quote and product
 screens use.
+
+## D148, 12 October 2026: quotes as a board beside the table
+
+Brown: a view of the quotes as columns, where a quote is dragged from one stage to the next, with a
+switch between it and the table. `?view=board` through the same `QueryViewSwitch` as the
+catalogue's cards. Columns are the statuses in order, each with its count and the priced total.
+
+The moves are the database's, not the board's: `quoteMoves` in `lib/quote-transitions.ts` states
+what `set_quote_status` and the `quotes_finalized_requires_approval` constraint allow (forward
+only, won only from quoted, won and lost closed, a quote waiting on approval held to reviewing),
+and the quote screen's status buttons now read the same function, so the two cannot drift. While a
+card is dragged only its legal columns accept a drop. Won and Lost ask first through
+ConfirmDialog, Lost with the reason the record keeps, as on the quote screen. Every card carries a
+Move to select with the same moves, because native drag and drop does not work by touch or
+keyboard. The card moves at once (`useOptimistic`) and the server's answer settles it or puts it
+back with the reason in a toast; the lock token travels with the move, so a quote changed
+elsewhere is refused rather than overwritten.
+
+*Reverses if:* the board needs to reorder within a column, which would need a sort column the
+quotes table does not have.
