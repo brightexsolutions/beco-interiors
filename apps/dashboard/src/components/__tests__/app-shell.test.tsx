@@ -120,6 +120,16 @@ describe('AppShell', () => {
     expect(within(main).queryByRole('link', { name: 'Users' })).toBeNull();
   });
 
+  it('leaves New quote out of the desktop top bar, D151', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const bar = container.querySelector('[data-top-bar]') as HTMLElement;
+    expect(within(bar).queryByRole('link', { name: 'New quote' })).toBeNull();
+  });
+
   it('keeps the desktop top bar in view while the page scrolls, and names its height for what pins under it (D146)', () => {
     const { container } = render(
       <AppShell user={admin}>

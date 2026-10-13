@@ -17,7 +17,6 @@ const SHELL: readonly TourStep[] = [
   { target: 'search', title: 'Search anything', body: 'Jump to a screen or search quotes. Press Command K from anywhere.' },
   { target: 'nav', title: 'Sections', body: 'Grouped by job. Fold a group you rarely use and it stays folded.' },
   { target: 'bottom-nav', title: 'Sections', body: 'Your main screens, with New quote in the middle.' },
-  { target: 'new-quote', title: 'New quote', body: 'Raise a quote from any screen.' },
   { target: 'guide', title: 'This guide', body: 'Start this tour again here, or read the full written guide.' },
 ];
 

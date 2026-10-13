@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { Icon, buttonClasses, cn } from '@beco/ui';
 import { ROUTE_RULES, accessLevel, canAccess, grantsFrom } from '@/lib/access';
 import { guideTopicsFor } from '@/lib/guide';
 import type { ActiveSession } from '@/lib/session';
@@ -178,13 +177,9 @@ export function AppShell({
                   </svg>
                 </Link>
               ) : null}
+              {/* No New quote here, D151: home and Quotes carry their own, the
+                  phone bar its centre button, and command K offers it. */}
               <AccountMenu name={name} />
-              {raisesQuotes ? (
-                <Link href="/quotes/new" data-tour="new-quote" className={cn(buttonClasses({ variant: 'primary' }), 'ml-2 h-10 gap-2')}>
-                  <Icon name="plus" />
-                  New quote
-                </Link>
-              ) : null}
             </div>
           </div>
 

@@ -3810,3 +3810,15 @@ which D139's resize keeps under its limit, so nothing breaks; the direct PUT wai
 Variables, remove `R2_ACCOUNT_ID` and add it again for Production as a plain, not Sensitive,
 variable. An account ID is not a secret: it is in every R2 URL. The two keys stay Sensitive. The
 next production build then carries the host, and the build log's D150 warning goes away.
+
+## D151, 13 October 2026: dialogs pad their content and pin their actions; New quote leaves the top bar
+
+Brown, with screenshots. The access dialog's text and checkboxes sat against the dialog's edge
+and its list ran off the bottom with Save under it: Dialog's body is a bare column, so a PDF
+preview can fill it, and three callers (the access editor, the guide, the phone's More) had
+never added padding or a scroll. `DialogBody` and `DialogFooter` in @beco/ui are that padding,
+that scroll, and the pinned row of actions, the same frame as a Sheet's footer.
+
+New quote is gone from the top bar: it sat beside the page's own New quote on Quotes and home, in
+Warm Red, which was the page's loudest element on every screen. It stays on home, on Quotes, in
+the phone bar's centre and in command K.

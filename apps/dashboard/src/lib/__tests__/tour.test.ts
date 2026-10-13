@@ -28,7 +28,6 @@ describe('tourFor, D149', () => {
       'search',
       'nav',
       'bottom-nav',
-      'new-quote',
       'guide',
     ]);
   });
