@@ -16,6 +16,10 @@ vi.mock('@/app/(app)/studio/blog/actions', () => ({
   removeBlogCover: vi.fn(async () => ({ ok: 'Cover removed.' })),
 }));
 
+// These walk a whole form with userEvent; under a full parallel run they
+// have crossed the 5s default while passing in 1s alone.
+vi.setConfig({ testTimeout: 15_000 });
+
 const { BlogEditor } = await import('../blog-editor');
 import type { StaffBlogPost } from '@/lib/blog';
 
