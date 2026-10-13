@@ -53,6 +53,8 @@ const sam: GrantStaffRow = {
   canWriteBlog: false,
   canReadAudit: false,
   canManageUsers: false,
+  moduleGrants: [],
+  updatedAt: '2026-10-12T08:00:00.000Z',
 };
 
 beforeEach(() => {

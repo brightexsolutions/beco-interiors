@@ -313,3 +313,36 @@ describe('addProductImage', () => {
     expect(update).not.toHaveBeenCalled();
   });
 });
+
+describe('updateProduct sizes, D137', () => {
+  it('writes the sizes the editor listed, dropping an empty row', async () => {
+    maybeSingle
+      .mockResolvedValueOnce({ data: { slug: 'limestone-ivory', categories: { slug: '12mm-sintered-stones' } } })
+      .mockResolvedValueOnce({ data: { id: '11111111-1111-4111-8111-111111111111' }, error: null });
+    const result = await updateProduct(
+      {},
+      formFrom({
+        sizes: JSON.stringify([
+          { label: '96mm', price: 850, sku: 'H-96' },
+          { label: '', price: null, sku: null },
+          { label: '128mm', price: null, sku: null },
+        ]),
+      }),
+    );
+    expect(result.ok).toBe('Saved.');
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sizes: [
+          { label: '96mm', price: 850, sku: 'H-96' },
+          { label: '128mm', price: null, sku: null },
+        ],
+      }),
+    );
+  });
+
+  it('refuses two sizes with the same label before touching the database', async () => {
+    const result = await updateProduct({}, formFrom({ sizes: JSON.stringify([{ label: '96mm' }, { label: '96mm' }]) }));
+    expect(result.error).toMatch(/listed twice/);
+    expect(update).not.toHaveBeenCalled();
+  });
+});

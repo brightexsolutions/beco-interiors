@@ -19,3 +19,14 @@ export interface Spec {
   label: string;
   value: string;
 }
+
+/**
+ * One size a product comes in, D137: "128mm" on a handle, "2.4m" on a
+ * profile. A null price takes the product's own. Stored in `products.sizes`
+ * in the order the editor lists them.
+ */
+export interface ProductSize {
+  label: string;
+  price: number | null;
+  sku: string | null;
+}

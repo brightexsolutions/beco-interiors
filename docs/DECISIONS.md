@@ -3563,3 +3563,262 @@ map gives `/users` a `users` grant, the way `/audit` has one.
 *Reverses if:* Beco wants a holder to manage Brightex accounts, which would mean Beco can lock
 Brightex out. The ownership split (`docs/OWNERSHIP.md`) puts the data on Beco's accounts, so that
 is a handover decision, not a permission switch.
+
+## D136, 12 October 2026: a module grant opens a section to read, beside the role
+
+Asked by Brown: a way, as Brightex or as a person given the right, to let another member see a
+given module. The roles were fixed lists, and the two staff grants (audit read, staff
+management, D135) each opened one door with its writes attached.
+
+**Module grants, per account.** `users.module_grants text[]`, one key per dashboard section
+(`quotes`, `orders`, `customers`, `products`, `announcements`, `reports`, `users`, `settings`,
+`audit`), the list held once in `module_keys()` and once in `DASHBOARD_MODULES`, asserted equal
+by test. A grant opens the screen (the route map carries the module on its rule, so the proxy,
+the nav, the bottom bar and the guide all agree) and the reads behind it (`has_module()` drives
+a select policy on quotes, quote lines, orders, order lines, customers and analytics events;
+`has_audit_read()` now counts the audit module). **Writes never widen:** the policies that
+change rows are untouched, and the shell draws a View only pill on a section a person reaches
+by grant alone, so a refused save is never the first they hear of it.
+
+**Who grants.** Brightex, anything. A holder of the staff grant, only what they reach
+themselves, on a Beco account, never their own row: `can_grant_module()` and the users guard
+trigger refuse the rest with a sentence, and the action says the same thing before the write.
+One editor, `ModuleAccessEditor`, on the user's own sheet and on the Permissions tab, which a
+staff manager who is an admin now also sees for module access alone.
+
+Studio, the Drive import and the launch control have no module: they stay Brightex only.
+
+*Reverses if:* Beco wants a grant to carry writes. That is a role, and D110's reasoning about
+roles being cheap to add and expensive to retire applies.
+
+## D137, 12 October 2026: a product can come in several sizes
+
+Feedback from the counter: handles come in three lengths, profiles in two, and each was either a
+separate product or a spec line nobody could quote from.
+
+`products.sizes` is an ordered array of `{ label, price, sku }`. The editor has a Sizes section
+(label, optional price, optional code); the list and cards say "3 sizes"; the storefront product
+page lists each size with its own price, or the product's when it has none. The quote picker
+lists one row per size, "HT-8350 Black Gold, 128mm", priced by the size, and
+`add_catalogue_quote_lines` takes the size, puts it in the line's description and sets the list
+price from it, refusing a size the product does not carry. A product with no sizes is exactly
+what it was.
+
+*Reverses if:* sizes need their own stock counts, at which point they are variants with rows of
+their own, not a column.
+
+## D138, 12 October 2026: the catalogue has a cards view beside the list
+
+Brown, with two concept screenshots: the catalogue should be viewable as a list or as large
+cards that show the photograph and a line of detail, the full record opening when one is picked.
+The 18 September lock said never cards on desktop; that held while the only card was a phone
+substitute for the table. This is a different thing: a view chosen from the toolbar, for
+checking what a product looks like rather than what it costs.
+
+`?view=cards` through the shared transition, twelve to a page, four across on a wide screen.
+Each card: the first photograph in a fixed 4:3 frame with the Published or Draft pill and a
+photo count over it, name, code and range, two lines of the short description, price and unit,
+availability and stock, then Low stock, Out of stock and the size count. The whole card opens the
+editor. The list stays the default and the table stays the desktop list.
+
+## D139, 12 October 2026: photographs are made small on the device, several at once, HEIC included
+
+The upload that kept failing, reported with a screenshot: "The direct upload failed and 9.5MB is
+too large to send the slow way." A camera roll JPEG, a dropped PUT on mobile data, and a fallback
+capped at 4MB by Vercel. The server resized to 1600px anyway, so the slowest part of the trip
+carried bytes that were thrown away on arrival.
+
+Now the browser prepares each file: an iPhone HEIC is decoded by libheif in WebAssembly
+(`heic-to`, loaded only when a HEIC is picked, with `'wasm-unsafe-eval'` in the CSP), the long
+edge is capped at 2400px and a JPEG is encoded. A 12MB HEIC becomes about a megabyte, goes direct
+in seconds and fits the fallback when it does not; the direct PUT is also tried twice. The input
+takes several files at once, up to 40MB each; every file gets a shot guessed from its name and
+alt text from the product name, and one Upload sends them one after another, each saying
+Preparing, Uploading with a percentage, Saving, Added, a failure staying on its row with the reason
+while the rest carry on. Each add hands back the row's new lock token for the next. The team photo
+and the blog cover take HEIC through the same hook.
+
+## D140, 12 October 2026: the guide lives in the shell
+
+A Guide control in the top bar and the phone header opens a dialog with the current screen's
+walkthrough first, every other screen the person can reach beside it, each a purpose and numbered
+steps: what to do, then where and what happens. The topics are filtered by the access map, so the
+guide never describes a screen the reader cannot open. `docs/STAFF-GUIDE.md` stays the written
+copy for Beco; the in-app guide is the one beside the screen.
+
+## D141, 12 October 2026: the connection and the next screen both say so
+
+Brown: the user should never sit there wondering what could possibly be going on. D117 covered
+buttons, lists and saves. Two gaps remained. A lost connection: `ConnectionStatus` listens to the
+browser and draws a charcoal bar, "You are offline. Nothing will save until the connection is
+back.", announced assertively, with a toast when it returns. A tap on a nav link: `RouteProgress`
+draws a thin Warm Red bar across the top from the click until the URL changes, creeping so it
+reads as alive, giving up after twenty seconds so a link that opened nothing cannot leave it on
+screen.
+
+## D142, 12 October 2026: home carries the team and the catalogue, and the sidebar its glyphs
+
+Brown's concept dashboard against the current one: ours read as minimal and basic. What changed,
+inside the brand system: the greeting carries a lede and two actions (Catalogue, New quote); under
+the charts, The team this month ranks the salespeople by value won from the leaderboard function,
+and Catalogue shows live, drafts, low stock and price on request as four linked figures, Warm Red
+only on low stock when it is non zero. The sidebar draws each section's glyph beside its word, the
+same glyph the phone bar uses, from one `NavGlyph`; the word stays. No gradient blob, no sparkline
+tiles, no dark sidebar: the ban on those stands.
+
+## D143, 12 October 2026: the dashboard gets an admin surface of its own, on the same components
+
+Brown, with three screenshots: the dashboard still read as low fidelity, "looks like no aspect of
+design put in mind"; use a font common to dashboards, look at how stride-app and Dreamville are
+put together, consider shadcn, and leave the storefront alone. Three directions were drawn as a
+design canvas (A Studio, B Ledger, C Showroom); Brown chose A with C's big card, "well styled
+with gradient and pattern in the background".
+
+What was decided. The dashboard is an operations tool used all day on a laptop, so it gets a
+surface of its own on top of the one @beco/ui: `data-surface="admin"` on its root, and a block in
+`tokens.css` that overrides the variables under it and nothing else. Geist for UI and display
+(self hosted through next/font, the shop keeps Titillium and Cormorant); a 13/14/15 type scale
+with the 16px floor kept on every phone input; 10px controls and 14px cards; a cool grey ground
+so the white panels read as cards; tinted tokens for success, warning, info and danger; a ring
+token that is Warm Red on the shop and charcoal here. Two hooks carry the brand's tracked
+uppercase and red focus ring: `beco-case` and `beco-ring`, on by default, off under the admin
+surface. One component set, two looks, no fork.
+
+The shell: a white sidebar with the mark, a command K search (sections, "Search quotes for
+...", guide topics), the sections as glyph and word grouped by job, the signed in person at the
+foot; a 64px top bar with where the reader is, the guide, the new quote bell, appearance,
+settings, the account and New quote. Home: the focus card keeps its two columns and takes the
+Showroom treatment, charcoal with a red bloom and a fine vein pattern (`.beco-veins`), the red
+edge only on a breached target; each month tile carries a glyph in a tinted chip and its trend
+beside the figure. Lists sit in panels with a tinted table header band; detail screens frame
+their main column and rail in panels; the confirm dialog opens with a glyph tile, danger tinted
+when destructive; tabs underline in Warm Red.
+
+Two things the harness found while clicking through, not the unit tests: Dialog and
+ConfirmDialog now portal to the body, because rendered inside the sticky sidebar the palette's
+overlay was painted over by the main column (sticky and relative ancestors each form a stacking
+context no z-index escapes); and the HEIC decoder's worker, built from a blob URL, was refused by
+`worker-src 'self'`, so every iPhone photo failed with the Most Compatible advice. `blob:` is
+allowed and pinned by a test. The same policy never named the R2 host in `connect-src`, so in
+production the browser's direct PUT was refused outright and every photograph took the form post
+fallback, which is the "direct upload failed and 9.5MB is too large to send the slow way" error
+Brown reported. `connect-src` now carries the account's own R2 host from `R2_ACCOUNT_ID`.
+`R2_ENDPOINT`, local only, points the S3 client at a stand in so the whole upload path runs
+without the real bucket.
+
+What was not done: no shadcn install. Its construction is already the pattern here (Radix
+behind Tabs, plain elements elsewhere so jsdom can test them); its default look is what Brown
+asked us to move past. The storefront's bytes are untouched except the shared components' class
+names, which resolve to the same values there.
+
+## D144, 12 October 2026: the sidebar groups fold
+
+Brown, walking the D143 shell on a laptop: the sidebar scrolled before it showed Admin. Each group
+heading now folds its rows. Home and Sales, the day's work, open on a first visit and the rest are
+folded; the group holding the current screen always opens, so the reader can always see where they
+are; what someone opens or folds is kept in their own browser (`beco-dashboard-side-nav`), a
+convenience that falls back to the defaults when storage is blocked. A folded Sales carries the
+new quote count on its heading so the count is never hidden. The phone bar is unchanged.
+
+*Reverses if:* the sections fit a laptop screen again, at which point the fold is noise.
+
+## D145, 12 October 2026: the catalogue ranges stay in view
+
+Brown, scrolling the cards: the range pills scrolled off, so changing range meant scrolling back
+up. From a tablet up the Browse section is sticky at the top of the screen on the ground fill, and
+the list slides under it. On a phone it scrolls as before: the pills wrap to four rows there and
+pinned they would cover a third of the screen.
+
+## D146, 12 October 2026: the top bar stays
+
+Brown: the dashboard header should not scroll off. From a laptop up the top bar is sticky, so New
+quote, the guide and the account are always one click away. Its height is `--shell-top` on the
+shell root (0 under `lg`, where there is no bar), and anything else pinned to the top of the page
+sits under it: the catalogue ranges (D145), the blog editor's rail and the new quote customer rail.
+Sticky headers inside their own scrolling boxes are unaffected.
+
+## D147, 12 October 2026: a view switch is a segmented control, and the article editor is framed
+
+Brown, on the article editor: Edit, Preview and Save draft sat in one row as three buttons, the
+chosen view filled charcoal like an action, and every field lay on the ground with nothing
+framing it. `SegmentedControl` in @beco/ui draws a view choice as one tray with the chosen option
+raised on white; the catalogue's List and Cards switch moved onto it, and Table and Board on
+quotes will use it. The article editor gets a bar: Edit or Preview and the Draft or Published
+pill on the left, Publish or Unpublish and Save on the right, pinned under the top bar from a
+laptop up. Publish moved out of the Cover section, where it had been easy to miss. The fields sit
+in panels, Article, Body, Generate, Search and Cover, the same frame the quote and product
+screens use.
+
+## D148, 12 October 2026: quotes as a board beside the table
+
+Brown: a view of the quotes as columns, where a quote is dragged from one stage to the next, with a
+switch between it and the table. `?view=board` through the same `QueryViewSwitch` as the
+catalogue's cards. Columns are the statuses in order, each with its count and the priced total.
+
+The moves are the database's, not the board's: `quoteMoves` in `lib/quote-transitions.ts` states
+what `set_quote_status` and the `quotes_finalized_requires_approval` constraint allow (forward
+only, won only from quoted, won and lost closed, a quote waiting on approval held to reviewing),
+and the quote screen's status buttons now read the same function, so the two cannot drift. While a
+card is dragged only its legal columns accept a drop. Won and Lost ask first through
+ConfirmDialog, Lost with the reason the record keeps, as on the quote screen.
+
+Drag and drop is the way a card moves, by pointer events rather than the browser's native drag,
+which does nothing on a phone: with a mouse the card lifts once it moves five pixels; on a phone it
+lifts after a 300ms hold, so a quick swipe still scrolls the columns, the page is held still while
+a finger carries it, and the board scrolls along near its edge; from the keyboard each card's grip
+lifts it with Space, the arrows choose among the legal columns, Space drops and Escape puts it
+back, each step announced. The click after a drop is swallowed so a release does not open a quote.
+A Move to select on every card was tried first and dropped on Brown's word: it made every card a
+form. The card moves at once (`useOptimistic`) and the server's answer settles it or puts it
+back with the reason in a toast; the lock token travels with the move, so a quote changed
+elsewhere is refused rather than overwritten.
+
+*Reverses if:* the board needs to reorder within a column, which would need a sort column the
+quotes table does not have.
+
+## D149, 12 October 2026: the guide becomes a tour of the screen
+
+Brown, with a screenshot of the D140 guide: not the guide asked for; the one where the reader
+presses Next and another part of the screen lights up with a short description. Guide now starts
+a tour of the screen being looked at. The page dims, the part the step is about is cut out of the
+dimming with a white edge, and a card beside it, never over it, gives a title and one sentence,
+how far through the reader is, Back, Next and Skip. A step names a `data-tour` mark on the real
+element, so the tour follows the component if it moves; a mark not on screen at this width (the
+sidebar on a phone, the bottom bar on a laptop) drops its step. Each screen opens on its heading
+with the first sentence of its written guide topic, then its own parts, then the shell: search,
+sections, New quote, and Guide itself.
+
+The written guide stays, one tap away: Full guide on the tour card opens it, and Take the tour in
+it starts the tour again. The tour does not start by itself on a first visit; that is a choice
+for Beco once they have seen it.
+
+## D150, 12 October 2026: the CSP's R2 host is read at build, so the account ID must not be Sensitive
+
+Found checking the deploy, not by a test. The dashboard project holds `R2_ACCOUNT_ID`,
+`R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` as Sensitive. The deploy workflows build in GitHub
+Actions after `vercel pull`, and `vercel pull` hands a Sensitive variable over as the placeholder
+`[sensitive]`, so the build saw an account ID of `[sensitive]` and D143's `connect-src` fix would
+have named `https://[sensitive].r2.cloudflarestorage.com`, a host no browser matches: the direct
+PUT would still have been refused. The keys are fine as they are, since they are read at run time,
+where Vercel supplies the real values.
+
+`r2ConnectOrigin` now writes the host only for a 32 character hex account ID and leaves anything
+else out, and the build says so in its log. Without the host a photograph takes the form post,
+which D139's resize keeps under its limit, so nothing breaks; the direct PUT waits on one setting.
+
+**To do in Vercel, by a person who holds the value:** in `beco-dashboard`, Settings, Environment
+Variables, remove `R2_ACCOUNT_ID` and add it again for Production as a plain, not Sensitive,
+variable. An account ID is not a secret: it is in every R2 URL. The two keys stay Sensitive. The
+next production build then carries the host, and the build log's D150 warning goes away.
+
+## D151, 13 October 2026: dialogs pad their content and pin their actions; New quote leaves the top bar
+
+Brown, with screenshots. The access dialog's text and checkboxes sat against the dialog's edge
+and its list ran off the bottom with Save under it: Dialog's body is a bare column, so a PDF
+preview can fill it, and three callers (the access editor, the guide, the phone's More) had
+never added padding or a scroll. `DialogBody` and `DialogFooter` in @beco/ui are that padding,
+that scroll, and the pinned row of actions, the same frame as a Sheet's footer.
+
+New quote is gone from the top bar: it sat beside the page's own New quote on Quotes and home, in
+Warm Red, which was the page's loudest element on every screen. It stays on home, on Quotes, in
+the phone bar's centre and in command K.

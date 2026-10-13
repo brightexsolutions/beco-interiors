@@ -15,6 +15,7 @@ const quote = (over: Partial<QuoteListItem> = {}): QuoteListItem => ({
   validUntil: null,
   requiresApproval: false,
   approvedAt: null,
+  updatedAt: '2026-10-01T09:00:00.000Z',
   assignedTo: null,
   assignedToName: null,
   createdBy: null,

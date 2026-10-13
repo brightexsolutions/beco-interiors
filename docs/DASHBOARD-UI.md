@@ -366,3 +366,62 @@ shows the state and one place changes it.
 
 Seen on the dev server at 390 and 1280: create a draft, Publish, Unpublish through the dialog,
 Save and publish after an edit, the local row checked after each.
+
+## 12 October 2026, access, sizes, cards, uploads, the guide, and the shell that says so (D136 to D142)
+
+Brown's round of feedback with the client live on main. Everything below is additive and on
+its own branch; nothing on main moved.
+
+- **Module access.** A person can be let into a section beyond their role, read only, from Edit
+  access on their sheet or on the Permissions tab. The shell says View only there. Brightex
+  grants anything; a staff manager what they hold. D136.
+- **Sizes.** A Sizes section in the product editor; the picker lists one row per size and the
+  quote line names it. D137.
+- **List or cards.** A toolbar switch on the catalogue. Cards are four across, photograph first,
+  a line of detail, the card opens the editor. The list stays the default. D138.
+- **Photographs.** Several at once, HEIC included, made small on the device first, each file
+  saying what it is doing. The 9.5MB failure cannot happen: what travels is a megabyte. D139.
+- **Guide.** In the top bar and the phone header, the current screen first. D140.
+- **Status everywhere.** Offline bar, route progress bar, and the upload queue's per file state,
+  on top of D117's pending buttons, Busy rows and toasts. Nobody sits wondering. D141.
+- **Home and the sidebar.** The team this month and the catalogue's four figures under the
+  charts; two actions on the greeting; glyphs beside the sidebar words. D142.
+
+Rules unchanged: tokens, type floor, 44px targets, no browser dialog, no dark sidebar, the
+storefront untouched except the product page's Sizes list.
+
+## 12 October 2026, later: the admin surface (D143)
+
+Brown's second round: the result of D136 to D142 was still "basic design, low fidelity". Three
+directions were drawn, Brown chose A (Studio) with C's hero card.
+
+- **One component set, two looks.** `data-surface="admin"` on the dashboard root. The admin
+  block in `tokens.css` overrides fonts (Geist), scale (13/14/15, 16px on phone inputs), radii
+  (10 control, 14 card and panel), ground (`neutral-50` cool grey), shadows and the ring colour.
+  `beco-case` and `beco-ring` hooks turn the tracked uppercase and the red focus ring off here.
+  Nothing in `apps/storefront` changed.
+- **Shell.** Sidebar: mark, command K search, grouped glyph and word rows (active on the tint,
+  glyph in Warm Red), the person at the foot. Top bar: crumb, guide, bell with a red dot when
+  quotes are new, appearance, settings, account, New quote. Screens sit on the ground with no
+  wrapper panel; each card draws its own edge. Phone: the header card keeps the showroom still
+  (D85) behind it, the band now the card's own height; bottom bar labels at 13px.
+- **Home.** The focus card on `.beco-veins`, red edge only on a breach. Month tiles with a
+  tinted glyph chip (won green, conversion blue, invoiced neutral, leads danger, catalogue
+  warning) and the trend beside the figure in the success or danger tint. Panels with the soft
+  shadow. Latest quotes rows lead with initials.
+- **Lists and details.** Tinted table header band, plain captions, rows at 14px with more air.
+  Users, audit and announcements in the same Panel and TableToolbar frame as the rest. Quote,
+  order and customer details frame main column and rail in panels.
+- **Editor.** The product sheet follows the A Studio editor: thumbnail, range, code and state in
+  the header, the Website card tinted, photographs as a tile grid with the cover badged, queued
+  files as tiles with their state and an Add photos tile at the end, a tap on a tile opening its
+  shot, alt text, order and Remove under the grid, sizes as one bordered list, and the footer
+  saying Unsaved changes or All saved beside Delete and Save.
+- **Dialogs.** Dialog and ConfirmDialog portal to the body. ConfirmDialog opens with a glyph
+  tile, danger tinted when destructive. Tabs underline in Warm Red. Toasts expand so several
+  refusals at once each stay readable.
+- **Checked, not assumed.** Every screen shot at 1440, 1024 and 390 through the harness with a
+  horizontal overflow probe (one found and fixed: the phone's docked save bars bled by the old
+  panel padding). The upload path walked with a real HEIC, a 3200px JPEG, a PNG, a 41MB file and a
+  PDF against a fake bucket: the HEIC worker was being refused by the CSP, fixed and pinned.
+

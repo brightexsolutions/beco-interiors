@@ -20,7 +20,7 @@ export function OrderDates({
 
   return (
     <div>
-      <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Dates</h2>
+      <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">Dates</h2>
       <dl className="mt-2 space-y-1 font-ui text-base">
         {rows.map((row) => (
           <div key={row.label} className="flex flex-wrap justify-between gap-x-3 gap-y-0.5">

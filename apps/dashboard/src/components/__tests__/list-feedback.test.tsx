@@ -64,6 +64,7 @@ const quote: QuoteListItem = {
   validUntil: null,
   requiresApproval: false,
   approvedAt: null,
+  updatedAt: '2026-10-01T09:00:00.000Z',
   assignedTo: null,
   assignedToName: null,
   createdBy: null,
@@ -105,6 +106,9 @@ const staff: StaffUser = {
   lastLoginAt: '2026-09-18T07:00:00.000Z',
   createdAt: '2026-09-01T07:00:00.000Z',
   updatedAt: '2026-09-18T07:00:00.000Z',
+  canReadAudit: false,
+  canManageUsers: false,
+  moduleGrants: [],
 };
 
 const announcement: StaffAnnouncement = {

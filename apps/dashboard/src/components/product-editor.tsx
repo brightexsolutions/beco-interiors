@@ -5,6 +5,7 @@ import {
   AvailabilityBadge,
   Button,
   ConfirmDialog,
+  cn,
   Field,
   FormSection,
   Icon,
@@ -17,14 +18,15 @@ import {
   useActionToast,
   useKeepValuesSubmit,
 } from '@beco/ui';
-import { PRODUCT_UNITS, stockStepFor } from '@beco/validation';
-import type { Availability, PriceDisplayMode } from '@beco/types';
+import { PRODUCT_UNITS, slugifyProductName, stockStepFor } from '@beco/validation';
+import type { Availability, PriceDisplayMode, ProductSize } from '@beco/types';
 import {
   deleteProduct,
   setProductPublished,
   updateProduct,
   type ProductActionState,
 } from '@/app/(app)/products/actions';
+import { PageUrl } from '@/components/page-url';
 import { ProductImages } from '@/components/product-images';
 import { groupCategoryOptions, type CatalogueProduct, type ProductCategoryOption } from '@/lib/products';
 
@@ -39,6 +41,25 @@ export const UNPUBLISH_TIP =
 
 /** What a Save was started by, so only the control that was pressed spins. D117. */
 type SaveIntent = 'save' | 'publish' | 'unpublish';
+
+/** A size row as the form holds it: every field a string, so a half typed price is not thrown away. */
+interface SizeRow {
+  label: string;
+  price: string;
+  sku: string;
+}
+
+const toSizeRow = (size: ProductSize): SizeRow => ({
+  label: size.label,
+  price: size.price == null ? '' : String(size.price),
+  sku: size.sku ?? '',
+});
+
+const fromSizeRow = (row: SizeRow) => ({
+  label: row.label.trim(),
+  price: row.price.trim() === '' ? null : Number(row.price),
+  sku: row.sku.trim() === '' ? null : row.sku.trim(),
+});
 
 const asNumber = (value: string): number | null => {
   if (value.trim() === '') return null;
@@ -67,6 +88,7 @@ export function ProductEditor({
   const [deleteState, remove, removing] = useActionState(deleteProduct, INITIAL);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [specs, setSpecs] = useState(product.specs);
+  const [sizes, setSizes] = useState<SizeRow[]>(() => product.sizes.map(toSizeRow));
   const [name, setName] = useState(product.name);
   const [availability, setAvailability] = useState<Availability>(product.availability);
   const [stockInput, setStockInput] = useState(
@@ -108,6 +130,7 @@ export function ProductEditor({
 
   useEffect(() => {
     setSpecs(product.specs);
+    setSizes(product.sizes.map(toSizeRow));
     setName(product.name);
     setAvailability(product.availability);
     setStockInput(product.stockQuantity == null ? '' : String(product.stockQuantity));
@@ -120,6 +143,7 @@ export function ProductEditor({
     product.id,
     product.updatedAt,
     product.specs,
+    product.sizes,
     product.name,
     product.availability,
     product.stockQuantity,
@@ -154,6 +178,18 @@ export function ProductEditor({
     setDirty(true);
     setSpecs((current) => current.filter((_, i) => i !== index));
   };
+  const addSize = () => {
+    setDirty(true);
+    setSizes((current) => [...current, { label: '', price: '', sku: '' }]);
+  };
+  const updateSize = (index: number, patch: Partial<SizeRow>) => {
+    setDirty(true);
+    setSizes((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  };
+  const removeSize = (index: number) => {
+    setDirty(true);
+    setSizes((current) => current.filter((_, i) => i !== index));
+  };
   // Fields sit inside and outside the <form>, tied to it with `form=`, so the
   // test is the field's form owner, not where it is in the DOM. Photograph
   // controls belong to their own forms and save themselves.
@@ -187,6 +223,10 @@ export function ProductEditor({
     startTransition(() => publish(payload));
   };
 
+  // The address follows the name: the saved slug while the name is as saved
+  // (an imported slug may differ from the name's own), the name's slug once it
+  // changes. Old links keep working through the slug history.
+  const derivedSlug = name.trim() === product.name.trim() ? product.slug : slugifyProductName(name) || product.slug;
   const busy = saving || removing || publishing;
   const publishPending = publishing || (saving && saveIntent !== 'save');
   const stockQuantity = asNumber(stockInput);
@@ -215,8 +255,8 @@ export function ProductEditor({
           onChange={markDirty}
           className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5"
         >
-          <div className="min-w-0 border border-neutral-200 px-4 py-4">
-            <p className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+          <div className="min-w-0 rounded-card border border-neutral-200 bg-neutral-50 px-4 py-4">
+            <p className="beco-case font-ui text-xs font-semibold text-neutral-500">
               Website
             </p>
             <p className="mt-2 font-ui text-lg font-semibold text-charcoal">{name.trim() || 'Unnamed product'}</p>
@@ -286,6 +326,7 @@ export function ProductEditor({
             <input type="hidden" name="productId" value={product.id} />
             <input type="hidden" name="updatedAt" value={product.updatedAt} />
             <input type="hidden" name="specs" value={JSON.stringify(specs)} />
+            <input type="hidden" name="sizes" value={JSON.stringify(sizes.map(fromSizeRow))} />
 
             <FormSection title="Name" hint="The name customers see on the product page and in search.">
               <Field label="Product name" htmlFor="name">
@@ -301,9 +342,7 @@ export function ProductEditor({
               <Field label="SKU" htmlFor="sku" hint="Supplier code. Shown on the product page">
                 <Input id="sku" name="sku" defaultValue={product.sku ?? ''} className="min-w-0" />
               </Field>
-              <Field label="Page URL" htmlFor="slug" hint="Old links still work">
-                <Input id="slug" name="slug" defaultValue={product.slug} required className="min-w-0" />
-              </Field>
+              <PageUrl prefix="/product" slug={derivedSlug} renamed={derivedSlug !== product.slug} />
               <Field label="Range" htmlFor="categoryId">
                 <Select id="categoryId" name="categoryId" defaultValue={product.categoryId ?? ''}>
                   <option value="">None</option>
@@ -389,6 +428,65 @@ export function ProductEditor({
                   ))}
                 </div>
               </div>
+            </FormSection>
+
+            <FormSection
+              title="Sizes"
+              hint="For a product that comes in several sizes, a handle in three lengths for example. Blank price uses the product price."
+            >
+              {sizes.length === 0 ? (
+                <p className="font-ui text-base text-neutral-500">One size. Add sizes if the counter has to pick one.</p>
+              ) : (
+                <ul className="divide-y divide-neutral-200 overflow-hidden rounded-card border border-neutral-200">
+                  {sizes.map((row, index) => (
+                    <li key={index} className="grid min-w-0 grid-cols-1 gap-2 p-3 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                      <Field label="Size" htmlFor={`size-label-${index}`}>
+                        <Input
+                          id={`size-label-${index}`}
+                          value={row.label}
+                          onChange={(event) => updateSize(index, { label: event.target.value })}
+                          placeholder="128mm"
+                          maxLength={40}
+                          className="min-w-0"
+                        />
+                      </Field>
+                      <Field label="Price" htmlFor={`size-price-${index}`} hint="KES">
+                        <Input
+                          id={`size-price-${index}`}
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          step="0.01"
+                          value={row.price}
+                          onChange={(event) => updateSize(index, { price: event.target.value })}
+                          className={NUMBER_INPUT}
+                        />
+                      </Field>
+                      <Field label="Code" htmlFor={`size-sku-${index}`} hint="Optional">
+                        <Input
+                          id={`size-sku-${index}`}
+                          value={row.sku}
+                          onChange={(event) => updateSize(index, { sku: event.target.value })}
+                          className="min-w-0"
+                        />
+                      </Field>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => removeSize(index)}
+                        aria-label={`Remove size ${row.label || index + 1}`}
+                      >
+                        <Icon name="trash" />
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button type="button" variant="outline" onClick={addSize}>
+                <Icon name="plus" />
+                Add size
+              </Button>
             </FormSection>
 
             <FormSection
@@ -542,20 +640,27 @@ export function ProductEditor({
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-neutral-200 bg-high-vis-white px-5 py-3 sm:flex-row sm:justify-between">
-          <Button type="button" variant="ghost" onClick={() => setConfirmOpen(true)} disabled={busy}>
-            <Icon name="trash" />
-            Delete product
-          </Button>
-          <Button
-            type="submit"
-            form="product-editor"
-            variant="primary"
-            disabled={busy}
-            pending={saving && saveIntent === 'save'}
-          >
-            {saving && saveIntent === 'save' ? 'Saving' : 'Save'}
-          </Button>
+        <div className="flex shrink-0 flex-col gap-3 border-t border-neutral-200 bg-high-vis-white px-5 py-3 sm:flex-row sm:items-center">
+          {/* The dot says whether Save has anything to do, before anyone presses it. */}
+          <p aria-live="polite" className="flex items-center gap-2 font-ui text-sm text-neutral-500">
+            <span aria-hidden className={cn('h-2 w-2 rounded-full', dirty ? 'bg-warning' : 'bg-success')} />
+            {dirty ? 'Unsaved changes' : 'All saved'}
+          </p>
+          <div className="flex flex-col-reverse gap-3 sm:ml-auto sm:flex-row">
+            <Button type="button" variant="ghost" onClick={() => setConfirmOpen(true)} disabled={busy}>
+              <Icon name="trash" />
+              Delete product
+            </Button>
+            <Button
+              type="submit"
+              form="product-editor"
+              variant="primary"
+              disabled={busy}
+              pending={saving && saveIntent === 'save'}
+            >
+              {saving && saveIntent === 'save' ? 'Saving' : 'Save'}
+            </Button>
+          </div>
         </div>
       </div>
 

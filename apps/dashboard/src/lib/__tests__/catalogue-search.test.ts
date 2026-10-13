@@ -11,6 +11,7 @@ const hit = (over: Partial<CatalogueHit> & Pick<CatalogueHit, 'id' | 'name'>): C
   categoryName: null,
   parentCategoryName: null,
   thumb: null,
+  sizes: [],
   ...over,
 });
 

@@ -10,6 +10,7 @@ const requirePath = vi.fn(async () => ({
   canWriteBlog: false,
   canReadAudit: false,
   canManageUsers: false,
+  moduleGrants: [],
 }));
 vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
 

@@ -15,7 +15,9 @@ import {
   paginate,
   type DataTableColumn,
 } from '@beco/ui';
+import { ProductCardGrid } from '@/components/product-card-grid';
 import { ProductEditor } from '@/components/product-editor';
+import type { CatalogueView } from '@/lib/catalogue-view';
 import { ProductCreate } from '@/components/product-create';
 import { ProductThumb } from '@/components/product-thumb';
 import { BusyRegion } from '@/components/list-rows';
@@ -23,6 +25,7 @@ import { useQueryNavigation } from '@/lib/use-query-navigation';
 import {
   isLowStock,
   productAvailabilityLabel,
+  sizesLabel,
   type CatalogueProduct,
   type ProductCategoryOption,
 } from '@/lib/products';
@@ -71,8 +74,8 @@ const desktopColumns = (editHref: (slug: string) => string): DataTableColumn<Cat
         <ProductThumb name={product.name} path={product.images[0]?.path} size="sm" />
         <div className="min-w-0">
           <p className="font-semibold text-charcoal">{product.name}</p>
-          {product.sku || product.categoryName ? (
-            <p className="text-neutral-500">{[product.sku, product.categoryName].filter(Boolean).join(' · ')}</p>
+          {product.sku || product.categoryName || product.sizes.length > 0 ? (
+            <p className="text-neutral-500">{[product.sku, product.categoryName, sizesLabel(product.sizes)].filter(Boolean).join(' · ')}</p>
           ) : null}
         </div>
       </div>
@@ -113,7 +116,7 @@ const desktopColumns = (editHref: (slug: string) => string): DataTableColumn<Cat
 ];
 
 function ProductCard({ product, href }: { product: CatalogueProduct; href: string }) {
-  const meta = [product.sku, product.categoryName].filter(Boolean).join(' · ');
+  const meta = [product.sku, product.categoryName, sizesLabel(product.sizes)].filter(Boolean).join(' · ');
   const flagged =
     isLowStock(product.stockQuantity, product.lowStockThreshold) || !product.isPublished;
 
@@ -128,7 +131,7 @@ function ProductCard({ product, href }: { product: CatalogueProduct; href: strin
         <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0 break-words font-ui text-base font-semibold text-charcoal">{product.name}</p>
-          <span className="inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold uppercase tracking-[0.09em] text-charcoal">
+          <span className="beco-case inline-flex shrink-0 items-center gap-1 font-ui text-sm font-semibold text-charcoal">
             <Icon name="pencil" />
             Edit
           </span>
@@ -171,6 +174,7 @@ export function ProductResults({
   editing,
   creating,
   categories,
+  view = 'list',
 }: {
   /** The rows to show. With `paging`, one page the server sliced; without, the whole list. */
   products: CatalogueProduct[];
@@ -183,6 +187,8 @@ export function ProductResults({
   editing: CatalogueProduct | null;
   creating: boolean;
   categories: ProductCategoryOption[];
+  /** List (table, rows on a phone) or cards, D138. */
+  view?: CatalogueView | undefined;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -223,9 +229,12 @@ export function ProductResults({
   const sheetTitle = creating ? 'New product' : (editing?.name ?? 'Product');
   const sheetDescription = creating
     ? 'Unpublished draft. Photographs and availability come next.'
-    : editing?.isPublished
-      ? 'On the website'
-      : 'Draft, hidden on the website';
+    : [editing?.categoryName, editing?.sku, editing?.isPublished ? 'On the website' : 'Draft, hidden on the website']
+        .filter(Boolean)
+        .join(' · ');
+  const sheetLeading = editing ? (
+    <ProductThumb name={editing.name} path={editing.images[0]?.path} size="sm" className="rounded-control" />
+  ) : null;
 
   const sheet = (
     <Sheet
@@ -233,6 +242,7 @@ export function ProductResults({
       onOpenChange={(open) => !open && closeSheet()}
       title={sheetTitle}
       description={sheetDescription}
+      leading={sheetLeading}
     >
       {creating ? (
         <ProductCreate categories={categories} returnTo={withParam('new', null)} />
@@ -266,10 +276,29 @@ export function ProductResults({
     );
   }
 
+  if (view === 'cards') {
+    return (
+      <>
+        <ProductCardGrid products={paged.items} editHref={editHref} busy={isPending} />
+        <Pagination
+          className="mt-4"
+          page={paged.page}
+          pageCount={paged.pageCount}
+          from={paged.from}
+          to={paged.to}
+          total={paged.total}
+          onPageChange={setPage}
+        />
+        {sheet}
+      </>
+    );
+  }
+
   return (
     <>
-      {/* Desktop keeps the sortable table. Phone gets cards so the list
-          cannot scroll sideways. Do not collapse desktop to cards. */}
+      {/* The list view: the sortable table on desktop, rows on a phone so the
+          list cannot scroll sideways. Cards are a view of their own (D138),
+          chosen from the toolbar, never forced on desktop. */}
       <div className="hidden min-w-0 xl:block">
         <DataTable
           busy={isPending}

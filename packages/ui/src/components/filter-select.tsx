@@ -38,7 +38,7 @@ export function FilterSelect({ label, accessibleName, value, options, onChange, 
       className={cn(
         'relative flex h-11 min-w-0 flex-col justify-center rounded-control border border-neutral-300 bg-high-vis-white pl-3 pr-8',
         'transition-colors duration-200 hover:border-charcoal',
-        'has-[select:focus-visible]:border-charcoal has-[select:focus-visible]:ring-2 has-[select:focus-visible]:ring-warm-red',
+        'has-[select:focus-visible]:border-charcoal has-[select:focus-visible]:ring-2 has-[select:focus-visible]:ring-ring',
         className,
       )}
     >

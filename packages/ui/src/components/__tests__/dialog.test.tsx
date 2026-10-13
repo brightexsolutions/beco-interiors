@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
-import { Dialog } from '../dialog';
+import { Dialog, DialogBody, DialogFooter } from '../dialog';
 
 const setup = (over: Partial<React.ComponentProps<typeof Dialog>> = {}) => {
   const onOpenChange = vi.fn();
@@ -106,5 +106,42 @@ describe('Dialog with an on screen keyboard', () => {
     const overlay = screen.getByRole('dialog').parentElement!;
     expect(overlay).not.toHaveAttribute('data-keyboard-open');
     expect(overlay.style.top).toBe('');
+  });
+});
+
+describe('DialogBody and DialogFooter', () => {
+  it('pads and scrolls the body, and pins the actions under it with a rule', () => {
+    render(
+      <Dialog open onOpenChange={() => undefined} title="Access for Aisha Farah">
+        <DialogBody>
+          <p>Product manager by role.</p>
+        </DialogBody>
+        <DialogFooter start={<span>3 sections</span>}>
+          <button type="button">Cancel</button>
+          <button type="button">Save access</button>
+        </DialogFooter>
+      </Dialog>,
+    );
+    const body = screen.getByText('Product manager by role.').parentElement!;
+    expect(body).toHaveClass('overflow-y-auto', 'px-5', 'py-5', 'flex-1', 'min-h-0');
+    const footer = screen.getByRole('button', { name: 'Save access' }).closest('.border-t')!;
+    expect(footer).toHaveClass('shrink-0', 'border-neutral-200');
+    // The body comes before the footer, so the actions stay put while it scrolls.
+    expect(body.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(footer).toHaveTextContent('3 sections');
+  });
+
+  it('has no accessibility violations with a body and a footer', async () => {
+    render(
+      <Dialog open onOpenChange={() => undefined} title="Access">
+        <DialogBody>
+          <p>Body</p>
+        </DialogBody>
+        <DialogFooter>
+          <button type="button">Save</button>
+        </DialogFooter>
+      </Dialog>,
+    );
+    expect(await axe(document.body)).toHaveNoViolations();
   });
 });

@@ -19,6 +19,8 @@ import { cn } from '../lib/cn';
  */
 export type StatCardTone = 'plain' | 'attention' | 'positive' | 'inverse';
 export type StatCardSize = 'default' | 'compact';
+/** The tint behind the icon chip, D143. Says what kind of figure this is, not how it is doing. */
+export type StatCardIconTone = 'neutral' | 'positive' | 'info' | 'warning' | 'danger';
 
 export interface StatCardDelta {
   direction: 'up' | 'down' | 'flat';
@@ -56,8 +58,8 @@ const TONES: Record<StatCardTone, { card: string; value: string; label: string; 
     fill: 'bg-warm-red-deep',
   },
   positive: {
-    card: 'border-success/25 bg-success/[0.04]',
-    value: 'text-success',
+    card: 'border-neutral-200 bg-high-vis-white',
+    value: 'text-success-deep',
     label: 'text-neutral-500',
     meta: 'text-neutral-500',
     track: 'bg-success/10',
@@ -76,9 +78,17 @@ const TONES: Record<StatCardTone, { card: string; value: string; label: string; 
 const SEGMENT_FILLS = ['bg-charcoal', 'bg-neutral-500', 'bg-neutral-300'];
 
 const DELTA_TONE: Record<NonNullable<StatCardDelta['sentiment']>, string> = {
-  good: 'bg-success/10 text-success',
-  bad: 'bg-neutral-100 text-neutral-700',
-  neutral: 'bg-neutral-100 text-neutral-500',
+  good: 'bg-success-soft text-success-deep',
+  bad: 'bg-danger-soft text-danger',
+  neutral: 'bg-neutral-100 text-neutral-700',
+};
+
+const ICON_TONE: Record<StatCardIconTone, string> = {
+  neutral: 'bg-tint text-charcoal',
+  positive: 'bg-success-soft text-success-deep',
+  info: 'bg-info-soft text-info',
+  warning: 'bg-warning-soft text-warning',
+  danger: 'bg-danger-soft text-danger',
 };
 
 const ARROW: Record<StatCardDelta['direction'], string> = { up: 'M6 15l6-6 6 6', down: 'M6 9l6 6 6-6', flat: 'M5 12h14' };
@@ -97,6 +107,9 @@ export interface StatCardProps {
   segments?: StatCardSegment[] | undefined;
   /** A link to the screen behind the number. Its hit area covers the card. */
   action?: ReactNode;
+  /** A glyph for the kind of figure, drawn in a tinted chip at the top right. D143. */
+  icon?: ReactNode;
+  iconTone?: StatCardIconTone | undefined;
   className?: string | undefined;
 }
 
@@ -111,6 +124,8 @@ export function StatCard({
   meter,
   segments,
   action,
+  icon,
+  iconTone = 'neutral',
   className,
 }: StatCardProps) {
   const t = TONES[tone];
@@ -122,13 +137,18 @@ export function StatCard({
   // and a long figure holds at 24px, which is what a five column row at
   // 1440px and the two column phone grid both fit without touching an edge.
   const longFigure = String(value).length > 8;
+  // Intl's currency output joins "Ksh" to the number with a non breaking
+  // space, so a long figure could never wrap and spilled out of a phone
+  // tile (360px, two across). A plain space lets it break there when it
+  // must, which the comment above already allows for.
+  const figure = String(value).replace(/\u00a0/g, ' ');
 
   return (
     <div
       className={cn(
-        'group relative flex min-w-0 flex-col rounded-panel border transition-[box-shadow,border-color] duration-200',
+        'group relative flex min-w-0 flex-col rounded-panel border shadow-panel transition-[box-shadow,border-color] duration-200',
         compact ? 'p-2.5 sm:p-3' : 'p-4 sm:p-5',
-        action ? 'hover:border-neutral-300 hover:shadow-panel focus-within:ring-2 focus-within:ring-charcoal focus-within:ring-offset-2' : null,
+        action ? 'hover:border-neutral-300 focus-within:ring-2 focus-within:ring-charcoal focus-within:ring-offset-2' : null,
         t.card,
         className,
       )}
@@ -136,8 +156,20 @@ export function StatCard({
       {/* The trend chip drops under the label when the card is narrow, so a
           two word label never breaks letter by letter beside it. */}
       <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
-        <p className={cn('min-w-[6.5rem] flex-1 break-words font-ui text-sm font-semibold leading-snug', t.label)}>{label}</p>
-        {delta ? (
+        <p className={cn('min-w-[6.5rem] flex-1 break-words font-ui text-sm font-semibold leading-snug', compact ? null : 'pt-1', t.label)}>{label}</p>
+        {icon ? (
+          <span
+            aria-hidden
+            className={cn(
+              'flex shrink-0 items-center justify-center rounded-control [&>svg]:h-[19px] [&>svg]:w-[19px]',
+              compact ? 'h-8 w-8' : 'h-10 w-10',
+              tone === 'inverse' ? 'bg-high-vis-white/10 text-high-vis-white' : ICON_TONE[iconTone],
+            )}
+          >
+            {icon}
+          </span>
+        ) : null}
+        {delta && !icon ? (
           <span
             className={cn(
               'inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 font-ui text-xs font-semibold tabular-nums',
@@ -151,16 +183,31 @@ export function StatCard({
           </span>
         ) : null}
       </div>
-      <p
-        className={cn(
-          // Lining figures: Cormorant's default old-style "1" reads as "I".
-          'mt-2 [overflow-wrap:normal] font-display leading-none tabular-nums lining-nums',
-          compact ? 'text-lg sm:text-xl' : longFigure ? 'text-2xl' : 'text-3xl sm:text-4xl',
-          t.value,
-        )}
-      >
-        {value}
-      </p>
+      <div className={cn('flex flex-wrap items-end gap-x-2.5 gap-y-1', compact ? 'mt-1.5' : 'mt-2')}>
+        <p
+          className={cn(
+            // Lining figures: Cormorant's default old-style "1" reads as "I".
+            '[overflow-wrap:normal] font-display font-semibold leading-none tracking-[-0.02em] tabular-nums lining-nums',
+            compact ? 'text-lg sm:text-xl' : longFigure ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl',
+            t.value,
+          )}
+        >
+          {figure}
+        </p>
+        {delta && icon ? (
+          <span
+            className={cn(
+              'mb-0.5 inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 font-ui text-xs font-semibold tabular-nums',
+              tone === 'inverse' ? 'bg-high-vis-white/10 text-high-vis-white' : DELTA_TONE[delta.sentiment ?? 'neutral'],
+            )}
+          >
+            <svg aria-hidden viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d={ARROW[delta.direction]} />
+            </svg>
+            {delta.label}
+          </span>
+        ) : null}
+      </div>
 
       {meter ? (
         <div className="mt-3">

@@ -16,14 +16,13 @@ import { Spinner } from './spinner';
 const button = cva(
   [
     'inline-flex items-center justify-center gap-2',
-    'font-ui font-semibold uppercase tracking-[0.09em] leading-none whitespace-nowrap',
+    'font-ui font-semibold beco-case leading-none whitespace-nowrap',
     'text-sm', // 16px floor, never smaller
     // Fixed 44px, same as Input `h-11`. py-3.5 plus body line-height 1.6
     // grew past the input and wrapped labels like SAVE LINE.
     'h-11 rounded-control px-4',
     'transition-colors duration-200 ease-brand',
-    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px]',
-    'focus-visible:outline-warm-red',
+    'beco-ring',
     'disabled:opacity-50 disabled:pointer-events-none',
   ],
   {
@@ -35,11 +34,17 @@ const button = cva(
         outline:
           'border border-charcoal text-charcoal hover:bg-charcoal hover:text-high-vis-white',
         ghost: 'text-charcoal hover:bg-neutral-100',
+        /** A quiet filled button on the admin surface: Filter, Columns, Cancel inside a card. D143. */
+        soft: 'bg-tint text-charcoal hover:bg-neutral-200',
+        /** The destructive confirm on a white ground, outlined in the danger tint. D143. */
+        danger: 'border border-danger/30 bg-high-vis-white text-danger hover:bg-danger-soft',
         whatsapp: 'bg-whatsapp text-high-vis-white hover:brightness-95',
       },
       size: {
         default: '',
+        small: 'h-9 px-3 text-xs',
         large: 'h-12 px-8 text-base',
+        icon: 'h-11 w-11 px-0',
       },
     },
     defaultVariants: { variant: 'primary', size: 'default' },

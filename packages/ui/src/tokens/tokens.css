@@ -48,6 +48,8 @@
      Pure warm-red is for FILLS, RULES and BADGES. Anything with white text
      on it uses warm-red-deep, which measures 5.88:1. Verified, not assumed. */
   --color-warm-red-deep: #c81419;
+  /* The focus ring. Warm Red on the shop; the admin surface pins it to charcoal, D143. */
+  --color-ring: #ed1c24;
   --color-charcoal: #101820;
   /* True charcoal and paper. They never invert when the dashboard is dark,
      so a showroom wash and type sitting on it stay legible. */
@@ -69,6 +71,18 @@
   --color-success: #16a34a;
   --color-error: #dc2626;
   --color-whatsapp: #25d366;
+  /* The admin surface's soft tints, D143: a status is a tinted pill, an
+     icon sits on a tinted tile. Each pairs with the deeper text colour
+     beside it; the pairs are in contrast-check.ts. */
+  --color-success-deep: #166534;
+  --color-success-soft: #e8f6ec;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3e2;
+  --color-info: #1d4ed8;
+  --color-info-soft: #e8f0fe;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fdecec;
+  --color-tint: #eef0f3;
 
   /* --- Type. Self hosted. F1 Display is NEVER deployed, see D3. --- */
   --font-display: 'Cormorant Garamond', Georgia, serif;
@@ -139,6 +153,87 @@
 
   /* --- Motion. Long expo out, settled rather than snappy. --- */
   --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================
+   THE ADMIN SURFACE, D143
+
+   The dashboard sets `data-surface="admin"` on its <html>. Everything in
+   this block applies there and nowhere else: the storefront never carries
+   the attribute, so its fonts, scale, radii and ground are untouched.
+
+   Geist for every word (self hosted by next/font, which sets
+   --font-geist-sans), a 15px body with 13px captions (the scale Stride and
+   the shadcn admins the client pointed at use), 10px controls and 14px
+   cards, a cool grey ground under white cards. Inputs stay 16px on a phone
+   so iOS never zooms the page on focus.
+   ============================================================ */
+[data-surface="admin"] {
+  --color-ring: #101820;
+  --font-ui: var(--font-geist-sans, 'Geist'), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-geist-sans, 'Geist'), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 1.75rem;
+  --text-5xl: 2.25rem;
+  --text-6xl: 2.75rem;
+  --text-7xl: 3.25rem;
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-panel: 14px;
+  --color-neutral-50: #f4f5f7;
+  --color-neutral-100: #eef0f3;
+  --color-neutral-200: #e6e8eb;
+  --shadow-panel: 0 1px 2px rgba(16, 24, 32, 0.04), 0 8px 24px -18px rgba(16, 24, 32, 0.18);
+  font-feature-settings: 'rlig' 1, 'calt' 1, 'ss01' 1;
+  -webkit-font-smoothing: antialiased;
+}
+@media (max-width: 767px) {
+  [data-surface="admin"] input,
+  [data-surface="admin"] select,
+  [data-surface="admin"] textarea {
+    font-size: 16px;
+  }
+}
+/* Hooks for the few utilities a component hardcodes that the admin surface
+   reads differently. Default is the storefront's look; the admin's follows. */
+.beco-case {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+[data-surface="admin"] .beco-case {
+  text-transform: none;
+  letter-spacing: -0.005em;
+}
+.beco-ring:focus-visible {
+  outline: 2px solid var(--color-warm-red);
+  outline-offset: 3px;
+}
+[data-surface="admin"] .beco-ring:focus-visible {
+  outline: 2px solid var(--color-charcoal);
+  outline-offset: 2px;
+}
+[data-surface="admin"] :focus-visible {
+  outline-color: var(--color-charcoal);
+}
+[data-surface="admin"] input,
+[data-surface="admin"] textarea {
+  caret-color: var(--color-charcoal);
+}
+/* The hero band's stone vein pattern, D143: drawn in CSS so it costs no
+   request and recolours with the band. */
+.beco-veins {
+  background-image:
+    radial-gradient(60% 80% at 100% 0%, rgba(237, 28, 36, 0.22), transparent 60%),
+    radial-gradient(40% 60% at 0% 100%, rgba(255, 255, 255, 0.06), transparent 60%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 22px),
+    repeating-linear-gradient(25deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 34px),
+    linear-gradient(120deg, #101820 0%, #1b2733 65%, #243444 100%);
 }
 
 /* Dashboard dark appearance. Class strategy, never prefers-color-scheme

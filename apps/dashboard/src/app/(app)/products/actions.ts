@@ -9,6 +9,7 @@ import {
   removeProductImageSchema,
   saveProductImagesSchema,
   setProductPublishedSchema,
+  sizesFromForm,
   specsToRecord,
   updateProductSchema,
 } from '@beco/validation';
@@ -26,6 +27,9 @@ export interface ProductActionState {
   error?: string;
   ok?: string;
   slug?: string;
+  /** The row's new lock token after a write that returns it, so a queue of
+   *  uploads can hand each the token the last one left (D139). */
+  updatedAt?: string;
 }
 
 const formString = (form: FormData, key: string): string => String(form.get(key) ?? '');
@@ -87,6 +91,7 @@ export async function updateProduct(_prev: ProductActionState, form: FormData): 
     metaTitle: formString(form, 'metaTitle'),
     metaDescription: formString(form, 'metaDescription'),
     specs: specsFromForm(form),
+    sizes: sizesFromForm(form.get('sizes')),
     stockQuantity: formString(form, 'stockQuantity'),
     lowStockThreshold: formString(form, 'lowStockThreshold'),
   });
@@ -125,6 +130,7 @@ export async function updateProduct(_prev: ProductActionState, form: FormData): 
       meta_title: parsed.data.metaTitle,
       meta_description: parsed.data.metaDescription,
       specs: specsToRecord(parsed.data.specs),
+      sizes: parsed.data.sizes,
       stock_quantity: parsed.data.stockQuantity,
       low_stock_threshold: parsed.data.lowStockThreshold,
     })
@@ -264,7 +270,7 @@ const writeImages = async (
   productId: string,
   updatedAt: string,
   images: ProductImage[],
-): Promise<{ error?: string; categorySlug: string | null; slug: string | null }> => {
+): Promise<{ error?: string; categorySlug: string | null; slug: string | null; updatedAt: string | null }> => {
   const supabase = await getSupabase();
   const { data, error } = await supabase
     .from('products')
@@ -272,17 +278,18 @@ const writeImages = async (
     .eq('id', productId)
     .eq('updated_at', updatedAt)
     .is('deleted_at', null)
-    .select('slug, categories(slug)')
+    .select('slug, updated_at, categories(slug)')
     .maybeSingle();
-  if (error) return { error: productMutationMessage(error), categorySlug: null, slug: null };
+  if (error) return { error: productMutationMessage(error), categorySlug: null, slug: null, updatedAt: null };
   if (!data) {
     return {
       error: 'This product changed while you were editing. Reload and try again.',
       categorySlug: null,
       slug: null,
+      updatedAt: null,
     };
   }
-  return { categorySlug: categorySlugOf(data.categories), slug: data.slug ?? null };
+  return { categorySlug: categorySlugOf(data.categories), slug: data.slug ?? null, updatedAt: data.updated_at ?? null };
 };
 
 export async function addProductImage(_prev: ProductActionState, form: FormData): Promise<ProductActionState> {
@@ -349,7 +356,7 @@ export async function addProductImage(_prev: ProductActionState, form: FormData)
     return { error: written.error };
   }
   await revalidateStorefront({ productSlug: written.slug ?? current.data.slug, categorySlug: written.categorySlug });
-  return { ok: 'Photograph added.' };
+  return { ok: 'Photograph added.', ...(written.updatedAt ? { updatedAt: written.updatedAt } : {}) };
 }
 
 export async function removeProductImage(_prev: ProductActionState, form: FormData): Promise<ProductActionState> {

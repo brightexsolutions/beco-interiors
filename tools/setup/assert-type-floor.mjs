@@ -37,8 +37,22 @@ const TOKEN_FLOOR = {
   '--text-base': 16, // 17px in practice, but 16 is the rule
 };
 
+/**
+ * The admin surface, D143: the dashboard redefines the same tokens inside a
+ * `[data-surface="admin"]` block in tokens.css, on the denser scale the
+ * client asked for (15px body, 14px small, 13px captions). Those lines are
+ * held to this second set of floors, and nothing lower.
+ */
+const ADMIN_TOKEN_FLOOR = {
+  '--text-xs': 13,
+  '--text-sm': 14,
+  '--text-base': 15,
+};
+
 /** The floor for anything written as a literal rather than through the scale. */
 const LITERAL_FLOOR = 14;
+/** Inside the admin block, a caption may be written at 13px. */
+const ADMIN_LITERAL_FLOOR = 13;
 
 const toPx = (value, unit) => (unit === 'rem' || unit === 'em' ? Number(value) * 16 : Number(value));
 
@@ -58,12 +72,19 @@ const seenTokens = new Set();
 
 for (const file of files) {
   const lines = readFileSync(file, 'utf8').split('\n');
+  let inAdmin = false;
 
   lines.forEach((line, i) => {
     const where = `${file}:${i + 1}`;
+    // Track the admin block: it opens on a line selecting the surface and
+    // closes on the first lone brace after it.
+    if (/\[data-surface="admin"\]\s*\{/.test(line)) inAdmin = true;
+    else if (inAdmin && /^\s*\}\s*$/.test(line)) inAdmin = false;
+    const floors = inAdmin ? ADMIN_TOKEN_FLOOR : TOKEN_FLOOR;
+    const literalFloor = inAdmin || /data-surface="admin"/.test(line) ? ADMIN_LITERAL_FLOOR : LITERAL_FLOOR;
 
     // 1. The tokens themselves.
-    for (const [token, floor] of Object.entries(TOKEN_FLOOR)) {
+    for (const [token, floor] of Object.entries(floors)) {
       const match = line.match(new RegExp(`${token}\\s*:\\s*(\\d+(?:\\.\\d+)?)(px|rem|em)`));
       if (!match) continue;
       seenTokens.add(token);
@@ -76,8 +97,8 @@ for (const file of files) {
     // 2. Arbitrary Tailwind sizes, which go around the scale.
     for (const match of line.matchAll(/\btext-\[(\d+(?:\.\d+)?)(px|rem|em)\]/g)) {
       const px = toPx(match[1], match[2]);
-      if (px < LITERAL_FLOOR) {
-        breaches.push(`${where}  ${match[0]} is ${px}px, below the ${LITERAL_FLOOR}px floor`);
+      if (px < literalFloor) {
+        breaches.push(`${where}  ${match[0]} is ${px}px, below the ${literalFloor}px floor`);
       }
     }
 
@@ -85,8 +106,8 @@ for (const file of files) {
     const raw = line.match(/font-size\s*:\s*(\d+(?:\.\d+)?)(px|rem|em)/);
     if (raw) {
       const px = toPx(raw[1], raw[2]);
-      if (px < LITERAL_FLOOR) {
-        breaches.push(`${where}  font-size ${px}px is below the ${LITERAL_FLOOR}px floor`);
+      if (px < literalFloor) {
+        breaches.push(`${where}  font-size ${px}px is below the ${literalFloor}px floor`);
       }
     }
   });

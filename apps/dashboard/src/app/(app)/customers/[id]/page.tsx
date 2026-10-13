@@ -26,7 +26,7 @@ const formatDate = (iso: string) =>
 
 const WRITERS = new Set(['beco_sales', 'beco_admin', 'brightex_admin']);
 
-const RAIL_HEADING = 'font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500';
+const RAIL_HEADING = 'beco-case font-ui text-xs font-semibold text-neutral-500';
 
 export default async function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requirePath('/customers');
@@ -51,8 +51,8 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
         lede={[customer.phone, customer.company].filter(Boolean).join(' · ')}
       />
 
-      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <aside className="min-w-0 space-y-6 border-b border-neutral-200 pb-6 xl:col-start-2 xl:row-start-1 xl:border-b-0 xl:border-l xl:pb-0 xl:pl-8">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <aside className="min-w-0 space-y-6 rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel xl:col-start-2 xl:row-start-1">
           <div>
             <h2 className={RAIL_HEADING}>Reach them</h2>
             <div className="mt-2">
@@ -151,7 +151,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
           ) : null}
         </aside>
 
-        <div className="min-w-0 xl:col-start-1 xl:row-start-1">
+        <div className="min-w-0 rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel sm:p-6 xl:col-start-1 xl:row-start-1">
           <CustomerEditor customer={customer} canEdit={canEdit} canDelete={isAdminRole(user.role)} />
         </div>
       </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { GeistSans } from 'geist/font/sans';
 import { KeyboardAwareFocus, Toaster } from '@beco/ui';
 import '@beco/ui/src/tokens/tokens.css';
 
@@ -34,7 +35,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // `data-surface="admin"` switches @beco/ui onto the admin look (Geist,
+    // the 15px scale, soft radii, the grey ground), D143. The storefront
+    // never sets it, so nothing there moves.
+    <html lang="en" suppressHydrationWarning data-surface="admin" className={GeistSans.variable}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -50,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           attributes only, one level deep, so a real mismatch inside the app
           still surfaces. Nothing is being papered over: the server and client
           trees below this agree. */}
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className="bg-neutral-50 font-ui text-base text-charcoal antialiased">
         {children}
         {/* Keeps a focused field above the phone keyboard. Renders nothing. */}
         <KeyboardAwareFocus />

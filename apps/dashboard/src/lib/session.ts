@@ -26,6 +26,8 @@ export interface SessionUser {
   canWriteBlog: boolean;
   canReadAudit: boolean;
   canManageUsers: boolean;
+  /** Module grants, D136: sections opened read only beside the role. */
+  moduleGrants: string[];
 }
 
 /** A signed-in user whose account is active: `role` is known to be set. */
@@ -46,7 +48,7 @@ export const resolveSessionUser = async (
 ): Promise<SessionUser | null> => {
   const { data } = await supabase
     .from('users')
-    .select('role, is_active, must_change_password, email, full_name, can_write_blog, can_read_audit, can_manage_users')
+    .select('role, is_active, must_change_password, email, full_name, can_write_blog, can_read_audit, can_manage_users, module_grants')
     .eq('id', userId)
     .maybeSingle();
   if (!data) return null;
@@ -61,6 +63,7 @@ export const resolveSessionUser = async (
     canWriteBlog: Boolean(data.can_write_blog),
     canReadAudit: Boolean(data.can_read_audit),
     canManageUsers: Boolean(data.can_manage_users),
+    moduleGrants: Array.isArray(data.module_grants) ? data.module_grants.filter((m): m is string => typeof m === 'string') : [],
   };
 };
 

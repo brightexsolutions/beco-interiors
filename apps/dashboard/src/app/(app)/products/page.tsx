@@ -6,6 +6,8 @@ import { NewProductFab } from '@/components/new-product';
 import { CatalogueRanges } from '@/components/catalogue-ranges';
 import { ProductFilters } from '@/components/product-filters';
 import { ProductResults } from '@/components/product-results';
+import { ProductViewSwitch } from '@/components/product-view-switch';
+import { parseCatalogueView } from '@/lib/catalogue-view';
 import { categoryIdsInSelection, categoryParentOptions, fetchCategoryTree, flattenCategoryTree } from '@/lib/categories';
 import { fetchProductBySlug, fetchProductCategories, fetchProducts, type ProductListFilters } from '@/lib/products';
 import { canAccess } from '@/lib/access';
@@ -53,10 +55,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     categoryIds: categoryIdsInSelection(tree, selectedCategoryId) ?? undefined,
   };
   const products = await fetchProducts(supabase, filters);
+  const view = parseCatalogueView(one(params.view));
   // Paged here, not in the browser: only this page's rows cross the wire,
   // which is what a range pill tap waits for. Paging was already a
-  // navigation, so this costs nothing extra.
-  const { items: pageItems, ...paging } = paginate(products, Number(one(params.page) || 1));
+  // navigation, so this costs nothing extra. Cards take twelve to a page,
+  // three rows of four on a wide screen.
+  const { items: pageItems, ...paging } = paginate(products, Number(one(params.page) || 1), view === 'cards' ? 12 : undefined);
 
   const editSlug = one(params.edit);
   const creating = one(params.new) === '1' && !editSlug;
@@ -103,9 +107,17 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <Panel>
           <TableToolbar
             filters={<ProductFilters count={`${products.length} ${products.length === 1 ? 'product' : 'products'}`} />}
+            actions={<ProductViewSwitch view={view} />}
           />
-          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
-            <ProductResults products={pageItems} paging={paging} editing={editing} creating={creating} categories={productCategories} />
+          <div data-tour="results" className={view === 'cards' ? 'px-4 pb-4 sm:px-5' : 'px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0'}>
+            <ProductResults
+              products={pageItems}
+              paging={paging}
+              editing={editing}
+              creating={creating}
+              categories={productCategories}
+              view={view}
+            />
           </div>
         </Panel>
       </QueryNavigationProvider>

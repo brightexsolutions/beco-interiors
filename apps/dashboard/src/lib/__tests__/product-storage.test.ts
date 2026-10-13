@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { isSafeR2Key } from '../product-storage';
+import { isSafeR2Key, storageEndpoint } from '../product-storage';
 
 describe('isSafeR2Key', () => {
   it('accepts a team derivative and refuses traversal', () => {
@@ -7,6 +7,16 @@ describe('isSafeR2Key', () => {
     expect(isSafeR2Key('../etc/passwd')).toBe(false);
     expect(isSafeR2Key('/absolute')).toBe(false);
     expect(isSafeR2Key('')).toBe(false);
+  });
+});
+
+describe('storageEndpoint', () => {
+  it('addresses the account on R2 unless a local stand in is named, which is path style', () => {
+    delete process.env.R2_ENDPOINT;
+    expect(storageEndpoint('abc')).toEqual({ endpoint: 'https://abc.r2.cloudflarestorage.com', forcePathStyle: false });
+    process.env.R2_ENDPOINT = 'http://127.0.0.1:9000';
+    expect(storageEndpoint('abc')).toEqual({ endpoint: 'http://127.0.0.1:9000', forcePathStyle: true });
+    delete process.env.R2_ENDPOINT;
   });
 });
 

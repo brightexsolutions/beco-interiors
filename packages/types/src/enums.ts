@@ -10,6 +10,25 @@ export const USER_ROLES = [
 ] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+/**
+ * The dashboard sections a person can be let into by grant rather than by
+ * role, D136. Mirrors `module_keys()` in migration 70, asserted equal by
+ * test. Studio, the Drive import and the launch control are never here:
+ * they stay Brightex only (D42, D115, D80).
+ */
+export const DASHBOARD_MODULES = [
+  'quotes',
+  'orders',
+  'customers',
+  'products',
+  'announcements',
+  'reports',
+  'users',
+  'settings',
+  'audit',
+] as const;
+export type DashboardModule = (typeof DASHBOARD_MODULES)[number];
+
 export const ANNOUNCEMENT_TYPES = ['sale', 'clearance', 'notice', 'event'] as const;
 export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
 

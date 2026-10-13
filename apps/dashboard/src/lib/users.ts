@@ -48,6 +48,10 @@ export interface StaffUser {
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
+  canReadAudit: boolean;
+  canManageUsers: boolean;
+  /** Module grants, D136. */
+  moduleGrants: string[];
 }
 
 export const staffPhotoUrl = (path: string, width: 400 | 800 | 1600 = 400): string => {
@@ -103,6 +107,11 @@ export const userMutationMessage = (
   }
   if (/cannot change your own role/i.test(message)) return 'You cannot change your own role.';
   if (/cannot deactivate your own/i.test(message)) return 'You cannot deactivate your own account.';
+  if (/cannot change your own access/i.test(message)) return 'You cannot change your own access.';
+  if (/only grant access you hold yourself/i.test(message)) {
+    return 'You can only grant access you hold yourself.';
+  }
+  if (/only brightex can assign/i.test(message)) return 'Only Brightex can assign that permission.';
   if (/last active admin/i.test(message)) {
     return 'That is the last active admin of that role. Create another first.';
   }
@@ -117,7 +126,7 @@ export const userMutationMessage = (
 };
 
 const STAFF_COLUMNS =
-  'id, email, full_name, role, is_active, is_public, public_title, public_phone, public_photo, must_change_password, last_login_at, created_at, updated_at';
+  'id, email, full_name, role, is_active, is_public, public_title, public_phone, public_photo, must_change_password, last_login_at, created_at, updated_at, can_read_audit, can_manage_users, module_grants';
 
 const toStaff = (row: {
   id: string;
@@ -133,6 +142,9 @@ const toStaff = (row: {
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
+  can_read_audit?: boolean | null;
+  can_manage_users?: boolean | null;
+  module_grants?: string[] | null;
 }): StaffUser => ({
   id: row.id,
   email: row.email,
@@ -147,6 +159,9 @@ const toStaff = (row: {
   lastLoginAt: row.last_login_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+  canReadAudit: Boolean(row.can_read_audit),
+  canManageUsers: Boolean(row.can_manage_users),
+  moduleGrants: Array.isArray(row.module_grants) ? row.module_grants : [],
 });
 
 export async function fetchUsers(

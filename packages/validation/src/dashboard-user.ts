@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { USER_ROLES } from '@beco/types';
+import { DASHBOARD_MODULES, USER_ROLES } from '@beco/types';
 import { phoneSchema } from './quote';
 
 const staffEmail = z
@@ -59,3 +59,17 @@ export const removeStaffPhotoSchema = z.object({
 });
 
 export type CreateStaffUser = z.infer<typeof createStaffUserSchema>;
+
+/**
+ * The whole set of module grants for one account, D136. The editor sends
+ * the set, not a diff, so what the person sees ticked is what is written.
+ * Duplicates collapse; an unknown module is refused, not dropped.
+ */
+export const setModuleGrantsSchema = z.object({
+  userId: z.uuid(),
+  updatedAt: z.string().min(1, 'Missing lock token'),
+  modules: z
+    .array(z.enum(DASHBOARD_MODULES, { message: 'That is not a dashboard section' }))
+    .max(DASHBOARD_MODULES.length)
+    .transform((modules) => [...new Set(modules)]),
+});

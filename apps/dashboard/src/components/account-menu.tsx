@@ -52,7 +52,7 @@ export function AccountMenu({ name }: { name: string }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Account, ${name}`}
-        className="flex h-11 w-11 items-center justify-center rounded-full bg-ink font-ui text-sm font-semibold text-paper"
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-charcoal font-ui text-xs font-bold text-high-vis-white ring-2 ring-high-vis-white hover:ring-neutral-200"
       >
         {initials(name)}
       </button>
@@ -60,13 +60,13 @@ export function AccountMenu({ name }: { name: string }) {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-2 w-56 rounded-panel border border-neutral-200 bg-high-vis-white p-1.5"
+          className="absolute right-0 top-full z-30 mt-2 w-60 rounded-card border border-neutral-200 bg-high-vis-white p-1.5 shadow-panel"
         >
-          <p className="px-2.5 pb-1.5 pt-1 font-ui text-xs text-neutral-500">{name}</p>
+          <p className="px-2.5 pb-1.5 pt-1.5 font-ui text-xs font-semibold text-neutral-500">Signed in as {name}</p>
           <Link
             role="menuitem"
             href="/change-password"
-            className="block rounded-control px-2.5 py-2 font-ui text-sm text-charcoal hover:bg-neutral-100"
+            className="block rounded-control px-2.5 py-2 font-ui text-sm font-medium text-charcoal hover:bg-neutral-100"
           >
             Change password
           </Link>
@@ -77,7 +77,7 @@ export function AccountMenu({ name }: { name: string }) {
             <button
               role="menuitem"
               type="submit"
-              className="block w-full rounded-control px-2.5 py-2 text-left font-ui text-sm text-charcoal hover:bg-neutral-100"
+              className="block w-full rounded-control px-2.5 py-2 text-left font-ui text-sm font-medium text-charcoal hover:bg-neutral-100"
             >
               Sign out
             </button>

@@ -56,6 +56,9 @@ export interface GrantStaffRow {
   canWriteBlog: boolean;
   canReadAudit: boolean;
   canManageUsers: boolean;
+  /** Module grants, D136. */
+  moduleGrants: string[];
+  updatedAt: string;
 }
 
 export const settingText = (value: unknown): string => {
@@ -111,7 +114,7 @@ export async function fetchDashboardSettings(supabase: SupabaseClient): Promise<
 export async function fetchGrantStaff(supabase: SupabaseClient): Promise<GrantStaffRow[]> {
   const { data } = await supabase
     .from('users')
-    .select('id, email, full_name, role, can_write_blog, can_read_audit, can_manage_users, is_active')
+    .select('id, email, full_name, role, can_write_blog, can_read_audit, can_manage_users, module_grants, updated_at, is_active')
     .eq('is_active', true)
     .order('full_name');
   return (data ?? []).map((row) => ({
@@ -122,6 +125,8 @@ export async function fetchGrantStaff(supabase: SupabaseClient): Promise<GrantSt
     canWriteBlog: row.can_write_blog,
     canReadAudit: row.can_read_audit,
     canManageUsers: row.can_manage_users,
+    moduleGrants: Array.isArray(row.module_grants) ? row.module_grants : [],
+    updatedAt: row.updated_at,
   }));
 }
 
@@ -137,8 +142,10 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
-export const parseSettingsTab = (raw: string | undefined, canGrant: boolean): SettingsTab => {
-  if (raw === 'permissions' || raw === 'studio') return canGrant ? raw : 'quotes';
+/** `canGrant` opens Permissions; `canStudio` (Brightex only) opens Studio, and defaults to the same answer. */
+export const parseSettingsTab = (raw: string | undefined, canGrant: boolean, canStudio: boolean = canGrant): SettingsTab => {
+  if (raw === 'permissions') return canGrant ? raw : 'quotes';
+  if (raw === 'studio') return canStudio ? raw : 'quotes';
   if (raw === 'bank' || raw === 'payments') return 'payments';
   if (raw === 'business' || raw === 'contact' || raw === 'notifications' || raw === 'quotes') {
     return raw;

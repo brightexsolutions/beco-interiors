@@ -42,6 +42,14 @@ export const PAIRS: Array<{ name: string; fg: string; bg: string; min: number }>
   // So text bearing surfaces use the deep variant instead.
   { name: 'white on warm red, LARGE bold only', fg: '#ffffff', bg: '#ed1c24', min: 3.0 },
   { name: 'white on warm-red-deep, buttons', fg: '#ffffff', bg: '#c81419', min: 4.5 },
+  // The admin surface's tinted pills and tiles, D143.
+  { name: 'success deep on success soft', fg: '#166534', bg: '#e8f6ec', min: 4.5 },
+  { name: 'warning on warning soft', fg: '#b45309', bg: '#fef3e2', min: 4.5 },
+  { name: 'info on info soft', fg: '#1d4ed8', bg: '#e8f0fe', min: 4.5 },
+  { name: 'danger on danger soft', fg: '#b91c1c', bg: '#fdecec', min: 4.5 },
+  { name: 'body on the admin ground', fg: '#101820', bg: '#f4f5f7', min: 4.5 },
+  // Muted grey on the tint fails at 4.1:1, so a tinted tile carries neutral-700 captions, never neutral-500.
+  { name: 'neutral-700 on the admin tint', fg: '#333d47', bg: '#eef0f3', min: 4.5 },
 ];
 
 if (import.meta.url === `file://${process.argv[1]}`) {

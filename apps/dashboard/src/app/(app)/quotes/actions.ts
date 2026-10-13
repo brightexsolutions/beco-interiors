@@ -260,6 +260,7 @@ export async function addCatalogueLines(_prev: QuoteActionState, form: FormData)
       product_id: item.productId,
       quantity: item.quantity,
       unit_price: item.unitPrice,
+      ...(item.size ? { size: item.size } : {}),
     })),
     p_expected_updated_at: parsed.data.updatedAt,
   });

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Field, FormSection, Input, Select, useActionToast, useKeepValuesSubmit } from '@beco/ui';
 import { PRODUCT_UNITS, slugifyProductName } from '@beco/validation';
 import { createProduct, type ProductActionState } from '@/app/(app)/products/actions';
+import { PageUrl } from '@/components/page-url';
 import { groupCategoryOptions, type ProductCategoryOption } from '@/lib/products';
 
 const INITIAL: ProductActionState = {};
@@ -23,8 +24,7 @@ export function ProductCreate({
   const [state, create, pending] = useActionState(createProduct, INITIAL);
   const onCreateSubmit = useKeepValuesSubmit(create);
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [slugTouched, setSlugTouched] = useState(false);
+  const slug = slugifyProductName(name);
   useActionToast(state);
 
   useEffect(() => {
@@ -41,25 +41,10 @@ export function ProductCreate({
               name="name"
               required
               value={name}
-              onChange={(event) => {
-                const next = event.target.value;
-                setName(next);
-                if (!slugTouched) setSlug(slugifyProductName(next));
-              }}
+              onChange={(event) => setName(event.target.value)}
             />
           </Field>
-          <Field label="Page URL" htmlFor="new-slug" hint="Auto from the name until you edit it">
-            <Input
-              id="new-slug"
-              name="slug"
-              required
-              value={slug}
-              onChange={(event) => {
-                setSlugTouched(true);
-                setSlug(event.target.value);
-              }}
-            />
-          </Field>
+          <PageUrl prefix="/product" slug={slug} />
           <Field label="SKU" htmlFor="new-sku" hint="Supplier code. Shown on the product page">
             <Input id="new-sku" name="sku" />
           </Field>

@@ -24,7 +24,7 @@ import { cn } from '../lib/cn';
 const CONTROL = [
   'block w-full rounded-control border border-neutral-300 bg-high-vis-white',
   'font-ui text-base text-charcoal placeholder:text-neutral-500',
-  'focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-red',
+  'focus:border-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
   'aria-invalid:border-error',
   'disabled:opacity-50 disabled:pointer-events-none',
 ];

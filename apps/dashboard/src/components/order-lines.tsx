@@ -20,7 +20,7 @@ export function OrderLines({
 }) {
   return (
     <div>
-      <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Line items</h2>
+      <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">Line items</h2>
       <div
         className={`mt-3 hidden gap-x-4 border-b border-neutral-200 pb-2 font-ui text-sm font-semibold uppercase tracking-[0.08em] text-neutral-500 md:grid ${LINE_COLS}`}
       >

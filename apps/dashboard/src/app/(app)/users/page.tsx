@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
+import { Panel, TableToolbar } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { NewUserFab } from '@/components/new-user';
 import { UserFilters } from '@/components/user-filters';
 import { UserResults } from '@/components/user-results';
 import { QueryNavigationProvider } from '@/lib/use-query-navigation';
+import { grantableModules, grantsFrom } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { fetchUserById, fetchUsers, type StaffUserFilters } from '@/lib/users';
@@ -44,12 +46,19 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       <PageHeading eyebrow="Team" title="Users" actions={<NewUserFab />} />
       {/* One transition for the filters and the list. D117. */}
       <QueryNavigationProvider>
-        <div className="mb-4">
-          <UserFilters count={`${users.length} ${users.length === 1 ? 'user' : 'users'}`} />
-        </div>
-        <div className="pb-24">
-          <UserResults users={users} viewing={viewing} creating={creating} viewerId={session.userId} viewerRole={session.role} />
-        </div>
+        <Panel className="mb-24">
+          <TableToolbar filters={<UserFilters count={`${users.length} ${users.length === 1 ? 'user' : 'users'}`} />} />
+          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+            <UserResults
+              users={users}
+              viewing={viewing}
+              creating={creating}
+              viewerId={session.userId}
+              viewerRole={session.role}
+              grantable={grantableModules(session.role, grantsFrom(session))}
+            />
+          </div>
+        </Panel>
       </QueryNavigationProvider>
     </>
   );

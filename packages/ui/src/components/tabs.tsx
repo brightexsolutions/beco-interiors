@@ -11,7 +11,7 @@ import { cn } from '../lib/cn';
 /**
  * Dashboard section switcher. Construction follows shadcn's Radix copy-paste
  * so keyboard and ARIA are not reinvented. The look is Beco: a hairline, a
- * charcoal underline on the active tab, 44px targets, 16px type. No muted
+ * Warm Red underline on the active tab (D143), 44px targets, 16px type. No muted
  * track, no rounded pill list, no zoom. If this looks like default shadcn,
  * it is not finished. See D88.
  *
@@ -44,8 +44,8 @@ export const TabsTrigger = forwardRef<
       className={cn(
         'inline-flex min-h-11 shrink-0 items-center px-4 font-ui text-base font-semibold text-neutral-500',
         '-mb-px border-b-2 border-transparent',
-        'data-[state=active]:border-charcoal data-[state=active]:text-charcoal',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-warm-red',
+        'data-[state=active]:border-warm-red data-[state=active]:text-charcoal',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring',
         className,
       )}
       {...props}

@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './button';
+import { cn } from '../lib/cn';
 import { useScrollLock } from '../lib/use-scroll-lock';
 
 /**
@@ -101,7 +103,9 @@ export function ConfirmDialog({
     }
   };
 
-  return (
+  // Portalled to the body for the same reason as Dialog: no ancestor's
+  // stacking context may paint the page over the overlay.
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center p-4 sm:items-center">
       <div
         aria-hidden
@@ -116,11 +120,30 @@ export function ConfirmDialog({
         aria-describedby="confirm-description"
         className="relative w-full max-w-[34rem] rounded-card bg-high-vis-white p-6 shadow-[0_24px_60px_rgba(16,24,32,0.28)] sm:p-8"
       >
-        <h2 id="confirm-title" className="font-display text-2xl leading-tight text-charcoal">
-          {title}
-        </h2>
-        <div id="confirm-description" className="mt-3 max-w-[52ch] text-base text-neutral-700">
-          {description}
+        <div className="flex items-start gap-4">
+          <span
+            aria-hidden
+            className={cn(
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-control',
+              destructive ? 'bg-danger-soft text-danger' : 'bg-tint text-charcoal',
+            )}
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {destructive ? (
+                <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+              ) : (
+                <path d="M12 16v-4m0-4h.01M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z" />
+              )}
+            </svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 id="confirm-title" className="font-display text-2xl font-semibold leading-tight tracking-[-0.01em] text-charcoal">
+              {title}
+            </h2>
+            <div id="confirm-description" className="mt-2 max-w-[52ch] text-base text-neutral-700">
+              {description}
+            </div>
+          </div>
         </div>
         {/* Cancel first in the DOM, so focus lands here rather than on the
             destructive action. Deliberate, not an ordering accident. */}
@@ -135,6 +158,7 @@ export function ConfirmDialog({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

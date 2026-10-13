@@ -68,7 +68,12 @@ const trend = (now: number, before: number, unit = ''): StatCardDelta | undefine
 };
 
 /** A month tile: the card, plus where tapping it goes. */
-export type HomeCard = Omit<StatCardProps, 'action'> & { href: string; actionLabel: string };
+export type HomeCard = Omit<StatCardProps, 'action' | 'icon' | 'iconTone'> & {
+  href: string;
+  actionLabel: string;
+  /** Which glyph the tile carries in its chip, D143. The page maps it to the drawing. */
+  glyph: 'won' | 'conversion' | 'invoiced' | 'leads' | 'catalogue';
+};
 
 export interface HomeFocus {
   waiting: number;
@@ -126,6 +131,7 @@ export const toStatCards = (s: DashboardSummary): HomeCard[] => {
   return [
     {
       label: 'Won this month',
+      glyph: 'won',
       value: String(s.won.count),
       delta: trend(s.won.count, s.won.prev_count),
       comparison: versus(s.won.count, s.won.prev_count, s.won.prev_count === 1 ? 'quote' : 'quotes'),
@@ -136,6 +142,7 @@ export const toStatCards = (s: DashboardSummary): HomeCard[] => {
     },
     {
       label: 'Quote to won',
+      glyph: 'conversion',
       // A month with nothing decided has no rate. Printing 0% would read as
       // a bad month rather than an empty one. A short 'None' holds the
       // shape; the line beneath says why.
@@ -154,6 +161,7 @@ export const toStatCards = (s: DashboardSummary): HomeCard[] => {
     },
     {
       label: 'Invoiced this month',
+      glyph: 'invoiced',
       value: money(s.sales.invoiced),
       // Kept deliberately apart per D8. Billed is not banked.
       meter: s.sales.invoiced > 0 ? { value: paidShare, label: `${money(s.sales.collected)} collected` } : undefined,
@@ -168,6 +176,7 @@ export const toStatCards = (s: DashboardSummary): HomeCard[] => {
     },
     {
       label: 'Leads today',
+      glyph: 'leads',
       value: String(s.leads.total),
       // The only view that counts the leads that left the site entirely.
       segments: [
@@ -185,6 +194,7 @@ export const toStatCards = (s: DashboardSummary): HomeCard[] => {
     },
     {
       label: 'Products live',
+      glyph: 'catalogue',
       value: String(s.catalogue.published),
       comparison:
         s.catalogue.draft > 0 ? `${s.catalogue.draft} not published` : 'Whole catalogue published',

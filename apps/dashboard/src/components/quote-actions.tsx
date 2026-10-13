@@ -15,6 +15,8 @@ import {
 } from '@/app/(app)/quotes/actions';
 import { convertQuoteToOrder, type OrderActionState } from '@/app/(app)/orders/actions';
 import type { QuoteAssignee } from '@/lib/quote-detail';
+import { quoteMoves } from '@/lib/quote-transitions';
+import { QUOTE_STATUS } from '@/lib/quotes';
 import type { QuoteStatus } from '@beco/types';
 
 const INITIAL: QuoteActionState = {};
@@ -87,13 +89,11 @@ export function QuoteActions({
     if (convertState.orderReference) router.push(`/orders/${convertState.orderReference}`);
   }, [convertState.orderReference, router]);
 
-  const nextStatuses: { status: QuoteStatus; label: string }[] = [];
-  if (canMutate && status !== 'won' && status !== 'lost') {
-    if (status === 'new') nextStatuses.push({ status: 'reviewing', label: 'Reviewing' });
-    if (status === 'new' || status === 'reviewing') nextStatuses.push({ status: 'quoted', label: 'Quoted' });
-    if (status === 'quoted') nextStatuses.push({ status: 'won', label: 'Won' });
-    if (status === 'reviewing' || status === 'quoted') nextStatuses.push({ status: 'lost', label: 'Lost' });
-  }
+  // One rule set with the quotes board, D148.
+  const nextStatuses = quoteMoves({ status, requiresApproval, approvedAt }, canMutate).map((next) => ({
+    status: next,
+    label: QUOTE_STATUS[next].label,
+  }));
 
   return (
     <div className="space-y-3">

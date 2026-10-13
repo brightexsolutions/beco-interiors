@@ -2,6 +2,8 @@
 
 import { getSupabase } from '@/lib/supabase';
 import { requirePath } from '@/lib/session';
+import type { ProductSize } from '@beco/types';
+import { parseProductSizes } from '@beco/validation';
 import { parseProductImages, productImageUrl } from '@/lib/products';
 
 export interface CatalogueHit {
@@ -19,6 +21,14 @@ export interface CatalogueHit {
   /** A 400px derivative of the first photograph, so the counter can pick
    *  by eye. Null for a product with no photography yet. */
   thumb: string | null;
+  /** The sizes the product comes in, D137. The picker lists one row per
+   *  size, so a handle in three lengths is three lines to tick. */
+  sizes: ProductSize[];
+  /** Set on a row the picker expanded from `sizes`, D137: the size picked
+   *  and its own price, when it has one. */
+  key?: string;
+  size?: string;
+  sizePrice?: number | null;
 }
 
 export interface CatalogueRange {
@@ -69,7 +79,7 @@ export async function loadPickerCatalogue(): Promise<PickerCatalogue> {
       supabase.from('categories').select('id, name, sort_order, parent_id, is_published').order('sort_order'),
       supabase
         .from('products')
-        .select('id, name, slug, price, unit, price_display_mode, category_id, images')
+        .select('id, name, slug, price, unit, price_display_mode, category_id, images, sizes')
         .is('deleted_at', null)
         .eq('is_published', true),
     ]);
@@ -95,6 +105,7 @@ export async function loadPickerCatalogue(): Promise<PickerCatalogue> {
       categoryName: category?.name ?? null,
       parentCategoryName: parent?.name ?? null,
       thumb: first ? productImageUrl(first.path, 400) : null,
+      sizes: parseProductSizes(row.sizes),
     };
   });
   hits.sort(

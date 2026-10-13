@@ -5,14 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { permanentRedirect } from 'next/navigation';
 import {
-  ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn, displayAvailability,
+  ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn, displayAvailability, formatPrice,
   type GalleryImage, type GalleryRole,
 } from '@beco/ui';
 import { AddToQuote } from '@/components/add-to-quote';
 import { ProductGrid } from '@/components/product-grid';
 import {
   getProductBySlug, getCanonicalProductSlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
-  getCategoryWithTree,
+  getCategoryWithTree, productSizes,
 } from '@/lib/products';
 import { isStoneRange, specNote } from '@/lib/material';
 import { SITE, whatsappLink } from '@/lib/site';
@@ -40,6 +40,7 @@ async function loadProduct(slug: string) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const product = await loadProduct(slug);
+  const sizes = productSizes(product.sizes);
 
   return pageMetadata({
     // The override columns win, so Beco can tune a page without a deploy.
@@ -61,6 +62,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
   const product = await loadProduct(slug);
+  const sizes = productSizes(product.sizes);
 
   const images: GalleryImage[] = (product.images ?? []).map((img, i) => ({
     role: img.role as GalleryRole,
@@ -203,6 +205,33 @@ export default async function ProductPage({ params }: Params) {
               <Spec key={term} term={term} value={String(value)} />
             ))}
           </dl>
+
+          {sizes.length > 0 ? (
+            <section aria-labelledby="product-sizes" className="mt-6">
+              <h2 id="product-sizes" className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                Sizes
+              </h2>
+              <ul className="mt-2 divide-y divide-neutral-200 rounded-card border border-neutral-200 font-ui text-base">
+                {sizes.map((size) => (
+                  <li key={size.label} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-4 py-3">
+                    <span className="font-semibold text-charcoal">
+                      {size.label}
+                      {size.sku ? <span className="ml-2 font-normal text-neutral-500">{size.sku}</span> : null}
+                    </span>
+                    <span className="tabular-nums text-charcoal">
+                      {product.price_display_mode === 'poa'
+                        ? 'Price on request'
+                        : size.price != null
+                          ? formatPrice(size.price)
+                          : product.price != null
+                            ? formatPrice(product.price)
+                            : 'Price on request'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           {/* Said plainly. Beco has not supplied specification sheets yet, and
               a page that simply stops after four rows reads as unfinished,

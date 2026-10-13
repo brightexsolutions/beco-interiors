@@ -3,7 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import type { ActiveSession } from '@/lib/session';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/' }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+}));
 
 const { AppShell } = await import('../app-shell');
 
@@ -17,6 +21,7 @@ const admin: ActiveSession = {
   canWriteBlog: false,
   canReadAudit: false,
   canManageUsers: false,
+  moduleGrants: [],
 };
 
 describe('AppShell', () => {
@@ -58,7 +63,7 @@ describe('AppShell', () => {
     );
     expect(container.firstElementChild?.className).toContain('[--dock:calc(3.5625rem+env(safe-area-inset-bottom,0px))]');
     expect(container.firstElementChild?.className).toContain('lg:[--dock:0px]');
-    expect(container.querySelector('main')?.className).toContain('pb-[calc(var(--dock)+1rem)]');
+    expect(container.querySelector('main')?.className).toContain('pb-[calc(var(--dock)+1.25rem)]');
   });
 
   it('keeps the white header in flow. The breadcrumb is not part of that header', () => {
@@ -115,6 +120,28 @@ describe('AppShell', () => {
     expect(within(main).queryByRole('link', { name: 'Users' })).toBeNull();
   });
 
+  it('leaves New quote out of the desktop top bar, D151', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const bar = container.querySelector('[data-top-bar]') as HTMLElement;
+    expect(within(bar).queryByRole('link', { name: 'New quote' })).toBeNull();
+  });
+
+  it('keeps the desktop top bar in view while the page scrolls, and names its height for what pins under it (D146)', () => {
+    const { container } = render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    const bar = container.querySelector('[data-top-bar]');
+    expect(bar).toHaveClass('sticky', 'top-0', 'z-20');
+    expect(container.firstElementChild?.className).toMatch(/lg:\[--shell-top:4rem\]/);
+    expect(container.firstElementChild?.className).toMatch(/\[--shell-top:0px\]/);
+  });
+
   it('names where the reader is in the desktop top bar and the phone header alike', () => {
     render(
       <AppShell user={admin}>
@@ -122,6 +149,26 @@ describe('AppShell', () => {
       </AppShell>,
     );
     for (const crumb of screen.getAllByRole('list', { name: 'You are here' })) expect(crumb).toHaveTextContent('Overview');
+  });
+
+  it('offers the guide in the phone header and the desktop bar, and says nothing about the connection while it is up (D140, D141)', () => {
+    render(
+      <AppShell user={admin}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Guide' })).toHaveLength(2);
+    expect(screen.queryByText(/You are offline/)).toBeNull();
+  });
+
+  it('marks a section open by module grant alone as View only, and nothing else (D136)', () => {
+    render(
+      <AppShell user={{ ...admin, role: 'beco_product_manager', moduleGrants: ['quotes'] }}>
+        <p>Overview</p>
+      </AppShell>,
+    );
+    // The pathname is '/', which is never read only, so nothing is marked.
+    expect(screen.queryByText('View only')).toBeNull();
   });
 
   it('has no accessibility violations', async () => {
@@ -143,7 +190,7 @@ describe('AppShell', () => {
     expect(bar).toBeDefined();
     // backdrop-blur makes the bar a stacking context; without its own z-index
     // the later <main> paints over it and the menu inside it.
-    expect(bar).toHaveClass('relative', 'z-20');
+    expect(bar).toHaveClass('sticky', 'z-20');
     const main = container.querySelector('main')!;
     expect(main.className).not.toMatch(/\bz-(2|3|4|5)\d\b/);
   });

@@ -15,6 +15,7 @@ const requirePath = vi.fn(
     canWriteBlog: false,
     canReadAudit: false,
     canManageUsers: false,
+    moduleGrants: [],
   }),
 );
 vi.mock('@/lib/session', () => ({ requirePath: (...a: Parameters<typeof requirePath>) => requirePath(...a) }));
@@ -96,6 +97,7 @@ describe('saveDashboardSettings', () => {
       canWriteBlog: true,
       canReadAudit: true,
       canManageUsers: false,
+      moduleGrants: [],
     });
     maybeSingle.mockResolvedValue({ data: { key: 'x' }, error: null });
     await saveDashboardSettings({}, formFrom());
@@ -168,6 +170,7 @@ describe('setStaffGrant', () => {
       canWriteBlog: false,
       canReadAudit: false,
       canManageUsers: false,
+      moduleGrants: [],
     });
     maybeSingle.mockResolvedValue({ data: { full_name: 'Sam Odhiambo' }, error: null });
     const form = new FormData();
@@ -190,6 +193,7 @@ describe('setStaffGrant', () => {
       canWriteBlog: false,
       canReadAudit: false,
       canManageUsers: false,
+      moduleGrants: [],
     });
     maybeSingle.mockResolvedValue({ data: { full_name: 'Irene' }, error: null });
     const form = new FormData();
