@@ -27,7 +27,7 @@ const fab = cva([
   'shadow-panel hover:bg-neutral-700',
   'transition-colors duration-200 ease-brand',
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px]',
-  'focus-visible:outline-warm-red',
+  'focus-visible:outline-ring',
 ]);
 
 export const fabClasses = fab;

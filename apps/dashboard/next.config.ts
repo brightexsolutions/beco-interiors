@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
+import { r2ConnectOrigin } from './src/lib/r2-connect';
 
 // Dashboard CSP. No analytics, no tag manager: neither is loaded here.
 
@@ -38,8 +39,18 @@ const scriptSrc = [
   // Next.js inlines a small bootstrap script. Tighten to a nonce once the app
   // is stable, and record that as a follow up rather than forgetting it.
   "'unsafe-inline'",
+  // libheif, compiled to WebAssembly, decodes an iPhone HEIC in the browser
+  // before upload (D139). This allows WebAssembly alone, never eval.
+  "'wasm-unsafe-eval'",
   ...(isDev ? ["'unsafe-eval'"] : []),
 ].join(' ');
+
+// The browser PUTs photographs straight to R2 (D116): the account's own host,
+// never a wildcard, and never a masked placeholder (D150).
+const r2Connect = r2ConnectOrigin({ R2_ENDPOINT: process.env.R2_ENDPOINT, R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID });
+if (!r2Connect && !isDev) {
+  console.warn('R2_ACCOUNT_ID is missing or not a readable account ID at build: photographs will take the form post, not the direct PUT. See D150.');
+}
 
 const csp = [
   "default-src 'self'",
@@ -49,10 +60,11 @@ const csp = [
   // There is no fonts.gstatic.com entry and there should never be one.
   "font-src 'self'",
   `img-src 'self' data: blob: ${imageOrigins}`,
-  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''}`,
+  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} ${r2Connect}`,
   // pdf.js paints quote, receipt, and sales-review pages onto canvas. The
   // worker is copied into public/ from pdfjs-dist at config load.
-  "worker-src 'self'",
+  // heic-to decodes iPhone photographs in a Web Worker it builds from a blob URL, D139.
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",

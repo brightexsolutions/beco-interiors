@@ -57,6 +57,7 @@ anything there you would not print on a billboard.
 | `R2_ACCOUNT_ID` | Cloudflare account | Cloudflare dashboard, R2 overview | pipeline, dashboard |
 | `R2_ACCESS_KEY_ID` | S3 compatible key | Cloudflare, R2, Manage R2 API Tokens, Create. **Object Read and Write, scoped to the one bucket** | pipeline, dashboard |
 | `R2_SECRET_ACCESS_KEY` | Its secret | Shown **once** at creation. Capture it then | pipeline, dashboard |
+| `R2_ENDPOINT` | Local development only | Points the dashboard's S3 client at an S3 compatible stand in (MinIO, the test harness) instead of the account's R2 host, path style. **Never set in staging or production** | dashboard, local |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Drive import identity | See section 3.1 | pipeline, backup |
 | `AGE_PUBLIC_KEY` | Backup encryption, public half | `age-keygen -o key.txt`, then read the public line | backup workflow |
 | `AGE_SECRET_KEY` | Decrypts backups | The private half. **Store in the password manager and nowhere else.** Losing it makes every backup useless | restore only, never in CI |

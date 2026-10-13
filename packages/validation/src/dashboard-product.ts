@@ -67,6 +67,58 @@ const specRow = z.object({
   value: z.string().trim().max(240),
 });
 
+/**
+ * One size a product comes in, D137. The label is what the counter picks
+ * ("128mm"); price and code are optional and fall back to the product's.
+ * A row with no label is dropped before the write, so an empty row left in
+ * the editor is not an error.
+ */
+export const productSizeSchema = z.object({
+  label: z.string().trim().min(1, 'Name the size').max(40),
+  price: optionalPrice,
+  sku: productSku,
+});
+
+export const productSizesSchema = z
+  .array(productSizeSchema)
+  .max(40, 'Forty sizes is the most a product can carry')
+  .superRefine((rows, ctx) => {
+    const seen = new Set<string>();
+    rows.forEach((row, index) => {
+      const key = row.label.toLowerCase();
+      if (seen.has(key)) {
+        ctx.addIssue({ code: 'custom', path: [index, 'label'], message: `Size ${row.label} is listed twice` });
+      }
+      seen.add(key);
+    });
+  });
+
+/** The editor's sizes JSON, keeping only rows that name a size. */
+export const sizesFromForm = (raw: unknown): unknown[] => {
+  if (typeof raw !== 'string' || !raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((row) => row && typeof row === 'object' && String((row as { label?: unknown }).label ?? '').trim() !== '');
+  } catch {
+    return [];
+  }
+};
+
+/** What the database holds, read defensively: a bad row is dropped, never thrown. */
+export const parseProductSizes = (value: unknown): { label: string; price: number | null; sku: string | null }[] => {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== 'object') return [];
+    const rec = row as Record<string, unknown>;
+    const label = typeof rec.label === 'string' ? rec.label.trim() : '';
+    if (!label) return [];
+    const price = typeof rec.price === 'number' && Number.isFinite(rec.price) && rec.price > 0 ? rec.price : null;
+    const sku = typeof rec.sku === 'string' && rec.sku.trim() ? rec.sku.trim() : null;
+    return [{ label, price, sku }];
+  });
+};
+
 export const updateProductSchema = z
   .object({
     productId: z.uuid(),
@@ -93,6 +145,7 @@ export const updateProductSchema = z
     metaTitle: z.preprocess(emptyToNull, z.string().trim().max(70).nullable()),
     metaDescription: z.preprocess(emptyToNull, z.string().trim().max(180).nullable()),
     specs: z.array(specRow).max(20).default([]),
+    sizes: productSizesSchema.default([]),
     stockQuantity: optionalAmount,
     lowStockThreshold: optionalAmount,
   })

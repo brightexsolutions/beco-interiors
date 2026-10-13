@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import { loadPickerCatalogue } from '@/lib/catalogue';
-import { CataloguePicker, catalogueLineDraft, rangeSelectGroups } from '../catalogue-picker';
+import { CataloguePicker, catalogueLineDraft, catalogueLineName, expandSizes, rangeSelectGroups } from '../catalogue-picker';
 import type { CatalogueHit, CatalogueRange, PickerCatalogue } from '@/lib/catalogue';
 
 const amber: CatalogueHit = {
@@ -17,6 +17,7 @@ const amber: CatalogueHit = {
   categoryName: '12mm Sintered Stones',
   parentCategoryName: 'Sintered Stone',
   thumb: 'http://img.test/products/amber-jade/hero-400.webp',
+  sizes: [],
 };
 
 const handle: CatalogueHit = {
@@ -30,6 +31,7 @@ const handle: CatalogueHit = {
   categoryName: 'Handles',
   parentCategoryName: 'Hardware',
   thumb: null,
+  sizes: [],
 };
 
 const heixin: CatalogueHit = {
@@ -43,6 +45,7 @@ const heixin: CatalogueHit = {
   categoryName: 'Heixin 12mm',
   parentCategoryName: '12mm Sintered Stones',
   thumb: null,
+  sizes: [],
 };
 
 const ranges: CatalogueRange[] = [
@@ -366,5 +369,44 @@ describe('CataloguePicker', () => {
     await user.click(screen.getByRole('button', { name: 'Add from catalogue' }));
     await screen.findByRole('alert');
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('sizes in the picker, D137', () => {
+  const sizedHandle: CatalogueHit = {
+    ...handle,
+    sizes: [
+      { label: '96mm', price: 450, sku: null },
+      { label: '128mm', price: 520, sku: 'H-128' },
+      { label: '160mm', price: null, sku: null },
+    ],
+  };
+
+  it('lists one row per size, named for the size and priced by it, and hands the size back', async () => {
+    load.mockResolvedValue({ products: [amber, sizedHandle], ranges });
+    const onAdd = vi.fn();
+    const { user, dialog } = await openLoaded(onAdd);
+    expect(listed(dialog)).toEqual(['Amber Jade', '537 160 Black, 96mm', '537 160 Black, 128mm', '537 160 Black, 160mm']);
+    await user.click(within(dialog).getByRole('checkbox', { name: /128mm/ }));
+    await user.click(within(dialog).getByRole('checkbox', { name: /160mm/ }));
+    await user.click(within(dialog).getByRole('button', { name: 'Add 2 items' }));
+    const picked = onAdd.mock.calls[0]![0] as CatalogueHit[];
+    expect(picked.map((hit) => [hit.id, hit.size, hit.sizePrice])).toEqual([
+      [handle.id, '128mm', 520],
+      [handle.id, '160mm', null],
+    ]);
+    expect(catalogueLineDraft(picked[0]!)).toEqual({ quantity: 1, unitPrice: 520 });
+    expect(catalogueLineDraft(picked[1]!)).toEqual({ quantity: 1, unitPrice: 450 });
+    expect(catalogueLineName(picked[0]!)).toBe('537 160 Black, 128mm');
+    expect(catalogueLineName(amber)).toBe('Amber Jade');
+  });
+
+  it('expands sizes once per product and keeps a product without sizes to one row', () => {
+    expect(expandSizes([amber, sizedHandle]).map((hit) => hit.key)).toEqual([
+      amber.id,
+      `${handle.id}:96mm`,
+      `${handle.id}:128mm`,
+      `${handle.id}:160mm`,
+    ]);
   });
 });

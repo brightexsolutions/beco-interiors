@@ -18,7 +18,7 @@ import { UserCreate } from '@/components/user-create';
 import { UserEditor } from '@/components/user-editor';
 import { BusyRegion } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
-import type { UserRole } from '@beco/types';
+import type { DashboardModule, UserRole } from '@beco/types';
 import { STAFF_ROLE_LABEL, canManageAccount, formatLastLogin, rolesAssignableBy, type StaffUser } from '@/lib/users';
 
 function ViewAction({ href, name }: { href: string; name: string }) {
@@ -84,12 +84,15 @@ export function UserResults({
   creating,
   viewerId,
   viewerRole,
+  grantable = [],
 }: {
   users: StaffUser[];
   viewing: StaffUser | null;
   creating: boolean;
   viewerId: string;
   viewerRole: UserRole;
+  /** The modules the viewer may grant, D136. */
+  grantable?: readonly DashboardModule[] | undefined;
 }) {
   const roles = rolesAssignableBy(viewerRole);
   const router = useRouter();
@@ -141,6 +144,7 @@ export function UserResults({
           viewerId={viewerId}
           roles={roles}
           canManage={canManageAccount(viewerRole, viewing.role)}
+          grantable={grantable}
         />
       ) : null}
     </Sheet>
@@ -178,9 +182,9 @@ export function UserResults({
           <caption className="sr-only">{`${paged.total} users`}</caption>
           <thead>
             <tr className="border-b border-neutral-200">
-              <th className="py-3 pr-4 font-ui text-sm font-semibold text-neutral-500">Name</th>
-              <th className="py-3 pr-4 font-ui text-sm font-semibold text-neutral-500">Status</th>
-              <th className="py-3 text-right font-ui text-sm font-semibold text-neutral-500">Actions</th>
+              <th className="beco-case py-3 pr-4 font-ui text-xs font-semibold text-neutral-500">Name</th>
+              <th className="beco-case py-3 pr-4 font-ui text-xs font-semibold text-neutral-500">Status</th>
+              <th className="beco-case py-3 text-right font-ui text-xs font-semibold text-neutral-500">Actions</th>
             </tr>
           </thead>
           <tbody>

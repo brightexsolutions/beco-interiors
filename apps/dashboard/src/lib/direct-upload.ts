@@ -1,4 +1,5 @@
 import type { UploadArea } from '@beco/validation';
+import { megabytes } from '@/lib/file-size';
 import { photoUploadProblem } from '@/lib/photo-upload';
 
 /**
@@ -45,7 +46,7 @@ export type StagedPhoto =
   | { kind: 'fallback' }
   | { kind: 'error'; error: string };
 
-export const megabytes = (bytes: number): string => `${(bytes / 1048576).toFixed(1)}MB`;
+export { megabytes };
 
 /**
  * Stage one file. Returns the key to send instead of the file, or `fallback`
@@ -64,14 +65,21 @@ export async function stagePhoto(
   const signed = await presign({ area, size: file.size, type: file.type });
   if (signed.error !== undefined) return { kind: 'error', error: signed.error };
 
-  try {
-    await put(signed.url, file, onProgress);
-    return { kind: 'staged', key: signed.key };
-  } catch {
-    if (file.size <= DIRECT_UPLOAD_FALLBACK_BYTES) return { kind: 'fallback' };
-    return {
-      kind: 'error',
-      error: `The direct upload failed and ${megabytes(file.size)} is too large to send the slow way. Check the connection and try again.`,
-    };
+  // One retry before giving up on the direct path: a dropped connection on
+  // mobile data usually comes back within the second, and a retry costs
+  // less than the slow way.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      onProgress(0);
+      await put(signed.url, file, onProgress);
+      return { kind: 'staged', key: signed.key };
+    } catch {
+      // Try once more, then fall through to the slow way.
+    }
   }
+  if (file.size <= DIRECT_UPLOAD_FALLBACK_BYTES) return { kind: 'fallback' };
+  return {
+    kind: 'error',
+    error: `The direct upload failed twice and ${megabytes(file.size)} is too large to send the slow way. Check the connection, or choose a smaller photo, and try again.`,
+  };
 }

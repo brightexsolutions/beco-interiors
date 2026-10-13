@@ -95,6 +95,8 @@ export const addCatalogueLinesSchema = quoteLockSchema.extend({
         productId: z.uuid(),
         quantity: z.coerce.number().positive().max(10_000).multipleOf(0.5),
         unitPrice: z.coerce.number().min(0).max(10_000_000),
+        /** The size picked, D137, when the product comes in several. */
+        size: z.preprocess((value) => (typeof value === 'string' && value.trim() ? value.trim() : undefined), z.string().max(40).optional()),
       }),
     )
     .min(1, 'Pick at least one product')

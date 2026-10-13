@@ -58,7 +58,7 @@ const PlusIcon = () => (
 const stepperButton = (compact: boolean) => cn(
   'flex h-11 shrink-0 items-center justify-center text-charcoal',
   'transition-colors duration-200 ease-brand hover:bg-neutral-50 hover:text-warm-red-deep',
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-warm-red',
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-ring',
   'disabled:pointer-events-none disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-charcoal',
   compact ? 'w-9' : 'w-11',
 );
@@ -103,7 +103,7 @@ export function QuantityStepper({
               onChange={(e) => onChange(Math.max(bound, Number(e.target.value) || bound))}
               className={cn(
                 'h-11 border-x border-neutral-300 bg-transparent px-1 text-center font-ui text-base tabular-nums text-charcoal',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-warm-red',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                 '[-moz-appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none',
                 inputWidth,
               )}

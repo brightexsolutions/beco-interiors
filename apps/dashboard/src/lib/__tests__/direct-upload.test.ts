@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DIRECT_UPLOAD_FALLBACK_BYTES, putFile, stagePhoto, type PresignPhoto } from '../direct-upload';
+import { DIRECT_UPLOAD_FALLBACK_BYTES, megabytes, putFile, stagePhoto, type PresignPhoto } from '../direct-upload';
 
 const jpeg = (bytes: number) => new File([new Uint8Array(bytes)], 'slab.jpg', { type: 'image/jpeg' });
 const signed: PresignPhoto = vi.fn(async () => ({ key: 'uploads/0123456789abcdef0123456789abcdef', url: 'https://r2.example/put' }));
@@ -43,7 +43,7 @@ describe('stagePhoto', () => {
     });
     const result = await stagePhoto(jpeg(DIRECT_UPLOAD_FALLBACK_BYTES + 1), 'products', signed, () => {}, put);
     expect(result.kind).toBe('error');
-    if (result.kind === 'error') expect(result.error).toMatch(/4\.0MB is too large to send the slow way/);
+    if (result.kind === 'error') expect(result.error).toMatch(/failed twice and 4\.0MB is too large to send the slow way/);
   });
 });
 
@@ -99,5 +99,35 @@ describe('putFile', () => {
     await expect(putFile('https://r2.example/put', jpeg(10), () => {})).rejects.toThrow(/failed/);
     FakeXhr.status = 200;
     vi.unstubAllGlobals();
+  });
+});
+
+describe('stagePhoto retry, D139', () => {
+  it('tries the direct PUT a second time before falling back, and succeeds when the retry does', async () => {
+    let calls = 0;
+    const put = vi.fn(async () => {
+      calls += 1;
+      if (calls === 1) throw new Error('dropped');
+    });
+    const result = await stagePhoto(jpeg(10), 'products', signed, () => {}, put);
+    expect(result).toEqual({ kind: 'staged', key: 'uploads/0123456789abcdef0123456789abcdef' });
+    expect(put).toHaveBeenCalledTimes(2);
+  });
+
+  it('falls back only after both attempts failed', async () => {
+    const put = vi.fn(async () => {
+      throw new Error('dropped');
+    });
+    expect(await stagePhoto(jpeg(10), 'products', signed, () => {}, put)).toEqual({ kind: 'fallback' });
+    expect(put).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('megabytes', () => {
+  it('reads in kilobytes under a megabyte, so a 45KB photo never shows as 0.0MB', () => {
+    expect(megabytes(45269)).toBe('44KB');
+    expect(megabytes(10)).toBe('1KB');
+    expect(megabytes(4 * 1048576)).toBe('4.0MB');
+    expect(megabytes(9.5 * 1048576)).toBe('9.5MB');
   });
 });

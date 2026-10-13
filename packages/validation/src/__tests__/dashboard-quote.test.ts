@@ -198,3 +198,21 @@ describe('removeQuoteLineSchema', () => {
     if (!parsed.success) expect(parsed.error.issues[0]?.message).toBe('Pick the item to remove');
   });
 });
+
+describe('addCatalogueLinesSchema with sizes, D137', () => {
+  it('carries a picked size, trimmed, and leaves it out when blank', () => {
+    const parsed = addCatalogueLinesSchema.safeParse({
+      quoteId: '11111111-1111-4111-8111-111111111111',
+      updatedAt: '2026-10-12T08:00:00.000Z',
+      items: [
+        { productId: '22222222-2222-4222-8222-222222222222', quantity: 2, unitPrice: 950, size: ' 128mm ' },
+        { productId: '22222222-2222-4222-8222-222222222222', quantity: 1, unitPrice: 850, size: '' },
+      ],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.items[0]?.size).toBe('128mm');
+      expect(parsed.data.items[1]?.size).toBeUndefined();
+    }
+  });
+});

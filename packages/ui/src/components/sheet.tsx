@@ -14,6 +14,10 @@ export interface SheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  /** A thumbnail or glyph before the title, D143. */
+  leading?: ReactNode;
+  /** Controls beside the close, for the record's primary action. */
+  actions?: ReactNode;
   /** Quiet status under the title: Draft, On the website. */
   description?: string | undefined;
   children: ReactNode;
@@ -22,7 +26,7 @@ export interface SheetProps {
   className?: string | undefined;
 }
 
-export function Sheet({ open, onOpenChange, title, description, children, footer, className }: SheetProps) {
+export function Sheet({ open, onOpenChange, title, description, leading, actions, children, footer, className }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<Element | null>(null);
@@ -81,25 +85,27 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
           className,
         )}
       >
-        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-neutral-200 px-5 py-3">
-          <div className="min-w-0">
-            <h2 id="sheet-title" className="truncate font-ui text-base font-semibold text-charcoal">
+        <div className="flex shrink-0 items-center gap-3 border-b border-neutral-200 px-5 py-3">
+          {leading ? <div className="shrink-0">{leading}</div> : null}
+          <div className="min-w-0 flex-1">
+            <h2 id="sheet-title" className="truncate font-ui text-base font-bold text-charcoal">
               {title}
             </h2>
             {description ? (
-              <p id="sheet-description" className="mt-1 font-ui text-base text-neutral-500">
+              <p id="sheet-description" className="truncate font-ui text-sm text-neutral-500">
                 {description}
               </p>
             ) : null}
           </div>
+          {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
           <button
             ref={closeRef}
             type="button"
             onClick={close}
-            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 font-ui text-sm font-semibold text-neutral-500 hover:text-charcoal"
+            aria-label="Close"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-charcoal"
           >
             <Icon name="x" />
-            Close
           </button>
         </div>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

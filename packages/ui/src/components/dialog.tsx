@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../lib/cn';
 import { useScrollLock } from '../lib/use-scroll-lock';
 import { useVisualViewport } from '../lib/use-visual-viewport';
@@ -22,7 +23,14 @@ export interface DialogProps {
   initialFocusRef?: RefObject<HTMLElement | null> | undefined;
 }
 
-export function Dialog({ open, onOpenChange, title, children, className, initialFocusRef }: DialogProps) {
+export function Dialog({
+  open,
+  onOpenChange,
+  title,
+  children,
+  className,
+  initialFocusRef,
+}: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<Element | null>(null);
@@ -34,7 +42,9 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
   // which iOS leaves behind the keyboard. While a keyboard is open, pin the
   // overlay to the visible area instead, so the footer action stays above
   // the keys rather than under them.
-  const fitToKeyboard = viewport?.keyboardOpen ? { top: viewport.offsetTop, height: viewport.height, bottom: 'auto' } : undefined;
+  const fitToKeyboard = viewport?.keyboardOpen
+    ? { top: viewport.offsetTop, height: viewport.height, bottom: 'auto' }
+    : undefined;
 
   useEffect(() => {
     if (!open) return;
@@ -72,7 +82,10 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
 
   if (!open) return null;
 
-  return (
+  // Portalled to the body: a sticky sidebar or a positioned main would
+  // otherwise paint over the overlay, since each makes its own stacking
+  // context and z-index cannot escape one.
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex overscroll-none items-end justify-center sm:items-center sm:p-6"
       style={fitToKeyboard}
@@ -91,7 +104,10 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
         )}
       >
         <div className="flex shrink-0 items-center justify-between gap-4 border-b border-neutral-200 px-5 py-3 sm:px-6">
-          <h2 id="dialog-title" className="min-w-0 truncate font-ui text-base font-semibold text-charcoal">
+          <h2
+            id="dialog-title"
+            className="min-w-0 truncate font-ui text-base font-semibold text-charcoal"
+          >
             {title}
           </h2>
           <button
@@ -104,6 +120,62 @@ export function Dialog({ open, onOpenChange, title, children, className, initial
           </button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/**
+ * The padded, scrolling content of a Dialog. Dialog's own body is a bare
+ * column so a PDF preview or the command palette can fill it edge to edge;
+ * anything that is text, a list or a form goes in this, so it sits off the
+ * edges and scrolls under the title rather than being cut off.
+ */
+export function DialogBody({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string | undefined;
+}) {
+  return (
+    <div className={cn('min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6', className)}>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * A Dialog's actions, pinned under its body with a rule above, the same
+ * frame as a Sheet's footer: anything to the left (a status, a secondary
+ * action) on the left, Cancel and the verb on the right. On a phone the
+ * verb stacks first, nearest the thumb.
+ */
+export function DialogFooter({
+  children,
+  start,
+  className,
+}: {
+  children: ReactNode;
+  start?: ReactNode;
+  className?: string | undefined;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex shrink-0 flex-col-reverse gap-2 border-t border-neutral-200 bg-high-vis-white px-5 py-3 sm:flex-row sm:items-center sm:px-6',
+        className,
+      )}
+    >
+      {start ? <div className="min-w-0 sm:mr-auto">{start}</div> : null}
+      <div
+        className={cn(
+          'flex flex-col-reverse gap-2 sm:flex-row sm:items-center',
+          !start && 'sm:ml-auto',
+        )}
+      >
+        {children}
       </div>
     </div>
   );

@@ -9,6 +9,9 @@ vi.mock('node:fs', async (importOriginal) => {
   return { ...actual, copyFileSync: vi.fn(), mkdirSync: vi.fn() };
 });
 
+// The policy names the account's own R2 host, so one must be configured to see it.
+process.env.R2_ACCOUNT_ID = '0123456789abcdef0123456789abcdef';
+
 const { metadata } = await import('../layout');
 const { default: robots } = await import('../robots');
 const { default: nextConfig } = await import('../../../next.config');
@@ -43,6 +46,16 @@ describe('dashboard search exclusion', () => {
     const all = await nextConfig.headers!();
     const everyPath = all.find((rule) => rule.source === '/:path*');
     expect(everyPath?.headers).toContainEqual({ key: 'X-Robots-Tag', value: 'noindex, nofollow' });
+  });
+
+  it('lets the HEIC decoder run its worker and WebAssembly, and the browser PUT reach R2 (D116, D139)', async () => {
+    const all = await nextConfig.headers!();
+    const csp = all.flatMap((entry) => entry.headers).find((h) => h.key === 'Content-Security-Policy')?.value ?? '';
+    // heic-to builds its decoder worker from a blob URL; the harness found
+    // the upload failing silently at "Could not read" without this.
+    expect(csp).toMatch(/worker-src 'self' blob:/);
+    expect(csp).toMatch(/'wasm-unsafe-eval'/);
+    expect(csp).toMatch(/connect-src [^;]*r2\.cloudflarestorage\.com/);
   });
 
   it('has no page that opts back into indexing or sets its own share card', () => {

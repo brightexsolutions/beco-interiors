@@ -69,21 +69,21 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
         {!paid ? <p className="font-ui text-base text-neutral-500">Receipt after payment</p> : null}
       </div>
 
-      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel sm:p-6">
           <OrderLines lines={order.lines} totals={order.totals} />
 
           {order.notes ? (
             <div className="mt-8">
-              <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Notes</h2>
+              <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">Notes</h2>
               <p className="mt-2 max-w-[68ch] font-ui text-base text-neutral-700">{order.notes}</p>
             </div>
           ) : null}
         </div>
 
-        <aside className="min-w-0 space-y-8 border-t border-neutral-200 pt-6 xl:border-l xl:border-t-0 xl:pl-8 xl:pt-0">
+        <aside className="min-w-0 space-y-6 rounded-panel border border-neutral-200 bg-high-vis-white p-5 shadow-panel">
           <div>
-            <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Actions</h2>
+            <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">Actions</h2>
             <div className="mt-3 flex flex-col gap-2">
               {paid ? (
                 <OrderDocumentPanel
@@ -110,7 +110,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
           </div>
 
           <div>
-            <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Customer</h2>
+            <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">Customer</h2>
             <dl className="mt-2 space-y-1 break-words font-ui text-sm text-charcoal">
               <div className="text-base font-semibold">{order.customerName}</div>
               <div className="tabular-nums text-neutral-500">{order.customerPhone}</div>
@@ -132,7 +132,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
           </div>
 
           <div>
-            <h2 className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">Ownership</h2>
+            <h2 className="beco-case font-ui text-xs font-semibold text-neutral-500">Ownership</h2>
             <dl className="mt-2 space-y-1 font-ui text-base">
               <div className="flex flex-wrap justify-between gap-x-3 gap-y-0.5">
                 <dt className="text-neutral-500">Salesperson</dt>

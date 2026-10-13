@@ -2,6 +2,14 @@ import Link from 'next/link';
 import { StatusPill } from '@beco/ui';
 import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, type QuoteListItem } from '@/lib/quotes';
 
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('') || '?';
+
 const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
 
@@ -20,11 +28,14 @@ export const ageLabel = (iso: string, now = Date.now()): string => {
  */
 export function RecentQuotes({ quotes }: { quotes: QuoteListItem[] }) {
   return (
-    <section aria-labelledby="recent-quotes-title" className="rounded-panel border border-neutral-200 bg-high-vis-white">
-      <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5">
-        <h2 id="recent-quotes-title" className="font-ui text-sm font-semibold uppercase tracking-[0.16em] text-neutral-500">
-          Latest quotes
-        </h2>
+    <section aria-labelledby="recent-quotes-title" className="overflow-hidden rounded-panel border border-neutral-200 bg-high-vis-white shadow-panel">
+      <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3.5 sm:px-5">
+        <div>
+          <h2 id="recent-quotes-title" className="font-ui text-base font-semibold text-charcoal">
+            Latest quotes
+          </h2>
+          <p className="mt-0.5 font-ui text-sm text-neutral-500">Newest first, from every salesperson.</p>
+        </div>
         <Link href="/quotes?owner=all" className="inline-flex min-h-11 items-center font-ui text-sm font-semibold text-charcoal hover:underline">
           All quotes
         </Link>
@@ -41,6 +52,12 @@ export function RecentQuotes({ quotes }: { quotes: QuoteListItem[] }) {
                   href={`/quotes/${encodeURIComponent(quote.referenceNumber)}`}
                   className="group flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-neutral-50 sm:px-5"
                 >
+                  <span
+                    aria-hidden
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tint font-ui text-xs font-bold text-neutral-700"
+                  >
+                    {initials(quote.customerName)}
+                  </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-ui text-base font-semibold text-charcoal">{quote.customerName}</span>
                     <span className="block font-ui text-sm text-neutral-500">

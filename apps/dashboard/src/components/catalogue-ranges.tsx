@@ -120,9 +120,17 @@ export function CatalogueRanges({
   const levelName = (depth: number) => (depth === 1 ? 'category' : depth === 2 ? 'range' : 'sub range');
 
   return (
-    <section aria-labelledby="ranges-heading" className="mb-8">
+    // Pinned to the top while the list scrolls under it, from a tablet up:
+    // on a phone the pills wrap to several rows and would cover the list.
+    // The ground fill and the padding let cards slide under cleanly.
+    <section
+      aria-labelledby="ranges-heading"
+      data-sticky-ranges
+      data-tour="ranges"
+      className="mb-8 md:mb-5 md:sticky md:top-[var(--shell-top)] md:z-10 md:-mt-3 md:bg-neutral-50 md:pb-3 md:pt-3"
+    >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 id="ranges-heading" className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+        <h2 id="ranges-heading" className="beco-case font-ui text-xs font-semibold text-neutral-500">
           Browse
         </h2>
         <Link href={newHref(null)} className={buttonClasses({ variant: 'ghost' })}>
@@ -231,7 +239,7 @@ function RangePill({
       aria-pressed={active}
       className={cn(
         'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-control border px-3.5 font-ui text-sm font-semibold transition-colors duration-200',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-red',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
         active
           ? 'border-charcoal bg-charcoal text-high-vis-white'
           : draft

@@ -1,5 +1,7 @@
 'use client';
 
+import { slugifyCategoryName } from '@beco/validation';
+
 import { useActionState, useEffect, useState } from 'react';
 import {
   Button,
@@ -14,6 +16,7 @@ import {
   useActionToast,
   useKeepValuesSubmit,
 } from '@beco/ui';
+import { PageUrl } from '@/components/page-url';
 import { deleteCategory, updateCategory, type CategoryActionState } from '@/app/(app)/categories/actions';
 import type { CategoryParentOption, CategoryRow } from '@/lib/categories';
 
@@ -59,6 +62,9 @@ export function CategoryEditor({
 
   const busy = saving || removing;
   const isGroup = category.parentId == null;
+  // The address follows the name, as on a product. Old links keep working
+  // through the category slug history (migration 49).
+  const derivedSlug = name.trim() === category.name.trim() ? category.slug : slugifyCategoryName(name) || category.slug;
   const blockedBy =
     category.childCount > 0
       ? `${category.childCount} ${category.childCount === 1 ? 'range' : 'ranges'} filed under it`
@@ -71,7 +77,7 @@ export function CategoryEditor({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="min-h-0 min-w-0 flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-5 py-5">
           <div className="min-w-0 border border-neutral-200 px-4 py-4">
-            <p className="font-ui text-sm font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            <p className="beco-case font-ui text-xs font-semibold text-neutral-500">
               {category.depth === 1 ? 'Major category' : category.depth === 2 ? 'Range' : 'Sub range'}
             </p>
             <p className="mt-2 font-ui text-lg font-semibold text-charcoal">{name.trim() || 'Unnamed range'}</p>
@@ -112,9 +118,7 @@ export function CategoryEditor({
                   className="min-w-0"
                 />
               </Field>
-              <Field label="Page URL" htmlFor="cat-slug" hint="Old links still work">
-                <Input id="cat-slug" name="slug" defaultValue={category.slug} required className="min-w-0" />
-              </Field>
+              <PageUrl prefix="/shop" slug={derivedSlug} renamed={derivedSlug !== category.slug} />
               <Field
                 label="File under"
                 htmlFor="cat-parent"

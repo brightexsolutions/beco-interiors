@@ -103,7 +103,7 @@ export function DataTable<T>({
     <div className={cn('overflow-x-auto', className)} aria-busy={busy || undefined}>
       <table className="w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
-        <thead className="sticky top-0 z-[1] bg-high-vis-white">
+        <thead className="sticky top-0 z-[1] bg-neutral-50">
           <tr className="border-b border-neutral-200">
             {columns.map((col, index) => (
               <th
@@ -113,7 +113,7 @@ export function DataTable<T>({
                   sort?.key === col.key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined
                 }
                 className={cn(
-                  'whitespace-nowrap py-2.5 pr-5 font-ui text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500',
+                  'beco-case whitespace-nowrap py-2.5 pr-5 font-ui text-xs font-semibold text-neutral-500',
                   index === 0 && 'pl-4 sm:pl-5',
                   index === columns.length - 1 && 'pr-4 sm:pr-5',
                   col.align === 'right' && 'text-right',
@@ -125,7 +125,7 @@ export function DataTable<T>({
                     type="button"
                     onClick={() => toggleSort(col.key)}
                     className={cn(
-                      'inline-flex min-h-9 items-center gap-1 uppercase tracking-[0.1em] text-neutral-500 hover:text-charcoal',
+                      'beco-case inline-flex min-h-9 items-center gap-1 text-neutral-500 hover:text-charcoal',
                       sort?.key === col.key && 'text-charcoal',
                       col.align === 'right' && 'flex-row-reverse',
                     )}
@@ -149,7 +149,7 @@ export function DataTable<T>({
                 <td
                   key={col.key}
                   className={cn(
-                    'py-3 pr-5 font-ui text-sm text-charcoal',
+                    'py-3.5 pr-5 font-ui text-sm text-charcoal',
                     index === 0 && 'pl-4 sm:pl-5',
                     index === columns.length - 1 && 'pr-4 sm:pr-5',
                     col.align === 'right' && 'text-right tabular-nums',

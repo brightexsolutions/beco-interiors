@@ -3,8 +3,11 @@ import Link from 'next/link';
 import { Panel, TableToolbar, buttonClasses, cn } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { QuoteFilters, type OwnerOption } from '@/components/quote-filters';
+import { QuoteBoard } from '@/components/quote-board';
 import { QuoteResults } from '@/components/quote-results';
+import { QueryViewSwitch } from '@/components/query-view-switch';
 import { fetchQuotes, type QuoteListItem, type QuoteOwnerFilter } from '@/lib/quotes';
+import { parseQuoteView } from '@/lib/quote-view';
 import { QueryNavigationProvider } from '@/lib/use-query-navigation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
@@ -41,6 +44,8 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
   const source = one(params.source) || undefined;
   const search = one(params.search) || undefined;
   const approval = one(params.approval) === 'pending' ? 'pending' : undefined;
+  const view = parseQuoteView(one(params.view) || undefined);
+  const isAdmin = user.role === 'beco_admin' || user.role === 'brightex_admin';
 
   const supabase = await getSupabase();
   const quotes = await fetchQuotes(supabase, user.userId, {
@@ -83,6 +88,15 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
             filters={
               <QuoteFilters ownerOptions={ownerOptions} count={`${quotes.length} ${quotes.length === 1 ? 'quote' : 'quotes'}`} />
             }
+            actions={
+              <QueryViewSwitch
+                view={view}
+                options={[
+                  { value: 'table', label: 'Table', icon: 'rows' },
+                  { value: 'board', label: 'Board', icon: 'columns' },
+                ]}
+              />
+            }
           />
           {approval ? (
             <div className="flex flex-wrap items-center gap-2 px-4 pt-3 sm:px-5">
@@ -100,9 +114,15 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
               </span>
             </div>
           ) : null}
-          <div className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
-            <QuoteResults quotes={quotes} />
-          </div>
+          {view === 'board' ? (
+            <div data-tour="results" className="px-4 pt-3 sm:px-5 xl:px-0">
+              <QuoteBoard quotes={quotes} viewerId={user.userId} isAdmin={isAdmin} />
+            </div>
+          ) : (
+            <div data-tour="results" className="px-4 pb-4 sm:px-5 xl:px-0 xl:pb-0">
+              <QuoteResults quotes={quotes} />
+            </div>
+          )}
         </Panel>
       </QueryNavigationProvider>
     </>

@@ -12,13 +12,17 @@ import { cn } from '../lib/cn';
  * deliberately separate from the three brand colours, so a "won" quote does
  * not spend any of the page's Warm Red budget.
  */
-export type StatusTone = 'neutral' | 'positive' | 'attention' | 'muted';
+export type StatusTone = 'neutral' | 'positive' | 'attention' | 'muted' | 'info' | 'warning';
 
 const TONES: Record<StatusTone, string> = {
   neutral: 'bg-neutral-100 text-neutral-700',
-  positive: 'bg-success/10 text-success',
-  attention: 'bg-warm-red-deep/10 text-warm-red-deep',
+  positive: 'bg-success-soft text-success-deep',
+  attention: 'bg-danger-soft text-danger',
   muted: 'bg-neutral-100 text-neutral-500',
+  /** A state in flight, neither good nor bad yet: quoted, confirmed. D143. */
+  info: 'bg-info-soft text-info',
+  /** A state that wants a look but not today: reviewing, deposit paid. D143. */
+  warning: 'bg-warning-soft text-warning',
 };
 
 export interface StatusPillProps {

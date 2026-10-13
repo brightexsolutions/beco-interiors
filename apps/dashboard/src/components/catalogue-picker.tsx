@@ -28,12 +28,35 @@ export function rangeSelectGroups(
 const money = (n: number) =>
   new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
 
-/** Default qty and price when a published product is added to a quote. */
+/** Default qty and price when a published product is added to a quote. A
+ *  picked size with its own price sets the price; one without takes the
+ *  product's. D137. */
 export function catalogueLineDraft(hit: CatalogueHit): { quantity: number; unitPrice: number } {
   return {
     quantity: hit.unit === 'per slab' ? 0.5 : 1,
-    unitPrice: hit.price ?? 0,
+    unitPrice: hit.sizePrice ?? hit.price ?? 0,
   };
+}
+
+/** What the quote line is called: the product, then the size when one was picked. */
+export const catalogueLineName = (hit: CatalogueHit): string => (hit.size ? `${hit.name}, ${hit.size}` : hit.name);
+
+/**
+ * One row per size, D137: a handle in three lengths is three lines to tick,
+ * each named for its size and carrying that size's price. A product with no
+ * sizes is one row, as before. `key` tells the rows apart in the selection.
+ */
+export function expandSizes(hits: CatalogueHit[]): CatalogueHit[] {
+  return hits.flatMap((hit) => {
+    const sizes = hit.sizes ?? [];
+    if (sizes.length === 0) return [{ ...hit, key: hit.id }];
+    return sizes.map((size) => ({
+      ...hit,
+      key: `${hit.id}:${size.label}`,
+      size: size.label,
+      sizePrice: size.price,
+    }));
+  });
 }
 
 type LoadState =
@@ -88,7 +111,7 @@ export const CataloguePicker = forwardRef<
   const catalogue = load.status === 'ready' ? load.catalogue : null;
   const ranges = useMemo(() => catalogue?.ranges ?? [], [catalogue]);
   const hits = useMemo(
-    () => (catalogue ? filterCatalogue(catalogue.products, { term: query, rangeId: range || null }) : []),
+    () => (catalogue ? expandSizes(filterCatalogue(catalogue.products, { term: query, rangeId: range || null })) : []),
     [catalogue, query, range],
   );
 
@@ -104,10 +127,11 @@ export const CataloguePicker = forwardRef<
   };
 
   const toggle = (hit: CatalogueHit) => {
+    const key = hit.key ?? hit.id;
     setSelected((current) => {
       const next = new Map(current);
-      if (next.has(hit.id)) next.delete(hit.id);
-      else next.set(hit.id, hit);
+      if (next.has(key)) next.delete(key);
+      else next.set(key, hit);
       return next;
     });
   };
@@ -228,15 +252,16 @@ export const CataloguePicker = forwardRef<
             {hitGroups.map((group) => (
               <li key={group.name} className="mb-2">
                 {range ? null : (
-                  <h3 className="sticky top-0 z-10 bg-high-vis-white px-3 py-2 font-ui text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">
+                  <h3 className="sticky top-0 z-10 bg-high-vis-white px-3 py-2 beco-case font-ui text-xs font-semibold text-neutral-500">
                     {group.name}
                   </h3>
                 )}
                 <ul>
                   {group.hits.map((hit) => {
-                    const checked = selected.has(hit.id);
+                    const key = hit.key ?? hit.id;
+                    const checked = selected.has(key);
                     return (
-                      <li key={hit.id}>
+                      <li key={key}>
                         <label
                           className={cn(
                             'flex min-h-16 cursor-pointer items-center gap-3 border-l-4 px-3 py-2 font-ui text-base text-charcoal',
@@ -263,11 +288,11 @@ export const CataloguePicker = forwardRef<
                             <span aria-hidden className="size-12 shrink-0 rounded-control bg-neutral-100" />
                           )}
                           <span className="min-w-0 flex-1">
-                            <span className="block">{hit.name}</span>
+                            <span className="block">{catalogueLineName(hit)}</span>
                             {hit.unit ? <span className="block text-sm text-neutral-500">{hit.unit}</span> : null}
                           </span>
                           <span className="shrink-0 tabular-nums text-neutral-500">
-                            {hit.price ? money(hit.price) : 'POA'}
+                            {hit.sizePrice ?? hit.price ? money(hit.sizePrice ?? hit.price ?? 0) : 'POA'}
                           </span>
                         </label>
                       </li>

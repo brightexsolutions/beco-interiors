@@ -40,6 +40,7 @@ const user = (
   canWriteBlog: false,
   canReadAudit: false,
   canManageUsers: false,
+  moduleGrants: [],
   ...over,
 });
 

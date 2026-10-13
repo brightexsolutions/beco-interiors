@@ -3,7 +3,7 @@ export { Spinner } from './components/spinner';
 export { Busy } from './components/busy';
 export { Fab, fabClasses, type FabProps } from './components/fab';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
-export { Dialog, type DialogProps } from './components/dialog';
+export { Dialog, DialogBody, DialogFooter, type DialogProps } from './components/dialog';
 export { Sheet, type SheetProps } from './components/sheet';
 export { Icon, type IconName } from './components/icon';
 export { Tooltip, type TooltipProps } from './components/tooltip';
@@ -28,6 +28,8 @@ export {
 export { EmptyState, LoadingState, ErrorState } from './components/states';
 export { Skeleton, SkeletonScreen } from './components/skeleton';
 export { Panel } from './components/panel';
+export { Portal } from './components/portal';
+export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from './components/segmented-control';
 export { Pagination } from './components/pagination';
 export { paginate, DASHBOARD_LIST_PAGE_SIZE } from './lib/paginate';
 export { Reveal, type RevealProps } from './components/reveal';
@@ -48,6 +50,7 @@ export {
   StatCard,
   type StatCardProps,
   type StatCardTone,
+  type StatCardIconTone,
   type StatCardDelta,
   type StatCardMeter,
   type StatCardSegment,

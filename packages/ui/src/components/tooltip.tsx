@@ -120,7 +120,7 @@ export function Tooltip({ content, children, infoLabel, align = 'start', classNa
           setDismissed(false);
           setPinned((current) => !current);
         }}
-        className="inline-flex h-11 w-11 shrink-0 items-center justify-center text-neutral-500 transition-colors hover:text-charcoal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-warm-red"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center text-neutral-500 transition-colors hover:text-charcoal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
       >
         <Icon name="info" className="h-5 w-5" />
       </button>

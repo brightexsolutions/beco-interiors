@@ -56,6 +56,7 @@ const product: CatalogueProduct = {
   metaTitle: 'Limestone Ivory sintered stone',
   metaDescription: 'Stocked in Nairobi.',
   specs: [{ label: 'Finish', value: 'Soft Matte' }],
+  sizes: [],
   images: [],
   unit: 'per slab',
   stockQuantity: 4,
@@ -326,5 +327,32 @@ describe('ProductEditor, the tip on the publish control', () => {
       <ProductEditor product={{ ...draft, images: [], price: null }} categories={[]} />,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('sizes, D137', () => {
+  it('lists the sizes the product comes in, lets one be added and removed, and sends them with Save', async () => {
+    const user = userEvent.setup();
+    render(
+      <ProductEditor
+        product={{ ...product, sizes: [{ label: '96mm', price: 850, sku: null }] }}
+        categories={[]}
+      />,
+    );
+    expect(screen.getByRole('textbox', { name: 'Size' })).toHaveValue('96mm');
+    await user.click(screen.getByRole('button', { name: 'Add size' }));
+    const labels = screen.getAllByRole('textbox', { name: 'Size' });
+    expect(labels).toHaveLength(2);
+    await user.type(labels[1]!, '128mm');
+    await user.type(screen.getAllByRole('spinbutton', { name: /^Price KES/ })[1]!, '950');
+    await user.click(screen.getByRole('button', { name: 'Remove size 96mm' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    const form = updateProduct.mock.calls.at(-1)?.[1] as FormData;
+    expect(JSON.parse(String(form.get('sizes')))).toEqual([{ label: '128mm', price: 950, sku: null }]);
+  });
+
+  it('says a product is one size when it has none', () => {
+    render(<ProductEditor product={product} categories={[]} />);
+    expect(screen.getByText('One size. Add sizes if the counter has to pick one.')).toBeInTheDocument();
   });
 });

@@ -41,7 +41,7 @@ describe('CustomerCreate (D130)', () => {
     expect(form.get('kraPin')).toBe('a123456789z');
     expect(form.get('clientType')).toBe('designer');
     expect(form.has('notes')).toBe(true);
-    expect(onCreated).toHaveBeenCalledWith(customer);
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(customer));
     await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith('ZZ Wanjiku added.'));
   });
 

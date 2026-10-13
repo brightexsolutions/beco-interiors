@@ -137,6 +137,7 @@ describe('loadPickerCatalogue', () => {
       categoryName: '12mm Sintered Stones',
       parentCategoryName: 'Sintered Stone',
       thumb: 'https://img.test/stone/jatoba/slab-0-400.webp',
+      sizes: [],
     });
     expect(JSON.stringify(hits)).not.toContain('base64');
     expect(hits.find((item) => item.id === 'p-amber')!.thumb).toBeNull();

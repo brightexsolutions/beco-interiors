@@ -744,7 +744,19 @@ post under `/_vercel` on the site's own origin, so `'self'` covers them; in deve
 
 Dashboard and studio use the same headers plus `X-Robots-Tag: noindex, nofollow`, and drop the
 Google Tag Manager and Analytics entries, since neither is loaded there. The dashboard also
-sets `worker-src 'self'` so pdf.js can paint quote, receipt, and sales-review pages onto canvas.
+sets `worker-src 'self' blob:` so pdf.js can paint quote, receipt, and sales-review pages onto
+canvas and the HEIC decoder (D139) can run the worker it builds from a blob URL, and
+`'wasm-unsafe-eval'` for that decoder's WebAssembly. `connect-src` names the account's own R2 S3
+host, built from `R2_ACCOUNT_ID` at build time, so the browser can PUT a photograph straight to
+the bucket (D116). Until 12 October it did not, so every direct upload was refused by the policy
+and fell back to the form post, which is where "the direct upload failed and 9.5MB is too large
+to send the slow way" came from. `R2_ENDPOINT` replaces the host in local development against an
+S3 compatible stand in, never in production.
+
+**`R2_ACCOUNT_ID` must be a plain variable, not Sensitive (D150).** The CSP is built at build
+time in GitHub Actions after `vercel pull`, which hands a Sensitive variable over as
+`[sensitive]`. The build then leaves the host out and logs a D150 warning, and photographs take
+the slower form post. The access key and secret stay Sensitive: they are read at run time.
 
 `'unsafe-inline'` on `script-src` is a known compromise for Next.js inline bootstrap scripts.
 Tighten it to a nonce based policy once the app is stable, and record that as a follow up

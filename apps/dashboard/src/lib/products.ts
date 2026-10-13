@@ -1,8 +1,8 @@
-import type { Availability, PriceDisplayMode, ProductBadge, ProductImage } from '@beco/types';
+import type { Availability, PriceDisplayMode, ProductBadge, ProductImage, ProductSize } from '@beco/types';
 import { IMAGE_ROLES } from '@beco/types';
 import { displayAvailability } from '@beco/ui';
 import { createServerClient } from '@beco/supabase-client';
-import { specsFromRecord } from '@beco/validation';
+import { parseProductSizes, specsFromRecord } from '@beco/validation';
 
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
@@ -39,6 +39,8 @@ export interface CatalogueProduct {
   metaTitle: string | null;
   metaDescription: string | null;
   specs: { label: string; value: string }[];
+  /** The sizes the product comes in, D137. Empty for most products. */
+  sizes: ProductSize[];
   images: ProductImage[];
   unit: string | null;
   stockQuantity: number | null;
@@ -136,6 +138,10 @@ export const parseProductImages = (value: unknown): ProductImage[] => {
     .sort((a, b) => a.sort - b.sort);
 };
 
+/** "3 sizes", or null when the product has none. */
+export const sizesLabel = (sizes: readonly ProductSize[]): string | null =>
+  sizes.length === 0 ? null : sizes.length === 1 ? '1 size' : `${sizes.length} sizes`;
+
 export const productImageUrl = (path: string, width: 400 | 800 | 1600 = 400): string => {
   const host = (process.env.NEXT_PUBLIC_IMAGE_HOST ?? '').replace(/\/$/, '');
   return `${host}/${path}-${width}.webp`;
@@ -161,6 +167,7 @@ interface ProductRow {
   meta_title: string | null;
   meta_description: string | null;
   specs: unknown;
+  sizes: unknown;
   images: unknown;
   unit: string | null;
   stock_quantity: number | null;
@@ -178,7 +185,7 @@ const oneCategory = (
 
 const PRODUCT_SELECT = `id, name, slug, sku, category_id, price, compare_at_price, price_display_mode, availability, badge,
        is_published, sort_order, short_description, description, meta_title, meta_description,
-       specs, images, unit, stock_quantity, low_stock_threshold, updated_at, categories(id, name, slug)`;
+       specs, sizes, images, unit, stock_quantity, low_stock_threshold, updated_at, categories(id, name, slug)`;
 
 const toProduct = (row: ProductRow): CatalogueProduct => {
   const category = oneCategory(row.categories);
@@ -202,6 +209,7 @@ const toProduct = (row: ProductRow): CatalogueProduct => {
     metaTitle: row.meta_title,
     metaDescription: row.meta_description,
     specs: specsFromRecord(row.specs),
+    sizes: parseProductSizes(row.sizes),
     images: parseProductImages(row.images),
     unit: row.unit,
     stockQuantity: row.stock_quantity,

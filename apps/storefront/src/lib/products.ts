@@ -7,6 +7,28 @@ import type { ProductImage, ProjectType } from '@beco/types';
  * product is invisible here because the database says so, not because this
  * query remembered to filter.
  */
+export interface ProductSizeRow {
+  label: string;
+  price: number | null;
+  sku: string | null;
+}
+
+/** The sizes column read defensively: a bad row is dropped, never thrown. */
+export const productSizes = (value: unknown): ProductSizeRow[] => {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== 'object') return [];
+    const rec = row as Record<string, unknown>;
+    const label = typeof rec.label === 'string' ? rec.label.trim() : '';
+    if (!label) return [];
+    return [{
+      label,
+      price: typeof rec.price === 'number' && rec.price > 0 ? rec.price : null,
+      sku: typeof rec.sku === 'string' && rec.sku.trim() ? rec.sku.trim() : null,
+    }];
+  });
+};
+
 export interface CatalogueProduct {
   id: string;
   name: string;
@@ -26,6 +48,8 @@ export interface CatalogueProduct {
   category?: { name: string; slug: string } | null;
   /** Carried on the list query so the shop can facet on finish. */
   specs?: Record<string, string> | null;
+  /** The sizes the product comes in, D137: `[{ label, price, sku }]`. */
+  sizes?: ProductSizeRow[] | null;
   /**
    * Genuinely unique per stone, unlike `specs['Recommended for']`, which is
    * the same sentence on every product and therefore useless as hero copy
@@ -50,7 +74,7 @@ const anon = () =>
  */
 const PRODUCT_COLUMNS =
   'id,name,slug,price,compare_at_price,price_display_mode,availability,stock_quantity,face_type,unit,badge,' +
-  'images,specs,short_description,categories(name,slug)';
+  'images,specs,sizes,short_description,categories(name,slug)';
 
 // The generated types cannot narrow an embedded join in a select string, so
 // the shape is asserted here and guaranteed by PRODUCT_COLUMNS above.

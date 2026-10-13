@@ -15,7 +15,7 @@ import {
 } from '@beco/ui';
 import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
-import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, isExpired, type QuoteListItem } from '@/lib/quotes';
+import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, isExpired, quoteMoney, type QuoteListItem } from '@/lib/quotes';
 
 /**
  * The table's column config carries render functions, which cannot cross a
@@ -25,8 +25,7 @@ import { QUOTE_SOURCE_LABEL, QUOTE_STATUS, isExpired, type QuoteListItem } from 
  * built here, inside the client boundary.
  */
 
-const money = (n: number) =>
-  new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(n);
+const money = quoteMoney;
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', timeZone: 'Africa/Nairobi' });

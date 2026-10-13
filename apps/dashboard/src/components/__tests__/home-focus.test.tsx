@@ -24,6 +24,16 @@ describe('HomeFocus', () => {
     expect(screen.getByRole('link', { name: 'New quote' })).toHaveAttribute('href', '/quotes/new');
   });
 
+  it('is drawn on the vein pattern band, with the red edge only on a breach (D143)', () => {
+    const { container, unmount } = render(<HomeFocus focus={base} approvals={0} />);
+    const card = container.querySelector('section')!;
+    expect(card.className).toContain('beco-veins');
+    expect(card.querySelector('.bg-warm-red.h-1, .h-1.bg-warm-red')).not.toBeNull();
+    unmount();
+    const calm = render(<HomeFocus focus={{ ...base, breached: false }} approvals={0} />);
+    expect(calm.container.querySelector('.h-1.bg-warm-red')).toBeNull();
+  });
+
   it('says On time rather than Past target inside the SLA', () => {
     render(<HomeFocus focus={{ ...base, breached: false }} approvals={0} />);
     expect(screen.queryByText('Past target')).toBeNull();

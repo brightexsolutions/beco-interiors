@@ -4,6 +4,8 @@ import {
   deleteProductSchema,
   setProductPublishedSchema,
   isValidStockAmount,
+  parseProductSizes,
+  sizesFromForm,
   slugifyProductName,
   specsFromRecord,
   specsToRecord,
@@ -201,5 +203,52 @@ describe('specs round trip', () => {
       { label: 'Finish', value: 'Matte' },
       { label: 'Thickness', value: '12mm' },
     ]);
+  });
+});
+
+describe('product sizes, D137', () => {
+  it('accepts a list of sizes, each with an optional price and code, and keeps their order', () => {
+    const parsed = updateProductSchema.safeParse({
+      ...base,
+      sizes: [
+        { label: '96mm', price: '850', sku: 'HT-96' },
+        { label: '128mm', price: '', sku: '' },
+        { label: '160mm', price: null, sku: null },
+      ],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.sizes).toEqual([
+        { label: '96mm', price: 850, sku: 'HT-96' },
+        { label: '128mm', price: null, sku: null },
+        { label: '160mm', price: null, sku: null },
+      ]);
+    }
+  });
+
+  it('defaults to no sizes, refuses a duplicate label and a zero price', () => {
+    const none = updateProductSchema.safeParse(base);
+    expect(none.success).toBe(true);
+    if (none.success) expect(none.data.sizes).toEqual([]);
+
+    const twice = updateProductSchema.safeParse({ ...base, sizes: [{ label: '96mm' }, { label: '96MM' }] });
+    expect(twice.success).toBe(false);
+    if (!twice.success) expect(twice.error.issues[0]?.message).toBe('Size 96MM is listed twice');
+
+    const zero = updateProductSchema.safeParse({ ...base, sizes: [{ label: '96mm', price: '0' }] });
+    expect(zero.success).toBe(false);
+  });
+
+  it('drops an empty editor row before validation, and reads the stored column defensively', () => {
+    expect(sizesFromForm(JSON.stringify([{ label: ' ', price: null }, { label: '128mm', price: 950 }]))).toEqual([
+      { label: '128mm', price: 950 },
+    ]);
+    expect(sizesFromForm('not json')).toEqual([]);
+    expect(sizesFromForm(undefined)).toEqual([]);
+    expect(parseProductSizes([{ label: '128mm', price: 950, sku: ' A1 ' }, { label: '', price: 1 }, 'junk', { label: '160mm', price: -4 }])).toEqual([
+      { label: '128mm', price: 950, sku: 'A1' },
+      { label: '160mm', price: null, sku: null },
+    ]);
+    expect(parseProductSizes('x')).toEqual([]);
   });
 });

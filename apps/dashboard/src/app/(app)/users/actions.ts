@@ -7,10 +7,12 @@ import {
   removeStaffPhotoSchema,
   resetStaffPasswordSchema,
   saveStaffPublicProfileSchema,
+  setModuleGrantsSchema,
   setStaffActiveSchema,
   setStaffRoleSchema,
   uploadStaffPhotoSchema,
 } from '@beco/validation';
+import { MODULE_LABEL, grantableModules, grantsFrom } from '@/lib/access';
 import { requirePath, type ActiveSession } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { getServiceSupabase } from '@/lib/supabase-admin';
@@ -382,4 +384,64 @@ export async function removeStaffPhoto(_prev: UserActionState, form: FormData): 
   }
   await refreshUsersAndTeam();
   return { ok: 'Photograph removed from /team.' };
+}
+
+/**
+ * The module grants on one account, D136: the editor sends the whole set.
+ * Brightex writes any set. A holder of the staff grant may only hand on what
+ * they reach themselves, on a Beco account, never their own: the trigger in
+ * migration 70 enforces each of those, this says the same thing before the
+ * write so the toast is a sentence rather than a Postgres message.
+ */
+export async function setModuleGrants(_prev: UserActionState, form: FormData): Promise<UserActionState> {
+  const session = await requirePath('/users');
+  const parsed = setModuleGrantsSchema.safeParse({
+    userId: formString(form, 'userId'),
+    updatedAt: formString(form, 'updatedAt'),
+    modules: form.getAll('modules').map(String),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Reload and try again.' };
+  if (parsed.data.userId === session.userId) return { error: 'You cannot change your own access.' };
+  const allowed = grantableModules(session.role, grantsFrom(session));
+  if (allowed.length === 0) return { error: 'Only Brightex can assign that permission.' };
+  const refused = await refuseBrightexTarget(session, parsed.data.userId);
+  if (refused) return { error: refused };
+
+  const supabase = await getSupabase();
+  const current = await supabase
+    .from('users')
+    .select('id, full_name, module_grants, updated_at')
+    .eq('id', parsed.data.userId)
+    .maybeSingle();
+  if (!current.data) return { error: 'That account is gone. Reload the list.' };
+  if (current.data.updated_at !== parsed.data.updatedAt) {
+    return { error: 'This account changed while you were editing. Reload and try again.' };
+  }
+  const before = new Set(current.data.module_grants ?? []);
+  const outOfReach = parsed.data.modules.filter((module) => !before.has(module) && !allowed.includes(module));
+  if (outOfReach.length > 0) return { error: 'You can only grant access you hold yourself.' };
+  const revokedOutOfReach = [...before].filter(
+    (module) => !parsed.data.modules.includes(module as (typeof parsed.data.modules)[number]) && !allowed.includes(module as (typeof allowed)[number]),
+  );
+  if (revokedOutOfReach.length > 0) return { error: 'You can only change access you hold yourself.' };
+
+  const { data, error } = await supabase
+    .from('users')
+    .update({ module_grants: parsed.data.modules, updated_at: bumpLock() })
+    .eq('id', parsed.data.userId)
+    .eq('updated_at', parsed.data.updatedAt)
+    .select('id')
+    .maybeSingle();
+  if (error) return { error: userMutationMessage(error) };
+  if (!data) return { error: 'This account changed while you were editing. Reload and try again.' };
+
+  revalidatePath('/users');
+  revalidatePath('/settings');
+  const names = parsed.data.modules.map((module) => MODULE_LABEL[module]);
+  return {
+    ok:
+      names.length === 0
+        ? `${current.data.full_name} has no extra access now. Their role decides what they see.`
+        : `${current.data.full_name} can now see ${names.join(', ')}.`,
+  };
 }
