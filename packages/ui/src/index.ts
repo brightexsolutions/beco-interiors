@@ -3,7 +3,7 @@ export { Spinner } from './components/spinner';
 export { Busy } from './components/busy';
 export { Fab, fabClasses, type FabProps } from './components/fab';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
-export { Dialog, type DialogProps } from './components/dialog';
+export { Dialog, DialogBody, DialogFooter, type DialogProps } from './components/dialog';
 export { Sheet, type SheetProps } from './components/sheet';
 export { Icon, type IconName } from './components/icon';
 export { Tooltip, type TooltipProps } from './components/tooltip';

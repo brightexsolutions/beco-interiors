@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Dialog, cn } from '@beco/ui';
+import { Dialog, DialogBody, cn } from '@beco/ui';
 import type { BottomNav as BottomNavModel, NavItem } from '@/lib/nav-items';
 import { NavGlyph } from './nav-glyph';
 
@@ -24,7 +24,15 @@ const Glyph = NavGlyph;
 const isActive = (pathname: string, href: string) =>
   href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
-function BarItem({ item, active, badge }: { item: NavItem; active: boolean; badge?: number | undefined }) {
+function BarItem({
+  item,
+  active,
+  badge,
+}: {
+  item: NavItem;
+  active: boolean;
+  badge?: number | undefined;
+}) {
   return (
     <Link
       href={item.href}
@@ -91,17 +99,33 @@ export function BottomNav({
           {slots.map((slot) => {
             if (slot.kind === 'new') {
               return (
-                <li key="new" className="flex min-w-0 flex-1 flex-col items-center justify-end pb-1">
+                <li
+                  key="new"
+                  className="flex min-w-0 flex-1 flex-col items-center justify-end pb-1"
+                >
                   <Link
                     href="/quotes/new"
                     aria-label="New quote"
-                    className="-mt-5 flex h-12 w-12 items-center justify-center rounded-[10px] bg-charcoal text-high-vis-white shadow-panel transition-colors hover:bg-neutral-700"
+                    className="-mt-5 flex h-12 w-12 items-center justify-center rounded-control bg-charcoal text-high-vis-white shadow-panel transition-colors hover:bg-neutral-700"
                   >
-                    <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                    <svg
+                      aria-hidden
+                      viewBox="0 0 24 24"
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    >
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                   </Link>
-                  <span aria-hidden className="mt-1 font-ui text-xs font-semibold leading-none text-charcoal">New quote</span>
+                  <span
+                    aria-hidden
+                    className="mt-1 font-ui text-xs font-semibold leading-none text-charcoal"
+                  >
+                    New quote
+                  </span>
                 </li>
               );
             }
@@ -118,7 +142,9 @@ export function BottomNav({
                       moreActive ? 'text-charcoal' : 'text-neutral-500 hover:text-charcoal',
                     )}
                   >
-                    {moreActive ? <span aria-hidden className="absolute top-0 h-0.5 w-8 bg-charcoal" /> : null}
+                    {moreActive ? (
+                      <span aria-hidden className="absolute top-0 h-0.5 w-8 bg-charcoal" />
+                    ) : null}
                     <Glyph href="more" />
                     <span>More</span>
                   </button>
@@ -140,47 +166,49 @@ export function BottomNav({
 
       {nav.more.length > 0 ? (
         <Dialog open={moreOpen} onOpenChange={setMoreOpen} title="More">
-          <ul className="grid grid-cols-2 gap-2">
-            {nav.more.map((item) => {
-              const active = isActive(pathname, item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'flex min-h-14 items-center gap-3 rounded-[10px] border px-4 font-ui text-base font-semibold transition-colors',
-                      active
-                        ? 'border-charcoal bg-charcoal text-high-vis-white'
-                        : 'border-neutral-200 text-charcoal hover:bg-neutral-100',
-                    )}
-                  >
-                    <Glyph href={item.href} className="h-5 w-5 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="mt-5 border-t border-neutral-200 pt-4">
-            <p className="truncate font-ui text-sm text-neutral-500">Signed in as {name}</p>
-            <div className="mt-2 flex items-center gap-2">
-              <Link
-                href="/change-password"
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[10px] border border-neutral-200 px-4 font-ui text-base font-semibold text-charcoal hover:bg-neutral-100"
-              >
-                Change password
-              </Link>
-              <form action="/sign-out" method="post" className="flex-1">
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-[10px] border border-neutral-200 px-4 font-ui text-base font-semibold text-charcoal hover:bg-neutral-100"
+          <DialogBody>
+            <ul className="grid grid-cols-2 gap-2">
+              {nav.more.map((item) => {
+                const active = isActive(pathname, item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        'flex min-h-14 items-center gap-3 rounded-control border px-4 font-ui text-base font-semibold transition-colors',
+                        active
+                          ? 'border-charcoal bg-charcoal text-high-vis-white'
+                          : 'border-neutral-200 text-charcoal hover:bg-neutral-100',
+                      )}
+                    >
+                      <Glyph href={item.href} className="h-5 w-5 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-5 border-t border-neutral-200 pt-4">
+              <p className="truncate font-ui text-sm text-neutral-500">Signed in as {name}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <Link
+                  href="/change-password"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-control border border-neutral-200 px-4 font-ui text-base font-semibold text-charcoal hover:bg-neutral-100"
                 >
-                  Sign out
-                </button>
-              </form>
+                  Change password
+                </Link>
+                <form action="/sign-out" method="post" className="flex-1">
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-control border border-neutral-200 px-4 font-ui text-base font-semibold text-charcoal hover:bg-neutral-100"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </div>
             </div>
-          </div>
+          </DialogBody>
         </Dialog>
       ) : null}
     </>
