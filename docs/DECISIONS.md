@@ -3835,3 +3835,18 @@ size price is saved in its place (`lowestSizePrice`), so the database rule holds
 migration and the quote picker's fallback is still a real figure. A size without a price still
 needs the product price, since that size takes it. The shop and the editor's preview say "From
 KES 255" whenever a product's sizes come to more than one price (`priceIsFrom`).
+
+## D153, 14 October 2026: the session is read once per request
+
+Brown: clicks across the dashboard take a while to land. The functions already run in Dublin
+(`dub1`) beside the database in Ireland, so the time is in the round trips each click makes, in
+sequence: the proxy asks Supabase Auth who the caller is and reads their `users` row, then the
+layout does both again, then the page does both a third time, before the page's own queries.
+`requireSignedIn` now reads through a `cache()`d `readSession`, so the layout and the page share
+one answer per request; the proxy keeps its own check as the first gate. React's `cache` lasts a
+single server request, so a role change or deactivation is still seen on the next click, and the
+redirects stay outside the cached function.
+
+Still to measure on the live site with a real account: the time from a click to the next screen,
+and whether the proxy's check should move to `getClaims` (verified locally, no network) once the
+project's JWT keys are asymmetric.

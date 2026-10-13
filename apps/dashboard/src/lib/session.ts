@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@beco/supabase-client';
 import type { UserRole } from '@beco/types';
@@ -87,14 +88,25 @@ export const resolveAdminRole = async (
  * Everything else should use `requireUser`.
  */
 export const requireSignedIn = async (): Promise<ActiveSession> => {
+  const session = await readSession();
+  if (session === 'signed-out') redirect('/login');
+  if (!session || !session.role) redirect('/login?denied=1');
+  return session as ActiveSession;
+};
+
+/**
+ * Who is asking, read once per request. The layout and the page each need
+ * it, and each asking Supabase Auth and reading `users` again added two
+ * sequential round trips to every click (D153). React's `cache` is scoped to
+ * a single server request, so a change to the account is seen on the next
+ * one; the redirects stay outside so nothing thrown is cached.
+ */
+const readSession = cache(async (): Promise<SessionUser | null | 'signed-out'> => {
   const supabase = await getSupabase();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect('/login');
-
-  const user = await resolveSessionUser(supabase, auth.user.id);
-  if (!user || !user.role) redirect('/login?denied=1');
-  return user as ActiveSession;
-};
+  if (!auth.user) return 'signed-out';
+  return resolveSessionUser(supabase, auth.user.id);
+});
 
 /**
  * Signed in, active, and past the forced password change. The route side of
