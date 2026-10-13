@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Beco Platform: Technical Handbook</title>
+<link rel="stylesheet" href="handbook.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<section class="cover">
+  <div class="photo" style="background-image:url('../../apps/storefront/public/site-photos/kitchen-charcoal-island.webp')"></div>
+  <div class="shade"></div>
+  <div class="inner">
+    <div class="brand"><img src="../../apps/storefront/public/logo-lockup-white.png" alt="Beco Interiors"></div>
+    <div class="eyebrow">Technical handbook, for developers</div>
+    <h1>The Beco platform,<br>from the inside</h1>
+    <p class="lede">Architecture, data model, access control, the flows that matter, and how a change reaches production. Written so a developer new to the codebase can take it over.</p>
+    <div class="meta">
+      <div><b>Prepared for</b>Beco Interiors</div>
+      <div><b>Prepared by</b>Brightex Solutions</div>
+      <div><b>Date</b>13 October 2026</div>
+      <div><b>Reference</b>BEC-2026-004, release 18</div>
+    </div>
+    <div class="confid">Confidential: prepared for Beco Interiors and the developers it appoints</div>
+  </div>
+</section>
+
+<table class="flow">
+<thead><tr><td>
+  <div class="runhead"><div class="l"><img src="../../apps/storefront/public/logo-mark-white.png" alt=""><span class="name">Beco Interiors</span></div><span class="doc">Technical handbook &middot; 13 October 2026</span></div>
+  <div class="runhead-gap"></div>
+</td></tr></thead>
+<tfoot><tr><td>
+  <div class="runfoot"><span class="bx">Bright<span>ex</span> Solutions</span><span>www.brightexsolutions.co.ke &middot; +254 741 980 127 &middot; info.brightexsolutions@gmail.com</span></div>
+</td></tr></tfoot>
+<tbody><tr><td>
+
+<!-- ============ CONTENTS ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">00</div><div><div class="sec-tag">Start here</div><div class="sec-title">Contents</div></div></div>
+  <div class="toc">
+    <div><span>01</span>The platform at a glance</div>
+    <div><span>08</span>Security</div>
+    <div><span>02</span>Architecture</div>
+    <div><span>09</span>Environments and releases</div>
+    <div><span>03</span>Repository and stack</div>
+    <div><span>10</span>Testing and quality gates</div>
+    <div><span>04</span>Routes</div>
+    <div><span>11</span>Accounts and ownership</div>
+    <div><span>05</span>Data model</div>
+    <div><span>12</span>Known gaps</div>
+    <div><span>06</span>Access control</div>
+    <div><span>13</span>Your first day</div>
+    <div><span>07</span>The flows that matter</div>
+    <div><span>A</span>Key decisions</div>
+  </div>
+  <p class="lede">Beco sells interior materials through multi item quotations, not a checkout. Everything here serves one job: a salesperson raises, prices and issues a branded quote from a phone faster than writing it on paper.</p>
+  <div class="note"><b>Sources of truth.</b> This handbook summarises the repository as released on 13 October 2026 (main at <code>65ac22d</code>, both databases at migration 71). Where it and the code disagree, the code wins. The committed docs in <code>docs/</code> go deeper: <code>DECISIONS.md</code> (why), <code>SCHEMA.md</code>, <code>SECURITY.md</code>, <code>DEPLOYMENT.md</code>, <code>RUNBOOK.md</code>, <code>HANDOVER.md</code>, <code>QA-CHECKLIST.md</code>. <code>CLAUDE.md</code> holds the project rules every change must keep.</div>
+</div>
+
+<!-- ============ 01 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">01</div><div><div class="sec-tag">Overview</div><div class="sec-title">The platform at a glance</div></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">2</div><div class="l">Apps, one monorepo</div></div>
+    <div class="kpi"><div class="v">22</div><div class="l">Postgres tables</div></div>
+    <div class="kpi"><div class="v">71</div><div class="l">Migrations applied</div></div>
+    <div class="kpi"><div class="v">3,300+</div><div class="l">Automated tests</div></div>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="k">Public</div><h4>Storefront, www.beco.co.ke</h4><p>Catalogue by range, product pages with price or price on request, a quote list kept in the browser, and a submission that becomes a quote in the database. Blog, gallery, team, contact. Statically generated and revalidated hourly or on demand.</p></div>
+    <div class="card"><div class="k">Staff</div><h4>Dashboard, dashboard.beco.co.ke</h4><p>Quotes (table and board), counter quotes on a phone, orders and receipts, customers, catalogue and photographs, announcements, reports, users and permissions, settings, audit. Studio (blog drafting) lives inside it, Brightex only.</p></div>
+  </div>
+  <h3>Principles that shape every file</h3>
+  <ul class="arrows">
+    <li><b>The database is the authority.</b> Row level security is deny by default on every table; changes to quote lines and statuses go through Postgres functions that enforce the business rules and an optimistic lock.</li>
+    <li><b>Checked in two places.</b> Route access is decided by one map (<code>apps/dashboard/src/lib/access.ts</code>) in the proxy and in every page and action, and again by RLS. Hiding a button is never access control.</li>
+    <li><b>Everything is tested.</b> Unit, component (jsdom), integration against a local Supabase, and pgTAP tests for every policy from every role. No browser automation in the suite; journeys are walked by hand against <code>docs/QA-CHECKLIST.md</code>.</li>
+    <li><b>Beco owns its accounts.</b> Data, DNS, images and email are on Beco's accounts; Brightex holds only the repository and the Vercel projects.</li>
+    <li><b>House rules enforced by CI:</b> no em dashes anywhere, no browser dialogs (<code>ConfirmDialog</code> and <code>toast()</code> instead), a 16px type floor, verified contrast.</li>
+  </ul>
+</div>
+
+<!-- ============ 02 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">02</div><div><div class="sec-tag">How it fits together</div><div class="sec-title">Architecture</div></div></div>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph L1[" "]
+    direction LR
+    B([Buyers]):::person
+    S([Beco staff]):::person
+    X([Brightex]):::person
+  end
+  DNS[Cloudflare DNS, beco.co.ke<br/>Beco's account]:::edge
+  subgraph L2[Vercel, two projects]
+    direction LR
+    SF[Storefront<br/>www.beco.co.ke]:::app
+    DB[Dashboard and Studio<br/>dashboard.beco.co.ke]:::app
+  end
+  subgraph L3[Supabase, Beco's organisation]
+    direction LR
+    PG[(Postgres 17<br/>RLS, functions, audit)]:::store
+    AU[Auth<br/>staff only]:::store
+    ST[(Storage<br/>issued PDFs)]:::store
+  end
+  subgraph L4[Services]
+    direction LR
+    R2[(Cloudflare R2<br/>product images)]:::store
+    RS[Resend<br/>email]:::ext
+    WA[WhatsApp<br/>click to chat]:::ext
+    GM[Gemini<br/>blog drafts]:::ext
+  end
+  B --> DNS
+  S --> DNS
+  X --> DNS
+  DNS --> SF
+  DNS --> DB
+  SF -- anon key, submit_quote --> PG
+  DB -- signed in user --> PG
+  L2 --> L4
+  DB --> AU
+  DB --> ST
+  classDef app fill:#101820,color:#fff,stroke:#101820
+  classDef store fill:#fff,stroke:#101820
+  classDef edge fill:#f6f7f8,stroke:#6b757f
+  classDef ext fill:#fdf3e2,stroke:#c9a15a
+  classDef person fill:#fde8e8,stroke:#c81419,color:#101820
+  style L1 fill:none,stroke:none
+</pre><div class="cap"><b>Figure 1.</b> The layers. The storefront never holds a privileged key; the dashboard acts as the signed in person, so RLS applies to every staff read and write. Images reach the browser through the <code>/api/img</code> proxy; the Drive import runs in GitHub Actions and writes to R2 and Postgres directly.</div></div>
+
+  <h3>The pieces, one line each</h3>
+  <table class="grid">
+    <tr><th style="width:30%">Piece</th><th>Role</th></tr>
+    <tr><td>Storefront</td><td>Next.js 16 App Router. Server rendered and statically generated from the database with the anonymous key. Writes only through the <code>submit_quote</code> function, rate limited at the action.</td></tr>
+    <tr><td>Dashboard</td><td>Next.js 16. Every page and server action resolves the session, checks <code>lib/access.ts</code>, validates with zod and calls Supabase as the signed in user. The admin surface (Geist, tighter scale) sits on the same <code>@beco/ui</code> components as the shop (D143).</td></tr>
+    <tr><td>Supabase</td><td>Postgres 17 with RLS on all 22 tables, security definer functions for every commercial write, audit triggers, Auth for staff (no public signup), Storage for issued PDFs, Realtime for the new quote banner.</td></tr>
+    <tr><td>Cloudflare R2</td><td>Product and blog images. Originals are processed once into WebP at 400, 800 and 1600 wide plus a blur placeholder. Served through the <code>/api/img</code> proxy route today; <code>img.beco.co.ke</code> is planned but does not resolve yet.</td></tr>
+    <tr><td>Resend</td><td>Quote and receipt emails from <code>quotes@beco.co.ke</code>, and the buyer's confirmation after a website request.</td></tr>
+    <tr><td>GitHub Actions</td><td>CI on every pull request, and the Drive import (long sharp and HEIC jobs that cannot run on Vercel).</td></tr>
+    <tr><td>Gemini</td><td>Drafts blog posts in Studio from a brief; a validator and a person check every draft before it is published.</td></tr>
+  </table>
+</div>
+
+<!-- ============ 03 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">03</div><div><div class="sec-tag">Where things live</div><div class="sec-title">Repository and stack</div></div></div>
+  <p>Repository <code>brightexsolutions/beco-interiors</code>, private. <code>main</code> is what is live; <code>dev</code> is the standing branch kept ahead of it; feature branches fork from <code>dev</code>.</p>
+  <table class="grid">
+    <tr><th style="width:32%">Path</th><th>Purpose</th></tr>
+    <tr><td>apps/storefront</td><td>The public site. Anonymous key only.</td></tr>
+    <tr><td>apps/dashboard</td><td>Operations and Studio. Next.js middleware is named <code>proxy.ts</code> in this Next version.</td></tr>
+    <tr><td>packages/ui</td><td><code>@beco/ui</code>: tokens, primitives, Dialog, Sheet, ConfirmDialog, toast, DataTable, charts, SegmentedControl, Portal. If a pattern appears twice it belongs here (rule 5).</td></tr>
+    <tr><td>packages/documents</td><td>Quote, receipt and report PDFs with <code>@react-pdf/renderer</code>; email templates; sending through Resend.</td></tr>
+    <tr><td>packages/validation</td><td>zod schemas for every form, the in-memory rate limiter, <code>safeReturnPath</code>, constant time bearer checks, upload limits.</td></tr>
+    <tr><td>packages/supabase-client</td><td>Browser, server and admin clients. The admin (service role) client is server only.</td></tr>
+    <tr><td>packages/types</td><td>Database types (<code>pnpm db:types</code>) and enums such as <code>DASHBOARD_MODULES</code>.</td></tr>
+    <tr><td>tools/drive-import</td><td>The Drive to R2 catalogue importer, run in GitHub Actions or by hand (<code>pnpm drive:import</code>).</td></tr>
+    <tr><td>tools/setup, tools/backup</td><td>Env linking on install, the type floor check, the secret scan and the CSP test.</td></tr>
+    <tr><td>supabase/</td><td>70 migration files (01 to 71, no 29), 47 pgTAP test files, <code>seed.sql</code> with fictional data only.</td></tr>
+    <tr><td>docs/</td><td>Committed documentation. <code>files/</code> and <code>_incoming/</code> are gitignored internal material.</td></tr>
+  </table>
+  <h3>Stack</h3>
+  <table class="grid">
+    <tr><th style="width:32%">Layer</th><th>Choice and version</th></tr>
+    <tr><td>Runtime and tooling</td><td>Node 22, pnpm 11.24, Turborepo 2.10, TypeScript 7 (strict, <code>exactOptionalPropertyTypes</code>)</td></tr>
+    <tr><td>Framework</td><td>Next.js 16.3 App Router, React 19.2, server actions</td></tr>
+    <tr><td>Styling</td><td>Tailwind 4.3 with tokens in <code>packages/ui/src/tokens/tokens.css</code>; Titillium Web and Cormorant Garamond self hosted on the shop, Geist on the dashboard</td></tr>
+    <tr><td>Database and auth</td><td>Supabase: Postgres 17, Auth, Storage, Realtime; supabase-js 2.112, @supabase/ssr 0.12</td></tr>
+    <tr><td>Validation</td><td>zod 4.5 on every server action</td></tr>
+    <tr><td>Images</td><td>sharp 0.35 for derivatives; <code>heic-to</code> (libheif in WebAssembly) decodes iPhone photos in the browser; AWS S3 SDK against R2</td></tr>
+    <tr><td>Documents and email</td><td>@react-pdf/renderer 4.9; Resend</td></tr>
+    <tr><td>Charts and feedback</td><td>Recharts 2.15 inside @beco/ui; sonner toasts</td></tr>
+    <tr><td>Testing</td><td>Vitest 4.1, React Testing Library 16, jsdom 25, vitest-axe, pgTAP</td></tr>
+    <tr><td>Analytics</td><td>GA4 (production only), Vercel Analytics on the storefront, first party <code>analytics_events</code> table</td></tr>
+  </table>
+</div>
+
+<!-- ============ 04 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">04</div><div><div class="sec-tag">Screens and endpoints</div><div class="sec-title">Routes</div></div></div>
+  <h3>Storefront</h3>
+  <table class="grid">
+    <tr><th style="width:30%">Route</th><th>Purpose</th></tr>
+    <tr><td>/</td><td>Home: photography led hero, ranges, the slab to surface scroll</td></tr>
+    <tr><td>/shop, /shop/all, /shop/[category]</td><td>Browse by range; every product; a range page (an old slug answers with a 301)</td></tr>
+    <tr><td>/product/[slug]</td><td>Product: price or price on request, sizes with their own prices, add to quote</td></tr>
+    <tr><td>/quote</td><td>Review the quote list (browser storage <code>beco_quote_cart_v1</code>) and submit</td></tr>
+    <tr><td>/about, /gallery, /team, /contact</td><td>Company pages; /team lists staff flagged public</td></tr>
+    <tr><td>/blog, /blog/[slug]</td><td>Articles written in Studio</td></tr>
+    <tr><td>/privacy, /terms</td><td>Dated legal pages</td></tr>
+    <tr><td>/og/*</td><td>Generated link preview images</td></tr>
+    <tr><td>/api/health, /api/img, /api/revalidate</td><td>Uptime probe; R2 image proxy; on demand revalidation behind a bearer secret</td></tr>
+    <tr><td>robots.ts, sitemap.ts</td><td>Generated from the database</td></tr>
+  </table>
+  <h3>Dashboard</h3>
+  <table class="grid">
+    <tr><th style="width:30%">Route</th><th>Purpose</th></tr>
+    <tr><td>/login, /change-password</td><td>Sign in; forced password change on first sign in</td></tr>
+    <tr><td>/</td><td>Home: what needs attention, the month in figures, charts, team, catalogue</td></tr>
+    <tr><td>/quotes</td><td>Table or board (<code>?view=board</code>), with filters by owner, status, source</td></tr>
+    <tr><td>/quotes/new</td><td>A counter quote on a phone</td></tr>
+    <tr><td>/quotes/[reference], /pdf</td><td>Quote detail: lines, approval, status, PDF, email, WhatsApp, convert to order</td></tr>
+    <tr><td>/orders, /orders/[reference], /pdf</td><td>Orders, payment, receipt</td></tr>
+    <tr><td>/customers, /customers/[id]</td><td>One record per client, keyed on phone</td></tr>
+    <tr><td>/products, /products/import</td><td>Catalogue as list or cards with the editor in a sheet; Drive import (Brightex only)</td></tr>
+    <tr><td>/announcements, /reports, /leaderboard</td><td>Announcement bar; reports and the sales review PDF; the team</td></tr>
+    <tr><td>/users, /settings, /audit</td><td>Accounts, grants and module access; business settings; the audit log</td></tr>
+    <tr><td>/studio/blog</td><td>Blog drafting with Gemini, Brightex plus allowlist</td></tr>
+    <tr><td>/launch</td><td>Anniversary launch switch, Brightex only</td></tr>
+    <tr><td>/api/ops-alert, /api/quote-confirmation</td><td>Failure alerts to Brightex; the buyer's confirmation email for the storefront</td></tr>
+  </table>
+</div>
+
+<!-- ============ 05 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">05</div><div><div class="sec-tag">Postgres</div><div class="sec-title">Data model</div></div></div>
+  <div class="diagram"><pre class="mermaid">
+erDiagram
+  categories ||--o{ categories : "parent, 3 levels"
+  categories ||--o{ products : contains
+  customers ||--o{ quotes : "asks for"
+  customers ||--o{ orders : places
+  users ||--o{ quotes : "assigned to"
+  quotes ||--|{ quote_items : lines
+  products |o--o{ quote_items : "priced from"
+  quotes ||--o| orders : "converts to"
+  orders ||--|{ order_items : lines
+  quotes ||--o{ documents : "PDF issued"
+  orders ||--o{ documents : "receipt issued"
+  users ||--o{ audit_log : "acted"
+  </pre><div class="cap"><b>Figure 2.</b> The commercial core. Audit triggers write every change to these tables into <code>audit_log</code>.</div></div>
+  <table class="grid">
+    <tr><th style="width:24%">Table</th><th>Purpose and notes</th></tr>
+    <tr><td>users</td><td>Profile beside <code>auth.users</code>: role, active flag, forced password change, /team fields, grants, <code>module_grants</code>. Deactivated, never deleted.</td></tr>
+    <tr><td>categories</td><td>Self referencing tree, at most three levels, identity is the Drive <code>source_path</code>.</td></tr>
+    <tr><td>products</td><td>Price (null for price on request), display mode, availability, images with shot roles, specs, <code>sizes</code> (label, price, code), stock and low stock mark. Soft deleted.</td></tr>
+    <tr><td>customers</td><td>One live record per phone (<code>phone_key</code>), KRA PIN, notes.</td></tr>
+    <tr><td>quotes</td><td><code>BEC-Q-00042</code>. Status new, reviewing, quoted, won, lost; source web, walk in, phone, WhatsApp; owner and assignee; money; approval; <code>updated_at</code> is the lock; <code>requested_items</code> keeps what the buyer asked for.</td></tr>
+    <tr><td>quote_items, order_items</td><td>Lines with a description snapshot, <code>list_price</code> beside <code>unit_price</code>, generated <code>line_total</code>. Custom lines have no product.</td></tr>
+    <tr><td>orders</td><td><code>BEC-O-00042</code>, one live order per quote, status pending to fulfilled or cancelled, paid flag with <code>paid_at</code>.</td></tr>
+    <tr><td>documents</td><td>One row per issued PDF, quote or receipt, with where and how it was sent.</td></tr>
+    <tr><td>audit_log</td><td>Who, what, before and after. Written only by triggers and sign in.</td></tr>
+    <tr><td>settings</td><td>Key and value: VAT, validity, payment channels, WhatsApp number, business identity, Brightex allowlist, launch switch.</td></tr>
+    <tr><td>Others</td><td>blog_posts, announcements, testimonials, clients, analytics_events, category_slugs and product_slugs (301s), import_files, import_runs, import_issues, import_state.</td></tr>
+  </table>
+  <h3>Functions that carry the business rules</h3>
+  <ul class="arrows">
+    <li><code>submit_quote</code>: the only public write. Recomputes prices from the catalogue, links or creates the customer, in one transaction.</li>
+    <li><code>create_counter_quote</code>, <code>add_catalogue_quote_lines</code> (one lock, takes a size), <code>add_custom_quote_line</code>, <code>update_quote_lines</code>, <code>remove_quote_line</code>: every line change, guarded by <code>assert_quote_lines_open</code> so a won, lost or converted quote cannot change.</li>
+    <li><code>set_quote_status</code>: forward only, lost needs a reason, won and lost are closed; <code>reopen_quote</code> is the only way back from lost.</li>
+    <li><code>refresh_quote_money</code>, <code>refresh_order_money</code>: totals by trigger. Prices include VAT and the documents back it out (D50).</li>
+    <li><code>convert_quote_to_order</code>, <code>set_order_status</code>, <code>mark_order_paid</code>.</li>
+    <li>Access helpers: <code>current_user_role()</code> (null when inactive), <code>is_admin()</code>, <code>is_brightex_user()</code>, <code>has_module()</code>, <code>can_grant_module()</code>, <code>has_staff_manage()</code>.</li>
+    <li>A stale lock raises SQLSTATE <code>PT409</code> everywhere; the UI turns it into "This quote changed while you were editing".</li>
+  </ul>
+</div>
+
+<!-- ============ 06 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">06</div><div><div class="sec-tag">Who can do what</div><div class="sec-title">Access control</div></div></div>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  R[Request] --> P{proxy.ts<br/>route map}
+  P -- not allowed --> L[Redirect to sign in<br/>or home]
+  P -- allowed --> A{Page or action<br/>requirePath}
+  A -- refused --> L
+  A -- allowed --> Z[zod validation]
+  Z --> F[(Postgres:<br/>RLS and function guards)]
+  F -- refused --> T[Toast with the reason]
+  F -- allowed --> W[Row changed<br/>and audited]:::ok
+  classDef ok fill:#e7f4ec,stroke:#1f7a4d
+  </pre><div class="cap"><b>Figure 3.</b> Every write passes three gates. The route map in <code>lib/access.ts</code> is read by the proxy, the navigation, the guide and the actions alike; Postgres is the authority.</div></div>
+  <table class="grid">
+    <tr><th style="width:22%">Role</th><th>Can</th><th style="width:28%">Cannot</th></tr>
+    <tr><td>beco_sales</td><td>Raise, price and issue quotes; claim unassigned ones; move, reopen and convert their own; record payment; add and edit customers.</td><td>Approve, reassign, cancel an order, delete a customer.</td></tr>
+    <tr><td>beco_product_manager</td><td>Products, ranges, photographs, stock; read customers.</td><td>Quotes and orders (unless granted to read).</td></tr>
+    <tr><td>beco_editor</td><td>Reads the published catalogue.</td><td>Any operations screen.</td></tr>
+    <tr><td>beco_admin</td><td>Everything sales can, on every quote; approve prices away from the catalogue; reassign; cancel orders; announcements, reports, settings.</td><td>Brightex accounts, the import, Studio.</td></tr>
+    <tr><td>brightex_admin</td><td>All of the above, accounts, the allowlist, the Drive import, Studio (with the allowlist), the launch switch, every grant.</td><td></td></tr>
+  </table>
+  <h3>Grants on a person, beside the role</h3>
+  <ul class="arrows">
+    <li><b>Module grants</b> (D136, migration 70): <code>module_grants</code> opens a section to read: quotes, orders, customers, products, announcements, reports, users, settings, audit. Writes never widen; the shell shows a View only pill. Brightex grants anything; a staff manager only what they reach, on a Beco account, never their own.</li>
+    <li><b>Staff management</b> (<code>can_manage_users</code>, D135): opens /users for Beco accounts.</li>
+    <li><b>Audit read</b> (<code>can_read_audit</code>).</li>
+    <li>The <code>guard_users_staff</code> trigger refuses any grant change the rules do not allow, before RLS and before the check constraint.</li>
+  </ul>
+</div>
+
+<!-- ============ 07 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">07</div><div><div class="sec-tag">Step by step</div><div class="sec-title">The flows that matter</div></div></div>
+  <h3>A quote's life</h3>
+  <div class="diagram"><pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> new: website submit_quote
+  [*] --> reviewing: counter quote
+  new --> reviewing: claim or assign
+  new --> quoted
+  reviewing --> quoted: priced and issued
+  quoted --> won: customer accepts
+  reviewing --> lost: with a reason
+  quoted --> lost: with a reason
+  lost --> reviewing: reopen_quote
+  won --> [*]: convert_quote_to_order
+  </pre><div class="cap"><b>Figure 4.</b> The moves <code>set_quote_status</code> allows. A quote priced away from the catalogue cannot reach quoted, won or lost until an admin approves (a check constraint, D86). The board (D148) offers exactly these moves through <code>lib/quote-transitions.ts</code>, which the detail screen reads too.</div></div>
+
+  <h3>Website request to a priced quote</h3>
+  <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant B as Buyer
+  participant S as Storefront
+  participant P as Postgres
+  participant D as Dashboard
+  participant R as Resend
+  B->>S: Submit the quote list
+  S->>S: zod and rate limit, 10 a minute per IP
+  S->>P: submit_quote (anon)
+  P-->>S: BEC-Q reference
+  S->>D: /api/quote-confirmation (bearer)
+  D->>R: Confirmation email to the buyer
+  S-->>B: Reference and a prefilled WhatsApp link
+  P-->>D: Realtime: new quotes banner
+  D->>P: claim_quote, then price the lines
+  D->>D: PDF with react-pdf, stored and recorded
+  D->>B: Email, WhatsApp or print
+  </pre></div>
+
+  <h3>Product photographs</h3>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  A[Pick several files<br/>JPEG, PNG, WebP, HEIC] --> B[In the browser:<br/>decode HEIC, long edge 2400px,<br/>JPEG]
+  B --> C[Action signs a 5 minute<br/>presigned PUT]
+  C --> D{Direct PUT to R2<br/>tried twice}
+  D -- ok --> E[Action: sharp makes WebP<br/>400, 800, 1600 and a blur]
+  D -- refused --> F[Form post fallback<br/>under 4MB]
+  F --> E
+  E --> G[Image added to the product<br/>staging object deleted]:::ok
+  classDef ok fill:#e7f4ec,stroke:#1f7a4d
+  </pre><div class="cap"><b>Figure 5.</b> D116 and D139. The browser's CSP must name the account's R2 host for the direct PUT: built at build time, so <code>R2_ACCOUNT_ID</code> must be readable then (D150). R2 CORS and lifecycle rules are still to be configured.</div></div>
+
+  <h3>The other flows, briefly</h3>
+  <ul class="arrows">
+    <li><b>Counter quote.</b> <code>/quotes/new</code> on a phone: customer, lines from the catalogue (one row per size) or custom, any price typed with the list price kept beside it. A line priced away from the catalogue sets <code>requires_approval</code>; any later line change clears the approval.</li>
+    <li><b>Won to paid.</b> <code>convert_quote_to_order</code> copies the prices; the order moves to confirmed and fulfilled; <code>mark_order_paid</code> stamps the date; the receipt PDF comes from the order. Stock is not decremented automatically.</li>
+    <li><b>Drive import.</b> Brightex starts it from /products/import, which dispatches <code>drive-import.yml</code>; the job reads the Drive tree, plans by md5, uploads derivatives to R2 and upserts by <code>source_path</code>, never overwriting prices Beco has set. Needs <code>GITHUB_ACTIONS_TOKEN</code>, not yet set.</li>
+    <li><b>Blog.</b> Studio sends a brief to Gemini, a validator rejects em dashes, banned phrases and long meta, a person edits and checks the claims, the cover needs alt text, publishing revalidates the blog and sitemap.</li>
+    <li><b>Announcement bar.</b> Admins schedule it; the shop renders the live one with the highest priority server side, height reserved.</li>
+  </ul>
+</div>
+
+<!-- ============ 08 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">08</div><div><div class="sec-tag">Defence in depth</div><div class="sec-title">Security</div></div></div>
+  <div class="cards">
+    <div class="card"><div class="k">Headers</div><h4>An explicit policy on both apps</h4><p>CSP with <code>default-src 'self'</code>, <code>frame-ancestors 'none'</code>, <code>object-src 'none'</code>, <code>upgrade-insecure-requests</code>; HSTS a year; X-Frame-Options DENY; nosniff; strict referrer; camera, microphone and location denied. The dashboard adds <code>'wasm-unsafe-eval'</code> for the HEIC decoder and <code>noindex</code>. <code>'unsafe-inline'</code> scripts remain a known compromise.</p></div>
+    <div class="card"><div class="k">Input</div><h4>Validated on the server</h4><p>zod on every action; client checks are for convenience only. Safe return paths, constant time secret comparison.</p></div>
+    <div class="card"><div class="k">Secrets</div><h4>Service role stays on the server</h4><p>Used only for account creation and the import job. Never in a <code>NEXT_PUBLIC_</code> variable; CI's secret scan fails the build if it leaks.</p></div>
+    <div class="card"><div class="k">Accounts</div><h4>Staff only, no public signup</h4><p>Supabase Auth; forced password change on first sign in; deactivation makes the role null so RLS closes and sessions end. No MFA yet (deferred, D83).</p></div>
+  </div>
+  <table class="grid">
+    <tr><th style="width:44%">Rate limit (in memory, per instance)</th><th>Limit</th></tr>
+    <tr><td>Website quote submission</td><td>10 a minute per IP (documents say 5; the code is the truth)</td></tr>
+    <tr><td>Dashboard sign in</td><td>10 a minute per address</td></tr>
+    <tr><td>Drive import dispatch</td><td>1 a minute per person</td></tr>
+    <tr><td>/api/ops-alert, /api/quote-confirmation</td><td>60 a minute each</td></tr>
+  </table>
+  <p class="small muted">The in memory limiter is a brake, not a wall. A Cloudflare edge rule on POST to the quote and contact endpoints is the intended backstop and should be confirmed.</p>
+  <p><b>Soft delete and audit.</b> Products, quotes, orders and customers carry <code>deleted_at</code>; users are deactivated. Audit triggers record every change to commercial tables with who and before and after.</p>
+</div>
+
+<!-- ============ 09 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">09</div><div><div class="sec-tag">Getting changes live</div><div class="sec-title">Environments and releases</div></div></div>
+  <table class="grid">
+    <tr><th style="width:18%">Environment</th><th style="width:30%">Database</th><th>Notes</th></tr>
+    <tr><td>Local</td><td><code>supabase start</code> (Docker), seeded from <code>seed.sql</code></td><td>Fictional staff, password <code>beco-dev-pass</code>. Storefront :3000, dashboard :3001. Point <code>R2_ENDPOINT</code> at a local S3 stand in to exercise uploads.</td></tr>
+    <tr><td>Staging</td><td><code>beco-staging</code> (lzsqfsnjijpqnjukqpnu)</td><td>Vercel Preview deployments. Fictional data only, never cloned from production. <code>staging.beco.co.ke</code> is not yet in DNS; the dashboard Preview lacks its R2 keys.</td></tr>
+    <tr><td>Production</td><td><code>beco-prod</code> (fctfpttoinhsncakhirh)</td><td>www.beco.co.ke and dashboard.beco.co.ke. Real names and phone numbers: nothing tests against it.</td></tr>
+  </table>
+  <h3>How a release is done today</h3>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  A[Pull request into main] --> B[CI green: checks, suites,<br/>pgTAP, build, Lighthouse]
+  B --> C[Migrate beco-staging<br/>supabase db push]
+  C --> D[Dump beco-prod schema and data<br/>~/beco-backups/date/]
+  D --> E[Migrate beco-prod<br/>from ~/beco-prod-link]
+  E --> F[Merge the pull request]
+  F --> G[vercel deploy --prod for each project<br/>from a git archive export of main]
+  G --> H[Smoke test: pages, CSP,<br/>protected routes redirect]:::ok
+  classDef ok fill:#e7f4ec,stroke:#1f7a4d
+  </pre><div class="cap"><b>Figure 6.</b> Migrations always run before the deploy that needs them and are kept additive, so the code already live keeps working in between. Deploy from an export, never the working tree: <code>.claude/</code> holds large agent worktrees that <code>.vercelignore</code> does not list.</div></div>
+  <ul class="arrows">
+    <li><b>Planned, not yet working:</b> <code>deploy-production.yml</code> (staging migrate, approval, production) needs the Supabase secrets in GitHub and required reviewers on the Production environment.</li>
+    <li><b>Rollback.</b> Code: promote the previous Vercel deployment, seconds. Database: forward only; reverse with a new migration, with the dump as the floor. If both, roll the code back first.</li>
+    <li><b>Backups.</b> Manual dumps before every production migration. The nightly encrypted backup to Drive in the plan is not yet built, and no restore drill is recorded.</li>
+    <li><b>Health.</b> <code>/api/health</code> on both apps; failures email Brightex through <code>/api/ops-alert</code>. Keep alive and uptime monitors are planned on cron-job.org and UptimeRobot.</li>
+  </ul>
+</div>
+
+<!-- ============ 10 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">10</div><div><div class="sec-tag">What green means</div><div class="sec-title">Testing and quality gates</div></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">551</div><div class="l">Unit tests</div></div>
+    <div class="kpi"><div class="v">911</div><div class="l">Component tests</div></div>
+    <div class="kpi"><div class="v">1,138</div><div class="l">Dashboard tests</div></div>
+    <div class="kpi"><div class="v">719</div><div class="l">pgTAP assertions</div></div>
+  </div>
+  <p>Plus 63 integration tests against a local Supabase. Counts as of the 13 October release.</p>
+  <table class="grid">
+    <tr><th style="width:34%">CI check (ci.yml)</th><th>What it protects</th></tr>
+    <tr><td>AGENTS.md symlink</td><td>Claude Code and Codex read the same rules</td></tr>
+    <tr><td>Em dash grep</td><td>House style in code, copy, documents and commits</td></tr>
+    <tr><td>Browser dialog grep</td><td>No <code>window.confirm</code>, <code>alert</code> or <code>prompt</code></td></tr>
+    <tr><td>Secret scan</td><td>The service role key never ships</td></tr>
+    <tr><td>Type floor, contrast</td><td>16px minimum type; every colour pair passes AA</td></tr>
+    <tr><td>Typecheck, unit, component, dashboard</td><td>Behaviour, accessibility (axe), the controls doing what they say</td></tr>
+    <tr><td>pgTAP, integration</td><td>Every RLS policy from every role, every function's refusals</td></tr>
+    <tr><td>Build and serve</td><td>Both apps build; the storefront serves with no console errors and a production CSP</td></tr>
+    <tr><td>Lighthouse</td><td>CLS and blocking time as errors; LCP and page weight as warnings in CI</td></tr>
+  </table>
+  <div class="note">Commits are checked by <code>.githooks/commit-msg</code> (activate with <code>git config core.hooksPath .githooks</code>): no em dashes, no agent attribution. Every interactive control is listed in <code>docs/QA-CHECKLIST.md</code> with how it was proven to work.</div>
+</div>
+
+<!-- ============ 11 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">11</div><div><div class="sec-tag">Who holds what</div><div class="sec-title">Accounts and ownership</div></div></div>
+  <table class="grid">
+    <tr><th style="width:34%">Account</th><th style="width:22%">Owner</th><th>Notes</th></tr>
+    <tr><td>Domain beco.co.ke</td><td>Beco</td><td>Registrar is Beco's</td></tr>
+    <tr><td>Supabase organisation</td><td>Beco</td><td>Both projects; Brightex is a member</td></tr>
+    <tr><td>Cloudflare zone and R2</td><td>Beco</td><td>Under becointeriorsdev@gmail.com</td></tr>
+    <tr><td>Resend</td><td>Beco</td><td>Sending domain beco.co.ke</td></tr>
+    <tr><td>Monitoring, keep alive</td><td>Beco</td><td>cron-job.org, UptimeRobot</td></tr>
+    <tr><td>Google Analytics, Search Console, Business Profile</td><td>Beco's Google account</td><td>Brightex as manager only</td></tr>
+    <tr><td>Drive service account</td><td>Beco</td><td>beco-import@beco-platform.iam.gserviceaccount.com</td></tr>
+    <tr><td>GitHub repository</td><td>Brightex</td><td>brightexsolutions/beco-interiors</td></tr>
+    <tr><td>Vercel projects</td><td>Brightex</td><td>beco-interiors, beco-dashboard</td></tr>
+    <tr><td>Gemini key</td><td>Brightex</td><td>Studio drafting only</td></tr>
+  </table>
+  <p><b>If Brightex stops.</b> The site, database, images, email and DNS keep running with no action; only new deployments stop. <code>docs/HANDOVER.md</code> lists the thirteen steps to move the repository and Vercel projects to Beco, rotate credentials and remove Brightex's access, and a one hour emergency path Beco can run alone.</p>
+</div>
+
+<!-- ============ 12 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">12</div><div><div class="sec-tag">Honest list</div><div class="sec-title">Known gaps</div></div></div>
+  <table class="grid plain">
+    <tr><th style="width:26%">Area</th><th>Open item</th></tr>
+    <tr><td>Releases</td><td>GitHub lacks the Supabase secrets and Production reviewers, so the Actions deploy cannot migrate; releases are manual (section 09).</td></tr>
+    <tr><td>Staging</td><td><code>staging.beco.co.ke</code> not in DNS; dashboard Preview lacks R2 keys; staging needs a reseed.</td></tr>
+    <tr><td>Images</td><td>R2 CORS and lifecycle rules; <code>img.beco.co.ke</code>; <code>R2_ACCOUNT_ID</code> as a plain variable (D150).</td></tr>
+    <tr><td>Import</td><td><code>GITHUB_ACTIONS_TOKEN</code> not set, so the dashboard has never dispatched an import.</td></tr>
+    <tr><td>Resilience</td><td>Nightly backup workflow not built; <code>backup:verify</code> script missing; no restore drill recorded; monitors to confirm.</td></tr>
+    <tr><td>Security</td><td>No MFA; <code>'unsafe-inline'</code> scripts; in memory rate limiting; Cloudflare edge rule to confirm; check production for anonymous orders before migration 63.</td></tr>
+    <tr><td>Product</td><td>An end to end production quote with its email; real phone QA including the board's press and hold; Search Console under Beco's account.</td></tr>
+    <tr><td>Docs drift</td><td><code>SYSTEM.md</code> (pdf-lib, Actions only deploys), <code>SCHEMA.md</code> RLS table, Studio path in <code>CLAUDE.md</code> and <code>HANDOVER.md</code>, <code>STATUS.md</code> dates.</td></tr>
+  </table>
+</div>
+
+<!-- ============ 13 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">13</div><div><div class="sec-tag">Onboarding</div><div class="sec-title">Your first day</div></div></div>
+  <pre>git clone git@github.com:brightexsolutions/beco-interiors.git
+cd beco-interiors
+git config core.hooksPath .githooks
+pnpm install --frozen-lockfile        # links .env.local into both apps
+supabase start                        # Docker; local Postgres, Auth, Storage
+supabase db reset                     # migrations 01 to 71 and the fictional seed
+pnpm --filter @beco/dashboard dev     # http://localhost:3001, sign in with a seeded account
+pnpm --filter @beco/storefront dev    # http://localhost:3000</pre>
+  <pre>pnpm typecheck
+pnpm test:unit &amp;&amp; pnpm test:component &amp;&amp; pnpm test:dashboard
+supabase test db                      # pgTAP, every policy from every role
+pnpm test:integration                 # needs the local stack
+pnpm build</pre>
+  <ul class="arrows">
+    <li>Read <code>CLAUDE.md</code> first: its rules are enforced by CI and by review.</li>
+    <li>A database change is one migration with its RLS policies and pgTAP tests in the same change (<code>supabase-migration</code> and <code>rls-policy</code> skills in <code>.claude/skills</code>).</li>
+    <li>A UI change uses <code>@beco/ui</code> tokens, keeps 44px targets and the 16px floor, and adds its controls to <code>docs/QA-CHECKLIST.md</code>.</li>
+    <li>Record the why of a non obvious change as the next D number in <code>docs/DECISIONS.md</code>.</li>
+    <li>Ask Brightex for: membership of the Supabase organisation, Cloudflare and Resend; the Vercel team; the <code>files/BUILD-PLAN.md</code> reference.</li>
+  </ul>
+</div>
+
+<!-- ============ A ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">A</div><div><div class="sec-tag">Why it is built this way</div><div class="sec-title">Key decisions</div></div></div>
+  <table class="grid">
+    <tr><th style="width:12%">D</th><th style="width:38%">Decision</th><th>Reason</th></tr>
+    <tr><td>D1</td><td>Quotes and orders, no checkout or online payment</td><td>Beco sells through multi item quotations; nobody pays online</td></tr>
+    <tr><td>D8</td><td>Payment is a flag with a date</td><td>Payment happens offline; reports keep invoiced and collected apart</td></tr>
+    <tr><td>D86</td><td>Any price can be typed; off catalogue needs an admin's approval</td><td>Speed at the counter with one person overseeing discounts</td></tr>
+    <tr><td>D10, D19</td><td>Beco owns every account but the repository and Vercel</td><td>The business survives Brightex disappearing</td></tr>
+    <tr><td>D13, D16</td><td>Cloudflare R2 for images, processed once</td><td>No egress fees; cost grows with the catalogue, not the traffic</td></tr>
+    <tr><td>D44</td><td>Separate staging and production databases</td><td>Nothing tests against real customers' data</td></tr>
+    <tr><td>D26, D39</td><td>Quote request first, WhatsApp second, call third</td><td>One clear path to conversion on every page</td></tr>
+    <tr><td>D50</td><td>Prices include VAT</td><td>Adding it on top would overstate every quote by 16%</td></tr>
+    <tr><td>D105, D115</td><td>Drive import in GitHub Actions, Brightex only</td><td>Long jobs and the service key cannot live on Vercel</td></tr>
+    <tr><td>D116, D139</td><td>Photos resized on the device, sent straight to R2</td><td>Mobile data and Vercel's request limit</td></tr>
+    <tr><td>D127</td><td>Production moved to its own database</td><td>Production had been running on staging</td></tr>
+    <tr><td>D130</td><td>Real customer records</td><td>Returning clients were guessed from phone numbers</td></tr>
+    <tr><td>D136</td><td>Read only module grants per person</td><td>Let someone see a section without inventing roles</td></tr>
+    <tr><td>D148</td><td>Quotes board beside the table</td><td>See the pipeline by stage; moves follow the database rules</td></tr>
+    <tr><td>D150</td><td>R2 host in the CSP only from a real account ID</td><td>A masked value would break direct uploads silently</td></tr>
+  </table>
+  <p class="small muted">The full list, D1 to D151, is in <code>docs/DECISIONS.md</code>, with the earliest decisions summarised in <code>files/BUILD-PLAN.md</code>.</p>
+</div>
+
+</td></tr></tbody>
+</table>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'base',
+  securityLevel: 'loose',
+  flowchart: { curve: 'basis', padding: 12, htmlLabels: true },
+  themeVariables: {
+    fontFamily: 'Titillium Web, Helvetica, Arial, sans-serif',
+    fontSize: '13px',
+    primaryColor: '#ffffff',
+    primaryBorderColor: '#101820',
+    primaryTextColor: '#101820',
+    lineColor: '#6b757f',
+    secondaryColor: '#f6f7f8',
+    tertiaryColor: '#ffffff',
+    clusterBkg: '#ffffff',
+    clusterBorder: '#d7dce0',
+    actorBkg: '#101820',
+    actorTextColor: '#ffffff',
+    actorBorder: '#101820',
+    signalColor: '#333d47',
+    noteBkgColor: '#fdf3e2'
+  }
+});
+</script>
+</body>
+</html>
