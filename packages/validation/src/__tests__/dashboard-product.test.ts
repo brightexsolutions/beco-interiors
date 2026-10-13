@@ -11,6 +11,8 @@ import {
   specsToRecord,
   stockStepFor,
   updateProductSchema,
+  lowestSizePrice,
+  priceIsFrom,
 } from '../dashboard-product';
 
 const base = {
@@ -250,5 +252,76 @@ describe('product sizes, D137', () => {
       { label: '160mm', price: null, sku: null },
     ]);
     expect(parseProductSizes('x')).toEqual([]);
+  });
+});
+
+describe('a product priced by its sizes, D152', () => {
+  const handle = {
+    ...base,
+    name: 'HT-3916 Black Handles',
+    slug: 'ht-3916-black-handles',
+    unit: 'per piece',
+    stockQuantity: null,
+    lowStockThreshold: null,
+    price: '',
+    sizes: [
+      { label: '600MM', price: 255, sku: null },
+      { label: '700MM', price: 320, sku: null },
+      { label: '1000MM', price: 490, sku: null },
+    ],
+  };
+
+  it('saves a fixed price product with no price of its own when every size is priced, taking the lowest', () => {
+    const parsed = updateProductSchema.safeParse(handle);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.price).toBe(255);
+  });
+
+  it('keeps a price typed on the product rather than the lowest size', () => {
+    const parsed = updateProductSchema.safeParse({ ...handle, price: 300 });
+    expect(parsed.success && parsed.data.price).toBe(300);
+  });
+
+  it('still asks for a price when one size has none, since that size would take the product price', () => {
+    const parsed = updateProductSchema.safeParse({
+      ...handle,
+      sizes: [...handle.sizes, { label: '1200MM', price: '', sku: null }],
+    });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) expect(parsed.error.issues[0]?.message).toBe('Give the product a price, or give every size its own');
+  });
+
+  it('still asks for a price on a product with no sizes', () => {
+    const parsed = updateProductSchema.safeParse({ ...handle, sizes: [] });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) expect(parsed.error.issues[0]?.message).toBe('A fixed price product must have a price');
+  });
+
+  it('leaves a price on application product without a price', () => {
+    const parsed = updateProductSchema.safeParse({ ...handle, priceDisplayMode: 'poa' });
+    expect(parsed.success && parsed.data.price).toBeNull();
+  });
+
+  it('measures a compare-at price against the lowest size price', () => {
+    expect(updateProductSchema.safeParse({ ...handle, compareAtPrice: 300 }).success).toBe(true);
+    expect(updateProductSchema.safeParse({ ...handle, compareAtPrice: 200 }).success).toBe(false);
+  });
+});
+
+describe('lowestSizePrice', () => {
+  it('is the lowest size price only when every size has one', () => {
+    expect(lowestSizePrice([{ price: 490 }, { price: 255 }])).toBe(255);
+    expect(lowestSizePrice([{ price: 490 }, { price: null }])).toBeNull();
+    expect(lowestSizePrice([])).toBeNull();
+  });
+});
+
+describe('priceIsFrom', () => {
+  it('is true when the sizes come to two or more prices, an unpriced size taking the product price', () => {
+    expect(priceIsFrom(255, [{ price: 255 }, { price: 490 }])).toBe(true);
+    expect(priceIsFrom(255, [{ price: null }, { price: 490 }])).toBe(true);
+    expect(priceIsFrom(255, [{ price: null }, { price: 255 }])).toBe(false);
+    expect(priceIsFrom(255, [])).toBe(false);
+    expect(priceIsFrom(null, [{ price: null }])).toBe(false);
   });
 });

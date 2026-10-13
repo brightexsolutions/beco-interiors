@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Beco Platform: Summary</title>
+<link rel="stylesheet" href="handbook.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  body { font-size: 11pt; }
+  .step-list { display: grid; gap: 3mm; margin: 0 0 6mm; }
+  .step { display: grid; grid-template-columns: 10mm 1fr; gap: 4mm; align-items: start; border: 1px solid var(--n200); border-radius: 6px; padding: 3.5mm 4mm; break-inside: avoid; }
+  .step .n { width: 10mm; height: 10mm; border-radius: 4px; background: var(--red); color: #fff; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .step b { display: block; }
+  .step span { color: var(--n700); font-size: 10pt; }
+  .diagram .mermaid svg { max-height: 125mm; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="photo" style="background-image:url('../../apps/storefront/public/site-photos/karen-kitchen-cyprus-grey.webp')"></div>
+  <div class="shade"></div>
+  <div class="inner">
+    <div class="brand"><img src="../../apps/storefront/public/logo-lockup-white.png" alt="Beco Interiors"></div>
+    <div class="eyebrow">Platform summary, for the Beco team</div>
+    <h1>What is in place,<br>and why</h1>
+    <p class="lede">Your website and your team's dashboard, explained in plain words and pictures: how a quote travels, who can do what, how your photographs and records are kept safe, and the reasons behind each choice.</p>
+    <div class="meta">
+      <div><b>Prepared for</b>Beco Interiors</div>
+      <div><b>Prepared by</b>Brightex Solutions</div>
+      <div><b>Date</b>13 October 2026</div>
+      <div><b>Reference</b>BEC-2026-004</div>
+    </div>
+    <div class="confid">Confidential: prepared exclusively for Beco Interiors</div>
+  </div>
+</section>
+
+<table class="flow">
+<thead><tr><td>
+  <div class="runhead"><div class="l"><img src="../../apps/storefront/public/logo-mark-white.png" alt=""><span class="name">Beco Interiors</span></div><span class="doc">Platform summary &middot; 13 October 2026</span></div>
+  <div class="runhead-gap"></div>
+</td></tr></thead>
+<tfoot><tr><td>
+  <div class="runfoot"><span class="bx">Bright<span>ex</span> Solutions</span><span>www.brightexsolutions.co.ke &middot; +254 741 980 127 &middot; info.brightexsolutions@gmail.com</span></div>
+</td></tr></tfoot>
+<tbody><tr><td>
+
+<!-- ============ CONTENTS ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">00</div><div><div class="sec-tag">Inside this summary</div><div class="sec-title">Contents</div></div></div>
+  <div class="toc">
+    <div><span>01</span>What you have now</div>
+    <div><span>07</span>Who can see what</div>
+    <div><span>02</span>How it fits together</div>
+    <div><span>08</span>Finding your way</div>
+    <div><span>03</span>A quote's journey</div>
+    <div><span>09</span>Why it is built this way</div>
+    <div><span>04</span>Quoting at the counter</div>
+    <div><span>10</span>Keeping it safe</div>
+    <div><span>05</span>From approval to payment</div>
+    <div><span>11</span>What Beco owns</div>
+    <div><span>06</span>Your catalogue and photographs</div>
+    <div><span>12</span>What is still open</div>
+  </div>
+  <p class="lede">Beco sells through quotations, so the whole platform is built around one moment: a salesperson raising, pricing and sending a branded quote from a phone faster than writing it on paper.</p>
+</div>
+
+<!-- ============ 01 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">01</div><div><div class="sec-tag">The big picture</div><div class="sec-title">What you have now</div></div></div>
+  <p>Two places, one set of records. Customers use the <b>website</b>. Your team uses the <b>dashboard</b>. Both read and write the same secure records, so a request made on the website is waiting in the dashboard a moment later.</p>
+  <div class="pair">
+    <figure><div class="frame"><img src="assets/site-home.jpg" alt="The Beco website home page"></div><figcaption><b>www.beco.co.ke</b>, what your customers see: every range, product pages, and a quote request.</figcaption></figure>
+    <figure><div class="frame"><img src="assets/dash-home.jpg" alt="The dashboard home"></div><figcaption><b>dashboard.beco.co.ke</b>, where your team works: what needs attention today, and how the month is going.</figcaption></figure>
+  </div>
+  <div class="cards three">
+    <div class="card"><div class="k">For customers</div><h4>Browse and ask</h4><p>See every range and product, add items to a quote list, and send it. They get a reference and a WhatsApp link straight away.</p></div>
+    <div class="card"><div class="k">For sales</div><h4>Quote and close</h4><p>Claim requests, price them, send a branded PDF by email or WhatsApp, and turn a yes into an order and a receipt.</p></div>
+    <div class="card"><div class="k">For managers</div><h4>See and decide</h4><p>Approve special prices, follow every quote by stage, read the month's figures, and control who can see what.</p></div>
+  </div>
+</div>
+
+<!-- ============ 02 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">02</div><div><div class="sec-tag">The pieces</div><div class="sec-title">How it fits together</div></div></div>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  C([Your customers]):::person --> W[The website<br/>www.beco.co.ke]:::app
+  T([Your team]):::person --> D[The dashboard<br/>dashboard.beco.co.ke]:::app
+  W -- quote requests --> R[(Beco's records<br/>products, quotes, orders,<br/>customers)]:::store
+  D -- prices, approvals,<br/>orders, payments --> R
+  D --> P[(Photograph storage)]:::store
+  P --> W
+  D --> E[Email: quotes and receipts<br/>from quotes@beco.co.ke]:::ext
+  D --> WA[WhatsApp: the PDF<br/>in a chat]:::ext
+  W --> WA
+  classDef app fill:#101820,color:#fff,stroke:#101820
+  classDef store fill:#fff,stroke:#101820
+  classDef ext fill:#fdf3e2,stroke:#c9a15a
+  classDef person fill:#fde8e8,stroke:#c81419,color:#101820
+  </pre><div class="cap"><b>Figure 1.</b> One set of records in the middle. The website can only send in a request; everything else is done by your team in the dashboard, and only by the people allowed to.</div></div>
+  <div class="cards">
+    <div class="card"><div class="k">The records</div><h4>A secure database</h4><p>Products, quotes, orders, customers and settings live in one database on Beco's own account. It refuses anything a person is not allowed to do, whatever screen they use.</p></div>
+    <div class="card"><div class="k">The photographs</div><h4>Stored once, shown fast</h4><p>Every photograph is saved in three sizes, so a phone downloads a small one and a laptop a sharp one. Storage is on Beco's own Cloudflare account.</p></div>
+    <div class="card"><div class="k">The messages</div><h4>Email and WhatsApp</h4><p>Quotes and receipts go out from <b>quotes@beco.co.ke</b>, or as a PDF in a WhatsApp chat with the number already filled in.</p></div>
+    <div class="card"><div class="k">The hosting</div><h4>Always on, quick everywhere</h4><p>Both sites are served from a global network, so pages load quickly in Nairobi and abroad, with a copy for testing changes before they reach you.</p></div>
+  </div>
+</div>
+
+<!-- ============ 03 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">03</div><div><div class="sec-tag">Request to order</div><div class="sec-title">A quote's journey</div></div></div>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A([Customer sends<br/>a request]):::person --> N[New]
+  B([Walk in or call]):::person --> V
+  N -- a salesperson<br/>claims it --> V[Reviewing]
+  V -- priced and sent --> Q[Quoted]
+  Q -- customer says yes --> Wn[Won]:::good
+  V -- not going ahead --> L[Lost]:::muted
+  Q -- not going ahead --> L
+  L -. reopen if they<br/>come back .-> V
+  Wn --> O[Order, payment,<br/>receipt]:::good
+  classDef person fill:#fde8e8,stroke:#c81419,color:#101820
+  classDef good fill:#e7f4ec,stroke:#1f7a4d
+  classDef muted fill:#eceef0,stroke:#6b757f
+  </pre><div class="cap"><b>Figure 2.</b> Every quote moves forward through the same stages. Won and Lost are final; a lost quote can be reopened if the customer comes back, and the reason it was lost is kept.</div></div>
+  <figure><div class="frame"><img src="assets/dash-quotes-board.jpg" alt="The quotes board"></div><figcaption><b>The quotes board.</b> Every quote as a card in its stage, with the value in each column. Drag a card to the next stage; on a phone, press and hold it first. The table view beside it is for searching and sorting.</figcaption></figure>
+</div>
+
+<!-- ============ 04 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">04</div><div><div class="sec-tag">On a phone</div><div class="sec-title">Quoting at the counter</div></div></div>
+  <p>The dashboard is built to be used standing at the counter with one hand. The main screens sit in a bar at the bottom of the phone, with New quote in the middle.</p>
+  <div class="phones">
+    <figure class="phone"><div class="frame"><img src="assets/phone-home.jpg" alt="Dashboard home on a phone"></div><figcaption><b>Home.</b> What is waiting, and the month so far.</figcaption></figure>
+    <figure class="phone"><div class="frame"><img src="assets/phone-new-quote.jpg" alt="A new quote on a phone"></div><figcaption><b>New quote.</b> Pick the customer, add products, set prices, save.</figcaption></figure>
+    <figure class="phone"><div class="frame"><img src="assets/phone-quotes-board.jpg" alt="The quotes board on a phone"></div><figcaption><b>The board.</b> Swipe across the stages; press and hold to move a quote.</figcaption></figure>
+  </div>
+  <div class="step-list">
+    <div class="step"><div class="n">1</div><div><b>Pick the customer.</b><span>Search by name or phone. A number already on file brings up the existing customer, so nobody is entered twice.</span></div></div>
+    <div class="step"><div class="n">2</div><div><b>Add the products.</b><span>Tick several from the catalogue at once. A product that comes in sizes lists one row per size, each with its own price. Anything not listed can be added as a custom item.</span></div></div>
+    <div class="step"><div class="n">3</div><div><b>Price and send.</b><span>Adjust quantities and prices, then send the branded PDF by email or WhatsApp, or print it.</span></div></div>
+  </div>
+</div>
+
+<!-- ============ 05 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">05</div><div><div class="sec-tag">Control without slowing sales</div><div class="sec-title">From approval to payment</div></div></div>
+  <div class="diagram tall"><pre class="mermaid">
+flowchart TB
+  P[Salesperson prices the quote] --> Q{Any price different<br/>from the catalogue?}
+  Q -- no --> S[Send to the customer]
+  Q -- yes --> A[Waits for a manager<br/>to approve]:::wait
+  A --> S
+  S --> Y{Customer says yes?}
+  Y -- yes --> O[Becomes an order<br/>at the quoted prices]:::good
+  Y -- no --> L[Marked lost<br/>with the reason]:::muted
+  O --> F[Confirmed, then fulfilled]
+  F --> M[Marked paid,<br/>receipt sent]:::good
+  classDef wait fill:#fdf3e2,stroke:#c9a15a
+  classDef good fill:#e7f4ec,stroke:#1f7a4d
+  classDef muted fill:#eceef0,stroke:#6b757f
+  </pre><div class="cap"><b>Figure 3.</b> A salesperson can type any price, so a deal is never lost waiting. But a quote priced away from the catalogue cannot be sent, won or lost until a manager approves it, and changing a line afterwards needs approval again.</div></div>
+</div>
+
+<div class="chapter">
+  <figure><div class="frame"><img src="assets/dash-quote-detail.jpg" alt="A quote in the dashboard"></div><figcaption><b>A quote waiting for approval.</b> Lines and totals on the left; the person it is assigned to, Approve, Call and WhatsApp on the right.</figcaption></figure>
+</div>
+
+<!-- ============ 06 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">06</div><div><div class="sec-tag">What you sell</div><div class="sec-title">Your catalogue and photographs</div></div></div>
+  <div class="pair">
+    <figure><div class="frame"><img src="assets/dash-catalogue-cards.jpg" alt="The catalogue as cards"></div><figcaption><b>Catalogue.</b> Browse by range, as a list for prices and stock or as cards for the photographs.</figcaption></figure>
+    <figure><div class="frame"><img src="assets/dash-product-editor.jpg" alt="Editing a product"></div><figcaption><b>A product.</b> Name, photographs, sizes, price, stock and whether it shows on the website.</figcaption></figure>
+  </div>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A[Pick several photos<br/>on a phone or laptop]:::person --> B[Made smaller on<br/>the device first]
+  B --> C[Sent straight to<br/>photograph storage]
+  C --> D[Saved in three sizes]
+  D --> E[On the product page]:::good
+  classDef person fill:#fde8e8,stroke:#c81419,color:#101820
+  classDef good fill:#e7f4ec,stroke:#1f7a4d
+  </pre><div class="cap"><b>Figure 4.</b> iPhone photographs included. A 12MB photo becomes about a megabyte before it leaves the phone, so it uploads in seconds even on mobile data. Each file shows Preparing, Uploading, Saving and Added.</div></div>
+</div>
+
+<!-- ============ 07 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">07</div><div><div class="sec-tag">Access</div><div class="sec-title">Who can see what</div></div></div>
+  <table class="grid">
+    <tr><th style="width:26%">Role</th><th>What they do</th></tr>
+    <tr><td>Salesperson</td><td>Raises and prices quotes, claims website requests, follows their own quotes to an order and payment, adds customers.</td></tr>
+    <tr><td>Product manager</td><td>Keeps the catalogue: products, ranges, photographs, prices and stock.</td></tr>
+    <tr><td>Admin (Beco)</td><td>Everything a salesperson does on every quote, plus approving special prices, reassigning, cancelling orders, announcements, reports and settings.</td></tr>
+    <tr><td>Brightex</td><td>Accounts, the catalogue import from Drive, blog writing and technical settings.</td></tr>
+  </table>
+  <div class="pair">
+    <div>
+      <h4>Extra access, without a new role</h4>
+      <p>A person can be let into a section beyond their role, for example a product manager who should see quotes. Granted sections open <b>read only</b>: they can look, not change, and the screen says View only. Brightex can grant any section; a Beco manager given staff management can grant what they hold themselves.</p>
+    </div>
+    <figure><div class="frame"><img src="assets/dash-access.jpg" alt="Granting access"></div><figcaption><b>Edit access.</b> Tick the sections a person may see.</figcaption></figure>
+  </div>
+</div>
+
+<!-- ============ 08 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">08</div><div><div class="sec-tag">Help built in</div><div class="sec-title">Finding your way</div></div></div>
+  <figure class="narrow"><div class="frame"><img src="assets/dash-tour.jpg" alt="The guided tour"></div><figcaption><b>The guide.</b> Press Guide at the top of any screen: it lights up one part at a time with a short line on what it is for. Next moves on; the full written guide is a tap away.</figcaption></figure>
+  <ul class="arrows">
+    <li><b>Search anything.</b> The search box, or Command K, jumps to any screen or finds a quote by name, phone or reference.</li>
+    <li><b>Never left wondering.</b> Buttons show they are working, a bar shows the next screen loading, and a dark bar says when the connection drops and nothing will save.</li>
+    <li><b>Mistakes are hard to make.</b> Anything that cannot be undone, such as marking a quote lost or deleting a product, asks first and says exactly what will happen.</li>
+  </ul>
+</div>
+
+<!-- ============ 09 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">09</div><div><div class="sec-tag">The reasoning</div><div class="sec-title">Why it is built this way</div></div></div>
+  <div class="why"><b>Quotes, not a shopping cart</b><p>Beco's customers buy several materials for a project and agree a price, so the website collects a request and your team prices it. Nobody pays online, so there is no card handling and nothing to go wrong at checkout.</p></div>
+  <div class="why"><b>WhatsApp as the second door</b><p>Many of your customers prefer to talk on WhatsApp. Every page offers it after the quote request, and the PDF can be sent in a chat with the number filled in.</p></div>
+  <div class="why"><b>Any price, with one person checking</b><p>A salesperson can agree a price on the spot so a deal is never lost waiting, but a special price must be approved by a manager before the quote is final.</p></div>
+  <div class="why"><b>Every change recorded</b><p>Who changed what, and when, is kept for prices, quotes, orders, customers and settings. Records with commercial meaning are archived rather than erased, so the history always points to something real.</p></div>
+  <div class="why"><b>A practice copy, separate from the real one</b><p>Changes are tried on a separate copy filled with made up customers before they reach you. Your real customers' names and numbers are never used for testing.</p></div>
+  <div class="why"><b>Photographs on Cloudflare</b><p>Showing photographs costs nothing extra however many people visit, so a busy month never brings a surprise bill. Cost grows only with the size of the catalogue.</p></div>
+  <div class="why"><b>Read only access instead of new roles</b><p>Letting one person see a section is a tick box, and it can never let them change records their role does not allow.</p></div>
+  <div class="why"><b>Beco owns the accounts</b><p>Your domain, records, photographs, email and analytics are on Beco's own accounts. If Brightex stopped working with Beco tomorrow, everything would keep running.</p></div>
+</div>
+
+<!-- ============ 10 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">10</div><div><div class="sec-tag">Protection</div><div class="sec-title">Keeping it safe</div></div></div>
+  <div class="cards">
+    <div class="card"><div class="k">Sign in</div><h4>Staff accounts only</h4><p>Nobody can sign themselves up. Each person gets an account and must set their own password on first sign in. A deactivated account is locked out at once.</p></div>
+    <div class="card"><div class="k">Permissions</div><h4>Checked twice</h4><p>Every screen checks who you are, and the records themselves refuse anything your role does not allow. Hiding a button is never the only protection.</p></div>
+    <div class="card"><div class="k">Testing</div><h4>Over 3,300 automated checks</h4><p>Every change is tested before it goes live, including that each kind of user is refused what they should not do.</p></div>
+    <div class="card"><div class="k">Backups</div><h4>Saved before every change</h4><p>A full copy of the records is taken before each update to the database. An automatic nightly backup is planned and listed in section 12.</p></div>
+  </div>
+</div>
+
+<!-- ============ 11 ============ -->
+<div class="chapter new-page">
+  <div class="sec-head"><div class="sec-num">11</div><div><div class="sec-tag">Ownership</div><div class="sec-title">What Beco owns</div></div></div>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph BECO[Beco's accounts]
+    direction LR
+    D1[beco.co.ke domain]
+    D2[Records database]
+    D3[Photograph storage<br/>and DNS]
+    D4[Email sending]
+    D5[Analytics, Search Console,<br/>Business Profile]
+  end
+  subgraph BX[Held by Brightex for the engagement]
+    direction LR
+    B1[The code]
+    B2[The hosting projects]
+  end
+  BX -. can be handed over<br/>in a documented process .-> BECO
+  style BECO fill:#e7f4ec,stroke:#1f7a4d
+  style BX fill:#f6f7f8,stroke:#6b757f
+  </pre><div class="cap"><b>Figure 5.</b> Beco holds everything that holds its data. Brightex holds the code and the hosting projects while it works on the platform; a written handover plan moves both to Beco if the engagement ends, and the site keeps running in the meantime.</div></div>
+</div>
+
+<!-- ============ 12 ============ -->
+<div class="chapter">
+  <div class="sec-head"><div class="sec-num">12</div><div><div class="sec-tag">Next</div><div class="sec-title">What is still open</div></div></div>
+  <table class="grid plain">
+    <tr><th style="width:34%">Item</th><th>What it means for Beco</th></tr>
+    <tr><td><b>Staging address</b></td><td>A web address for the practice copy, so your team can try changes before they go live.</td></tr>
+    <tr><td><b>Nightly backups</b></td><td>An automatic, encrypted copy every night in Beco's Google Drive, and a test restore to prove it works.</td></tr>
+    <tr><td><b>Two step sign in</b></td><td>A code from a phone as well as a password, for admins first.</td></tr>
+    <tr><td><b>Catalogue import from Drive</b></td><td>One step of setup so Brightex can refresh the catalogue from your Drive folders from the dashboard.</td></tr>
+    <tr><td><b>Search Console</b></td><td>Verifying the site under Beco's Google account, to watch how customers find you on Google.</td></tr>
+    <tr><td><b>A full live test</b></td><td>One real quote sent end to end on the live site, and the board's press and hold tried on a real phone.</td></tr>
+  </table>
+  <h4>What we need from Beco</h4>
+  <ul class="arrows">
+    <li>The handles price list, and how to name the handle photographs that are still unlabelled.</li>
+    <li>Confirmation of the DELFONE and HEIXIN folder arrangement, and whether panels are WPC or SPC.</li>
+    <li>Whether the website's quote response promise of two hours is the one you want customers to see.</li>
+    <li>The list of the old website's addresses, so customers following old links land in the right place.</li>
+  </ul>
+</div>
+
+</td></tr></tbody>
+</table>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'base',
+  securityLevel: 'loose',
+  flowchart: { curve: 'basis', padding: 14, htmlLabels: true },
+  themeVariables: {
+    fontFamily: 'Titillium Web, Helvetica, Arial, sans-serif',
+    fontSize: '15px',
+    primaryColor: '#ffffff',
+    primaryBorderColor: '#101820',
+    primaryTextColor: '#101820',
+    lineColor: '#6b757f',
+    clusterBkg: '#ffffff',
+    clusterBorder: '#d7dce0'
+  }
+});
+</script>
+</body>
+</html>

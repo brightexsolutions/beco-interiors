@@ -1,0 +1,155 @@
+/* Print styles for the Beco handbook PDFs. Beco's palette and self hosted
+   fonts; A4; a cover, then a table whose header and footer rows Chrome
+   repeats on every printed page. Rendered with headless Chrome. */
+
+@font-face { font-family: 'Titillium Web'; font-weight: 400; src: url('../../packages/ui/src/fonts/titillium-400.woff2') format('woff2'); }
+@font-face { font-family: 'Titillium Web'; font-weight: 600; src: url('../../packages/ui/src/fonts/titillium-600.woff2') format('woff2'); }
+@font-face { font-family: 'Titillium Web'; font-weight: 700; src: url('../../packages/ui/src/fonts/titillium-600.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 400; src: url('../../packages/ui/src/fonts/cormorant-400.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 500; src: url('../../packages/ui/src/fonts/cormorant-500.woff2') format('woff2'); }
+
+:root {
+  --charcoal: #101820;
+  --red: #ed1c24;
+  --red-deep: #c81419;
+  --white: #ffffff;
+  --n50: #f6f7f8;
+  --n100: #eceef0;
+  --n200: #d7dce0;
+  --n500: #6b757f;
+  --n700: #333d47;
+  --green: #1f7a4d;
+  --green-soft: #e7f4ec;
+  --amber-soft: #fdf3e2;
+  --blue-soft: #e8f0fb;
+  --ui: 'Titillium Web', 'Helvetica Neue', Arial, sans-serif;
+  --display: 'Cormorant Garamond', Georgia, serif;
+  --mono: 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--white); }
+body { font-family: var(--ui); color: var(--charcoal); font-size: 10.5pt; line-height: 1.55; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+/* ---------- cover ---------- */
+.cover { position: relative; height: 297mm; overflow: hidden; background: var(--charcoal); color: var(--white); page-break-after: always; }
+.cover .photo { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.38; }
+.cover .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16,24,32,0.55) 0%, rgba(16,24,32,0.35) 40%, rgba(16,24,32,0.92) 100%); }
+.cover .inner { position: relative; height: 100%; padding: 22mm 20mm 18mm; display: flex; flex-direction: column; }
+.cover .brand { display: flex; align-items: center; gap: 12px; }
+.cover .brand img { height: 22mm; }
+.cover .eyebrow { margin-top: auto; font-size: 9pt; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.75); display: flex; align-items: center; gap: 10px; }
+.cover .eyebrow::before { content: ''; width: 28px; height: 2px; background: var(--red); }
+.cover h1 { font-family: var(--display); font-weight: 500; font-size: 44pt; line-height: 1.05; margin: 6mm 0 4mm; letter-spacing: -0.01em; }
+.cover .lede { font-size: 12.5pt; max-width: 135mm; color: rgba(255,255,255,0.85); margin: 0; }
+.cover .meta { margin-top: 12mm; padding-top: 6mm; border-top: 1px solid rgba(255,255,255,0.25); display: grid; grid-template-columns: repeat(4, 1fr); gap: 6mm; font-size: 8.5pt; }
+.cover .meta b { display: block; font-size: 7.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 600; margin-bottom: 1mm; }
+.cover .confid { margin-top: 7mm; font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+
+/* ---------- flowing pages ---------- */
+table.flow { width: 100%; border-collapse: collapse; }
+table.flow > thead > tr > td, table.flow > tfoot > tr > td { padding: 0; }
+.runhead { height: 21mm; display: flex; align-items: center; justify-content: space-between; padding: 0 18mm; border-bottom: 3px solid var(--red); background: var(--charcoal); color: var(--white); }
+.runhead .l { display: flex; align-items: center; gap: 10px; }
+.runhead img { height: 9mm; width: auto; }
+.runhead .name { font-size: 9pt; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; }
+.runhead .doc { font-size: 8.5pt; color: rgba(255,255,255,0.7); }
+.runhead-gap { height: 7mm; }
+.runfoot { height: 15mm; display: flex; align-items: center; justify-content: space-between; padding: 0 18mm; border-top: 1px solid var(--n200); font-size: 7.5pt; color: var(--n500); }
+.runfoot .bx { font-family: Georgia, serif; font-weight: 700; font-size: 10pt; color: var(--charcoal); }
+.runfoot .bx span { color: #e8920a; }
+table.flow > tbody > tr > td { padding: 0 18mm 4mm; vertical-align: top; }
+
+/* ---------- headings and text ---------- */
+.chapter { page-break-before: always; }
+.chapter:first-child { page-break-before: auto; }
+.sec-head { display: flex; align-items: flex-start; gap: 5mm; margin: 2mm 0 6mm; }
+.sec-num { flex: 0 0 auto; width: 12mm; height: 12mm; background: var(--charcoal); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11pt; border-radius: 4px; }
+.sec-tag { font-size: 7.5pt; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red-deep); font-weight: 600; }
+.sec-title { font-family: var(--display); font-size: 25pt; line-height: 1.1; font-weight: 500; }
+h3 { font-size: 12.5pt; margin: 7mm 0 2mm; font-weight: 600; break-after: avoid; }
+h4 { font-size: 10.5pt; margin: 5mm 0 1.5mm; font-weight: 600; break-after: avoid; }
+p { margin: 0 0 3mm; }
+.lede { font-family: var(--display); font-size: 15pt; line-height: 1.35; border-left: 3px solid var(--red); padding: 1mm 0 1mm 5mm; margin: 0 0 6mm; color: var(--charcoal); }
+.muted { color: var(--n500); }
+small, .small { font-size: 8.5pt; }
+code, .code { font-family: var(--mono); font-size: 8.4pt; background: var(--n50); border: 1px solid var(--n100); border-radius: 3px; padding: 0 3px; }
+pre { font-family: var(--mono); font-size: 8pt; line-height: 1.5; background: var(--n50); border: 1px solid var(--n200); border-left: 3px solid var(--charcoal); border-radius: 4px; padding: 3mm 4mm; white-space: pre-wrap; break-inside: avoid; margin: 0 0 4mm; }
+ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+li { margin: 0 0 1.2mm; }
+ul.arrows { list-style: none; padding-left: 0; }
+ul.arrows li { padding-left: 5mm; position: relative; }
+ul.arrows li::before { content: '\203A'; position: absolute; left: 0; color: var(--red); font-weight: 700; }
+
+/* ---------- tables ---------- */
+table.grid { width: 100%; border-collapse: collapse; margin: 0 0 5mm; font-size: 9pt; break-inside: auto; }
+table.grid th { background: var(--charcoal); color: var(--white); text-align: left; font-weight: 600; padding: 2mm 3mm; font-size: 8.5pt; }
+table.grid td { padding: 2mm 3mm; border-bottom: 1px solid var(--n200); vertical-align: top; }
+table.grid tr:nth-child(even) td { background: var(--n50); }
+table.grid tr { break-inside: avoid; }
+table.grid td:first-child { font-weight: 600; }
+table.grid.plain td:first-child { font-weight: 400; }
+
+/* ---------- blocks ---------- */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 0 0 5mm; }
+.cards.three { grid-template-columns: 1fr 1fr 1fr; }
+.card { border: 1px solid var(--n200); border-radius: 6px; padding: 4mm; break-inside: avoid; background: var(--white); }
+.card .k { font-size: 7.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red-deep); font-weight: 600; }
+.card h4 { margin: 1mm 0 1.5mm; }
+.card p { font-size: 9.3pt; margin: 0; color: var(--n700); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 0 0 6mm; }
+.kpi { background: var(--charcoal); color: var(--white); border-radius: 6px; padding: 4mm; }
+.kpi .v { font-family: var(--display); font-size: 22pt; line-height: 1; }
+.kpi .l { font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-top: 2mm; }
+.note { border: 1px dashed var(--n200); border-radius: 6px; padding: 3mm 4mm; font-size: 9pt; color: var(--n700); margin: 0 0 5mm; break-inside: avoid; }
+.why { background: var(--n50); border-left: 3px solid var(--red); border-radius: 0 6px 6px 0; padding: 3mm 4mm; margin: 0 0 4mm; break-inside: avoid; }
+.why b { display: block; font-size: 7.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red-deep); margin-bottom: 1mm; }
+.why p { margin: 0; font-size: 9.5pt; }
+.pill { display: inline-block; font-size: 7.5pt; font-weight: 600; padding: 0.3mm 2mm; border-radius: 999px; background: var(--n100); color: var(--n700); }
+.pill.green { background: var(--green-soft); color: var(--green); }
+.pill.red { background: #fde8e8; color: var(--red-deep); }
+
+/* ---------- figures ---------- */
+figure { margin: 0 0 6mm; break-inside: avoid; }
+figure .frame { border: 1px solid var(--n200); border-radius: 6px; overflow: hidden; background: var(--white); }
+figure img { display: block; width: 100%; }
+figure.phone .frame { width: 62mm; margin: 0 auto; border-radius: 10px; }
+figcaption { font-size: 8.5pt; color: var(--n500); margin-top: 2mm; }
+figcaption b { color: var(--charcoal); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.phones { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; }
+.diagram { border: 1px solid var(--n200); border-radius: 6px; padding: 4mm; background: var(--n50); break-inside: avoid; margin: 0 0 6mm; text-align: center; }
+.diagram .mermaid { display: flex; justify-content: center; }
+.diagram .mermaid svg { max-width: 100% !important; height: auto; }
+.diagram .cap { font-size: 8.5pt; color: var(--n500); margin-top: 2mm; text-align: left; }
+
+/* ---------- table of contents ---------- */
+.toc { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8mm; margin: 2mm 0 6mm; }
+.toc div { display: flex; gap: 4mm; padding: 2.4mm 0; border-bottom: 1px solid var(--n200); font-size: 10pt; }
+.toc span { color: var(--red-deep); font-weight: 600; width: 8mm; }
+
+.avoid { break-inside: avoid; }
+.page-break { page-break-before: always; }
+
+/* Mermaid draws into a pre: none of the code block styling applies. */
+pre.mermaid { background: none; border: 0; border-radius: 0; padding: 0; margin: 0; white-space: normal; font-family: var(--ui); }
+
+/* Chapters flow on with space between them rather than each taking a new
+   page; a heading never ends a page alone, and a diagram fits under it. */
+.chapter { page-break-before: auto; break-before: auto; margin-top: 14mm; }
+.chapter:first-child { margin-top: 0; }
+.chapter.new-page { break-before: page; page-break-before: always; margin-top: 0; }
+.sec-head, h3, h4 { break-after: avoid; page-break-after: avoid; }
+.diagram .mermaid svg { max-height: 118mm; width: auto !important; }
+
+/* The flow table must never grow past the page: Chrome would then shrink
+   the whole document to fit, cover included. */
+table.flow { table-layout: fixed; }
+img { max-width: 100%; }
+.sec-head { break-inside: avoid; page-break-inside: avoid; }
+.diagram.tall .mermaid svg { max-height: 165mm; }
+
+/* Phones in a row take their column, never a fixed width that overruns it. */
+.phones figure.phone .frame { width: 100%; }
+figure.narrow { width: 86%; margin-left: auto; margin-right: auto; }

@@ -14,6 +14,7 @@ import {
   getProductBySlug, getCanonicalProductSlug, getProductSlugs, getRelatedProducts, primaryImage, blurProps,
   getCategoryWithTree, productSizes,
 } from '@/lib/products';
+import { priceIsFrom } from '@beco/validation';
 import { isStoneRange, specNote } from '@/lib/material';
 import { SITE, whatsappLink } from '@/lib/site';
 import { shopSearchFor } from '@/lib/legacy-redirects';
@@ -130,6 +131,7 @@ export default async function ProductPage({ params }: Params) {
               compareAtPrice={product.compare_at_price}
               unit={product.unit}
               vatInclusive
+              from={priceIsFrom(product.price, sizes)}
             />
             <AvailabilityBadge
               availability={product.availability}

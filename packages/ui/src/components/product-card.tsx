@@ -35,6 +35,8 @@ export interface ProductCardProps {
   priceDisplayMode: 'fixed' | 'poa';
   price?: number | null | undefined;
   compareAtPrice?: number | null | undefined;
+  /** The price is the lowest of several sizes: reads "From". D152. */
+  priceFrom?: boolean | undefined;
   unit?: string | null | undefined;
   availability?: 'in_stock' | 'pre_order' | 'poa' | undefined;
   /** Counted stock. Zero makes the card read as out of stock. */
@@ -62,7 +64,7 @@ const FRAME = {
 const BADGE_LABEL = { hot: 'Popular', new: 'New', sale: 'Sale', clearance: 'Clearance' } as const;
 
 export function ProductCard({
-  name, href, image, priceDisplayMode, price, compareAtPrice, unit,
+  name, href, image, priceDisplayMode, price, compareAtPrice, priceFrom, unit,
   availability = 'poa', badge, frame = 'portrait', imageClassName, action, images,
   stockQuantity,
   className,
@@ -132,6 +134,7 @@ export function ProductCard({
             compareAtPrice={compareAtPrice}
             unit={unit}
             vatInclusive
+            from={priceFrom}
           />
           <AvailabilityBadge
             availability={availability}

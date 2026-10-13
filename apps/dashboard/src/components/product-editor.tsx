@@ -11,6 +11,7 @@ import {
   Icon,
   Input,
   PriceDisplay,
+  formatPrice,
   Select,
   StatusPill,
   Textarea,
@@ -18,7 +19,7 @@ import {
   useActionToast,
   useKeepValuesSubmit,
 } from '@beco/ui';
-import { PRODUCT_UNITS, slugifyProductName, stockStepFor } from '@beco/validation';
+import { PRODUCT_UNITS, lowestSizePrice, priceIsFrom, slugifyProductName, stockStepFor } from '@beco/validation';
 import type { Availability, PriceDisplayMode, ProductSize } from '@beco/types';
 import {
   deleteProduct,
@@ -230,11 +231,16 @@ export function ProductEditor({
   const busy = saving || removing || publishing;
   const publishPending = publishing || (saving && saveIntent !== 'save');
   const stockQuantity = asNumber(stockInput);
+  // A product priced by its sizes, D152: every size priced, the product's own
+  // price may stay blank and the lowest size price is what saves.
+  const namedSizes = sizes.filter((row) => row.label.trim() !== '').map((row) => ({ price: asNumber(row.price) }));
+  const sizeFloor = lowestSizePrice(namedSizes);
+  const effectivePrice = asNumber(priceInput) ?? sizeFloor;
   const warnings = published
     ? []
     : [
         product.images.length === 0 ? 'No photo yet' : null,
-        priceMode !== 'poa' && asNumber(priceInput) == null ? 'No price yet' : null,
+        priceMode !== 'poa' && effectivePrice == null ? 'No price yet' : null,
       ].filter((warning): warning is string => warning != null);
   const publishLabel = publishPending
     ? published
@@ -301,10 +307,11 @@ export function ProductEditor({
             <div className="mt-2">
               <PriceDisplay
                 priceDisplayMode={priceMode}
-                price={asNumber(priceInput)}
+                price={effectivePrice}
                 compareAtPrice={asNumber(compareInput)}
                 unit={unit}
                 vatInclusive={priceMode === 'fixed'}
+                from={priceIsFrom(effectivePrice, namedSizes)}
               />
             </div>
             <p className="mt-3 font-ui text-base text-neutral-500">
@@ -572,7 +579,15 @@ export function ProductEditor({
                   <option value="poa">Price on application</option>
                 </Select>
               </Field>
-              <Field label="Price" htmlFor="price" hint="KES, VAT inc.">
+              <Field
+                label="Price"
+                htmlFor="price"
+                hint={
+                  priceMode === 'fixed' && sizeFloor != null && asNumber(priceInput) == null
+                    ? `Blank uses the lowest size, ${formatPrice(sizeFloor)}`
+                    : 'KES, VAT inc.'
+                }
+              >
                 <Input
                   id="price"
                   name="price"

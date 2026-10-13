@@ -93,6 +93,27 @@ export const productSizesSchema = z
     });
   });
 
+/**
+ * The price a sized product falls back to when its own is left blank: the
+ * lowest size price, but only when every size carries one. A size with no
+ * price takes the product's, so a blank product price with an unpriced size
+ * would leave that size with nothing. Shown on the shop as "From". D152.
+ */
+export const lowestSizePrice = (sizes: readonly { price: number | null }[]): number | null => {
+  if (sizes.length === 0 || sizes.some((size) => size.price == null)) return null;
+  return Math.min(...sizes.map((size) => size.price as number));
+};
+
+/**
+ * Whether a product's price is a floor rather than the price: true when its
+ * sizes come to two or more different prices, a size with none taking the
+ * product's. The shop and the editor's preview then say "From". D152.
+ */
+export const priceIsFrom = (price: number | null, sizes: readonly { price: number | null }[]): boolean => {
+  const prices = new Set(sizes.map((size) => size.price ?? price).filter((value): value is number => value != null));
+  return prices.size > 1;
+};
+
 /** The editor's sizes JSON, keeping only rows that name a size. */
 export const sizesFromForm = (raw: unknown): unknown[] => {
   if (typeof raw !== 'string' || !raw) return [];
@@ -157,14 +178,20 @@ export const updateProductSchema = z
         message: 'A price on application product cannot carry a price',
       });
     }
-    if (value.priceDisplayMode === 'fixed' && value.price == null) {
+    // Every size priced: the product price may be left blank and takes the
+    // lowest size price below (D152). Otherwise a fixed price is required.
+    const price = value.price ?? lowestSizePrice(value.sizes);
+    if (value.priceDisplayMode === 'fixed' && price == null) {
       ctx.addIssue({
         code: 'custom',
         path: ['price'],
-        message: 'A fixed price product must have a price',
+        message:
+          value.sizes.length > 0
+            ? 'Give the product a price, or give every size its own'
+            : 'A fixed price product must have a price',
       });
     }
-    if (value.compareAtPrice != null && (value.price == null || value.compareAtPrice <= value.price)) {
+    if (value.compareAtPrice != null && (price == null || value.compareAtPrice <= price)) {
       ctx.addIssue({
         code: 'custom',
         path: ['compareAtPrice'],
@@ -191,7 +218,11 @@ export const updateProductSchema = z
             : 'The low-stock mark is a whole unit',
       });
     }
-  });
+  })
+  .transform((value) => ({
+    ...value,
+    price: value.priceDisplayMode === 'fixed' ? (value.price ?? lowestSizePrice(value.sizes)) : value.price,
+  }));
 
 /**
  * The editor's Publish and Unpublish control. Only the flag is written, under
