@@ -23,6 +23,19 @@ for the dashboard lacks its keys, so there is no working staging dashboard yet.
 off it; it took 63 to 69 the same day, fictional data only. Release PR #17 is live on the
 dashboard.
 
+**13 October 2026: both databases at migration 71, release PR #18 live.** `beco-staging` took 70
+(`module_grants`, D136) and 71 (`product_sizes`, D137) first; `beco-prod` took them after a schema
+and data dump to `~/beco-backups/2026-10-13/prod-*-pre70.sql`. Both migrations are additive and
+71 keeps `add_catalogue_quote_lines`' signature, so the code then live kept working between the
+migration and the deploy. Main at `65ac22d` deployed to both projects with `vercel deploy --prod`
+from a `git archive` export of main, never the working tree: the working tree carries 19GB of
+agent worktrees under `.claude/` that `.vercelignore` does not list. Building on Vercel, not in
+Actions, gave the dashboard the real `R2_ACCOUNT_ID`, so the live CSP names the account's R2 host
+(D150). Previews of the same commit on beco-staging: `beco-interiors-9v11ku04w` and
+`beco-dashboard-6rc0a0lzs`. `staging.beco.co.ke` still does not resolve. The CLI lost its
+connection while polling both production deploys; each had completed, checked with
+`vercel inspect` before anything was retried.
+
 `vercel deploy --prod --skip-domain` did NOT keep the custom domains off: www served the new
 build at once. Do not rely on it as a dry run; deploy to Preview to test before promoting.
 
