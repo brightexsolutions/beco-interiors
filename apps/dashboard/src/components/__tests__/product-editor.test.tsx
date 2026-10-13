@@ -351,6 +351,42 @@ describe('sizes, D137', () => {
     expect(JSON.parse(String(form.get('sizes')))).toEqual([{ label: '128mm', price: 950, sku: null }]);
   });
 
+  it('lets a handle priced by its sizes save with no price of its own, and says what it will use (D152)', async () => {
+    const user = userEvent.setup();
+    render(
+      <ProductEditor
+        product={{
+          ...product,
+          isPublished: false,
+          price: null,
+          sizes: [
+            { label: '600MM', price: 255, sku: null },
+            { label: '700MM', price: 320, sku: null },
+          ],
+        }}
+        categories={[]}
+      />,
+    );
+    expect(screen.getByText('Blank uses the lowest size, KES 255')).toBeInTheDocument();
+    expect(screen.queryByText(/No price yet/)).toBeNull();
+    // The preview reads as the website will: from the lowest size.
+    expect(screen.getAllByText('From').length).toBeGreaterThan(0);
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    const form = updateProduct.mock.calls.at(-1)?.[1] as FormData;
+    expect(form.get('price')).toBe('');
+  });
+
+  it('still warns there is no price when a size has none and the product has none', () => {
+    render(
+      <ProductEditor
+        product={{ ...product, isPublished: false, price: null, sizes: [{ label: '600MM', price: null, sku: null }] }}
+        categories={[]}
+      />,
+    );
+    expect(screen.getByText(/No price yet/)).toBeInTheDocument();
+    expect(screen.queryByText(/Blank uses the lowest size/)).toBeNull();
+  });
+
   it('says a product is one size when it has none', () => {
     render(<ProductEditor product={product} categories={[]} />);
     expect(screen.getByText('One size. Add sizes if the counter has to pick one.')).toBeInTheDocument();

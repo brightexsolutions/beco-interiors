@@ -3822,3 +3822,16 @@ that scroll, and the pinned row of actions, the same frame as a Sheet's footer.
 New quote is gone from the top bar: it sat beside the page's own New quote on Quotes and home, in
 Warm Red, which was the page's loudest element on every screen. It stays on home, on Quotes, in
 the phone bar's centre and in command K.
+
+## D152, 14 October 2026: a product can be priced by its sizes alone
+
+Feedback from a Beco user adding HT-3916 Black Handles: five lengths, each with its own price, and
+the editor would not save "because I still have to add a fixed price". A fixed price product had
+to carry a price of its own, enforced in the schema and by the `products_price_matches_mode`
+check, even when every size was priced.
+
+Now, when every size carries a price, the product's own price may be left blank and the lowest
+size price is saved in its place (`lowestSizePrice`), so the database rule holds without a
+migration and the quote picker's fallback is still a real figure. A size without a price still
+needs the product price, since that size takes it. The shop and the editor's preview say "From
+KES 255" whenever a product's sizes come to more than one price (`priceIsFrom`).

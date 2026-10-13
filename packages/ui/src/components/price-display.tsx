@@ -32,6 +32,8 @@ export interface PriceDisplayProps {
    * it is and be surprised at the invoice.
    */
   vatInclusive?: boolean | undefined;
+  /** The figure is the lowest of several, a product in sizes priced apart: "From KES 255". D152. */
+  from?: boolean | undefined;
   className?: string | undefined;
 }
 
@@ -47,6 +49,7 @@ export function PriceDisplay({
   currency = 'KES',
   size = 'default',
   vatInclusive = false,
+  from = false,
   className,
 }: PriceDisplayProps) {
   const big = size === 'large';
@@ -66,6 +69,7 @@ export function PriceDisplay({
   return (
     <p className={cn('font-ui text-charcoal flex flex-wrap items-baseline gap-2 tabular-nums', className)}>
       <span className={cn('font-semibold', big ? 'text-xl' : 'text-base')}>
+        {from ? <span className="font-normal text-neutral-500">From </span> : null}
         {formatPrice(price, currency)}
       </span>
       {onSale ? (

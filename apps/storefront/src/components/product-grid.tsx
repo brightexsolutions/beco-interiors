@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { ProductCard, Reveal } from '@beco/ui';
 import { QuickAddToQuote } from './quick-add-to-quote';
-import { orderedImages, primaryImage, type CatalogueProduct, blurProps } from '@/lib/products';
+import { priceIsFrom } from '@beco/validation';
+import { orderedImages, primaryImage, productSizes, type CatalogueProduct, blurProps } from '@/lib/products';
 
 /**
  * The grid, in one place, because it is the same on the home page, on /shop
@@ -24,6 +25,7 @@ export function ProductGrid({ products }: { products: CatalogueProduct[] }) {
               priceDisplayMode={p.price_display_mode}
               price={p.price}
               compareAtPrice={p.compare_at_price}
+              priceFrom={priceIsFrom(p.price, productSizes(p.sizes))}
               unit={p.unit}
               availability={p.availability}
               stockQuantity={p.stock_quantity}

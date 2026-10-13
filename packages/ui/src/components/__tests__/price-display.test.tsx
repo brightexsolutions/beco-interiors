@@ -48,4 +48,15 @@ describe('PriceDisplay', () => {
     const { container } = render(<PriceDisplay priceDisplayMode="fixed" price={25000} />);
     expect(container.textContent).not.toContain('Price on application');
   });
+
+  it('says From when the figure is the lowest of several sizes, D152', () => {
+    render(<PriceDisplay priceDisplayMode="fixed" price={255} from unit="per piece" />);
+    expect(screen.getByText('From')).toBeInTheDocument();
+    expect(screen.getByText(/KES 255/)).toBeInTheDocument();
+  });
+
+  it('never says From on price on application', () => {
+    render(<PriceDisplay priceDisplayMode="poa" price={null} from />);
+    expect(screen.queryByText('From')).toBeNull();
+  });
 });

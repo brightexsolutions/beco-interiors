@@ -20,7 +20,9 @@ import { LocalBusinessSchema } from '@/components/local-business-schema';
 import {
   getPublishedProducts, getCategoriesWithProducts, getCategoryTree, primaryImage, imagesForGroup,
   type CatalogueProduct, blurProps,
+  productSizes,
 } from '@/lib/products';
+import { priceIsFrom } from '@beco/validation';
 import { getPublishedClients } from '@/lib/clients';
 import { SITE, SITE_SHOTS, whatsappLink } from '@/lib/site';
 import { RANGE_GROUPS, HERO_RANGE_IMAGES } from '@/lib/ranges';
@@ -447,6 +449,7 @@ export default async function HomePage() {
                   priceDisplayMode={p.price_display_mode}
                   price={p.price}
                   compareAtPrice={p.compare_at_price}
+                  priceFrom={priceIsFrom(p.price, productSizes(p.sizes))}
                   unit={p.unit}
                   availability={p.availability}
                   badge={p.badge}
