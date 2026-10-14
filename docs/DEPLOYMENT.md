@@ -23,6 +23,14 @@ for the dashboard lacks its keys, so there is no working staging dashboard yet.
 off it; it took 63 to 69 the same day, fictional data only. Release PR #17 is live on the
 dashboard.
 
+**14 October 2026: release PR #19 live (D152 sized prices, D153 session read once), no
+migration.** Dashboard deployed from an export of main at `05edbfb`. **The storefront project's
+Vercel Git integration is still on:** it deployed main to Production by itself three seconds after
+the merge (`beco-interiors-m9pq1wvgj`), and builds a Preview for every push. That is against D45,
+and with a migration in a release it would put new code in front of an old schema. Turn it off in
+Vercel, `beco-interiors`, Settings, Git (disconnect, or an Ignored Build Step of `exit 0`), and until
+then migrate before merging, not after. The dashboard project has no Git deploys.
+
 **13 October 2026: both databases at migration 71, release PR #18 live.** `beco-staging` took 70
 (`module_grants`, D136) and 71 (`product_sizes`, D137) first; `beco-prod` took them after a schema
 and data dump to `~/beco-backups/2026-10-13/prod-*-pre70.sql`. Both migrations are additive and
