@@ -22,6 +22,7 @@ import { ProductCreate } from '@/components/product-create';
 import { ProductThumb } from '@/components/product-thumb';
 import { BusyRegion } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
+import { useSheetOpen } from '@/lib/use-sheet-open';
 import {
   isLowStock,
   productAvailabilityLabel,
@@ -218,7 +219,10 @@ export function ProductResults({
   };
 
   const closeSheet = () => {
-    navigate(() => router.push(withParam('edit', null, ['new'])));
+    navigate(() => {
+      dismissSheet();
+      return router.push(withParam('edit', null, ['new']));
+    });
   };
 
   const refresh = () => {
@@ -226,6 +230,8 @@ export function ProductResults({
   };
 
   const sheetOpen = Boolean(editing) || creating;
+  // Shut at once on Close, the backdrop or Escape; the URL settles behind it. D157.
+  const [sheetShown, dismissSheet] = useSheetOpen(sheetOpen);
   const sheetTitle = creating ? 'New product' : (editing?.name ?? 'Product');
   const sheetDescription = creating
     ? 'Unpublished draft. Photographs and availability come next.'
@@ -238,7 +244,7 @@ export function ProductResults({
 
   const sheet = (
     <Sheet
-      open={sheetOpen}
+      open={sheetShown}
       onOpenChange={(open) => !open && closeSheet()}
       title={sheetTitle}
       description={sheetDescription}

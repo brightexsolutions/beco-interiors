@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { StaffUser } from '@/lib/users';
@@ -12,6 +12,9 @@ const resetStaffPassword = vi.fn(async () => ({ ok: 'Password reissued.', passwo
 const saveStaffPublicProfile = vi.fn(async () => ({ ok: 'Shown on /team.' }));
 const uploadStaffPhoto = vi.fn(async () => ({ ok: 'Photograph uploaded.' }));
 const removeStaffPhoto = vi.fn(async () => ({ ok: 'Photograph removed from /team.' }));
+const deleteStaffUser = vi.fn(async (_prev: unknown, _form: FormData) => ({
+  ok: 'Account deleted. Quotes and orders they raised keep their name.',
+}));
 vi.mock('@/app/(app)/users/actions', () => ({
   setStaffRole: (...a: Parameters<typeof setStaffRole>) => setStaffRole(...a),
   setStaffActive: (...a: Parameters<typeof setStaffActive>) => setStaffActive(...a),
@@ -19,6 +22,7 @@ vi.mock('@/app/(app)/users/actions', () => ({
   saveStaffPublicProfile: (...a: Parameters<typeof saveStaffPublicProfile>) => saveStaffPublicProfile(...a),
   uploadStaffPhoto: (...a: Parameters<typeof uploadStaffPhoto>) => uploadStaffPhoto(...a),
   removeStaffPhoto: (...a: Parameters<typeof removeStaffPhoto>) => removeStaffPhoto(...a),
+  deleteStaffUser: (...a: Parameters<typeof deleteStaffUser>) => deleteStaffUser(...a),
   setModuleGrants: vi.fn(async () => ({ ok: 'Saved.' })),
 }));
 vi.mock('next/navigation', () => ({
@@ -62,6 +66,44 @@ describe('UserEditor', () => {
     expect(within(dialog).getByText(/stay attributed/i)).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Deactivate' }));
     expect(setStaffActive).toHaveBeenCalled();
+  });
+
+  it('offers Delete to Brightex alone, names the person and says the verb (D158)', async () => {
+    const user = userEvent.setup();
+    const onDeleted = vi.fn();
+    const { unmount } = render(<UserEditor user={person} viewerId="irene-1" canDelete={false} />);
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    unmount();
+    render(<UserEditor user={person} viewerId="brightex-1" canDelete onDeleted={onDeleted} />);
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog).toHaveAccessibleName('Delete Sam Odhiambo?');
+    expect(within(dialog).getByText(/cannot be undone/i)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Delete account' }));
+    const form = deleteStaffUser.mock.calls.at(-1)?.[1] as FormData;
+    expect(form.get('userId')).toBe(person.id);
+    expect(form.get('updatedAt')).toBe(person.updatedAt);
+    // The toast lives in the app shell, not this tree; the sheet closing is what the editor owes.
+    await waitFor(() => expect(onDeleted).toHaveBeenCalled());
+  });
+
+  it('shows a Beco account to a view only viewer with nothing to press, and says why (D136)', () => {
+    render(
+      <UserEditor
+        user={person}
+        viewerId="irene-1"
+        roles={['beco_admin', 'beco_sales', 'beco_product_manager', 'beco_editor']}
+        canManage={false}
+        viewOnly
+      />,
+    );
+    expect(screen.getByText('You can read this account, not change it.')).toBeInTheDocument();
+    expect(screen.queryByText('Brightex manages this account.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deactivate' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reset password' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /photograph/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /access/i })).not.toBeInTheDocument();
   });
 
   it('shows a Brightex account to a Beco holder with nothing to press (D135)', () => {

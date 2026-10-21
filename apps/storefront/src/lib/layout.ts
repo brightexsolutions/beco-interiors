@@ -21,6 +21,11 @@
  * sitting visibly left of the header's logo above it. One constant now,
  * so a future widening pass cannot update one file and miss the other the
  * way this one did.
+ *
+ * The `lg` padding grows with the viewport, so an element carrying this
+ * AND a `max-w` must be `box-content`: under border-box the padding comes
+ * out of the max width, and the type column narrows as the screen widens.
+ * Seen on a 24 inch screen at 1914px as a 325px hero column (D155).
  */
 export const HERO_GRID_INSET = 'pl-8 sm:pl-24 lg:pl-[calc(max(0px,(100vw-1380px)/2)+10rem)]';
 

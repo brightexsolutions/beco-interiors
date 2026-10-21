@@ -24,6 +24,13 @@ describe('HeroStatic', () => {
     expect(screen.getByRole('region', { name: 'Sintered stone' })).toBeInTheDocument();
   });
 
+  it('caps the type column with content-box sizing, like PinnedHero (D155)', () => {
+    const { container } = render(<HeroStatic />);
+    const column = container.querySelector('.beco-hero-content-top.max-w-\\[52rem\\]');
+    expect(column).not.toBeNull();
+    expect(column).toHaveClass('box-content');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<HeroStatic />);
     expect(await axe(container)).toHaveNoViolations();

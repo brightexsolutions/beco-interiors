@@ -29,7 +29,9 @@ export function HeroStatic() {
       <div
         className={cn(
           HERO_GRID_INSET,
-          'beco-hero-content-top relative flex min-h-[68svh] max-w-[52rem] flex-col justify-center pb-14 pr-6',
+          // box-content, for the same reason as PinnedHero: the inset's padding
+          // must not come out of the 52rem (D155).
+          'beco-hero-content-top relative flex min-h-[68svh] max-w-[52rem] box-content flex-col justify-center pb-14 pr-6',
           'lg:min-h-[78vh] lg:pr-20',
         )}
       >

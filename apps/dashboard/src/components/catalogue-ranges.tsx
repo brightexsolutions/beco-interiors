@@ -7,6 +7,7 @@ import { Icon, Sheet, buttonClasses, cn } from '@beco/ui';
 import { CategoryEditor } from '@/components/category-editor';
 import { CategoryCreate } from '@/components/category-create';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
+import { useSheetOpen } from '@/lib/use-sheet-open';
 import { flattenCategoryTree, subtreeProductCount, type CategoryGroupRow, type CategoryParentOption, type CategoryRow } from '@/lib/categories';
 
 /**
@@ -86,11 +87,16 @@ export function CatalogueRanges({
 
   const editHref = (id: string) => withParam({ range: id, newRange: null, parent: null });
   const newHref = (parentId: string | null) => withParam({ newRange: '1', parent: parentId, range: null });
-  const closeSheet = () => {
-    navigate(() => router.push(withParam({ range: null, newRange: null, parent: null })));
-  };
-
   const sheetOpen = Boolean(editing) || creating;
+  // Shut at once on Close, the backdrop or Escape; the URL settles behind it. D157.
+  const [sheetShown, dismissSheet] = useSheetOpen(sheetOpen);
+
+  const closeSheet = () => {
+    navigate(() => {
+      dismissSheet();
+      return router.push(withParam({ range: null, newRange: null, parent: null }));
+    });
+  };
   const sheetTitle = creating ? 'New range' : (editing?.name ?? 'Range');
   const sheetDescription = creating
     ? 'Draft, hidden from the shop until published.'
@@ -99,7 +105,7 @@ export function CatalogueRanges({
       : 'Draft, hidden on the website';
 
   const sheet = (
-    <Sheet open={sheetOpen} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle} description={sheetDescription}>
+    <Sheet open={sheetShown} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle} description={sheetDescription}>
       {creating ? (
         <CategoryCreate groupOptions={groupOptions} defaultParentId={createParentId} returnTo={withParam({ newRange: null, parent: null })} />
       ) : editing ? (

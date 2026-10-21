@@ -108,3 +108,25 @@ describe('product sizes, D137', () => {
     expect(screen.queryByRole('region', { name: 'Sizes' })).toBeNull();
   });
 });
+
+describe('structured data, D156', () => {
+  const jsonLd = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('script[type="application/ld+json"]')).map(
+      (s) => JSON.parse(s.textContent ?? '{}') as { '@type': string; offers?: { price?: number } },
+    );
+
+  it('gives a price on request product its breadcrumb and no Product entity', async () => {
+    // Beverly Gold is POA. Search Console flagged every such page for an
+    // Offer with no price, so the whole entity stays out until there is one.
+    const { container } = await renderPage('beverly-gold');
+    const blocks = jsonLd(container);
+    expect(blocks.map((b) => b['@type'])).toEqual(['BreadcrumbList']);
+  });
+
+  it('gives a priced product the Product entity with its price, plus the breadcrumb', async () => {
+    const { container } = await renderPage('hinge-1187');
+    const blocks = jsonLd(container);
+    expect(blocks.map((b) => b['@type'])).toEqual(['Product', 'BreadcrumbList']);
+    expect(blocks[0]?.offers?.price).toBe(850);
+  });
+});

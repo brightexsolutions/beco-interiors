@@ -68,7 +68,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 |---|---|---|
 | Hero CTAs | Navigate to `/shop` and `/quote` | Server |
 | Hero range chips (D92) | Six ranges, not four stone colours: sintered stone, lighting, wall panels, SPC flooring, hardware, accessories, each a real link to `/shop/<range>` or a plain span if the range has no stock. Photography is a static manifest, `HERO_RANGE_IMAGES` in `lib/ranges.ts`, not a live product query, so it renders the same way before and after a `db:reset` | Test, `pinned-hero.test.tsx`, 17 tests, including the no-stock-renders-a-span case |
-| Hero left column lines up with the header's own logo (D99) | Shared `HERO_GRID_INSET` (`lib/layout.ts`), corrected from the site's very first, pre-widening gutter value to match `px-24`/`px-40`, used by both `PinnedHero` and `HeroStatic` | Server: class present in the rendered HTML on both. **Not walked on a device** |
+| Hero left column lines up with the header's own logo (D99) | Shared `HERO_GRID_INSET` (`lib/layout.ts`), corrected from the site's very first, pre-widening gutter value to match `px-24`/`px-40`, used by both `PinnedHero` and `HeroStatic`. The column is `box-content` so the inset's viewport grown padding never comes out of its 52rem cap: on a 24 inch screen at 1914px the type was wrapping inside 325px (D155) | Server: class present in the rendered HTML on both. Test: both hero tests prove the pairing. **Not walked on a device; walk at 1920px and 1440px after the next release** |
 | Hero, no photography | `HeroStatic` renders in place of `PinnedHero` when `heroSlides` is somehow empty. Same eyebrow, h1, lede and the same two CTAs to the same routes, on flat charcoal. In practice this branch no longer depends on the database per D92, so it is a safety rail rather than the common case D79 wrote it for | Test, 4 tests. The swap point is `heroSlides.length` in `page.tsx` |
 | Category rail cards | Navigate to the category | Server |
 | Range grid cards | Navigate to the product | Server, 29 product links present |
@@ -197,8 +197,11 @@ Index gating asked of the subtree: `/shop/wall-panels` noindex, `/shop/hardware`
 | Related product cards | Navigate | Server |
 | An unknown slug (D107) | 301 to `/shop?q=<words from the slug>` rather than a 404, because WooCommerce lived at `/product/<slug>` too. A former slug from `product_slugs` still 301s to the current product first | Test: `shopSearchFor` in `legacy-redirects.test.ts`; the order of the two lookups is `loadProduct` in `page.tsx` |
 
-`Product` with a real `Offer` and `InStock`, plus `BreadcrumbList`. **Server confirmed by
-parsing. NOT validated in Google's Rich Results Test.**
+`BreadcrumbList` on every product. `Product` with a real `Offer`, its `price` in KES and its availability, only
+when the product has a price above zero; a price on request product carries no `Product` entity (D156), because
+Search Console reported every POA page as a critical "Missing field price (in offers)" on 8 October 2026.
+Test: `product-schema.test.ts`, page render in `material-wording.test.tsx`. **Server confirmed by parsing. NOT
+validated in Google's Rich Results Test. After the next release: Validate fix on the Merchant listings report.**
 
 ---
 
@@ -563,16 +566,18 @@ Every operations role reads it: `beco_sales`, `beco_product_manager`, `beco_admi
 | Desktop table | Name, Email, Role, Status, Last login, Actions. Actions is icon plus View | Test: `UserResults` |
 | Phone table | Name, Status, Actions. No cards. No horizontal scroll | Test: `UserResults` |
 | View | Opens the detail sheet at `?user=id` | Test: `UserResults` |
-| New user | Charcoal labelled FAB, desktop and phone. Opens `?new=1` | Test: `NewUserFab`, `UserCreate` |
+| New user | Charcoal labelled FAB, desktop and phone. Opens `?new=1`. Not drawn, and `?new=1` opens nothing, when the screen is open by module grant alone (D136) | Test: `NewUserFab`, `UserCreate`, `UserResults` |
 | Create user | Email, name, role. Issues a password once, copyable. Forced change on first sign in | Test: `UserCreate`, `createStaffUser` |
 | Change role | ConfirmDialog names the person. Hidden on your own row | Test: `UserEditor`. Trigger `guard_users_staff` |
 | Deactivate / Reactivate | ConfirmDialog names the person. Sessions end. Quotes keep attribution. Nothing is deleted | Test: `UserEditor`, `setStaffActive` |
 | Reset password | ConfirmDialog. Shows a new secret once. Re-arms `must_change_password` | Test: `resetStaffPassword` |
+| Delete (D158) | Brightex only, in the sheet footer beside Reset password, never on your own row. ConfirmDialog names the person, says they leave Users and cannot sign in, that quotes, orders and the audit log keep their name, and that it cannot be undone; confirm reads Delete account. Soft: `delete_user()` flags the row, deactivates it, strips grants and ends sessions; the login is then retired through Supabase Auth so the address is free. Toast, then the sheet shuts and the row is gone from the list | Test: `UserEditor`, `UserResults`, `deleteStaffUser` cases in `users/actions.test.ts`, `users.integration.test.ts` end to end against the local stack; pgTAP `47`. **Server NOT WALKED** |
 | Show on /team | Sales only. Writes `is_public`. Directors cannot be listed | Test: `UserEditor`, `saveStaffPublicProfile`. Constraint `users_only_sales_are_public` |
 | Upload / replace photograph | JPEG, PNG or WebP up to 12MB, direct to R2 with a percentage on the button (D116). 400/800/1600 webp on R2. Preview loads from dashboard `/api/img`. Busts storefront `/team` | Test: `UserEditor`, `uploadStaffPhoto`, `readPhotoUpload`, img route |
 | Remove photograph | ConfirmDialog names the person. Deletes the R2 objects | Test: `UserEditor`, `removeStaffPhoto` |
 | Product manager at `/users` | Proxy bounces to `/products` | `access.test.ts`. **Server** still to walk as Aisha |
 | Dashboard access (D136) | Under Role on the sheet: the granted sections as pills, or "Role access only". Edit access opens a dialog listing every section: the role's own ticked and locked with the reason, the ones the viewer cannot hand on locked with theirs, the rest to tick. Save access writes the whole set under the lock. Hidden on your own row and on a Brightex row. The person's nav and the proxy open the section on their next load, read only, with a View only pill in the shell | Test: `ModuleAccessEditor`, `ModuleAccessSummary`, `setModuleGrants` reach checks, `grantableModules`, `accessLevel`, `ViewOnlyMark` via `AppShell`; pgTAP `46`. **Server NOT WALKED** |
+| Beco admin at `/users` by module grant alone (D136, D154) | Loads with the View only pill. No New user. Every sheet opens read only: "You can read this account, not change it.", no role select, no Deactivate, no Reset password, no website listing, no Edit access. Each write action refuses with the same sentence before the service role or the database is asked | Test: `UserEditor`, `UserResults`, view only cases in `users/actions.test.ts`; pgTAP `46`. **Server NOT WALKED** |
 | Granted Beco person at `/users` (D135) | Loads. Role select offers Beco roles only. A Brightex row opens read only: "Brightex manages this account.", no role select, no Deactivate, no Reset password, no website listing | Test: `UserEditor`, `UserCreate`, `access.test.ts`, holder cases in `users/actions.test.ts`; pgTAP `45`. **Server NOT WALKED** as a granted account |
 
 ### `/announcements`
@@ -608,6 +613,7 @@ Every operations role reads it: `beco_sales`, `beco_product_manager`, `beco_admi
 | Guide (D140) | Top bar on desktop, icon in the phone header. Opens a dialog: the current screen's topic first, marked Here, the rest the person can reach beside it; purpose, numbered steps (do, then where), notes. Filtered by the access map | Test: `GuideButton`, `guideTopicsFor`, `currentGuideTopic`, `AppShell`. Seen on the screenshot harness |
 | Offline bar (D141) | Charcoal bar across the top the moment the browser goes offline, announced; gone with a Back online toast when it returns | Test: `ConnectionStatus`. **Not walked on a device with the radio off** |
 | Route progress (D141) | A thin Warm Red bar from a nav tap until the next URL lands; ignores new tab, download, another site and a modified click; gives up after twenty seconds | Test: `RouteProgress`. Seen on the harness |
+| Sheet close (D157) | On Users, Catalogue, Ranges, Announcements and Audit: Close, the backdrop and Escape shut the sheet on the same frame. The navigation that drops `?user=`, `?edit=`, `?range=` or `?row=` lands behind it and the list dims meanwhile; a navigation that fails brings the sheet back | Test: a close case in each of the five results tests, with a navigation that never lands standing in for the network. **Server NOT WALKED; the pause was reported by Brown on production, 21 October** |
 | View only (D136) | A muted pill beside the crumb, with a tip, on a section open by module grant alone | Test: `AppShell` (absent for a role that holds the section). **Server NOT WALKED** |
 | Sidebar glyphs (D142) | Each section's glyph beside its word, from the same `NavGlyph` as the bar | Test: `AppShell`, `BottomNav`. Seen at 1440 |
 | Sidebar group fold (D144) | Each group heading is a button with a chevron: a click folds or opens its rows. Home and Sales open on a first visit, the rest folded; the group holding the current screen always opens; the choice is kept in this browser. While Sales is folded its heading carries the new quote count | Test: `side-nav.test.tsx` 6 tests, `side-nav-groups.test.ts` 5 tests. **Seen 12 October** at 1440 by 768 against the local stack: the nav measured 570px tall with nothing to scroll, Admin opened, survived a reload, and Users navigated to /users |
@@ -657,7 +663,7 @@ D110: as `beco_admin` the Studio tab and the Brightex allowlist are absent and a
 | Anniversary launch | Title row, right. Brightex only. Navigates to `/launch` | Test: `SettingsForm`. Irene does not see it |
 | Allow audit / Remove audit | Brightex only. ConfirmDialog names the person. Sets `can_read_audit` | Test: `SettingsGrants`. pgTAP `28` |
 | Allow staff / Remove staff (D135) | Brightex only. Not drawn on a Brightex row. ConfirmDialog names the person and says Brightex accounts stay out of reach. Sets `can_manage_users`; the Users item appears in their nav on the next load | Test: `SettingsGrants`, `setStaffGrant`; pgTAP `45`. **Server NOT WALKED** |
-| Edit access (D136) | On every non Brightex row of Permissions, the same `ModuleAccessEditor` as the user's sheet. A Beco admin holding the staff grant sees the Permissions tab for this alone; Audit, Staff and the Studio tab stay Brightex | Test: `SettingsGrants`, `parseSettingsTab` with the Studio flag. **Server NOT WALKED** |
+| Edit access (D136) | On every non Brightex row of Permissions, the same `ModuleAccessEditor` as the user's sheet. A Beco admin holding the staff grant sees the Permissions tab for this alone, listing Beco accounts only (D154): a Brightex account is not on their list. Audit, Staff and the Studio tab stay Brightex | Test: `SettingsGrants`, `parseSettingsTab` with the Studio flag. **Server NOT WALKED** |
 | Product manager or sales at `/settings` | Proxy bounces | `access.test.ts`, `proxy.test.ts` |
 
 ### `/studio/blog`

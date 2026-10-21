@@ -16,6 +16,7 @@ import {
 } from '@beco/ui';
 import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
+import { useSheetOpen } from '@/lib/use-sheet-open';
 import {
   formatAuditAction,
   formatAuditFields,
@@ -109,10 +110,19 @@ export function AuditResults({ rows, viewing }: { rows: AuditRow[]; viewing: Aud
     navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
+  // Shut at once on Close, the backdrop or Escape; the URL settles behind it. D157.
+  const [sheetShown, dismissSheet] = useSheetOpen(Boolean(viewing));
+  const closeSheet = () => {
+    navigate(() => {
+      dismissSheet();
+      return router.push(withParam('row', null));
+    });
+  };
+
   const sheet = (
     <Sheet
-      open={Boolean(viewing)}
-      onOpenChange={(open) => !open && navigate(() => router.push(withParam('row', null)))}
+      open={sheetShown}
+      onOpenChange={(open) => !open && closeSheet()}
       title={viewing ? formatAuditTitle(viewing.action, viewing.entityType) : 'Audit'}
     >
       {viewing ? (

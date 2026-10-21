@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEffect } from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { CatalogueProduct } from '@/lib/products';
 
@@ -155,6 +156,16 @@ describe('ProductResults', () => {
     );
     expect(screen.getByRole('dialog', { name: 'Limestone Ivory' })).toBeInTheDocument();
     expect(screen.getByText('Editing Limestone Ivory')).toBeInTheDocument();
+  });
+
+  it('shuts the sheet the moment Close is pressed, while the navigation is still landing (D157)', async () => {
+    const user = userEvent.setup();
+    push.mockReturnValue(new Promise(() => {}));
+    params = new URLSearchParams('edit=limestone-ivory');
+    render(<ProductResults products={[product()]} editing={product()} creating={false} categories={[]} />);
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith('/products');
   });
 
   it('opens a create sheet from ?new=1', () => {

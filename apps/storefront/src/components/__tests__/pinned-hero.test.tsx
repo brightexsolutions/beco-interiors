@@ -115,6 +115,22 @@ describe('PinnedHero, the lede', () => {
  * the same bug class this file already guards the lede against: opacity has
  * to have exactly one source per photograph layer.
  */
+describe('PinnedHero, the type column', () => {
+  it('caps the column with content-box sizing, so the viewport grown gutter never narrows it (D155)', () => {
+    // Reported from a 24 inch screen: at 1914px wide the eyebrow, h1 and
+    // lede wrapped inside about 325px. The inset's lg padding is
+    // (100vw - 1380px) / 2 + 10rem, and under border-box it came out of
+    // the 52rem cap. The two classes only work together.
+    const { container } = render(
+      <PinnedHero slides={[slide({ slug: 'sintered-stone', title: 'Sintered stone' })]} />,
+    );
+    const column = container.querySelector('.beco-hero-content-top.max-w-\\[52rem\\]');
+    expect(column).not.toBeNull();
+    expect(column).toHaveClass('box-content');
+    expect(column?.className).toContain('lg:pl-[calc(max(0px,(100vw-1380px)/2)+10rem)]');
+  });
+});
+
 describe('PinnedHero, the full bleed photograph', () => {
   // The desktop crossfade wrapper is the FIRST .beco-ambient block in the
   // document: mobile's own single background photograph and every

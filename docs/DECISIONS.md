@@ -3850,3 +3850,135 @@ redirects stay outside the cached function.
 Still to measure on the live site with a real account: the time from a click to the next screen,
 and whether the proxy's check should move to `getClaims` (verified locally, no network) once the
 project's JWT keys are asymmetric.
+
+## D154, 21 October 2026: the Users module grant draws nothing it cannot do
+
+Brown, checking Irene's access on production: a Beco admin given the Users module should be able
+to add accounts and set their roles, and Brightex accounts should not be on her list for access.
+
+The first is not what a module grant is. D136 made a module grant read only, and the Permissions
+tab carries two different switches for Users: Allow staff, which is `can_manage_users` (D135) and
+opens adding accounts, changing roles, deactivating and reissuing passwords on Beco accounts; and
+Edit access with Users ticked, which opens the screen to read. Irene needs the first. Nothing in
+that changes.
+
+What did change. On the screen a module grant opened, the write controls were still drawn: New
+user, the role select, Deactivate, Reset password, the website listing. The View only pill was the
+only warning, and each control failed only at RLS. Worse, two of the actions reach Supabase Auth
+through the service role before RLS sees anything: a view only viewer could reissue a Beco
+account's password, locking that person out, before the `users` update was refused. Now
+`accessLevel` decides on the page and in every write action: by module grant alone, New user is not
+drawn, `?new=1` opens nothing, every sheet opens read only saying "You can read this account, not
+change it.", and each action answers with the same sentence before the service role or the
+database is asked. On the Permissions tab a Beco holder is shown Beco accounts only; a Brightex
+row carried nothing they could press, and listing it read as though it were theirs to change.
+
+Not changed: the `/users` list itself stays whole for a holder of the staff grant, Brightex rows
+included, read only, as D135 decided. If Beco wants those rows out of that list too, that is a
+reversal of D135, not of this.
+
+*Reverses if:* a module grant is ever meant to carry writes, which D136 already says would make it
+a role.
+
+## D155, 21 October 2026: the hero's type column is content-box
+
+Brown, moving Chrome to a 24 inch screen: the home hero's eyebrow, headline and lede were
+squeezed into a narrow column. At 1914px wide the column measured about 325px; on a 1440px
+laptop it is about 560px, which is why the gutter passes under D92 never showed it.
+
+The cause is a pairing. `HERO_GRID_INSET` pads the column on the left by
+`(100vw - 1380px) / 2 + 10rem` from `lg` up, so the type lines up with the 1380px grid, and the
+same element carried `max-w-[52rem]`. Under Tailwind's border-box default the padding is part
+of the max width, so every pixel the viewport grows past 1380px takes half a pixel from the
+type. Both heroes now set `box-content` beside the cap, so 52rem is the column and the gutter
+sits outside it. The h1 keeps its own 18ch measure and the lede its 42ch, so nothing gets
+wider than it was designed to be on a laptop; the wide screen simply stops losing width.
+
+The constant's comment now says that anything carrying the inset and a max width must be
+content-box, since the next element to pair them would hit the same wall.
+
+*Reverses if:* the hero moves onto the shared 1380px container with `px-40`, at which point the
+inset and this rule both go.
+
+## D156, 21 October 2026: a price on request product carries no Product entity
+
+Search Console, 8 October 2026, Merchant listings: "Missing field price (in offers)", critical,
+on every product page it had crawled, all price on request. The page emitted a `Product` with an
+`Offer` carrying the URL, `KES` and `LimitedAvailability` and, deliberately, no `price`, because a
+zero would have been a lie.
+
+Google's documentation, read rather than remembered: a merchant listing requires `price` or
+`priceSpecification.price`, above zero; a product snippet requires one of `offers`, `review` or
+`aggregateRating`, and its `Offer` lists `price` as required too. So an `Offer` with no price is
+not a listing with a field missing, it is an invalid listing, and dropping only the `offers` would
+move the same critical error to the Product snippets report. There is no structured data for
+"ask us for the price".
+
+The page now emits the `Product` entity only when the product has a fixed price above zero, and
+the `BreadcrumbList` always. The rule is `productJsonLd` in `lib/product-schema.ts`, unit tested,
+and the page renders whatever it returns. A POA page loses nothing: it was never eligible for a
+listing or a snippet, it only produced errors. A product gains the entity the day it gains a
+price, with no further change. D152's sized products already save their lowest size price as
+the product price, so they list at "from" the lowest figure, matching what the shop shows.
+
+*Reverses if:* Google adds a way to mark an offer as price on request, at which point the
+`Offer` comes back for POA with that marking and `LimitedAvailability`.
+
+## D157, 21 October 2026: a sheet shuts on the tap, not on the round trip
+
+Brown, on production: a dialog takes a while to close, on the Close button and on a tap outside.
+
+The dialogs proper close at once; their open flag is component state. The detail sheets do not:
+every one of them, on Users, Catalogue, Ranges, Announcements and Audit, opens from a query
+parameter and is rendered open by the server from it, per D38 and D117, so Close, the backdrop and
+Escape each start a navigation that drops the parameter, and the sheet stayed open until the
+server's render without it arrived. That is the proxy, the session read and the page's own queries
+(D153 took it from three session reads to one), Nairobi to Dublin and back, with the sheet sitting
+there the whole time. The sheet component itself has no exit animation; the whole pause was the
+network.
+
+`useSheetOpen` is `useOptimistic` on the open flag, the same pattern the range browser already uses
+for its selected pill. `dismiss` runs inside the navigation's transition, so the sheet is gone on
+the next render; the flag settles to the URL when the navigation lands, and comes back if it
+fails. Each list's test closes a sheet against a navigation that never resolves, which is what a
+slow connection looks like to React, and expects the dialog gone and the URL pushed.
+
+Opening a sheet still waits for the round trip, since the server renders its contents. The list
+already holds the row, so the same pattern could show the sheet at once with the row it has and
+settle when the page lands. Not done here: Brown reported closing, and opening at least shows the
+list dimming while it waits.
+
+*Reverses if:* the sheets stop living in the URL, at which point their open flag is state and
+this hook has nothing to do.
+
+## D158, 21 October 2026: Brightex can delete an account
+
+Brown: a Brightex admin needs to delete a user, not only deactivate one, and nobody else gets it.
+
+**Soft, because nothing else is possible or right.** Nine foreign keys name a user: quotes,
+orders, documents, customers, the audit log and other users, none of them cascading, so a row
+delete fails for any account that has done anything, and rule 7 says a record with commercial
+meaning is soft deleted so the audit trail points at a real row. `users.deleted_at` and
+`deleted_by`, set by one function, `delete_user()`: allowlisted Brightex only, never their own,
+refusing a stale lock token and an account already gone. It deactivates, clears the website
+listing and every grant, and ends the sessions, and the guard trigger still refuses the last
+active admin of a role. The audit trigger already treats a `deleted_at` transition as a delete.
+
+**The address comes free.** A deleted colleague who returns, or an account made with the wrong
+name, must not leave their email unusable. The unique constraint on `users.email` becomes a
+partial unique index over live rows, and the action retires the login through Supabase Auth's
+soft delete, which releases the address on that side too, while the row keeps its real email for
+the trail. The integration test creates, deletes and recreates the same address against the local
+stack to prove it.
+
+**Who sees what.** The Users list and the sheet filter deleted rows out for everyone, in the
+query. The guard trigger keeps a deleted row out of every other hand: a holder of the staff grant
+can neither edit one nor bring one back, and the self pin covers the two new columns. Brightex
+can restore one in SQL, deliberately, since the row is whole.
+
+**On the screen.** Delete sits in the sheet footer beside Reset password, drawn for Brightex only
+and never on their own row. The dialog names the person, says what stays and that it cannot be
+undone, and its confirm reads Delete account.
+
+*Reverses if:* Beco wants a holder of the staff grant to delete Beco accounts, which is a change
+to D135's list of what the grant opens.

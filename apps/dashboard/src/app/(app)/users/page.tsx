@@ -5,7 +5,7 @@ import { NewUserFab } from '@/components/new-user';
 import { UserFilters } from '@/components/user-filters';
 import { UserResults } from '@/components/user-results';
 import { QueryNavigationProvider } from '@/lib/use-query-navigation';
-import { grantableModules, grantsFrom } from '@/lib/access';
+import { accessLevel, grantableModules, grantsFrom } from '@/lib/access';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { fetchUserById, fetchUsers, type StaffUserFilters } from '@/lib/users';
@@ -25,6 +25,9 @@ const parseRole = (value: string): UserRole | undefined =>
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<Search> }) {
   const session = await requirePath('/users');
+  // D136: by module grant alone the screen reads and nothing on it writes,
+  // so the write controls are not drawn and the create sheet never opens.
+  const canWrite = accessLevel(session.role, '/users', grantsFrom(session)) === 'full';
   const params = await searchParams;
   const statusRaw = one(params.status);
   const filters: StaffUserFilters = {
@@ -36,14 +39,14 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const supabase = await getSupabase();
   const users = await fetchUsers(supabase, filters);
   const userId = one(params.user);
-  const creating = one(params.new) === '1' && !userId;
+  const creating = canWrite && one(params.new) === '1' && !userId;
   const viewing = userId
     ? (users.find((user) => user.id === userId) ?? (await fetchUserById(supabase, userId)))
     : null;
 
   return (
     <>
-      <PageHeading eyebrow="Team" title="Users" actions={<NewUserFab />} />
+      <PageHeading eyebrow="Team" title="Users" actions={canWrite ? <NewUserFab /> : undefined} />
       {/* One transition for the filters and the list. D117. */}
       <QueryNavigationProvider>
         <Panel className="mb-24">
@@ -55,6 +58,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
               creating={creating}
               viewerId={session.userId}
               viewerRole={session.role}
+              canWrite={canWrite}
               grantable={grantableModules(session.role, grantsFrom(session))}
             />
           </div>

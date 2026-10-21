@@ -15,6 +15,7 @@ import {
   useKeepValuesSubmit,
 } from '@beco/ui';
 import {
+  deleteStaffUser,
   removeStaffPhoto,
   resetStaffPassword,
   saveStaffPublicProfile,
@@ -42,6 +43,9 @@ export function UserEditor({
   viewerId,
   roles = STAFF_ROLES,
   canManage = true,
+  viewOnly = false,
+  canDelete = false,
+  onDeleted,
   grantable = [],
 }: {
   user: StaffUser;
@@ -50,6 +54,13 @@ export function UserEditor({
   roles?: readonly UserRole[];
   /** False for a Brightex account seen by a Beco holder of the grant: shown, never editable. */
   canManage?: boolean;
+  /** True when the viewer is on Users by module grant alone (D136): the
+   *  account is a Beco one, and it is the viewer who cannot change it. */
+  viewOnly?: boolean;
+  /** True for Brightex (D158): the Delete button and its dialog. */
+  canDelete?: boolean;
+  /** Called once the delete has gone through, to shut the sheet. */
+  onDeleted?: (() => void) | undefined;
   /** The modules the viewer may grant, D136. Empty hides the editor. */
   grantable?: readonly DashboardModule[] | undefined;
 }) {
@@ -63,10 +74,12 @@ export function UserEditor({
   const [photoState, uploadPhoto, photoPending] = useActionState(uploadStaffPhoto, INITIAL);
   const upload = usePhotoUpload({ area: 'users', field: 'photo', dispatch: uploadPhoto });
   const [removeState, removePhoto, removePending] = useActionState(removeStaffPhoto, INITIAL);
+  const [deleteState, deleteAccount, deletePending] = useActionState(deleteStaffUser, INITIAL);
   const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
   const [confirmActive, setConfirmActive] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmRemovePhoto, setConfirmRemovePhoto] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   useActionToast(roleState);
   useActionToast(activeState);
   useActionToast(resetState);
@@ -76,6 +89,10 @@ export function UserEditor({
     if (photoState.ok || photoState.error) upload.settle();
   }, [photoState, upload.settle]);
   useActionToast(removeState);
+  useActionToast(deleteState);
+  useEffect(() => {
+    if (deleteState.ok) onDeleted?.();
+  }, [deleteState.ok, onDeleted]);
 
   useEffect(() => {
     if (roleState.ok || activeState.ok || publicState.ok || photoState.ok || removeState.ok) {
@@ -84,7 +101,7 @@ export function UserEditor({
   }, [roleState.ok, activeState.ok, publicState.ok, photoState.ok, removeState.ok, router]);
 
   const busy =
-    rolePending || activePending || resetPending || publicPending || photoPending || removePending || upload.phase !== 'idle';
+    rolePending || activePending || resetPending || publicPending || photoPending || removePending || deletePending || upload.phase !== 'idle';
   const defaultAlt = `${user.fullName} at Beco Interiors`;
 
   return (
@@ -120,7 +137,9 @@ export function UserEditor({
           title="Role"
           hint={
             !canManage
-              ? 'Brightex manages this account.'
+              ? viewOnly
+                ? 'You can read this account, not change it.'
+                : 'Brightex manages this account.'
               : isSelf
                 ? 'Someone else changes this. You cannot change your own role.'
                 : undefined
@@ -280,6 +299,12 @@ export function UserEditor({
           <Button type="button" variant="ghost" disabled={busy} onClick={() => setConfirmReset(true)}>
             Reset password
           </Button>
+          {canDelete ? (
+            <Button type="button" variant="ghost" disabled={busy} onClick={() => setConfirmDelete(true)}>
+              <Icon name="trash" />
+              Delete
+            </Button>
+          ) : null}
         </div>
       )}
 
@@ -334,6 +359,22 @@ export function UserEditor({
           form.set('updatedAt', user.updatedAt);
           setConfirmReset(false);
           resetPassword(form);
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={`Delete ${user.fullName}?`}
+        description={`${user.fullName} is removed from Users and can no longer sign in. Quotes, orders and the audit log keep their name. This cannot be undone.`}
+        confirmLabel="Delete account"
+        destructive
+        onConfirm={() => {
+          const form = new FormData();
+          form.set('userId', user.id);
+          form.set('updatedAt', user.updatedAt);
+          setConfirmDelete(false);
+          deleteAccount(form);
         }}
       />
 

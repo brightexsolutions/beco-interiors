@@ -153,6 +153,17 @@ describe('CatalogueRanges, the range browser (D114)', () => {
     expect(screen.getByText('Editing Limestone')).toBeInTheDocument();
   });
 
+  it('shuts the editor the moment Close is pressed, while the navigation is still landing (D157)', async () => {
+    const user = userEvent.setup();
+    push.mockReturnValue(new Promise(() => {}));
+    params = new URLSearchParams('range=range-1');
+    render(<CatalogueRanges tree={deep()} groupOptions={[]} editing={range()} creating={false} selectedId={null} />);
+    expect(screen.getByText('Editing Limestone')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith('/products');
+  });
+
   it('marks a draft range apart from a published one, in the pill and in the path', () => {
     const tree = [group({ children: [range({ isPublished: false })] })];
     const closed = render(<CatalogueRanges tree={tree} groupOptions={[]} editing={null} creating={false} selectedId="group-1" />);

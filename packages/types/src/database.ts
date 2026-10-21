@@ -1201,6 +1201,8 @@ export type Database = {
           can_write_blog: boolean
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           email: string
           full_name: string
           id: string
@@ -1222,6 +1224,8 @@ export type Database = {
           can_write_blog?: boolean
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           email: string
           full_name: string
           id: string
@@ -1243,6 +1247,8 @@ export type Database = {
           can_write_blog?: boolean
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           email?: string
           full_name?: string
           id?: string
@@ -1262,6 +1268,13 @@ export type Database = {
           {
             foreignKeyName: "users_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_deleted_by_fkey"
+            columns: ["deleted_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -1359,6 +1372,7 @@ export type Database = {
         Returns: undefined
       }
       backfill_customers: { Args: never; Returns: number }
+      can_grant_module: { Args: { p_module: string }; Returns: boolean }
       category_depth: { Args: { p_id: string }; Returns: number }
       category_height: { Args: { p_id: string }; Returns: number }
       category_subtree_ids: { Args: { p_id: string }; Returns: string[] }
@@ -1402,12 +1416,14 @@ export type Database = {
       }
       customer_phone_key: { Args: { p_phone: string }; Returns: string }
       dashboard_summary: { Args: never; Returns: Json }
+      delete_user: {
+        Args: { p_updated_at: string; p_user_id: string }
+        Returns: undefined
+      }
       end_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
-      can_grant_module: { Args: { p_module: string }; Returns: boolean }
       has_audit_read: { Args: never; Returns: boolean }
-      has_module: { Args: { p_module: string }; Returns: boolean }
-      module_keys: { Args: never; Returns: string[] }
       has_blog_write: { Args: never; Returns: boolean }
+      has_module: { Args: { p_module: string }; Returns: boolean }
       has_staff_manage: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_brightex_user: { Args: never; Returns: boolean }
@@ -1423,8 +1439,16 @@ export type Database = {
         Args: { p_expected_updated_at: string; p_order_id: string }
         Returns: undefined
       }
+      module_keys: { Args: never; Returns: string[] }
       next_order_reference: { Args: never; Returns: string }
       next_quote_reference: { Args: never; Returns: string }
+      product_size_price: {
+        Args: {
+          p_product: Database["public"]["Tables"]["products"]["Row"]
+          p_size: string
+        }
+        Returns: Record<string, unknown>
+      }
       quote_pipeline: { Args: never; Returns: Json }
       record_sign_in: { Args: never; Returns: undefined }
       refresh_order_money: { Args: { p_order_id: string }; Returns: undefined }
@@ -1452,6 +1476,13 @@ export type Database = {
           period_end: string
           period_start: string
         }[]
+      }
+      role_covers_module: {
+        Args: {
+          p_module: string
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: boolean
       }
       round_quote_quantity: {
         Args: { p_quantity: number; p_unit: string }

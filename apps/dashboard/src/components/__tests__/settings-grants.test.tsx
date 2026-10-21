@@ -62,6 +62,21 @@ describe('SettingsGrants', () => {
     expect(form.get('enabled')).toBe('true');
   });
 
+  it('lists Beco accounts only for a Beco holder of the staff grant (D136)', () => {
+    render(
+      <SettingsGrants
+        staff={[sam, { ...sam, id: 'bx2', email: 'bx2@brightex.dev', fullName: 'Other Brightex', role: 'brightex_admin' }]}
+        viewerId="irene-1"
+        canAssignStaffGrants={false}
+        grantable={['users']}
+      />,
+    );
+    expect(screen.getByText('Sam Odhiambo')).toBeInTheDocument();
+    expect(screen.queryByText('Other Brightex')).not.toBeInTheDocument();
+    expect(screen.queryByText('bx2@brightex.dev')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Allow/ })).not.toBeInTheDocument();
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<SettingsGrants staff={[sam]} viewerId="viewer" />);
     expect(await axe(container)).toHaveNoViolations();

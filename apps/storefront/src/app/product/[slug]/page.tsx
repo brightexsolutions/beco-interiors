@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
-import { catalogueOgImage, pageMetadata, productDescription, productTitle, SITE_URL } from '@/lib/seo';
-import { absoluteCatalogueUrl } from '@/lib/image-loader';
+import { catalogueOgImage, pageMetadata, productDescription, productTitle } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { permanentRedirect } from 'next/navigation';
 import {
-  ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn, displayAvailability, formatPrice,
+  ProductGallery, PriceDisplay, AvailabilityBadge, buttonClasses, cn, formatPrice,
   type GalleryImage, type GalleryRole,
 } from '@beco/ui';
 import { AddToQuote } from '@/components/add-to-quote';
@@ -18,6 +17,7 @@ import { priceIsFrom } from '@beco/validation';
 import { isStoneRange, specNote } from '@/lib/material';
 import { SITE, whatsappLink } from '@/lib/site';
 import { shopSearchFor } from '@/lib/legacy-redirects';
+import { breadcrumbJsonLd, productJsonLd, type ProductSchemaInput } from '@/lib/product-schema';
 
 export const revalidate = 3600;
 
@@ -325,69 +325,19 @@ function Spec({ term, value }: { term: string; value: string }) {
   );
 }
 
-function ProductSchema(p: {
-  name: string; slug: string; sku: string | null; description: string | null;
-  image: string | null; price: number | null; priceDisplayMode: 'fixed' | 'poa';
-  availability: 'in_stock' | 'pre_order' | 'poa';
-  stockQuantity?: number | null;
-  category: { name: string; slug: string } | null;
-}) {
-  const url = `https://www.beco.co.ke/product/${p.slug}`;
-  const shown = displayAvailability(p.availability, p.stockQuantity);
-  const AVAILABILITY = {
-    in_stock: 'https://schema.org/InStock',
-    pre_order: 'https://schema.org/PreOrder',
-    // POA is genuinely "ask us", not "we do not have it". LimitedAvailability
-    // is the honest mapping; InStock with no price would be a lie to a
-    // crawler, and OutOfStock would be a lie to a customer.
-    poa: 'https://schema.org/LimitedAvailability',
-    out_of_stock: 'https://schema.org/OutOfStock',
-  } as const;
-
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: p.name,
-    ...(p.sku ? { sku: p.sku } : {}),
-    ...(p.description ? { description: p.description } : {}),
-    // An absolute derivative, not the bare key: `new URL(key, origin)` gave
-    // a URL with no width and no extension, which is a 404.
-    ...(p.image ? { image: [absoluteCatalogueUrl(p.image, 1600, SITE_URL)] } : {}),
-    brand: { '@type': 'Brand', name: SITE.name },
-    ...(p.category ? { category: p.category.name } : {}),
-    offers: {
-      '@type': 'Offer',
-      url,
-      priceCurrency: 'KES',
-      // A price is only ever asserted when one genuinely exists. Emitting 0
-      // for a POA product is the kind of structured data error that gets a
-      // whole feed disqualified.
-      ...(p.priceDisplayMode === 'fixed' && p.price != null ? { price: p.price } : {}),
-      availability: AVAILABILITY[shown],
-      seller: { '@type': 'Organization', name: SITE.name },
-    },
-  };
-
-  const breadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.beco.co.ke/' },
-      { '@type': 'ListItem', position: 2, name: 'Shop', item: 'https://www.beco.co.ke/shop' },
-      ...(p.category
-        ? [{
-            '@type': 'ListItem', position: 3, name: p.category.name,
-            item: `https://www.beco.co.ke/shop/${p.category.slug}`,
-          }]
-        : []),
-      { '@type': 'ListItem', position: p.category ? 4 : 3, name: p.name, item: url },
-    ],
-  };
-
+/**
+ * JSON-LD for the product, D156: the `Product` entity only when there is a
+ * price to offer, the breadcrumb always. The rule lives in `lib/product-schema`.
+ */
+function ProductSchema(p: ProductSchemaInput) {
+  const schema = productJsonLd(p);
+  const breadcrumb = breadcrumbJsonLd(p);
   return (
     <>
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      {schema ? (
+        <script type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ) : null}
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
     </>

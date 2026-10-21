@@ -98,7 +98,9 @@ export function SettingsGrants({
   grantable?: readonly DashboardModule[] | undefined;
 }) {
   const router = useRouter();
-  const others = staff.filter((row) => row.id !== viewerId);
+  // A Beco holder hands on access to Beco accounts only, so a Brightex
+  // account is not listed for them: there would be nothing on its row to press.
+  const others = staff.filter((row) => row.id !== viewerId && (canAssignStaffGrants || row.role !== 'brightex_admin'));
   const refresh = () => router.refresh();
 
   return (
@@ -106,7 +108,7 @@ export function SettingsGrants({
       hint={
         canAssignStaffGrants
           ? 'Brightex by default. Audit reads the log. Staff adds and manages Beco accounts. Access lets a person see a section beyond their role, read only. Studio stays Brightex only.'
-          : 'Access lets a person see a section beyond their role, read only. You can grant the sections you reach yourself. Audit and staff grants stay with Brightex.'
+          : 'Access lets a person see a section beyond their role, read only. You can grant the sections you reach yourself, on Beco accounts. Brightex accounts and the audit and staff grants stay with Brightex.'
       }
     >
       {others.length === 0 ? (

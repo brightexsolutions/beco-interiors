@@ -17,6 +17,7 @@ import {
 import { AnnouncementEditor } from '@/components/announcement-editor';
 import { BusyRegion, ListRowLink, ListRows } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
+import { useSheetOpen } from '@/lib/use-sheet-open';
 import {
   ANNOUNCEMENT_TYPE_LABEL,
   ANNOUNCEMENT_WINDOW_LABEL,
@@ -137,15 +138,20 @@ export function AnnouncementResults({
     navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
-  const closeSheet = () => {
-    navigate(() => router.push(withParam('edit', null, ['new'])));
-  };
-
   const sheetOpen = Boolean(editing) || creating;
+  // Shut at once on Close, the backdrop or Escape; the URL settles behind it. D157.
+  const [sheetShown, dismissSheet] = useSheetOpen(sheetOpen);
+
+  const closeSheet = () => {
+    navigate(() => {
+      dismissSheet();
+      return router.push(withParam('edit', null, ['new']));
+    });
+  };
   const sheetTitle = creating ? 'New announcement' : (editing?.title ?? 'Announcement');
 
   const sheet = (
-    <Sheet open={sheetOpen} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle}>
+    <Sheet open={sheetShown} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle}>
       {creating ? (
         <AnnouncementEditor announcement={null} />
       ) : editing ? (

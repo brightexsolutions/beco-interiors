@@ -112,6 +112,12 @@ export const userMutationMessage = (
     return 'You can only grant access you hold yourself.';
   }
   if (/only brightex can assign/i.test(message)) return 'Only Brightex can assign that permission.';
+  if (/only brightex deletes/i.test(message)) return 'Only Brightex deletes accounts.';
+  if (/cannot delete your own/i.test(message)) return 'You cannot delete your own account.';
+  if (/account is gone/i.test(message)) return 'That account is gone. Reload the list.';
+  if (/changed while you were editing/i.test(message)) {
+    return 'This account changed while you were editing. Reload and try again.';
+  }
   if (/last active admin/i.test(message)) {
     return 'That is the last active admin of that role. Create another first.';
   }
@@ -168,9 +174,12 @@ export async function fetchUsers(
   supabase: SupabaseClient,
   filters: StaffUserFilters = {},
 ): Promise<StaffUser[]> {
+  // A deleted account (D158) is off the list for everyone; its row stays
+  // for what points at it.
   let query = supabase
     .from('users')
     .select(STAFF_COLUMNS)
+    .is('deleted_at', null)
     .order('full_name')
     .limit(400);
 
@@ -190,6 +199,7 @@ export async function fetchUserById(supabase: SupabaseClient, id: string): Promi
     .from('users')
     .select(STAFF_COLUMNS)
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
   if (error) throw new Error(`Could not load that user: ${error.message}`);
   return data ? toStaff(data) : null;
