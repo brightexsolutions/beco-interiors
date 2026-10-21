@@ -22,7 +22,7 @@ until every box here is ticked.**
 
 | Page | Schema |
 |---|---|
-| Product | `Product` with offers and availability, plus `BreadcrumbList` |
+| Product | `BreadcrumbList` always. `Product` with an `Offer` carrying `price`, `priceCurrency` and availability only when the product has a price above zero. A price on request product carries no `Product` entity at all: an `Offer` without a price is a critical error on the Merchant listings report, and a `Product` without an `Offer` is the same error on the Product snippets report (D156) |
 | Category | `ItemList` plus `BreadcrumbList` |
 | Home, About | `LocalBusiness` and `Organization` |
 | Blog post | `BlogPosting` |

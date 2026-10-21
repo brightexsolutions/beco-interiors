@@ -945,6 +945,12 @@ from the database at `/feed/products.xml`, and submit it.
 Treat it as a scoped follow on, quoted separately, rather than an assumed inclusion. Promising
 Shopping listings for a POA catalog is promising something that cannot be delivered.
 
+The same constraint reaches Search Console's own Merchant listings report, which reads the product
+page JSON-LD. On 8 October 2026 it flagged every POA page as a critical "Missing field price (in
+offers)". Since D156 a POA page carries no `Product` entity, only its breadcrumb, so it is not a
+listing and raises nothing; a page gains the entity the day it gains a price. After the release that
+carries D156, open the report and press Validate fix.
+
 ### 9.5 Order of operations
 
 ```
