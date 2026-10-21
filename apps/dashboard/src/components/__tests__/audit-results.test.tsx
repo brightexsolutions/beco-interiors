@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { AuditRow } from '@/lib/audit';
 
+const push = vi.fn();
 vi.mock('next/navigation', () => ({
   usePathname: () => '/audit',
-  useRouter: () => ({ push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push }),
+  useSearchParams: () => new URLSearchParams('row=11111111-1111-4111-8111-111111111111'),
 }));
 
 const { AuditResults } = await import('../audit-results');
@@ -40,6 +42,15 @@ describe('AuditResults', () => {
     expect(screen.getByRole('dialog')).toHaveTextContent('Updated settings');
     expect(screen.getByRole('dialog')).toHaveTextContent('Before');
     expect(screen.getByRole('dialog')).toHaveTextContent('0.18');
+  });
+
+  it('shuts the sheet the moment Close is pressed, while the navigation is still landing (D157)', async () => {
+    const user = userEvent.setup();
+    push.mockReturnValue(new Promise(() => {}));
+    render(<AuditResults rows={[row]} viewing={row} />);
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith('/audit');
   });
 
   it('shows settings before/after as labelled rows, not JSON', () => {

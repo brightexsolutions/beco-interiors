@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { StaffAnnouncement } from '@/lib/announcements';
 
@@ -51,6 +52,16 @@ describe('AnnouncementResults', () => {
     render(<AnnouncementResults announcements={[row()]} editing={row()} creating={false} />);
     expect(screen.getByRole('dialog', { name: 'Mid year sale' })).toBeInTheDocument();
     expect(screen.getByText('Editing Mid year sale')).toBeInTheDocument();
+  });
+
+  it('shuts the sheet the moment Close is pressed, while the navigation is still landing (D157)', async () => {
+    const user = userEvent.setup();
+    push.mockReturnValue(new Promise(() => {}));
+    params = new URLSearchParams('edit=11111111-1111-4111-8111-111111111111');
+    render(<AnnouncementResults announcements={[row()]} editing={row()} creating={false} />);
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith('/announcements');
   });
 
   it('has no accessibility violations', async () => {
