@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createStaffUserSchema,
   resetStaffPasswordSchema,
+  deleteStaffUserSchema,
   saveStaffPublicProfileSchema,
   setStaffActiveSchema,
   setStaffRoleSchema,
@@ -93,5 +94,15 @@ describe('uploadStaffPhotoSchema', () => {
         alt: 'S',
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('deleteStaffUserSchema (D158)', () => {
+  it('needs the account and its lock token', () => {
+    expect(deleteStaffUserSchema.safeParse({ userId: '11111111-1111-4111-8111-111111111111' }).success).toBe(false);
+    expect(deleteStaffUserSchema.safeParse({ userId: 'not-a-uuid', updatedAt: '2026-10-21T10:00:00.000Z' }).success).toBe(false);
+    expect(
+      deleteStaffUserSchema.safeParse({ userId: '11111111-1111-4111-8111-111111111111', updatedAt: '2026-10-21T10:00:00.000Z' }).success,
+    ).toBe(true);
   });
 });

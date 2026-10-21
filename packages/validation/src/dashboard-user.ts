@@ -34,6 +34,12 @@ export const resetStaffPasswordSchema = z.object({
   updatedAt: z.string().min(1, 'Missing lock token'),
 });
 
+/** D158: Brightex deletes an account. The lock token is checked by `delete_user()` in the database. */
+export const deleteStaffUserSchema = z.object({
+  userId: z.uuid(),
+  updatedAt: z.string().min(1, 'Missing lock token'),
+});
+
 const optionalKenyanPhone = z.preprocess((value) => {
   if (typeof value !== 'string') return value;
   return value.trim() === '' ? undefined : value;

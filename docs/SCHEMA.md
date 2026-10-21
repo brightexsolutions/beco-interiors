@@ -58,6 +58,7 @@ created them.
 | `can_read_audit` | boolean default false | Brightex assigns this. Role `brightex_admin` already reads `/audit` |
 | `can_manage_users` | boolean default false | Brightex assigns this (D135). Opens `/users` for Beco accounts only: add, role, deactivate, reset, /team listing. Never a Brightex row, never a grant |
 | `module_grants` | text[] default '{}' | D136. Sections opened to read beside the role, from `module_keys()`. Brightex grants any; a staff manager only what they hold, on a Beco row, never their own. `has_module()` drives the read policies; writes never widen |
+| `deleted_at`, `deleted_by` | timestamptz, uuid | D158. Soft delete, set only by `delete_user()`. The row stays for the nine foreign keys that name it; the account is inactive, off the Users list and holds no grant. `email` is unique among live rows only (`users_email_live_key`), so the address is free for a new account. Migration 72 |
 | `public_title`, `public_phone` | text null | Shown on `/team` |
 | `public_photo` | jsonb null | Catalogue stem plus alt, width, height, blur. Derivatives at 400/800/1600 webp on R2 |
 | `sort_order` | int | `/team` listing order |
@@ -497,6 +498,7 @@ Drive changes feed page token and the last full reconciliation timestamp.
 | `backfill_customers()` | `security definer`, no grant. One customer per phone key among live unlinked quotes (newest name and phone, older email and company fill gaps), then links quotes and orders. Idempotent. Run by migration 64 and by `seed.sql` |
 | `link_quote_customer(p_quote_id, p_customer_id, p_expected_updated_at)` | Dashboard. Points a quote and its converted order at a live customer. Owner or admin, optimistic lock, `PT409` when stale. The quote's snapshot does not change. Migration 64 |
 | `end_user_sessions(p_user_id)` | `security definer`. Deletes that user's GoTrue sessions and refresh tokens. `is_brightex_user()` gated. Called after deactivation and password reset. `execute` to `authenticated` only. Migration 45 |
+| `delete_user(p_user_id, p_updated_at)` | `security definer`. D158. `is_brightex_user()` gated, never the caller's own row, refuses a stale lock token and an account already deleted. Sets `deleted_at` and `deleted_by`, deactivates, clears `is_public` and every grant, ends the sessions. The guard trigger still refuses the last active admin of a role. The action then retires the login through Supabase Auth, softly. `execute` to `authenticated` only. Migration 72 |
 
 **Stale edit conflicts raise SQLSTATE `PT409`, never `40001`.** Every function above that
 takes `p_expected_updated_at` refuses a stale timestamp with "This quote changed while you were

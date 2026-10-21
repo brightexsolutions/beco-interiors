@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import {
   createStaffUserSchema,
+  deleteStaffUserSchema,
   removeStaffPhotoSchema,
   resetStaffPasswordSchema,
   saveStaffPublicProfileSchema,
@@ -12,7 +13,7 @@ import {
   setStaffRoleSchema,
   uploadStaffPhotoSchema,
 } from '@beco/validation';
-import { MODULE_LABEL, grantableModules, grantsFrom } from '@/lib/access';
+import { MODULE_LABEL, accessLevel, grantableModules, grantsFrom } from '@/lib/access';
 import { requirePath, type ActiveSession } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { getServiceSupabase } from '@/lib/supabase-admin';
@@ -40,6 +41,17 @@ const refreshUsersAndTeam = async () => {
 };
 
 const BRIGHTEX_ONLY = 'Only Brightex manages a Brightex account.';
+const VIEW_ONLY = 'You can read this section. Changing accounts stays with the staff grant.';
+
+/**
+ * D136: a module grant opens the Users screen to read, and the route check
+ * lets the actions through on that. RLS refuses the row writes, but creating
+ * a login and reissuing a password reach Supabase Auth through the service
+ * role first, which RLS never sees. So every write asks this before it does
+ * anything, and the answer is a sentence rather than a refused row.
+ */
+const refuseViewOnly = (session: ActiveSession): string | null =>
+  accessLevel(session.role, '/users', grantsFrom(session)) === 'full' ? null : VIEW_ONLY;
 
 /**
  * D135: a Beco person holding the staff grant never acts on a Brightex
@@ -57,6 +69,8 @@ const refuseBrightexTarget = async (session: ActiveSession, userId: string): Pro
 
 export async function createStaffUser(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = createStaffUserSchema.safeParse({
     email: formString(form, 'email'),
     fullName: formString(form, 'fullName'),
@@ -111,6 +125,8 @@ export async function createStaffUser(_prev: UserActionState, form: FormData): P
 
 export async function setStaffRole(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = setStaffRoleSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -145,6 +161,8 @@ export async function setStaffRole(_prev: UserActionState, form: FormData): Prom
 
 export async function setStaffActive(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = setStaffActiveSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -184,6 +202,8 @@ export async function setStaffActive(_prev: UserActionState, form: FormData): Pr
 
 export async function resetStaffPassword(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = resetStaffPasswordSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -230,6 +250,8 @@ export async function resetStaffPassword(_prev: UserActionState, form: FormData)
 
 export async function saveStaffPublicProfile(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = saveStaffPublicProfileSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -276,6 +298,8 @@ export async function saveStaffPublicProfile(_prev: UserActionState, form: FormD
 
 export async function uploadStaffPhoto(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = uploadStaffPhotoSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -348,6 +372,8 @@ export async function uploadStaffPhoto(_prev: UserActionState, form: FormData): 
 
 export async function removeStaffPhoto(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = removeStaffPhotoSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -395,6 +421,8 @@ export async function removeStaffPhoto(_prev: UserActionState, form: FormData): 
  */
 export async function setModuleGrants(_prev: UserActionState, form: FormData): Promise<UserActionState> {
   const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
   const parsed = setModuleGrantsSchema.safeParse({
     userId: formString(form, 'userId'),
     updatedAt: formString(form, 'updatedAt'),
@@ -443,5 +471,47 @@ export async function setModuleGrants(_prev: UserActionState, form: FormData): P
       names.length === 0
         ? `${current.data.full_name} has no extra access now. Their role decides what they see.`
         : `${current.data.full_name} can now see ${names.join(', ')}.`,
+  };
+}
+
+/**
+ * Delete an account, D158. Brightex only, never their own. The database
+ * function does the soft delete and ends the sessions under its own gate;
+ * then the login is retired through Supabase Auth so the address is free
+ * for a new account. The row is already off the list by then, so a failure
+ * on that second step is reported rather than undone: the account cannot
+ * sign in either way.
+ */
+export async function deleteStaffUser(_prev: UserActionState, form: FormData): Promise<UserActionState> {
+  const session = await requirePath('/users');
+  const viewOnly = refuseViewOnly(session);
+  if (viewOnly) return { error: viewOnly };
+  if (session.role !== 'brightex_admin') return { error: 'Only Brightex deletes accounts.' };
+  const parsed = deleteStaffUserSchema.safeParse({
+    userId: formString(form, 'userId'),
+    updatedAt: formString(form, 'updatedAt'),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Reload and try again.' };
+  if (parsed.data.userId === session.userId) return { error: 'You cannot delete your own account.' };
+
+  const supabase = await getSupabase();
+  const { error } = await supabase.rpc('delete_user', {
+    p_user_id: parsed.data.userId,
+    p_updated_at: parsed.data.updatedAt,
+  });
+  if (error) return { error: userMutationMessage(error) };
+
+  let retired: { error: { message: string } | null } = { error: null };
+  try {
+    retired = await getServiceSupabase().auth.admin.deleteUser(parsed.data.userId, true);
+  } catch {
+    retired = { error: { message: 'Service role is not configured.' } };
+  }
+
+  await refreshUsersAndTeam();
+  return {
+    ok: retired.error
+      ? 'Account deleted. Their login could not be retired, so that email cannot be used for a new account yet.'
+      : 'Account deleted. Quotes and orders they raised keep their name.',
   };
 }

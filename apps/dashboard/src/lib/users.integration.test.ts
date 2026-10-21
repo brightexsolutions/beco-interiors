@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import type { Database } from '@beco/types';
+import { fetchUsers } from './users';
 
 config({ path: new URL('../../../../.env.local', import.meta.url).pathname, quiet: true });
 
@@ -86,6 +87,40 @@ describe('users staff writes', () => {
     expect(listed.data?.public_photo).toEqual(
       expect.objectContaining({ path: 'team/placeholder/ab12' }),
     );
+  });
+
+  it('lets Brightex delete an account, hides it from the list, and frees its address (D158)', async () => {
+    const { client, userId } = await signInAs('beco.brightex.dev@gmail.com');
+    const email = `${RUN}-gone@beco.co.ke`;
+    const first = await service().auth.admin.createUser({ email, password: 'zz-integration-test-pass', email_confirm: true });
+    expect(first.error).toBeNull();
+    const firstId = first.data.user!.id;
+    createdAuthIds.push(firstId);
+    const inserted = await client.from('users').insert({
+      id: firstId, email, full_name: 'ZZ Users Gone', role: 'beco_sales', must_change_password: true, created_by: userId,
+    }).select('updated_at').single();
+    expect(inserted.error).toBeNull();
+
+    // The database half, under the caller's own session.
+    const deleted = await client.rpc('delete_user', { p_user_id: firstId, p_updated_at: inserted.data!.updated_at });
+    expect(deleted.error).toBeNull();
+    const listed = await fetchUsers(client as never, { search: 'ZZ Users Gone' });
+    expect(listed.map((u) => u.id)).not.toContain(firstId);
+    const row = await service().from('users').select('deleted_at, is_active').eq('id', firstId).single();
+    expect(row.data?.deleted_at).not.toBeNull();
+    expect(row.data?.is_active).toBe(false);
+
+    // The auth half, as the action does it: soft, so the address is free.
+    const retired = await service().auth.admin.deleteUser(firstId, true);
+    expect(retired.error).toBeNull();
+    const again = await service().auth.admin.createUser({ email, password: 'zz-integration-test-pass', email_confirm: true });
+    expect(again.error).toBeNull();
+    const againId = again.data.user!.id;
+    createdAuthIds.push(againId);
+    const reinserted = await client.from('users').insert({
+      id: againId, email, full_name: 'ZZ Users Gone Again', role: 'beco_sales', must_change_password: true, created_by: userId,
+    });
+    expect(reinserted.error).toBeNull();
   });
 
   it('refuses the product manager writing users', async () => {

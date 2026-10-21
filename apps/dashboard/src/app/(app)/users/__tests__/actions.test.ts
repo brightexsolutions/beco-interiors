@@ -59,7 +59,7 @@ vi.mock('@/lib/product-storage', () => ({
   deleteProductDerivatives: vi.fn(),
 }));
 
-const { createStaffUser, setStaffRole, setStaffActive, resetStaffPassword, saveStaffPublicProfile, uploadStaffPhoto } =
+const { createStaffUser, deleteStaffUser, setStaffRole, setStaffActive, resetStaffPassword, saveStaffPublicProfile, uploadStaffPhoto } =
   await import('../actions');
 
 afterEach(() => {
@@ -193,6 +193,10 @@ describe('a Beco holder of the staff grant (D135)', () => {
     role: 'beco_admin',
     isActive: true,
     mustChangePassword: false,
+    canWriteBlog: false,
+    canReadAudit: false,
+    canManageUsers: true,
+    moduleGrants: [],
   } as never;
   const TARGET = '33333333-3333-4333-8333-333333333333';
   const asHolder = () => requirePath.mockResolvedValueOnce(HOLDER);
@@ -279,5 +283,127 @@ describe('a Beco holder of the staff grant (D135)', () => {
     const result = await setStaffActive({}, targetForm({ isActive: 'false' }));
     expect(result.error).toBe('That account is gone. Reload the list.');
     expect(update).not.toHaveBeenCalled();
+  });
+});
+
+describe('a Beco admin on Users by module grant alone (D136)', () => {
+  const VIEWER = {
+    userId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    email: 'irene@beco.co.ke',
+    fullName: 'Irene',
+    role: 'beco_admin',
+    isActive: true,
+    mustChangePassword: false,
+    canWriteBlog: false,
+    canReadAudit: false,
+    canManageUsers: false,
+    moduleGrants: ['users'],
+  } as never;
+  const TARGET = '33333333-3333-4333-8333-333333333333';
+  const asViewer = () => requirePath.mockResolvedValueOnce(VIEWER);
+  const targetForm = (extra: Record<string, string> = {}) => {
+    const form = new FormData();
+    form.set('userId', TARGET);
+    form.set('updatedAt', '2026-10-07T10:00:00.000Z');
+    for (const [key, value] of Object.entries(extra)) form.set(key, value);
+    return form;
+  };
+
+  it('cannot create an account, and the login is never made', async () => {
+    asViewer();
+    const form = new FormData();
+    form.set('email', 'njeri.kamau@beco.co.ke');
+    form.set('fullName', 'Njeri Kamau');
+    form.set('role', 'beco_sales');
+    const result = await createStaffUser({}, form);
+    expect(result.error).toMatch(/read this section/i);
+    expect(createUser).not.toHaveBeenCalled();
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it('cannot reissue a password: the service role is never asked', async () => {
+    asViewer();
+    const result = await resetStaffPassword({}, targetForm());
+    expect(result.error).toMatch(/read this section/i);
+    expect(result.password).toBeUndefined();
+    expect(updateUserById).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('cannot change a role or deactivate, before the database is asked', async () => {
+    asViewer();
+    expect((await setStaffRole({}, targetForm({ role: 'beco_sales' }))).error).toMatch(/read this section/i);
+    asViewer();
+    expect((await setStaffActive({}, targetForm({ isActive: 'false' }))).error).toMatch(/read this section/i);
+    expect(update).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('cannot edit the website listing either', async () => {
+    asViewer();
+    const result = await saveStaffPublicProfile({}, targetForm({ isPublic: 'true', publicTitle: 'Showroom' }));
+    expect(result.error).toMatch(/read this section/i);
+    expect(update).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteStaffUser (D158)', () => {
+  const TARGET = '33333333-3333-4333-8333-333333333333';
+  const form = () => {
+    const f = new FormData();
+    f.set('userId', TARGET);
+    f.set('updatedAt', '2026-10-21T10:00:00.000Z');
+    return f;
+  };
+
+  it('deletes through the database function, then retires the login softly', async () => {
+    rpc.mockResolvedValue({ error: null });
+    deleteUser.mockResolvedValue({ data: { user: null }, error: null });
+    const result = await deleteStaffUser({}, form());
+    expect(result.error).toBeUndefined();
+    expect(result.ok).toMatch(/Account deleted/);
+    expect(rpc).toHaveBeenCalledWith('delete_user', { p_user_id: TARGET, p_updated_at: '2026-10-21T10:00:00.000Z' });
+    expect(deleteUser).toHaveBeenCalledWith(TARGET, true);
+  });
+
+  it('says so when the row went but the login could not be retired', async () => {
+    rpc.mockResolvedValue({ error: null });
+    deleteUser.mockResolvedValue({ data: { user: null }, error: { message: 'auth down' } });
+    const result = await deleteStaffUser({}, form());
+    expect(result.ok).toMatch(/could not be retired/);
+  });
+
+  it('stops at the database refusal and never touches the login', async () => {
+    rpc.mockResolvedValue({ error: { code: 'P0001', message: 'That account is gone' } });
+    const result = await deleteStaffUser({}, form());
+    expect(result.error).toBe('That account is gone. Reload the list.');
+    expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('refuses the signed-in account before asking the database', async () => {
+    const f = form();
+    f.set('userId', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    const result = await deleteStaffUser({}, f);
+    expect(result.error).toBe('You cannot delete your own account.');
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('refuses a Beco holder of the staff grant, before anything is touched', async () => {
+    requirePath.mockResolvedValueOnce({
+      userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      email: 'irene@beco.co.ke',
+      fullName: 'Irene',
+      role: 'beco_admin',
+      isActive: true,
+      mustChangePassword: false,
+      canWriteBlog: false,
+      canReadAudit: false,
+      canManageUsers: true,
+      moduleGrants: [],
+    } as never);
+    const result = await deleteStaffUser({}, form());
+    expect(result.error).toBe('Only Brightex deletes accounts.');
+    expect(rpc).not.toHaveBeenCalled();
+    expect(deleteUser).not.toHaveBeenCalled();
   });
 });

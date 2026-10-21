@@ -18,6 +18,7 @@ import { UserCreate } from '@/components/user-create';
 import { UserEditor } from '@/components/user-editor';
 import { BusyRegion } from '@/components/list-rows';
 import { useQueryNavigation } from '@/lib/use-query-navigation';
+import { useSheetOpen } from '@/lib/use-sheet-open';
 import type { DashboardModule, UserRole } from '@beco/types';
 import { STAFF_ROLE_LABEL, canManageAccount, formatLastLogin, rolesAssignableBy, type StaffUser } from '@/lib/users';
 
@@ -84,6 +85,7 @@ export function UserResults({
   creating,
   viewerId,
   viewerRole,
+  canWrite = true,
   grantable = [],
 }: {
   users: StaffUser[];
@@ -91,6 +93,9 @@ export function UserResults({
   creating: boolean;
   viewerId: string;
   viewerRole: UserRole;
+  /** False when the viewer is on Users by module grant alone (D136): every
+   *  account opens read only and the create sheet never opens. */
+  canWrite?: boolean;
   /** The modules the viewer may grant, D136. */
   grantable?: readonly DashboardModule[] | undefined;
 }) {
@@ -121,21 +126,27 @@ export function UserResults({
     navigate(() => router.push(query ? `${pathname}?${query}` : pathname));
   };
 
-  const closeSheet = () => {
-    navigate(() => router.push(withParam('user', null, ['new'])));
-  };
+  const creatingUser = creating && canWrite;
+  const sheetOpen = Boolean(viewing) || creatingUser;
+  // Shut at once on Close, the backdrop or Escape; the URL settles behind it. D157.
+  const [sheetShown, dismissSheet] = useSheetOpen(sheetOpen);
 
-  const sheetOpen = Boolean(viewing) || creating;
-  const sheetTitle = creating ? 'New user' : (viewing?.fullName ?? 'User');
-  const sheetDescription = creating
+  const closeSheet = () => {
+    navigate(() => {
+      dismissSheet();
+      return router.push(withParam('user', null, ['new']));
+    });
+  };
+  const sheetTitle = creatingUser ? 'New user' : (viewing?.fullName ?? 'User');
+  const sheetDescription = creatingUser
     ? 'Issues a password once. They change it on first sign in.'
     : viewing?.isActive
       ? STAFF_ROLE_LABEL[viewing.role]
       : 'Inactive';
 
   const sheet = (
-    <Sheet open={sheetOpen} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle} description={sheetDescription}>
-      {creating ? (
+    <Sheet open={sheetShown} onOpenChange={(open) => !open && closeSheet()} title={sheetTitle} description={sheetDescription}>
+      {creatingUser ? (
         <UserCreate roles={roles} />
       ) : viewing ? (
         <UserEditor
@@ -143,7 +154,10 @@ export function UserResults({
           user={viewing}
           viewerId={viewerId}
           roles={roles}
-          canManage={canManageAccount(viewerRole, viewing.role)}
+          canManage={canWrite && canManageAccount(viewerRole, viewing.role)}
+          viewOnly={!canWrite}
+          canDelete={canWrite && viewerRole === 'brightex_admin'}
+          onDeleted={closeSheet}
           grantable={grantable}
         />
       ) : null}

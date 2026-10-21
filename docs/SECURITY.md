@@ -182,6 +182,7 @@ for a role that cannot use it.
 | **The Brightex allowlist** (D42) | no | no | **no** | yes |
 | Staff accounts: create, role, deactivate, reset, Beco accounts only (D135) | if granted | if granted | if granted | yes |
 | Create, edit or deactivate a Brightex account | no | no | **no, even if granted** | yes |
+| Delete an account (D158): soft, the row stays for what names it | no | no | **no, even if granted** | yes, never their own |
 | Grant audit or staff access to a Beco user | no | no | no | yes |
 | Audit log | if granted | if granted | if granted | yes |
 | Studio blog | no | no | no | yes |
