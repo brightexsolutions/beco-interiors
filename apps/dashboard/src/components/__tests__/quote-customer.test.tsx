@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 
@@ -91,6 +91,9 @@ describe('QuoteCustomer (D130)', () => {
     await user.type(within(dialog).getByLabelText(/^name/i), 'ZZ New');
     await user.type(within(dialog).getByLabelText(/^phone/i), '0700111222');
     await user.click(within(dialog).getByRole('button', { name: 'Add and link' }));
+    // The link follows the create's resolved promise, so under a loaded
+    // parallel run it lands a tick after the click returns.
+    await waitFor(() => expect(linkQuoteCustomer).toHaveBeenCalled());
     expect((linkQuoteCustomer.mock.calls[0]?.[1] as FormData).get('customerId')).toBe('c9');
   });
 

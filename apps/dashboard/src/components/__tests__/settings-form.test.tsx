@@ -4,6 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import type { DashboardSettings, GrantStaffRow } from '@/lib/settings';
 
+// These type through whole forms with userEvent; under a full parallel run
+// the preview test crossed the 5s default while passing in a second alone.
+vi.setConfig({ testTimeout: 15_000 });
+
 // Typed with the real action's two params (both ignored here) so
 // mock.calls[n] is a real two element tuple, matching how the component
 // actually calls it: saveDashboardSettings(prevState, formData).
