@@ -142,7 +142,10 @@ export function PinnedHero({ slides }: { slides: HeroRangeSlide[] }) {
         <div
           className={cn(
             HERO_GRID_INSET,
-            'beco-hero-content-top relative flex h-full max-w-[52rem] flex-col justify-end pb-10 pr-6 pt-16',
+            // box-content: the 52rem caps the type column, not the padded box.
+            // The inset's lg padding grows with the viewport, and border-box
+            // let it eat the column: 325px of type at 1914px wide (D155).
+            'beco-hero-content-top relative flex h-full max-w-[52rem] box-content flex-col justify-end pb-10 pr-6 pt-16',
             'lg:justify-center lg:pb-14 lg:pr-20',
           )}
         >
