@@ -30,7 +30,7 @@ export async function SiteFooter() {
   const rangeCount = categories.reduce((n, g) => n + Math.max(1, g.children.length), 0);
 
   return (
-    <footer className="bg-charcoal text-high-vis-white">
+    <footer data-popup-section="site-footer" className="bg-charcoal text-high-vis-white">
       {/* A narrower gutter than the site's own 160px desktop standard, on
           direct request: the footer carries several nav columns side by
           side, not one column of prose, and the full 160px read as

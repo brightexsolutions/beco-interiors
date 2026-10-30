@@ -13,6 +13,7 @@ export * from './dashboard-order';
 export * from './dashboard-report';
 export * from './dashboard-user';
 export * from './dashboard-announcement';
+export * from './dashboard-popup';
 export * from './dashboard-settings';
 export * from './dashboard-customer';
 export * from './dashboard-blog';

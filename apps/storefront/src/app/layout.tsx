@@ -7,12 +7,14 @@ import { AnalyticsListener } from '@/components/analytics-listener';
 import { GoogleAnalytics } from '@/components/google-analytics';
 import { AnnouncementBar } from '@/components/announcement-bar';
 import { LaunchBanner } from '@/components/launch-banner';
+import { PromoPopupHost } from '@/components/promo-popup-host';
 import { SiteSplash } from '@/components/site-splash';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { WhatsAppFab } from '@/components/whatsapp-fab';
 import { getLiveAnnouncements, buildAnnouncementItems } from '@/lib/announcements';
 import { getLaunchState } from '@/lib/launch';
+import { getLivePopups } from '@/lib/popups';
 import { buildRootMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildRootMetadata();
@@ -28,9 +30,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // moment Beco sets a date or throws the switch, because for that month
   // the anniversary IS the announcement. Its wrapper is shaped exactly like
   // AnnouncementBar's, so the spacing contract below does not care which.
-  const [announcements, launch] = await Promise.all([
+  const [announcements, launch, popups] = await Promise.all([
     getLiveAnnouncements(),
     getLaunchState(),
+    getLivePopups(),
   ]);
   const launchActive = Boolean(launch.launchAt) || launch.isLive;
   // The bar rotates through every live announcement plus Beco's phone and
@@ -78,6 +81,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <div id="main">{children}</div>
         <SiteFooter />
         <WhatsAppFab />
+        {/* The live pop ups, D159. Each on its own trigger, one at a time, never on the quote flow. */}
+        <PromoPopupHost popups={popups} />
         {/* Drives the entrance animations. Renders nothing. */}
         <ScrollMotion />
         {/* Keeps a focused quote form field above the phone keyboard. */}

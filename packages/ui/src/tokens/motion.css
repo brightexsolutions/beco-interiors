@@ -756,3 +756,23 @@
 
   }
 }
+
+/* --- The storefront pop up, D159: the backdrop fades and the card rises a
+       short way, once, as it opens. Transform and opacity only. Absent under
+       reduced motion, where the pop up simply appears. --- */
+@media (prefers-reduced-motion: no-preference) {
+  .beco-popup-backdrop {
+    animation: beco-popup-fade 320ms ease-out backwards;
+  }
+  .beco-popup-panel {
+    animation: beco-popup-rise 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  @keyframes beco-popup-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes beco-popup-rise {
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}

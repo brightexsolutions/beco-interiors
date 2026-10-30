@@ -390,6 +390,17 @@ appears and retires on its own and nobody has to remember to take it down. Anony
 only live rows inside the window. Staff read all. `beco_admin` and `brightex_admin` write.
 Dashboard authoring is `/announcements`. Audit trigger already on the table.
 
+### popups (migration 73, D159)
+
+A storefront pop up. `variant` (`split` or `offer`), copy (`eyebrow`, `badge`, `title`, `body`),
+an optional button (`cta_label` and `cta_url`, both or neither, checked), `product_ids uuid[]`
+of up to six catalogue products whose photographs it shows (not a foreign key; a missing or
+unpublished product is not drawn), `trigger` (`delay`, `scroll`, `exit`, `section`) with `trigger_value`
+range checked per trigger and `trigger_section` set exactly when the trigger is `section`, `show_again_days` 0 to 90, and the same `starts_at`, `ends_at`,
+`priority`, `is_active` window as announcements. RLS is the announcements shape: anon reads live
+rows only, staff read all, `is_admin()` writes. Audit trigger on. No delete. Authoring is
+`/popups`.
+
 ### settings
 
 Key/value. VAT rate, quote validity days, payment channels (bank, till, paybill,

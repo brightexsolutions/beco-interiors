@@ -71,6 +71,7 @@ describe('navItemsFor', () => {
     const hrefs = navItemsFor('beco_admin').map((i) => i.href);
     expect(hrefs).not.toContain('/users');
     expect(hrefs).toContain('/announcements');
+    expect(hrefs).toContain('/popups');
   });
 
   it('gives beco_editor nothing, since it has no operations screen', () => {
@@ -148,7 +149,7 @@ describe('bottomNavFor (D111)', () => {
   it('gives an admin Overview, Quotes and Orders on the bar and the rest behind More', () => {
     const nav = bottomNavFor('beco_admin');
     expect(nav.items.map((i) => i.href)).toEqual(['/', '/quotes', '/orders']);
-    expect(nav.more.map((i) => i.href)).toEqual(['/products', '/customers', '/announcements', '/reports', '/settings']);
+    expect(nav.more.map((i) => i.href)).toEqual(['/products', '/customers', '/announcements', '/popups', '/reports', '/settings']);
   });
 
   it('gives Brightex the same bar, with Users, Blog and Audit behind More', () => {

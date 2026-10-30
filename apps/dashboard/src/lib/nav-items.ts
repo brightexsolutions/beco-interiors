@@ -22,6 +22,7 @@ const ALL: readonly NavItem[] = [
   // After Catalogue, so the product manager's bar leads with its own screen.
   { href: '/customers', label: 'Customers' },
   { href: '/announcements', label: 'Announcements' },
+  { href: '/popups', label: 'Pop ups' },
   { href: '/reports', label: 'Reports' },
   { href: '/users', label: 'Users' },
   { href: '/settings', label: 'Settings' },
@@ -46,7 +47,7 @@ export interface NavGroup {
 const GROUPS: ReadonlyArray<{ label: string; hrefs: readonly string[] }> = [
   { label: 'Sales', hrefs: ['/quotes', '/orders', '/customers'] },
   { label: 'Catalogue', hrefs: ['/products'] },
-  { label: 'Content', hrefs: ['/announcements', '/studio/blog'] },
+  { label: 'Content', hrefs: ['/announcements', '/popups', '/studio/blog'] },
   { label: 'Insight', hrefs: ['/reports'] },
   { label: 'Admin', hrefs: ['/users', '/settings', '/audit'] },
 ];

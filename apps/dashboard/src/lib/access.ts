@@ -64,6 +64,8 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   // The Drive import rewrites the catalogue from a folder. Brightex runs it (D115).
   { prefix: '/products/import', roles: ['brightex_admin'] },
   { prefix: '/announcements', roles: [...ADMINS], module: 'announcements' },
+  // Pop ups are the same storefront messaging job, so the same module (D159).
+  { prefix: '/popups', roles: [...ADMINS], module: 'announcements' },
   { prefix: '/reports', roles: [...ADMINS], module: 'reports' },
   { prefix: '/leaderboard', roles: [...ADMINS], module: 'reports' },
   { prefix: '/users', roles: ['brightex_admin'], grant: 'users', module: 'users' },
@@ -92,7 +94,7 @@ export const MODULE_HINT: Record<DashboardModule, string> = {
   orders: 'Every order and its payments, read only.',
   customers: 'The client list and each record, read only.',
   products: 'Ranges, products, stock and prices.',
-  announcements: 'The website announcement bar.',
+  announcements: 'The website announcement bar and pop ups.',
   reports: 'Sales, conversion and the team figures.',
   users: 'Who has an account, read only.',
   settings: 'VAT, quote terms, payment details and contact.',
