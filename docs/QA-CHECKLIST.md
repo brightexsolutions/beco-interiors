@@ -51,6 +51,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 | Mobile menu trigger | Opens the panel, traps focus, locks the page, escape returns focus to the trigger, closes on navigation | Test, 7 tests |
 | Mobile action bar: Quote, WhatsApp, Call | Navigate and open external channels | Server on hrefs. **NOT CONFIRMED** that it never sits under the on screen keyboard |
 | Announcement bar (D82) | Rotates through every live announcement, then "Call the showroom" (dials), then "Email us:" (`mailto:`). An announcement's own CTA navigates. Rolls up and out on a ~5.5s timer, pauses on hover, no rotation under reduced motion. Always one row, 48px (D134): a line that fits sits still and centred, a line wider than the bar (measured) ticks left at 48px/s and pauses on hover and focus; a ticking line rotates only when its pass completes. Under reduced motion the body ellipsises, label and CTA stay whole. Close (44px, fixed right, never scrolls) hides the bar for the tab | Test: 28 on `AnnouncementBar`, including still vs ticking, constant pace, loop copy `aria-hidden` and `inert`, one link in the tab order, focus brings an off screen CTA back in, reduced motion, close. **Server, 7 Oct 2026, Irene's text**: 48px at 390, 820 and 1440 (was 70, 123 and 101), measured 48px/s, paused under the pointer, Tab focus held the CTA in view, no sideways page scroll; a short line sat centred. **Not walked on a device** |
+| Pop up (D159), when one is live | Every live pop up is armed, one open at a time. Each opens once on its trigger: after N seconds, at N percent scrolled, on the pointer leaving the window (halfway down on a touch screen), or as its chosen section comes into view. Close, No thanks, Escape and the backdrop close it and remember it for the set days; following its button remembers it too. Never on `/quote`. Focus lands on Close and stays inside | Test: `PromoPopup` 12 (keyboard, backdrop, axe on both looks), `PromoPopupHost` 10 (delay, scroll, quote path, memory, blocked storage), `popups.test.ts` 9. pgTAP `48_popups`. **Server, 30 Oct 2026**, local stack: offer look on `/shop` and split look on `/about` at desktop and 375px, opened after its 1s wait; Close removed it and wrote the visit memory; nothing opened on `/quote`. Same day, two live: the 42rem offer card after 2s, then after closing it a split pop up as the bookmatch section scrolled into view. **Not walked on a device** |
 | Launch banner (D80), when a launch date or the live switch is set | Replaces the announcement bar. Counts down to `site_launch_at`, or once live shows the reveal and links to `/gallery`. Confetti plays once per browser, `localStorage` gated, skipped under reduced motion | Test, 9 tests on `LaunchBanner`. The live transform across a page load has not been walked on a device |
 | Footer nav and category links | Navigate. The products column reads live from `getCategoryTree()`, so it cannot list a duplicate or a range that does not exist: the "Lights" top level category, a loose Drive folder importing itself as its own range beside "Lighting", was merged into "Lighting" for exactly this reason. The "soon" marker on a zero stock range is gone, on direct request | Server, each 200 |
 | Footer social icons | **Deliberately not links.** Five platforms drawn, all five URLs null until Beco supplies handles, so the icon is drawn without an anchor rather than shipping `href="#"` | Test |
@@ -66,6 +67,7 @@ device. That is the largest single gap in M4 and the milestone cannot close on i
 
 | Control | What it does | Status |
 |---|---|---|
+| Bookmatch Open section (D160) | Anakin leads: its slab photograph parts in two to reveal its room. Caption reads "Anakin, 12mm." | Test: `slab-to-surface.test.tsx` (slab as pair for a listed stone only). **NOT CONFIRMED** on a running server; local seed has no Anakin |
 | Hero CTAs | Navigate to `/shop` and `/quote` | Server |
 | Hero range chips (D92) | Six ranges, not four stone colours: sintered stone, lighting, wall panels, SPC flooring, hardware, accessories, each a real link to `/shop/<range>` or a plain span if the range has no stock. Photography is a static manifest, `HERO_RANGE_IMAGES` in `lib/ranges.ts`, not a live product query, so it renders the same way before and after a `db:reset` | Test, `pinned-hero.test.tsx`, 17 tests, including the no-stock-renders-a-span case |
 | Hero left column lines up with the header's own logo (D99) | Shared `HERO_GRID_INSET` (`lib/layout.ts`), corrected from the site's very first, pre-widening gutter value to match `px-24`/`px-40`, used by both `PinnedHero` and `HeroStatic`. The column is `box-content` so the inset's viewport grown padding never comes out of its 52rem cap: on a 24 inch screen at 1914px the type was wrapping inside 325px (D155) | Server: class present in the rendered HTML on both. Test: both hero tests prove the pairing. **Not walked on a device; walk at 1920px and 1440px after the next release** |
@@ -593,6 +595,23 @@ Every operations role reads it: `beco_sales`, `beco_product_manager`, `beco_admi
 | New announcement | Charcoal labelled FAB | Test: `NewAnnouncementFab` |
 | Editor | FormSections for copy, schedule (Nairobi), CTA, preview. Save writes the row and busts the storefront layout | Test: `AnnouncementEditor`, create/update actions |
 | Live window | A row that starts tomorrow is absent from anon today, present once the window includes now | pgTAP `27_announcements_admin`. Integration against local Postgres |
+
+### `/popups` (D159)
+
+`beco_admin` and `brightex_admin`, or anyone holding the announcements module grant (read only).
+
+| Control | What it does | Status |
+|---|---|---|
+| On the site now | Lists every live pop up with what opens it, or says none is live | **NOT CONFIRMED** against a running server |
+| New pop up | Opens the editor sheet empty, `?new=1` | Test: `PopupResults` |
+| Desktop table, cards | Headline, Look, Opens, Dates, Status, Edit. The card is Edit on a phone | Test: `PopupResults` |
+| Look | Two radio cards, switches the preview between split and offer | Test: `PopupEditor` |
+| Copy, Button | Typed into the preview as it changes. Half a button is refused, so is a link that is not a site path or http | Test: `PopupEditor`, `dashboard-popup` validation |
+| Stones | Search, tick up to six, numbered in the order picked; the seventh is disabled. The preview shows them in that order | Test: `PopupEditor` |
+| When it opens | Opens select; Seconds or Percent appear for their trigger, a Section select for On reaching a section, nothing for When leaving. Show again after, in days | Test: `PopupEditor`, validation ranges, pgTAP check constraints |
+| Schedule, Switched on | Nairobi times, priority, on/off | Test: create and update actions |
+| Save | Writes the row, busts the storefront layout, toasts | Test: actions (insert, update, RLS no-row, permission error). **NOT CONFIRMED**: row change and storefront refresh not yet observed against a running server |
+| Preview | Inert picture of the storefront card, not a set of controls | Test: `PopupEditor` |
 
 ### Dashboard shell, 3 October (D106)
 

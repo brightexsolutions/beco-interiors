@@ -18,6 +18,7 @@ describe('canAccess: the dashboard route/role matrix', () => {
     '/products': ['beco_product_manager', 'beco_admin', 'brightex_admin'],
     '/products/import': ['brightex_admin'],
     '/announcements': ['beco_admin', 'brightex_admin'],
+    '/popups': ['beco_admin', 'brightex_admin'],
     '/reports': ['beco_admin', 'brightex_admin'],
     '/leaderboard': ['beco_admin', 'brightex_admin'],
     '/settings': ['beco_admin', 'brightex_admin'],
@@ -34,6 +35,11 @@ describe('canAccess: the dashboard route/role matrix', () => {
       }
     });
   }
+
+  it('opens Pop ups with the announcements module grant, and not with another', () => {
+    expect(canAccess('beco_sales', '/popups', { modules: ['announcements'] })).toBe(true);
+    expect(canAccess('beco_sales', '/popups', { modules: ['reports'] })).toBe(false);
+  });
 
   it('applies a rule to everything under its prefix', () => {
     expect(canAccess('beco_sales', '/quotes/new')).toBe(true);

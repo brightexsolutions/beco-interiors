@@ -783,6 +783,80 @@ export type Database = {
           },
         ]
       }
+      popups: {
+        Row: {
+          badge: string | null
+          body: string | null
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          cta_url: string | null
+          ends_at: string
+          eyebrow: string | null
+          id: string
+          is_active: boolean
+          priority: number
+          product_ids: string[]
+          show_again_days: number
+          starts_at: string
+          title: string
+          trigger: Database["public"]["Enums"]["popup_trigger"]
+          trigger_section: string | null
+          trigger_value: number
+          variant: Database["public"]["Enums"]["popup_variant"]
+        }
+        Insert: {
+          badge?: string | null
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          ends_at: string
+          eyebrow?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          product_ids?: string[]
+          show_again_days?: number
+          starts_at: string
+          title: string
+          trigger?: Database["public"]["Enums"]["popup_trigger"]
+          trigger_section?: string | null
+          trigger_value?: number
+          variant?: Database["public"]["Enums"]["popup_variant"]
+        }
+        Update: {
+          badge?: string | null
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          ends_at?: string
+          eyebrow?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          product_ids?: string[]
+          show_again_days?: number
+          starts_at?: string
+          title?: string
+          trigger?: Database["public"]["Enums"]["popup_trigger"]
+          trigger_section?: string | null
+          trigger_value?: number
+          variant?: Database["public"]["Enums"]["popup_variant"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "popups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_slugs: {
         Row: {
           created_at: string
@@ -1579,6 +1653,8 @@ export type Database = {
       import_outcome: "new" | "changed" | "moved" | "unchanged" | "missing"
       order_status: "pending" | "confirmed" | "fulfilled" | "cancelled"
       payment_status: "unpaid" | "paid"
+      popup_trigger: "delay" | "scroll" | "exit" | "section"
+      popup_variant: "split" | "offer"
       post_status: "draft" | "published"
       price_display_mode: "fixed" | "poa"
       product_badge: "hot" | "new" | "sale" | "clearance"
@@ -1746,6 +1822,8 @@ export const Constants = {
       import_outcome: ["new", "changed", "moved", "unchanged", "missing"],
       order_status: ["pending", "confirmed", "fulfilled", "cancelled"],
       payment_status: ["unpaid", "paid"],
+      popup_trigger: ["delay", "scroll", "exit", "section"],
+      popup_variant: ["split", "offer"],
       post_status: ["draft", "published"],
       price_display_mode: ["fixed", "poa"],
       product_badge: ["hot", "new", "sale", "clearance"],

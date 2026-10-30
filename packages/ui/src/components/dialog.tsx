@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useCallback, useRef, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../lib/cn';
+import { useModalFocus } from '../lib/use-modal-focus';
 import { useScrollLock } from '../lib/use-scroll-lock';
 import { useVisualViewport } from '../lib/use-visual-viewport';
 
@@ -33,7 +34,6 @@ export function Dialog({
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const openerRef = useRef<Element | null>(null);
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
   useScrollLock(open, panelRef);
@@ -46,39 +46,7 @@ export function Dialog({
     ? { top: viewport.offsetTop, height: viewport.height, bottom: 'auto' }
     : undefined;
 
-  useEffect(() => {
-    if (!open) return;
-    openerRef.current = document.activeElement;
-    (initialFocusRef?.current ?? closeRef.current)?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        close();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input, select, textarea, iframe, [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusable || focusable.length === 0) return;
-      const first = focusable[0]!;
-      const last = focusable[focusable.length - 1]!;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      (openerRef.current as HTMLElement | null)?.focus?.();
-    };
-  }, [open, close, initialFocusRef]);
+  useModalFocus(open, panelRef, close, initialFocusRef, closeRef);
 
   if (!open) return null;
 

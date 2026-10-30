@@ -32,6 +32,32 @@ export type DashboardModule = (typeof DASHBOARD_MODULES)[number];
 export const ANNOUNCEMENT_TYPES = ['sale', 'clearance', 'notice', 'event'] as const;
 export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
 
+/** The two looks a storefront pop up can take, D159. */
+export const POPUP_VARIANTS = ['split', 'offer'] as const;
+export type PopupVariant = (typeof POPUP_VARIANTS)[number];
+
+/** What opens a pop up: a wait in seconds, a scroll depth, or the pointer leaving. */
+export const POPUP_TRIGGERS = ['delay', 'scroll', 'exit', 'section'] as const;
+export type PopupTrigger = (typeof POPUP_TRIGGERS)[number];
+
+/**
+ * The storefront sections a pop up can wait for, D159. Each key is a
+ * `data-popup-section` mark on the storefront, asserted present by test, so
+ * the dashboard can never offer a section the site does not have.
+ */
+export const POPUP_SECTIONS = [
+  'home-ranges',
+  'home-stones',
+  'home-bookmatch',
+  'home-beyond-stone',
+  'home-process',
+  'home-services',
+  'home-showroom',
+  'product-details',
+  'site-footer',
+] as const;
+export type PopupSection = (typeof POPUP_SECTIONS)[number];
+
 export const PRICE_DISPLAY_MODES = ['fixed', 'poa'] as const;
 export type PriceDisplayMode = (typeof PRICE_DISPLAY_MODES)[number];
 

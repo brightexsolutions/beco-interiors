@@ -3982,3 +3982,62 @@ undone, and its confirm reads Delete account.
 
 *Reverses if:* Beco wants a holder of the staff grant to delete Beco accounts, which is a change
 to D135's list of what the grant opens.
+
+## D159, 30 October 2026: Beco schedules its own storefront pop ups
+
+Brown, passing on Beco: an advertisement pop up on the site that Beco can set up itself, after
+two references, a split newsletter card and elegantfittings.co.ke's charcoal offer card. Built
+the way the Design Scents admin already does it: a scheduled, switchable row and a form with a
+live preview.
+
+**Two looks, chosen per pop up.** `split` is one photograph beside copy on white; `offer` is a
+charcoal card with a live dot, a badge, the headline, a button and a strip of stones. One shared
+`PromoPopupCard` in `@beco/ui` draws both, so the dashboard preview is the storefront card, not
+a drawing of it.
+
+**Stones, not uploads.** A pop up names up to six catalogue products and shows their own
+photographs: the room shot in the split look, the slab in the strip. No new upload path, the
+stone on offer is the stone in the catalogue, and a product that is unpublished drops out on its
+own because the storefront reads products with the anonymous key. A pop up whose every stone has
+gone is not shown.
+
+**No email capture.** The split reference is a newsletter sign up. Email marketing platforms are
+out of scope, and a capture form would be a new public write endpoint with its own rate limit
+and consent copy. The button links anywhere on the site or to an http link instead, a quote,
+WhatsApp or a range. Revisit only if the plan is revised to take on a mailing list.
+
+**When it opens.** After a wait (0 to 120 seconds), after a scroll depth (10 to 90 percent), on
+exit intent, which on a touch screen becomes halfway down the page, or on reaching a section. The
+sections are a fixed list in `@beco/types` (`POPUP_SECTIONS`), each a `data-popup-section` mark on
+the storefront, named in the dashboard by the heading a visitor sees there; a test fails if a key
+and a mark ever disagree. A page without the section never opens that pop up. Closing it or following
+its button is remembered per pop up for `show_again_days` (0 is once a visit), so a new pop up
+still reaches someone who closed the last. Storage that throws means it never opens, rather
+than opening on every page. Never on `/quote`: a modal over a quote in progress could only lose
+the quote.
+
+**Same rules as announcements.** RLS shows anonymous reads only rows switched on and inside
+their window (D36), staff read every row, admins write, the audit trigger records every change.
+No delete: switch it off or let it end. Access is the announcements module (route and grant),
+since it is the same job.
+
+**Several at once, one at a time.** Up to four live pop ups are armed on a page, each on its own
+trigger, so one can open after a wait and another at a section further down. Only one is ever
+open. One whose trigger fires while another is open is skipped for that page rather than queued,
+because two in a row is a site shouting; it is not marked seen, so it can open on a later page.
+
+*Reverses if:* Beco wants a pop up limited to particular pages, which is a targeting column, not
+a change to the card.
+
+## D160, 30 October 2026: Anakin opens the bookmatch section
+
+Beco asked for Anakin in place of Statuario in the home page's Bookmatch Open section.
+Anakin has no shot filed as a bookmatch: its `slab` photograph is itself the opened pair, two
+slabs mirrored on one seam. `pairShot()` lets a stone listed in `SLAB_IS_PAIR` cut its halves
+from that slab photograph, and Anakin leads `SIGNATURE_ORDER`. Listed by slug, never inferred,
+because an ordinary slab split down its middle would make "Two slabs. One block." untrue. A real
+bookmatch shot still wins if one is ever filed for the stone.
+
+*Reverses if:* the Anakin slab is retagged as a bookmatch in the dashboard, at which point the
+slug can leave `SLAB_IS_PAIR`.
+

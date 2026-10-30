@@ -10,7 +10,7 @@ import { PinnedHero, type HeroRangeSlide } from '@/components/pinned-hero';
 import { HeroStatic } from '@/components/hero-static';
 import { QuickAddToQuote } from '@/components/quick-add-to-quote';
 import { SlabRail } from '@/components/slab-rail';
-import { SlabToSurface } from '@/components/slab-to-surface';
+import { SlabToSurface, pairShot } from '@/components/slab-to-surface';
 import { RoomStack } from '@/components/room-stack';
 import { CompletedInteriors } from '@/components/completed-interiors';
 import { ShowroomFilm } from '@/components/showroom-film';
@@ -161,10 +161,11 @@ export default async function HomePage() {
   //     the ratio guard catches the rest.
   const goodRoom = (i: { role: string; width: number; height: number }) =>
     i.role === 'application' && i.width / i.height >= 1.2 && i.width / i.height <= 2;
-  const SIGNATURE_ORDER = ['bianco-fendi', 'statuario', 'calcatta-gold', 'beverly-gold'];
-  const signatureField = products.filter(
-    (p) => p.images?.some((i) => i.role === 'bookmatch') && p.images?.some(goodRoom),
-  );
+  //
+  // Anakin leads on Beco's call, 30 October. It has no shot filed as a
+  // bookmatch: its slab photograph is the opened pair, see `pairShot`.
+  const SIGNATURE_ORDER = ['anakin', 'bianco-fendi', 'statuario', 'calcatta-gold', 'beverly-gold'];
+  const signatureField = products.filter((p) => pairShot(p) && p.images?.some(goodRoom));
   const signature =
     SIGNATURE_ORDER.map((slug) => signatureField.find((p) => p.slug === slug)).find(Boolean) ??
     signatureField.sort(
@@ -313,7 +314,7 @@ export default async function HomePage() {
               bottom. Moving the stat band in between, a different
               background colour, left it touching the dark band above with
               no gap at all. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24">
+      <section data-popup-section="home-ranges" className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 pt-16 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -414,7 +415,7 @@ export default async function HomePage() {
               the page as a container to fill. No eyebrow: the third of what
               would otherwise be four "hairline plus label" openers in a row
               down this page, reported directly as reading templated. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
+      <section data-popup-section="home-stones" className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
           <div className="flex flex-wrap items-end justify-between gap-6">
@@ -497,7 +498,7 @@ export default async function HomePage() {
               sourcing a second set: those images were chosen for exactly
               this, being the one real (or checked, licensed) shot that
               sells the range. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
+      <section data-popup-section="home-beyond-stone" className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
             <div className="flex items-center gap-4">
@@ -556,7 +557,7 @@ export default async function HomePage() {
               serif numeral and real air between steps rather than a hairline
               rule under each one now, on request: too many rules of this
               kind across the site read as templated rather than editorial. --- */}
-      <section className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
+      <section data-popup-section="home-process" className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40 py-16 sm:py-22 lg:py-30">
         <div className="beco-clip">
           <div className="beco-wipe">
             {/* No eyebrow here on purpose: the numbered list below names the
@@ -606,7 +607,7 @@ export default async function HomePage() {
               so the two pages describe one set of services rather than each
               writing its own. No eyebrow: Process right above has none
               either, on the same reasoning, and this follows it directly. --- */}
-      <section className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
+      <section data-popup-section="home-services" className="bg-neutral-50 py-16 sm:py-22 lg:py-30">
         <div className="mx-auto max-w-[1380px] px-8 sm:px-24 lg:px-40">
           <div className="beco-clip">
             <div className="beco-wipe">
@@ -709,7 +710,7 @@ export default async function HomePage() {
               cinematic work instead of an ultra-wide crop, darkened
               corners the way a real film frame reads rather than a flat
               rectangle of video. --- */}
-      <section aria-label="The showroom" className="bg-charcoal text-high-vis-white">
+      <section data-popup-section="home-showroom" aria-label="The showroom" className="bg-charcoal text-high-vis-white">
         <div className="relative w-full overflow-hidden rounded-card bg-neutral-950">
           <ShowroomFilm className="aspect-[16/9] w-full object-cover" />
           {/* The vignette: a radial darkening toward the corners, the

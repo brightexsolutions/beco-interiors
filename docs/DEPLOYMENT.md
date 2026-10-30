@@ -23,6 +23,18 @@ for the dashboard lacks its keys, so there is no working staging dashboard yet.
 off it; it took 63 to 69 the same day, fictional data only. Release PR #17 is live on the
 dashboard.
 
+**21 October 2026: release PR #20 live (D154 to D158), migration 72 on both databases.**
+`beco-staging` took 72 (`users_delete`) first; `beco-prod` took it after a schema and data dump to
+`~/beco-backups/2026-10-21/prod-*-pre72.sql`, both before the merge. CI's first run failed on a
+timing flake in the quote customer test and a 5s timeout on the settings preview test, both fixed
+in `77e2937` rather than rerun. Main at `5e8d213`: the storefront's Git integration deployed it to
+Production at the minute of the merge (`beco-interiors-ef3grwbrm`, alias `git-main`); the dashboard
+deployed from an export of main (`beco-dashboard-b432zg337`), after one `vercel deploy` that ended
+in "fetch failed" before any deployment existed, so that one was retried. Checked live: the hero
+column carries `box-content`, a POA product page emits `BreadcrumbList` alone, the dashboard login
+answers and `/users` redirects signed out. The storefront's Git integration is still on; the D45
+note below still stands.
+
 **14 October 2026: release PR #19 live (D152 sized prices, D153 session read once), no
 migration.** Dashboard deployed from an export of main at `05edbfb`. **The storefront project's
 Vercel Git integration is still on:** it deployed main to Production by itself three seconds after

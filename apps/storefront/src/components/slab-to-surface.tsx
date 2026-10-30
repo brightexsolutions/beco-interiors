@@ -29,9 +29,23 @@ import { blurProps, type CatalogueProduct } from '@/lib/products';
  * Chromium only either way, and without it the section shows its finished
  * state, the room and its caption.
  */
+/**
+ * Stones whose `slab` photograph is itself the mirrored pair, two slabs shot
+ * opened along one seam, with no separate shot filed as a bookmatch. Anakin,
+ * Beco's pick for this section on 30 October, is one. Listed by slug rather
+ * than inferred, because an ordinary slab split down its middle would make
+ * "Two slabs. One block." untrue.
+ */
+export const SLAB_IS_PAIR: ReadonlySet<string> = new Set(['anakin']);
+
+/** The photograph the two halves are cut from: a bookmatch shot, or a listed stone's slab. */
+export const pairShot = (product: Pick<CatalogueProduct, 'slug' | 'images'>) =>
+  product.images?.find((i) => i.role === 'bookmatch') ??
+  (SLAB_IS_PAIR.has(product.slug) ? product.images?.find((i) => i.role === 'slab') : undefined);
+
 export function SlabToSurface({ product }: { product: CatalogueProduct | undefined }) {
   if (!product) return null;
-  const bookmatch = product.images?.find((i) => i.role === 'bookmatch');
+  const bookmatch = pairShot(product);
   // The best room shot, not the first one filed. A wide frame of an actual
   // interior reads as a room; a tall or square crop of a worktop reads as an
   // abstract, which defeats the point of revealing a room. Constrained to a
@@ -47,6 +61,7 @@ export function SlabToSurface({ product }: { product: CatalogueProduct | undefin
   return (
     <section
       aria-label="From slab to surface"
+      data-popup-section="home-bookmatch"
       // Tall, because the parting needs scroll distance to happen across. The
       // stage's own progress through this height drives every layer.
       className="beco-stage relative h-[200vh] lg:h-[240vh]"

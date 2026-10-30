@@ -5,6 +5,10 @@ export { Fab, fabClasses, type FabProps } from './components/fab';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog';
 export { Dialog, DialogBody, DialogFooter, type DialogProps } from './components/dialog';
 export { Sheet, type SheetProps } from './components/sheet';
+export {
+  PromoPopup, PromoPopupCard, promoPopupWidth,
+  type PromoPopupProps, type PromoPopupCardProps, type PromoPopupContent, type PromoPopupVariant,
+} from './components/promo-popup';
 export { Icon, type IconName } from './components/icon';
 export { Tooltip, type TooltipProps } from './components/tooltip';
 export { FormSection } from './components/form-section';
