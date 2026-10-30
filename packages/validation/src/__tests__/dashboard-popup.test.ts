@@ -59,7 +59,7 @@ describe('createPopupSchema', () => {
   });
 
   it('refuses a link that is not a site path or http, including protocol relative', () => {
-    expect(issue({ ...base, ctaUrl: 'javascript:alert(1)' })).toBe('Use a site path or an http link');
+    expect(issue({ ...base, ctaUrl: 'javascript:void(0)' })).toBe('Use a site path or an http link');
     expect(issue({ ...base, ctaUrl: '//evil.example' })).toBe('Use a site path or an http link');
     expect(createPopupSchema.safeParse({ ...base, ctaUrl: 'https://wa.me/254722333730' }).success).toBe(true);
   });
