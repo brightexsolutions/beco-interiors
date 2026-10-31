@@ -120,6 +120,24 @@ describe('PopupEditor', () => {
     expect(createPopup).not.toHaveBeenCalled();
   });
 
+  it('locks Save once a new pop up is saved, so a second press cannot make a duplicate', async () => {
+    const user = userEvent.setup();
+    createPopup.mockResolvedValueOnce({ ok: 'Pop up saved.', popupId: '11111111-1111-4111-8111-111111111111' } as never);
+    render(<PopupEditor popup={null} stones={stones} />);
+    await user.type(screen.getByLabelText('Headline'), 'Offer');
+    await user.click(screen.getByRole('checkbox', { name: /Anakin/ }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    const saved = await screen.findByRole('button', { name: 'Saved' });
+    expect(saved).toBeDisabled();
+    await user.click(saved);
+    expect(createPopup).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws the preview in the storefront palette and type, whatever the dashboard theme', () => {
+    render(<PopupEditor popup={null} stones={stones} />);
+    expect(preview()).toHaveClass('beco-fixed-palette', 'beco-storefront-scope');
+  });
+
   it('keeps the preview out of the tab order', () => {
     render(<PopupEditor popup={null} stones={stones} />);
     expect(preview()).toHaveAttribute('inert');

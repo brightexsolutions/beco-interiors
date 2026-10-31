@@ -252,8 +252,79 @@ html.dark {
   --color-neutral-200: #2c3540;
   --color-neutral-100: #1c242e;
   --color-neutral-50: #0b1119;
+  /* The tints and status colours, D161. Left at their light values they
+     drew pastel tiles on a dark page, and the neutral tile under a charcoal
+     icon became light on light, so the icon vanished. Brighter text, deep
+     tiles; contrast asserted by test. They are fills only for dots and
+     bars, never under white type. */
+  --color-tint: #1c242e;
+  --color-success: #22c55e;
+  --color-success-deep: #4ade80;
+  --color-success-soft: #0f2a1a;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #2e2210;
+  --color-info: #60a5fa;
+  --color-info-soft: #13233f;
+  --color-danger: #f87171;
+  --color-danger-soft: #331618;
   --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px -16px rgba(0, 0, 0, 0.55);
   --shadow-dock: 0 -8px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* A surface whose colour does not follow the dashboard theme, D161: the
+   home band drawn in charcoal and veins whichever theme is on, a printed
+   quote, a pop up preview. Inside it the palette keeps its light values, so
+   high-vis-white is still white on the band and charcoal still ink on the
+   page. Without this the swap above turned the band's white type the colour
+   of the band itself. Type on a fixed fill (Warm Red, WhatsApp green) uses
+   `text-paper` instead, which never swaps anywhere. */
+html.dark .beco-fixed-palette {
+  --color-charcoal: #101820;
+  --color-high-vis-white: #ffffff;
+  --color-neutral-950: #0b1119;
+  --color-neutral-900: #101820;
+  --color-neutral-700: #333d47;
+  --color-neutral-500: #6b757f;
+  --color-neutral-300: #b9c0c7;
+  --color-neutral-200: #d7dce0;
+  --color-neutral-100: #eceef0;
+  --color-neutral-50: #f6f7f8;
+  --color-tint: #eef0f3;
+  --color-success: #16a34a;
+  --color-success-deep: #166534;
+  --color-success-soft: #e8f6ec;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3e2;
+  --color-info: #1d4ed8;
+  --color-info-soft: #e8f0fe;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fdecec;
+}
+
+/* The storefront's own type and corners inside the dashboard, for a
+   preview of something a visitor sees. The admin surface swaps both
+   (Geist, a 15px body, 14px cards), so without this a pop up previewed in
+   the dashboard was not the pop up on the site. */
+[data-surface="admin"] .beco-storefront-scope {
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Titillium Web', system-ui, sans-serif;
+  --text-xs: 0.875rem;
+  --text-sm: 1rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 2.75rem;
+  --radius-control: 4px;
+  --radius-card: 6px;
+  --color-ring: #ed1c24;
+  font-feature-settings: normal;
+}
+[data-surface="admin"] .beco-storefront-scope .beco-case {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
 }
 
 /* ============================================================

@@ -29,7 +29,7 @@ const button = cva(
     variants: {
       variant: {
         /** The single most important action on a screen. Rationed. */
-        primary: 'bg-warm-red-deep text-high-vis-white hover:bg-warm-red',
+        primary: 'bg-warm-red-deep text-paper hover:bg-warm-red',
         secondary: 'bg-charcoal text-high-vis-white hover:bg-neutral-700',
         outline:
           'border border-charcoal text-charcoal hover:bg-charcoal hover:text-high-vis-white',
@@ -38,7 +38,7 @@ const button = cva(
         soft: 'bg-tint text-charcoal hover:bg-neutral-200',
         /** The destructive confirm on a white ground, outlined in the danger tint. D143. */
         danger: 'border border-danger/30 bg-high-vis-white text-danger hover:bg-danger-soft',
-        whatsapp: 'bg-whatsapp text-high-vis-white hover:brightness-95',
+        whatsapp: 'bg-whatsapp text-paper hover:brightness-95',
       },
       size: {
         default: '',

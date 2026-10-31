@@ -44,7 +44,7 @@ export function SettingsDocumentPreview({ values }: { values: DocumentPreviewVal
       <figcaption className="mb-2 beco-case font-ui text-xs font-semibold text-neutral-500">
         As printed on a quote
       </figcaption>
-      <div className="border border-neutral-200 bg-high-vis-white">
+      <div className="beco-fixed-palette border border-neutral-200 bg-high-vis-white">
         <div className="flex items-center gap-3 bg-charcoal px-4 py-3">
           <img src="/logo-mark.png" alt="" width={28} height={27} className="h-7 w-7" />
           <span className="text-sm font-semibold uppercase tracking-[0.18em] text-high-vis-white">Quotation</span>

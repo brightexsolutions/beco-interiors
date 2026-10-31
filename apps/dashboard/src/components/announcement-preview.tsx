@@ -16,7 +16,7 @@ export function AnnouncementPreview({
   type: AnnouncementType;
   ctaLabel: string;
 }) {
-  const tone = type === 'clearance' ? 'bg-warm-red-deep text-high-vis-white' : 'bg-charcoal text-high-vis-white';
+  const tone = type === 'clearance' ? 'bg-warm-red-deep text-paper' : 'bg-charcoal text-high-vis-white';
   return (
     <div className={`${tone} px-4 py-3`}>
       <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-ui text-sm">

@@ -137,7 +137,7 @@ export function PromoPopupCard({
           <div className="flex flex-wrap items-center gap-3 pr-12">
             {eyebrow ? <Eyebrow live tone="dark">{eyebrow}</Eyebrow> : null}
             {badge ? (
-              <span className="rounded-control bg-warm-red-deep px-2.5 py-1 font-ui text-xs font-semibold uppercase tracking-[0.12em] text-high-vis-white">
+              <span className="rounded-control bg-warm-red-deep px-2.5 py-1 font-ui text-xs font-semibold uppercase tracking-[0.12em] text-paper">
                 {badge}
               </span>
             ) : null}

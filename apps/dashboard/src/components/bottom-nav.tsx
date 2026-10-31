@@ -48,7 +48,7 @@ function BarItem({
         {badge && badge > 0 ? (
           <span
             aria-label={`${badge} new`}
-            className="absolute -right-2.5 -top-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-warm-red px-1 text-xs font-semibold leading-5 text-high-vis-white"
+            className="absolute -right-2.5 -top-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-warm-red px-1 text-xs font-semibold leading-5 text-paper"
           >
             {badge}
           </span>
