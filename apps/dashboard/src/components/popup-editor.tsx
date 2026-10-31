@@ -57,6 +57,8 @@ export function PopupEditor({ popup, stones }: { popup: StaffPopup | null; stone
   const [selected, setSelected] = useState<string[]>(popup?.productIds ?? []);
   const [stoneSearch, setStoneSearch] = useState('');
 
+  const justCreated = !popup && Boolean(state.popupId);
+
   useEffect(() => {
     if (state.popupId) router.replace(`/popups?edit=${state.popupId}`);
   }, [state.popupId, router]);
@@ -346,7 +348,7 @@ export function PopupEditor({ popup, stones }: { popup: StaffPopup | null; stone
           <div
             inert
             data-testid="popup-preview"
-            className={cn('mx-auto w-full', promoPopupWidth(variant))}
+            className={cn('beco-fixed-palette beco-storefront-scope mx-auto w-full', promoPopupWidth(variant))}
           >
             <PromoPopupCard
               variant={variant}
@@ -361,8 +363,12 @@ export function PopupEditor({ popup, stones }: { popup: StaffPopup | null; stone
         </FormSection>
       </div>
       <div className="shrink-0 border-t border-neutral-200 px-5 py-3">
-        <Button type="submit" pending={pending}>
-          {pending ? 'Saving' : 'Save'}
+        {/* A new pop up, once saved, locks Save until the sheet has moved to
+            editing it. The move waits on the storefront refresh, which can
+            take seconds on production, and a second press in that gap made
+            a duplicate. */}
+        <Button type="submit" pending={pending} disabled={justCreated}>
+          {pending ? 'Saving' : justCreated ? 'Saved' : 'Save'}
         </Button>
       </div>
     </form>

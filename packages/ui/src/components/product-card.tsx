@@ -109,7 +109,7 @@ export function ProductCard({
           )}
         </div>
         {badge ? (
-          <span className="absolute left-0 top-0 bg-warm-red-deep px-2 py-1 font-ui text-xs font-semibold uppercase tracking-[0.09em] text-high-vis-white">
+          <span className="absolute left-0 top-0 bg-warm-red-deep px-2 py-1 font-ui text-xs font-semibold uppercase tracking-[0.09em] text-paper">
             {BADGE_LABEL[badge]}
           </span>
         ) : null}

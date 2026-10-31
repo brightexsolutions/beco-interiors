@@ -40,7 +40,7 @@ export function HomeFocus({ focus, approvals }: { focus: HomeFocusData; approval
   return (
     <section
       aria-labelledby="home-focus-title"
-      className="beco-veins relative overflow-hidden rounded-panel text-high-vis-white shadow-panel"
+      className="beco-veins beco-fixed-palette relative overflow-hidden rounded-panel text-high-vis-white shadow-panel"
     >
       {focus.breached ? <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-warm-red" /> : null}
       <div className="relative grid gap-6 p-5 sm:p-7 lg:p-8 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-10">
@@ -51,7 +51,7 @@ export function HomeFocus({ focus, approvals }: { focus: HomeFocusData; approval
           <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
             <p className="font-display text-6xl font-bold leading-none tracking-[-0.02em] tabular-nums lining-nums sm:text-7xl">{focus.waiting}</p>
             {focus.breached ? (
-              <span className="mb-2 inline-flex items-center rounded-full bg-warm-red px-2.5 py-1 font-ui text-xs font-semibold text-high-vis-white">
+              <span className="mb-2 inline-flex items-center rounded-full bg-warm-red px-2.5 py-1 font-ui text-xs font-semibold text-paper">
                 Past target
               </span>
             ) : focus.waiting > 0 ? (

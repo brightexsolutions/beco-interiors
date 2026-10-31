@@ -67,7 +67,7 @@ export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuot
               {foldedNew ? (
                 <span
                   aria-label={`${newQuotes} new`}
-                  className="inline-flex min-w-[1.375rem] items-center justify-center rounded-full bg-warm-red-deep px-1.5 font-ui text-xs font-semibold normal-case leading-5 tracking-normal text-high-vis-white"
+                  className="inline-flex min-w-[1.375rem] items-center justify-center rounded-full bg-warm-red-deep px-1.5 font-ui text-xs font-semibold normal-case leading-5 tracking-normal text-paper"
                 >
                   {newQuotes}
                 </span>
@@ -100,7 +100,7 @@ export function SideNav({ groups, newQuotes = 0 }: { groups: NavGroup[]; newQuot
                       {item.href === '/quotes' && newQuotes > 0 ? (
                         <span
                           aria-label={`${newQuotes} new`}
-                          className="ml-auto inline-flex min-w-[1.375rem] items-center justify-center rounded-full bg-warm-red-deep px-1.5 font-ui text-xs font-semibold leading-5 text-high-vis-white"
+                          className="ml-auto inline-flex min-w-[1.375rem] items-center justify-center rounded-full bg-warm-red-deep px-1.5 font-ui text-xs font-semibold leading-5 text-paper"
                         >
                           {newQuotes}
                         </span>

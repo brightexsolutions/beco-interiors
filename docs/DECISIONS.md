@@ -4041,3 +4041,26 @@ bookmatch shot still wins if one is ever filed for the stone.
 *Reverses if:* the Anakin slab is retagged as a bookmatch in the dashboard, at which point the
 slug can leave `SLAB_IS_PAIR`.
 
+## D161, 31 October 2026: surfaces that ignore the theme keep their palette
+
+Brown, against a screenshot: in the dashboard's dark appearance the home band's text was not
+visible. Dark mode swaps charcoal and high-vis-white as ink on paper. The home band is drawn dark
+in both themes, so its white type swapped into the colour of the band itself. The same swap hit
+every white label on a fill that does not swap: the primary button and the badges read near black
+on Warm Red. The neutral tint and the status tints did not swap at all, so an icon in charcoal on
+the neutral tile turned light on light and vanished, and every status tile glared pastel.
+
+**`beco-fixed-palette`** restores the light values inside any surface whose look does not follow
+the theme: the home band, the printed quote preview in settings, the pop up preview. A test
+asserts every restored value equals the light palette, so the two cannot drift.
+**`text-paper`** for type on Warm Red and the WhatsApp green, which never swaps. A test scans the
+dashboard and `@beco/ui` and fails on white that swaps sitting on a fill that does not.
+**Dark tints and status colours**: deep tiles, brighter text, each pair asserted at AA on its tile
+and on the page. They are fills only for dots and bars, never under white type.
+**`beco-storefront-scope`** puts the storefront's type, corners and capitals back inside a
+preview, so a pop up previewed in the dashboard is the pop up on the site.
+
+The pop up editor also locks Save to "Saved" once a new pop up is saved. On production the move to
+editing it waits on the storefront refresh, and a second press in that gap would have made a
+duplicate.
+
