@@ -24,7 +24,7 @@ const ID = '11111111-1111-4111-8111-111111111111';
 const row = (over: Partial<StaffPopup> = {}): StaffPopup => ({
   id: ID, variant: 'offer', eyebrow: 'Live offer', badge: '40% off', title: 'Anniversary offer', body: null,
   ctaLabel: 'Explore', ctaUrl: '/shop', productIds: [], trigger: 'scroll', triggerValue: 50, triggerSection: null, showAgainDays: 7,
-  startsAt: '2026-11-01T05:00:00.000Z', endsAt: '2026-11-30T15:00:00.000Z', priority: 0, isActive: true,
+  startsAt: '2026-11-01T05:00:00.000Z', endsAt: '2026-11-30T15:00:00.000Z', priority: 0, isActive: true, image: null,
   ...over,
 });
 

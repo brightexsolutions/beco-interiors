@@ -4064,3 +4064,30 @@ The pop up editor also locks Save to "Saved" once a new pop up is saved. On prod
 editing it waits on the storefront refresh, and a second press in that gap would have made a
 duplicate.
 
+
+## D162, 5 November 2026: a pop up can be a designed banner
+
+Beco had an end year sale banner designed as one picture (5 November to 15 December 2026, up to
+40% off sintered stones) and wants it among the pop ups. D159's two looks draw a pop up from
+catalogue stones and typed copy; this banner already has its copy, dates and photographs composed
+into it, and redrawing it would throw that work away.
+
+**A third look, `image`.** The uploaded picture is the whole card, shown at its own shape and never
+cropped, up to 60rem wide. Stones, the small label, the badge and the supporting line are not used,
+and the form drops them on save. The headline stays required and becomes the picture's alt text and
+the dialog's name, read only by screen readers, because the words in a picture are invisible to
+them. The button's link makes the **whole picture** the link: a button painted into a design
+must do what it shows (rule 3), and on a phone the painted one is too small to aim at.
+
+**Upload path is the blog cover's.** Staged in R2 by the browser (D116), made into the three WebP
+widths by the server, stored on `popups.image` as `{ path, width, height, blur }` under
+`popups/<id>/`, migration 74. Two steps, as for a cover: save the pop up, then upload. The old
+banner's files are deleted only after the row has moved to the new ones; if the write fails the
+new files are deleted instead. Removing a banner goes through a ConfirmDialog. A banner pop up
+without its picture is not drawn on the storefront and is not listed under "On the site now".
+
+**On a phone the banner is shown whole**, at 351px wide. The headline reads; the dates and the
+painted button are small. A phone crop, or a second portrait upload, is the change if Beco wants
+the small type legible on phones.
+
+*Reverses if:* Beco stops supplying designed banners, in which case the look simply goes unused.

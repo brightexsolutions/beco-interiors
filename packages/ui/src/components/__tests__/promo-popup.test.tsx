@@ -16,6 +16,13 @@ const offer: PromoPopupContent = {
 
 const split: PromoPopupContent = { ...offer, variant: 'split' };
 
+const banner: PromoPopupContent = {
+  variant: 'image',
+  title: 'End year sale: up to 40% off sintered stones',
+  cta: { label: 'Shop now', href: '/shop/sintered-stone' },
+  images: [<img key="banner" src="/banner.webp" alt="End year sale: up to 40% off sintered stones" />],
+};
+
 const setup = (content: PromoPopupContent = offer, onCtaClick = vi.fn()) => {
   const onOpenChange = vi.fn();
   const view = render(
@@ -108,12 +115,39 @@ describe('PromoPopup', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
-  it('has no axe violations in either look', async () => {
+  it('has no axe violations in any look', async () => {
     const { unmount } = setup(offer);
     expect(await axe(document.body)).toHaveNoViolations();
     unmount();
-    setup(split);
+    const second = setup(split);
     expect(await axe(document.body)).toHaveNoViolations();
+    second.unmount();
+    setup(banner);
+    expect(await axe(document.body)).toHaveNoViolations();
+  });
+
+  it('a banner is the whole card, 60rem wide, and the picture is its button', async () => {
+    const user = userEvent.setup();
+    const { onCtaClick } = setup(banner);
+    const dialog = screen.getByRole('dialog', { name: banner.title });
+    expect(dialog.className).toContain('max-w-[60rem]');
+    // The headline is for screen readers; the picture already says it.
+    expect(within(dialog).getByRole('heading', { name: banner.title })).toHaveClass('sr-only');
+    const link = within(dialog).getByRole('link', { name: 'Shop now' });
+    expect(link).toHaveAttribute('href', '/shop/sintered-stone');
+    expect(within(link).getByRole('img')).toHaveAttribute('src', '/banner.webp');
+    link.addEventListener('click', (event) => event.preventDefault());
+    await user.click(link);
+    expect(onCtaClick).toHaveBeenCalledOnce();
+  });
+
+  it('a banner without a link is a picture, still closable', async () => {
+    const user = userEvent.setup();
+    const { onOpenChange } = setup({ ...banner, cta: null });
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.getByRole('img')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
 
@@ -129,5 +163,12 @@ describe('PromoPopupCard', () => {
     expect(container.firstChild).toHaveAttribute('data-variant', 'offer');
     rerender(<PromoPopupCard {...split} />);
     expect(container.firstChild).toHaveAttribute('data-variant', 'split');
+    rerender(<PromoPopupCard {...banner} />);
+    expect(container.firstChild).toHaveAttribute('data-variant', 'image');
+  });
+
+  it('a banner preview before its upload says so rather than drawing nothing', () => {
+    render(<PromoPopupCard {...banner} images={[]} />);
+    expect(screen.getByText('No banner yet')).toBeInTheDocument();
   });
 });

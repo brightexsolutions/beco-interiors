@@ -401,6 +401,11 @@ range checked per trigger and `trigger_section` set exactly when the trigger is 
 rows only, staff read all, `is_admin()` writes. Audit trigger on. No delete. Authoring is
 `/popups`.
 
+Migration 74, D162: a third `variant`, `image`, a designed banner shown whole, and `image jsonb`,
+its picture as `{ path, width, height, blur }`. A check holds the shape and keeps `path` an R2
+stem under `popups/<uuid>/`. The headline is the banner's alt text. A banner row with no `image` is
+not drawn on the storefront.
+
 ### settings
 
 Key/value. VAT rate, quote validity days, payment channels (bank, till, paybill,

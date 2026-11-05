@@ -1,10 +1,18 @@
 'use server';
 
+import { randomBytes } from 'node:crypto';
 import { createPopupSchema, updatePopupSchema } from '@beco/validation';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 import { fromDatetimeLocalValue } from '@/lib/announcements';
 import { popupMutationMessage } from '@/lib/popups';
+import { processProductPhoto } from '@/lib/product-photo';
+import { readPhotoUpload } from '@/lib/photo-source';
+import {
+  deleteProductDerivatives,
+  isProductStorageConfigured,
+  uploadProductDerivatives,
+} from '@/lib/product-storage';
 import { revalidateStorefrontPaths } from '@/lib/storefront-revalidate';
 
 export interface PopupActionState {
@@ -99,4 +107,94 @@ export async function updatePopup(_prev: PopupActionState, form: FormData): Prom
 
   await revalidateStorefrontPaths(['/']);
   return { ok: 'Pop up saved.' };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const popupIdFrom = (form: FormData): string | null => {
+  const id = formString(form, 'popupId');
+  return UUID.test(id) ? id.toLowerCase() : null;
+};
+
+/** The banner a pop up already has, so a replacement or removal can clear its old files. */
+async function currentBanner(
+  supabase: Awaited<ReturnType<typeof getSupabase>>,
+  popupId: string,
+): Promise<{ found: boolean; path: string | null }> {
+  const { data } = await supabase.from('popups').select('id, image').eq('id', popupId).maybeSingle();
+  if (!data) return { found: false, path: null };
+  const image = (data as { image: { path?: string } | null }).image;
+  return { found: true, path: image?.path ?? null };
+}
+
+/**
+ * Upload the banner look's picture, D162. Same path as a blog cover: the
+ * browser stages it in R2 (D116), the server makes the three WebP widths, and
+ * only then is the row pointed at them. The old banner's files go once the
+ * row has moved, so a failed write never leaves the pop up pointing at
+ * nothing.
+ */
+export async function uploadPopupBanner(_prev: PopupActionState, form: FormData): Promise<PopupActionState> {
+  await requirePath('/popups');
+  const popupId = popupIdFrom(form);
+  if (!popupId) return { error: 'Save the pop up before you add a banner.' };
+  const photo = await readPhotoUpload(form, 'file');
+  if (photo.error !== undefined) return { error: photo.error };
+  if (!isProductStorageConfigured()) {
+    return { error: 'Photograph storage is not configured. Add the R2 keys, then try again.' };
+  }
+
+  const supabase = await getSupabase();
+  const existing = await currentBanner(supabase, popupId);
+  if (!existing.found) return { error: 'That pop up is gone, or you cannot change it.' };
+
+  let processed;
+  try {
+    processed = await processProductPhoto(photo.buffer);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'That file is not a picture we can read.' };
+  }
+
+  const stem = `popups/${popupId}/${randomBytes(4).toString('hex')}`;
+  await uploadProductDerivatives(stem, processed.derivatives);
+
+  const { data, error } = await supabase
+    .from('popups')
+    .update({
+      image: { path: stem, width: processed.width, height: processed.height, blur: processed.blurDataUrl },
+    })
+    .eq('id', popupId)
+    .select('id')
+    .maybeSingle();
+  if (error || !data) {
+    // The row never moved, so the new files are the orphans, not the old.
+    await deleteProductDerivatives(stem);
+    return { error: error ? popupMutationMessage(error) : 'That pop up is gone, or you cannot change it.' };
+  }
+  if (existing.path) await deleteProductDerivatives(existing.path);
+
+  await revalidateStorefrontPaths(['/']);
+  return { ok: 'Banner uploaded.' };
+}
+
+export async function removePopupBanner(_prev: PopupActionState, form: FormData): Promise<PopupActionState> {
+  await requirePath('/popups');
+  const popupId = popupIdFrom(form);
+  if (!popupId) return { error: 'That pop up is gone.' };
+
+  const supabase = await getSupabase();
+  const existing = await currentBanner(supabase, popupId);
+  if (!existing.found) return { error: 'That pop up is gone, or you cannot change it.' };
+
+  const { data, error } = await supabase
+    .from('popups')
+    .update({ image: null })
+    .eq('id', popupId)
+    .select('id')
+    .maybeSingle();
+  if (error) return { error: popupMutationMessage(error) };
+  if (!data) return { error: 'That pop up is gone, or you cannot change it.' };
+  if (existing.path) await deleteProductDerivatives(existing.path);
+
+  await revalidateStorefrontPaths(['/']);
+  return { ok: 'Banner removed.' };
 }

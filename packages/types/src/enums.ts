@@ -32,8 +32,8 @@ export type DashboardModule = (typeof DASHBOARD_MODULES)[number];
 export const ANNOUNCEMENT_TYPES = ['sale', 'clearance', 'notice', 'event'] as const;
 export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
 
-/** The two looks a storefront pop up can take, D159. */
-export const POPUP_VARIANTS = ['split', 'offer'] as const;
+/** The looks a storefront pop up can take: two drawn from stones, D159, and a designed banner, D162. */
+export const POPUP_VARIANTS = ['split', 'offer', 'image'] as const;
 export type PopupVariant = (typeof POPUP_VARIANTS)[number];
 
 /** What opens a pop up: a wait in seconds, a scroll depth, or the pointer leaving. */
