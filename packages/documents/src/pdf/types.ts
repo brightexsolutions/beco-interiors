@@ -6,6 +6,8 @@ export interface QuotePdfLine {
   code?: string | null;
   quantity: number;
   unitPrice: number;
+  /** The sale's struck through price, printed as "Was KES 10,000, 40% off", D163. */
+  wasPrice?: number | null;
   lineTotal: number;
 }
 

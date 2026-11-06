@@ -1,6 +1,7 @@
 import { Document, Image, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { quoteTotals } from '@beco/validation';
 import { logoPath } from './fonts';
+import { lineSaleLabel } from '@beco/types';
 import type { QuotePdfInput } from './types';
 import { customerKraPinLine, lineCodeLabel, PDF_CARD_RADIUS, quoteFromLines, quotePaymentBlocks } from './types';
 
@@ -61,6 +62,7 @@ const styles = StyleSheet.create({
   body: { fontSize: 10, lineHeight: 1.5 },
   /** The product code under a line's description, D124. */
   code: { fontSize: 9, color: MUTED, marginTop: 1 },
+  sale: { fontSize: 9, color: MUTED, marginTop: 1 },
   tableHeader: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -208,6 +210,9 @@ export function QuoteDocument({ quote }: { quote: QuotePdfInput }) {
             <View style={styles.desc}>
               <Text style={styles.body}>{line.description}</Text>
               {lineCodeLabel(line.code) ? <Text style={styles.code}>{lineCodeLabel(line.code)}</Text> : null}
+              {lineSaleLabel(line.unitPrice, line.wasPrice, kes) ? (
+                <Text style={styles.sale}>{lineSaleLabel(line.unitPrice, line.wasPrice, kes)}</Text>
+              ) : null}
             </View>
             <Text style={[styles.body, styles.qty]}>{line.quantity}</Text>
             <Text style={[styles.body, styles.unit]}>

@@ -59,4 +59,20 @@ describe('PriceDisplay', () => {
     render(<PriceDisplay priceDisplayMode="poa" price={null} from />);
     expect(screen.queryByText('From')).toBeNull();
   });
+
+  it('adds the saving after the struck price when asked, D163', () => {
+    render(<PriceDisplay priceDisplayMode="fixed" price={15000} compareAtPrice={25000} showPercentOff />);
+    expect(screen.getByText('40% off')).toBeInTheDocument();
+  });
+
+  it('keeps the saving off by default, on a From price, and without a real saving', () => {
+    const { rerender } = render(<PriceDisplay priceDisplayMode="fixed" price={15000} compareAtPrice={25000} />);
+    expect(screen.queryByText(/% off/)).toBeNull();
+    rerender(<PriceDisplay priceDisplayMode="fixed" price={15000} compareAtPrice={25000} from showPercentOff />);
+    expect(screen.queryByText(/% off/)).toBeNull();
+    rerender(<PriceDisplay priceDisplayMode="fixed" price={25000} compareAtPrice={25000} showPercentOff />);
+    expect(screen.queryByText(/% off/)).toBeNull();
+    rerender(<PriceDisplay priceDisplayMode="poa" price={15000} compareAtPrice={25000} showPercentOff />);
+    expect(screen.queryByText(/% off/)).toBeNull();
+  });
 });

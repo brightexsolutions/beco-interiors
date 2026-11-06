@@ -55,6 +55,7 @@ const line = (over: Partial<QuoteLine> = {}): QuoteLine => ({
   quantity: 1,
   unitPrice: 65000,
   listPrice: 65000,
+  wasPrice: null,
   lineTotal: 65000,
   productId: '22222222-2222-4222-8222-222222222222',
   unit: 'per slab',
@@ -100,6 +101,26 @@ describe('QuoteLines', () => {
     expect(code.className).toContain('whitespace-nowrap');
     rerender(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate />);
     expect(screen.queryByText(/^Code /)).toBeNull();
+  });
+
+  it('says what the sale saved, read-only and editable, against the price being edited (D163)', async () => {
+    const user = userEvent.setup();
+    const onSale = line({ unitPrice: 6000, listPrice: 6000, wasPrice: 10000, lineTotal: 6000 });
+    const { rerender } = render(
+      <QuoteLines reference="BEC-Q-00012" lines={[onSale]} quoteId="q" updatedAt="t" canMutate={false} />,
+    );
+    expect(screen.getByText(/^Was .*10,000.*, 40% off$/)).toBeInTheDocument();
+    rerender(<QuoteLines reference="BEC-Q-00012" lines={[onSale]} quoteId="q" updatedAt="t" canMutate />);
+    expect(screen.getByText(/, 40% off$/)).toBeInTheDocument();
+    const price = screen.getAllByLabelText(/Unit price/)[0]!;
+    await user.clear(price);
+    await user.type(price, '5000');
+    expect(screen.getByText(/, 50% off$/)).toBeInTheDocument();
+    await user.clear(price);
+    await user.type(price, '10000');
+    expect(screen.queryByText(/% off$/)).toBeNull();
+    rerender(<QuoteLines reference="BEC-Q-00012" lines={[line()]} quoteId="q" updatedAt="t" canMutate={false} />);
+    expect(screen.queryByText(/% off$/)).toBeNull();
   });
 
   it('keeps Save disabled until a line actually changes, and says why', () => {

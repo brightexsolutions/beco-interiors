@@ -30,3 +30,4 @@ export interface ProductSize {
   price: number | null;
   sku: string | null;
 }
+export * from './sale';

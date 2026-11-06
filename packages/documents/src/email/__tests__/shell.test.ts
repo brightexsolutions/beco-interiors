@@ -292,6 +292,19 @@ describe('lineTable', () => {
     expect(html).toContain('Code &lt;b&gt;, 1');
   });
 
+  it('notes a sale under the quantity, escaped, and nothing without one (D163)', () => {
+    const html = lineTable(
+      [
+        { description: 'Anakin', quantity: 2, unit: 'slab', lineTotal: 12000, unitPrice: 6000, wasPrice: 10000 },
+        { description: 'Statuario', quantity: 1, unit: 'slab', lineTotal: 9000, unitPrice: 9000, wasPrice: null },
+        { description: 'Not priced', quantity: 1, unit: 'slab', lineTotal: null, unitPrice: 0, wasPrice: 10000 },
+      ],
+      money,
+    );
+    expect(html).toContain(`Was ${money(10000)}, 40% off`);
+    expect(html.match(/% off/g)).toHaveLength(1);
+  });
+
   it('caps the table and names how many more lines the PDF carries', () => {
     const lines = Array.from({ length: MAX_EMAIL_LINES + 3 }, (_, i) => ({
       description: `Line ${i + 1}`,

@@ -264,6 +264,7 @@ the UI. See D86.
 | `code` | text null, 1 to 80 chars | The product's code (`products.sku`) when the line was written, filled by the `quote_items_code` trigger on every insert path unless a code is given. A snapshot like the price: editing the product's code later never changes an issued line. Null for a custom line or an uncoded product. Migration 62, D124 |
 | `quantity` | numeric(12,2) | |
 | `list_price` | numeric(12,2) null | What it should have cost |
+| `compare_at_price` | numeric(12,2) null | D163, migration 75. The product's struck through price when the line was written at its sale price. Set only by the `quote_items_sale_price` trigger, which overwrites a caller's value on insert and keeps it on update. Null for a size priced apart, a free text line, a POA product, or a product not on sale. Printed as "Was KES 10,000, 40% off" |
 | `unit_price` | numeric(12,2) | What it did cost. **Stored on the line, never read live from products**, so a quote issued last week does not silently reprice |
 | `line_total` | numeric generated always as (quantity * unit_price) stored | Derived, so it cannot disagree with its inputs |
 | `notes` | text | |

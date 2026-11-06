@@ -111,7 +111,7 @@ export default function GalleryPage() {
             <p className="mt-2 font-ui text-xs text-neutral-500">Once Beco supplies prices</p>
           </div>
           <div>
-            <PriceDisplay priceDisplayMode="fixed" price={22000} compareAtPrice={25000} unit="per slab" />
+            <PriceDisplay priceDisplayMode="fixed" price={22000} compareAtPrice={25000} unit="per slab" showPercentOff />
             <p className="mt-2 font-ui text-xs text-neutral-500">Clearance, original struck through</p>
           </div>
         </div>

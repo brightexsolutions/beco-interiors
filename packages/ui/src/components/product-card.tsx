@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { cn } from '../lib/cn';
 import { HoverGallery } from './hover-gallery';
 import { PriceDisplay } from './price-display';
+import { percentOffLabel } from '@beco/types';
 import { AvailabilityBadge } from './availability-badge';
 
 /**
@@ -70,6 +71,9 @@ export function ProductCard({
   className,
 }: ProductCardProps) {
   const frames = images && images.length > 1 ? images : null;
+  // Only a single, shown price has a saving to state. A "From" figure is the
+  // cheapest of several sizes, not the price the struck one was cut to.
+  const saving = priceDisplayMode === 'fixed' && !priceFrom ? percentOffLabel(price, compareAtPrice) : null;
   const hasVisual = Boolean(frames || image);
 
   return (
@@ -108,9 +112,20 @@ export function ProductCard({
             </div>
           )}
         </div>
-        {badge ? (
-          <span className="absolute left-0 top-0 bg-warm-red-deep px-2 py-1 font-ui text-xs font-semibold uppercase tracking-[0.09em] text-paper">
-            {BADGE_LABEL[badge]}
+        {badge || saving ? (
+          // The badge Beco picked, then the saving worked out from the two
+          // prices, D163, so "Sale" and "40% off" sit side by side.
+          <span className="absolute left-0 top-0 flex">
+            {badge ? (
+              <span className="bg-warm-red-deep px-2 py-1 font-ui text-xs font-semibold uppercase tracking-[0.09em] text-paper">
+                {BADGE_LABEL[badge]}
+              </span>
+            ) : null}
+            {saving ? (
+              <span className="bg-charcoal px-2 py-1 font-ui text-xs font-semibold uppercase tracking-[0.09em] text-high-vis-white">
+                {saving}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </div>

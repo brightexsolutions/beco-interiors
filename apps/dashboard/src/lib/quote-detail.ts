@@ -16,6 +16,8 @@ export interface QuoteLine {
   quantity: number;
   unitPrice: number;
   listPrice: number | null;
+  /** The sale's struck through price the line kept when written, D163. Null when it was not on sale. */
+  wasPrice: number | null;
   lineTotal: number;
   productId: string | null;
   /** From the live product, if it still exists. Custom and deleted lines have none. */
@@ -215,7 +217,7 @@ export async function fetchQuote(
   const [{ data: items }, { data: documents }, settings, names] = await Promise.all([
     supabase
       .from('quote_items')
-      .select('id, description, code, quantity, unit_price, list_price, line_total, product_id, products(unit)')
+      .select('id, description, code, quantity, unit_price, list_price, compare_at_price, line_total, product_id, products(unit)')
       .eq('quote_id', quote.id)
       .order('sort_order', { ascending: true }),
     supabase
@@ -242,6 +244,7 @@ export async function fetchQuote(
       quantity: Number(row.quantity),
       unitPrice: Number(row.unit_price),
       listPrice: row.list_price == null ? null : Number(row.list_price),
+      wasPrice: row.compare_at_price == null ? null : Number(row.compare_at_price),
       lineTotal: Number(row.line_total ?? 0),
       productId: row.product_id,
       unit,

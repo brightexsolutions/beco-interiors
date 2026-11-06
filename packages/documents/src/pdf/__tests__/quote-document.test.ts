@@ -144,6 +144,32 @@ describe('lineCodeLabel (D124)', () => {
   });
 });
 
+describe('a line on sale (D163)', () => {
+  const texts = (node: unknown): string[] => {
+    if (node == null || typeof node === 'boolean') return [];
+    if (typeof node === 'string' || typeof node === 'number') return [String(node)];
+    if (Array.isArray(node)) return node.flatMap(texts);
+    const props = (node as { props?: { children?: unknown } }).props;
+    return props ? texts(props.children) : [];
+  };
+
+  it('prints the was price and the saving under the item, and nothing on a line not on sale', async () => {
+    const sale = { ...line(1, 6000), lineTotal: 6000, wasPrice: 10000 };
+    const plain = line(2);
+    const all = texts(QuoteDocument({ quote: base({ lines: [sale, plain] }) })).join('|');
+    expect(all).toContain('Was KES 10,000.00, 40% off');
+    expect(all.match(/% off/g)).toHaveLength(1);
+
+    const pdf = await renderQuotePdf(base({ lines: [sale, plain] }));
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+  });
+
+  it('says nothing on a line not yet priced, even with a was price', () => {
+    const unpriced = { ...line(1, 0), lineTotal: 0, wasPrice: 10000 };
+    expect(texts(QuoteDocument({ quote: base({ lines: [unpriced] }) })).join('|')).not.toContain('% off');
+  });
+});
+
 describe('quoteFromLines', () => {
   it('falls back to the legal name and showroom address when nothing is configured', () => {
     const from = quoteFromLines(base());

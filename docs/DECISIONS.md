@@ -4091,3 +4091,36 @@ painted button are small. A phone crop, or a second portrait upload, is the chan
 the small type legible on phones.
 
 *Reverses if:* Beco stops supplying designed banners, in which case the look simply goes unused.
+
+## D163, 6 November 2026: a sale shows its percent off, on the card, the page and the quote
+
+Brown, for the end year sale: products on offer need a second badge saying how much is off,
+next to the Sale badge. Asked where the figure comes from, Brown chose **worked out from the
+prices** over a typed percent or a sale that sets prices, and asked for it on product cards, the
+product page and quote lines.
+
+**The figure is never typed.** `percentOff(price, compareAt)` in `@beco/types` works it out from
+the two prices Beco already sets, so the badge cannot disagree with the price beside it. It rounds
+down (39.6 reads 39), says nothing below one percent, on price on application, or on a From price,
+which is the cheapest of several sizes rather than the price that was cut. One function serves the
+storefront, the dashboard, the PDF and the email; `@beco/types` was chosen because it costs the
+storefront bundle nothing.
+
+**Card:** "40% off" in charcoal beside the Sale badge in the photo's corner, charcoal so a grid of
+sale cards does not spend the page's Warm Red. It shows even if Beco picked no badge. **Product
+page:** a Warm Red tag after the struck through price (`showPercentOff`).
+
+**Quote lines** carry `compare_at_price`, migration 75: the product's struck through price, copied
+when the line is written at the product's sale price, the same snapshot rule as the price and the
+code (D124). One trigger fills it on every insert path; it overwrites anything a caller sends and
+cannot be changed by an update, so a salesperson can still discount a line (D86) but cannot invent
+a higher "was" price for a customer to see. A line at a size's own price, a free text line and a POA
+product carry none. The quote screen, the PDF and the priced quote email print "Was KES 10,000, 40%
+off" under the item, measured against what the line charges, so a further discount shows in the
+figure and a line priced back to full says nothing. An unpriced line never says "100% off".
+
+Not on orders or receipts, and not on lines written before migration 75: backfilling would rewrite
+issued quotes.
+
+*Reverses if:* Beco wants a sale to set prices on its own and revert on an end date, which is a
+sales table, not a change to this badge.

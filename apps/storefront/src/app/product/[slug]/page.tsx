@@ -132,6 +132,7 @@ export default async function ProductPage({ params }: Params) {
               unit={product.unit}
               vatInclusive
               from={priceIsFrom(product.price, sizes)}
+              showPercentOff
             />
             <AvailabilityBadge
               availability={product.availability}

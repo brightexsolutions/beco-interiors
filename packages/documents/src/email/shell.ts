@@ -21,6 +21,7 @@
  * the project's small print floor, with body copy at 16px.
  */
 
+import { lineSaleLabel } from '@beco/types';
 import { lineCodeLabel } from '../pdf/types';
 
 export const CHARCOAL = '#101820';
@@ -221,6 +222,9 @@ export interface EmailLine {
   unit?: string | null;
   /** Null or 0 means priced on application. */
   lineTotal: number | null;
+  /** What one unit charges, and the sale's struck through price, D163. Both, or no sale line. */
+  unitPrice?: number | null;
+  wasPrice?: number | null;
 }
 
 /** How many lines an email shows before it points at the PDF for the rest. */
@@ -232,6 +236,12 @@ const quantityOf = (line: EmailLine): string => {
   // The code first, so a hinge reads "Code H-301, 10 pc" under its name.
   const code = lineCodeLabel(line.code);
   return code ? `${code}, ${amount}` : amount;
+};
+
+/** "Was KES 10,000, 40% off" under the quantity, D163, or nothing. */
+const saleNote = (line: EmailLine, formatMoney: (n: number) => string): string => {
+  const label = lineSaleLabel(line.unitPrice, line.wasPrice, formatMoney);
+  return label ? `<span style="display:block;${text(14, MUTED)}">${escapeHtml(label)}</span>` : '';
 };
 
 /**
@@ -248,7 +258,9 @@ export function lineTable(lines: readonly EmailLine[], formatMoney: (n: number) 
       (line, i) =>
         `<tr>` +
         `<td style="padding:10px 12px 10px 0;border-top:1px solid ${i === 0 ? CHARCOAL : RULE};${text(16, CHARCOAL)}">${escapeHtml(line.description)}` +
-        `<span style="display:block;${text(14, MUTED)}">${escapeHtml(quantityOf(line))}</span></td>` +
+        `<span style="display:block;${text(14, MUTED)}">${escapeHtml(quantityOf(line))}</span>` +
+        saleNote(line, formatMoney) +
+        `</td>` +
         `<td align="right" valign="top" style="padding:10px 0 10px 12px;border-top:1px solid ${i === 0 ? CHARCOAL : RULE};white-space:nowrap;${text(16, CHARCOAL, 'font-weight:600;font-variant-numeric:tabular-nums')}">` +
         `${line.lineTotal && line.lineTotal > 0 ? escapeHtml(formatMoney(line.lineTotal)) : 'On application'}</td>` +
         `</tr>`,

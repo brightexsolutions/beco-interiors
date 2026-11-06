@@ -17,6 +17,7 @@ export const toPdfInput = (quote: QuoteDetail, settings: QuoteSettings): QuotePd
     code: line.code,
     quantity: line.quantity,
     unitPrice: line.unitPrice,
+    wasPrice: line.wasPrice,
     lineTotal: line.lineTotal,
   })),
   vatRate: settings.vatRate,
