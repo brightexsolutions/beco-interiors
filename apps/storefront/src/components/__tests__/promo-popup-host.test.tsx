@@ -43,6 +43,27 @@ describe('PromoPopupHost', () => {
     expect(shouldShowPopup(popup)).toBe(false);
   });
 
+  it('draws a banner at its own size, the whole picture linking to the sale, and remembers the click', async () => {
+    const user = userEvent.setup({ delay: null });
+    const banner: LivePopup = {
+      ...popup, id: 'p9', variant: 'image', title: 'End year sale', triggerValue: 0,
+      cta: { label: 'Shop now', href: '/shop' },
+      images: [{ path: '/banner.png', alt: 'End year sale', width: 3780, height: 1890 }],
+    };
+    render(<PromoPopupHost popups={[banner]} />);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 5));
+    });
+    const link = screen.getByRole('link', { name: 'Shop now' });
+    const picture = screen.getByRole('img', { name: 'End year sale' });
+    expect(link).toContainElement(picture);
+    expect(picture).toHaveAttribute('width', '3780');
+    expect(picture).toHaveAttribute('height', '1890');
+    link.addEventListener('click', (event) => event.preventDefault());
+    await user.click(link);
+    expect(localStorage.getItem(popupStorageKey('p9'))).not.toBeNull();
+  });
+
   it('never opens on the quote flow', () => {
     vi.useFakeTimers();
     pathname = '/quote';

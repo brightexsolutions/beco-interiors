@@ -134,6 +134,7 @@ export const GUIDE_TOPICS: readonly GuideTopic[] = [
     purpose: 'A promotion that opens over the website once per visitor: an offer, a new range, an event.',
     steps: [
       { do: 'Make one.', where: 'New pop up in the heading. Pick a look, write the headline, tick the stones to show. The preview is what visitors see.' },
+      { do: 'Use a designed banner.', where: 'Pick Banner image, write what it says, set the button link, save. Then upload the banner. The whole picture links to the button.' },
       { do: 'Choose when it opens.', where: 'After a wait, after scrolling, or when someone goes to leave. Show again after sets how many days before a visitor who closed it sees it again.' },
       { do: 'Turn it off early.', where: 'Open it and untick Switched on. Only the highest priority live pop up shows.' },
     ],

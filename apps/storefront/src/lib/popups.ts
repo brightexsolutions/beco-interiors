@@ -11,12 +11,23 @@ import type { PopupSection, PopupTrigger, PopupVariant, ProductImage } from '@be
  *
  * Its photographs are the catalogue's own. The products are read with the
  * anonymous key too, so an unpublished or deleted stone falls out of the
- * strip without the pop up needing to know.
+ * strip without the pop up needing to know. The banner look is the
+ * exception, D162: it carries its own uploaded picture.
  */
 export interface PopupImage {
   path: string;
   alt: string;
   blur?: string | undefined;
+  /** Known for a banner, which is drawn at its own shape rather than cropped to a frame. */
+  width?: number | undefined;
+  height?: number | undefined;
+}
+
+export interface PopupBannerImage {
+  path: string;
+  width: number;
+  height: number;
+  blur?: string | null;
 }
 
 export interface LivePopup {
@@ -48,6 +59,7 @@ export interface PopupRow {
   trigger_value: number;
   trigger_section: PopupSection | null;
   show_again_days: number;
+  image?: PopupBannerImage | null;
 }
 
 export interface PopupProduct {
@@ -77,14 +89,27 @@ export const pickPopupImage = (images: ProductImage[], variant: PopupVariant): P
 /** The row and its stones, as the host component draws them. Pure, so it is tested without a database. */
 export const toLivePopup = (row: PopupRow, products: PopupProduct[]): LivePopup | null => {
   const byId = new Map(products.map((p) => [p.id, p]));
-  const images = row.product_ids
+  const images: PopupImage[] = row.variant === 'image'
+    ? row.image
+      ? [
+          {
+            path: row.image.path,
+            // The words are in the picture, so the headline is its alt text.
+            alt: row.title,
+            blur: row.image.blur ?? undefined,
+            width: row.image.width,
+            height: row.image.height,
+          },
+        ]
+      : []
+    : row.product_ids
     .map((id) => byId.get(id))
     .map((p) => (p ? pickPopupImage(p.images ?? [], row.variant) : undefined))
     .filter((i): i is ProductImage => Boolean(i))
     .map((i) => ({ path: i.path, alt: i.alt, blur: i.blur }));
 
-  // A pop up whose every stone has gone is copy floating on nothing. Better
-  // to show nothing than a card built around an empty frame.
+  // A pop up whose every stone has gone is copy floating on nothing, and a
+  // banner not yet uploaded is an empty frame. Better to show nothing.
   if (images.length === 0) return null;
 
   return {
@@ -99,7 +124,7 @@ export const toLivePopup = (row: PopupRow, products: PopupProduct[]): LivePopup 
     triggerValue: row.trigger_value,
     triggerSection: row.trigger_section,
     showAgainDays: row.show_again_days,
-    images: row.variant === 'split' ? images.slice(0, 1) : images,
+    images: row.variant === 'offer' ? images : images.slice(0, 1),
   };
 };
 
@@ -115,7 +140,7 @@ export const getLivePopups = async (): Promise<LivePopup[]> => {
   const { data, error } = await sb
     .from('popups')
     .select(
-      'id,variant,eyebrow,badge,title,body,cta_label,cta_url,product_ids,trigger,trigger_value,trigger_section,show_again_days',
+      'id,variant,eyebrow,badge,title,body,cta_label,cta_url,product_ids,trigger,trigger_value,trigger_section,show_again_days,image',
     )
     .order('priority', { ascending: false })
     .order('starts_at', { ascending: false })
@@ -125,10 +150,14 @@ export const getLivePopups = async (): Promise<LivePopup[]> => {
   if (error || !data || data.length === 0) return [];
   const rows = data as PopupRow[];
   const ids = [...new Set(rows.flatMap((row) => row.product_ids))];
-  if (ids.length === 0) return [];
 
-  const { data: products, error: productsError } = await sb.from('products').select('id,images').in('id', ids);
-  if (productsError) return [];
-  const stones = (products as PopupProduct[] | null) ?? [];
+  // A banner needs no stones, so a page whose only live pop up is a banner
+  // skips the second read altogether.
+  let stones: PopupProduct[] = [];
+  if (ids.length > 0) {
+    const { data: products, error: productsError } = await sb.from('products').select('id,images').in('id', ids);
+    if (productsError) return [];
+    stones = (products as PopupProduct[] | null) ?? [];
+  }
   return rows.map((row) => toLivePopup(row, stones)).filter((popup): popup is LivePopup => popup !== null);
 };

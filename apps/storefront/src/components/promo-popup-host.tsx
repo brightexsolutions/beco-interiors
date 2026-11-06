@@ -27,7 +27,10 @@ export const isQuietPath = (pathname: string) =>
   QUIET_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
 /** Whether this visitor should see the pop up now. Throws nothing. */
-export const shouldShowPopup = (popup: Pick<LivePopup, 'id' | 'showAgainDays'>, now = Date.now()): boolean => {
+export const shouldShowPopup = (
+  popup: Pick<LivePopup, 'id' | 'showAgainDays'>,
+  now = Date.now(),
+): boolean => {
   try {
     const key = popupStorageKey(popup.id);
     if (popup.showAgainDays === 0) return window.sessionStorage.getItem(key) === null;
@@ -38,7 +41,10 @@ export const shouldShowPopup = (popup: Pick<LivePopup, 'id' | 'showAgainDays'>, 
   }
 };
 
-export const rememberPopupSeen = (popup: Pick<LivePopup, 'id' | 'showAgainDays'>, now = Date.now()) => {
+export const rememberPopupSeen = (
+  popup: Pick<LivePopup, 'id' | 'showAgainDays'>,
+  now = Date.now(),
+) => {
   try {
     const store = popup.showAgainDays === 0 ? window.sessionStorage : window.localStorage;
     store.setItem(popupStorageKey(popup.id), String(now));
@@ -70,7 +76,10 @@ const TOUCH_EXIT_SCROLL = 50;
  * on a page without that section it never fires, and waits for a page that
  * has it.
  */
-export const armTrigger = (popup: Pick<LivePopup, 'trigger' | 'triggerValue' | 'triggerSection'>, fire: () => void) => {
+export const armTrigger = (
+  popup: Pick<LivePopup, 'trigger' | 'triggerValue' | 'triggerSection'>,
+  fire: () => void,
+) => {
   const cleanups: Array<() => void> = [];
   let fired = false;
   const once = () => {
@@ -169,17 +178,32 @@ export function PromoPopupHost({ popups }: { popups: LivePopup[] }) {
       title={popup.title}
       body={popup.body}
       cta={popup.cta}
-      images={popup.images.map((image, index) => (
-        <Image
-          key={`${index}:${image.path}`}
-          src={image.path}
-          alt={image.alt}
-          fill
-          sizes={popup.variant === 'split' ? '(max-width: 640px) 100vw, 460px' : '160px'}
-          {...(image.blur ? { placeholder: 'blur' as const, blurDataURL: image.blur } : {})}
-          className="object-cover"
-        />
-      ))}
+      images={popup.images.map((image, index) =>
+        popup.variant === 'image' && image.width && image.height ? (
+          // A designed banner keeps its own shape: cropping it to a frame
+          // would cut its words. Full width of a card at most 60rem.
+          <Image
+            key={`${index}:${image.path}`}
+            src={image.path}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            sizes="(max-width: 1000px) 100vw, 960px"
+            {...(image.blur ? { placeholder: 'blur' as const, blurDataURL: image.blur } : {})}
+            className="block h-auto w-full"
+          />
+        ) : (
+          <Image
+            key={`${index}:${image.path}`}
+            src={image.path}
+            alt={image.alt}
+            fill
+            sizes={popup.variant === 'split' ? '(max-width: 640px) 100vw, 460px' : '160px'}
+            {...(image.blur ? { placeholder: 'blur' as const, blurDataURL: image.blur } : {})}
+            className="object-cover"
+          />
+        ),
+      )}
     />
   );
 }

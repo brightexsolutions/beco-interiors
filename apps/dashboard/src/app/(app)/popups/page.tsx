@@ -4,7 +4,7 @@ import { Icon, Panel, buttonClasses, cn } from '@beco/ui';
 import { PageHeading } from '@/components/page-heading';
 import { PopupResults } from '@/components/popup-results';
 import { QueryNavigationProvider } from '@/lib/use-query-navigation';
-import { describeTrigger, fetchPopupStones, fetchPopups, popupWindow } from '@/lib/popups';
+import { describeTrigger, fetchPopupStones, fetchPopups, isDrawable, popupWindow } from '@/lib/popups';
 import { requirePath } from '@/lib/session';
 import { getSupabase } from '@/lib/supabase';
 
@@ -25,8 +25,9 @@ export default async function PopupsPage({ searchParams }: { searchParams: Promi
   const editId = one(params.edit);
   const creating = one(params.new) === '1' && !editId;
   const editing = editId ? (popups.find((row) => row.id === editId) ?? null) : null;
-  // Every live one is armed on the site, each on its own trigger.
-  const showing = popups.filter((row) => popupWindow(row) === 'live');
+  // Every live one is armed on the site, each on its own trigger. A banner
+  // with no picture yet draws nothing there, so it is not claimed here.
+  const showing = popups.filter((row) => popupWindow(row) === 'live' && isDrawable(row));
 
   return (
     <>

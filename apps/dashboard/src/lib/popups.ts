@@ -12,11 +12,13 @@ export const POPUP_SECTION_VALUES = POPUP_SECTIONS;
 export const POPUP_VARIANT_LABEL: Record<PopupVariant, string> = {
   split: 'Photo beside copy',
   offer: 'Offer card',
+  image: 'Banner image',
 };
 
 export const POPUP_VARIANT_HINT: Record<PopupVariant, string> = {
   split: 'One room photo, copy on white.',
   offer: 'Charcoal card, badge, strip of stones.',
+  image: 'A designed banner, shown whole.',
 };
 
 export const POPUP_TRIGGER_LABEL: Record<PopupTrigger, string> = {
@@ -43,6 +45,14 @@ export const POPUP_SECTION_LABEL: Record<PopupSection, string> = {
 export type PopupWindow = AnnouncementWindow;
 export const popupWindow = announcementWindow;
 
+/** A banner's uploaded picture: an R2 derivative stem and its size, D162. */
+export interface PopupBanner {
+  path: string;
+  width: number;
+  height: number;
+  blur?: string | null;
+}
+
 export interface StaffPopup {
   id: string;
   variant: PopupVariant;
@@ -61,6 +71,7 @@ export interface StaffPopup {
   endsAt: string;
   priority: number;
   isActive: boolean;
+  image: PopupBanner | null;
 }
 
 /** A stone the editor can put in a pop up, with the one photograph it will show. */
@@ -89,13 +100,14 @@ export const popupMutationMessage = (error: { message?: string; code?: string } 
   if (/popups_products_bounded/i.test(message)) return 'Pick up to 6 stones.';
   if (/popups_trigger_value/i.test(message)) return 'That wait or scroll depth is out of range.';
   if (/popups_trigger_section/i.test(message)) return 'Pick the section it waits for.';
+  if (/popups_image_shape/i.test(message)) return 'That banner did not save. Upload it again.';
   if (code === '42501') return 'You do not have permission to change pop ups.';
   if (message) return message;
   return 'The database refused that write.';
 };
 
 const COLUMNS =
-  'id, variant, eyebrow, badge, title, body, cta_label, cta_url, product_ids, trigger, trigger_value, trigger_section, show_again_days, starts_at, ends_at, priority, is_active';
+  'id, variant, eyebrow, badge, title, body, cta_label, cta_url, product_ids, trigger, trigger_value, trigger_section, show_again_days, starts_at, ends_at, priority, is_active, image';
 
 interface PopupDbRow {
   id: string;
@@ -115,6 +127,7 @@ interface PopupDbRow {
   ends_at: string;
   priority: number;
   is_active: boolean;
+  image?: PopupBanner | null;
 }
 
 export const toPopup = (row: PopupDbRow): StaffPopup => ({
@@ -135,7 +148,23 @@ export const toPopup = (row: PopupDbRow): StaffPopup => ({
   endsAt: row.ends_at,
   priority: row.priority,
   isActive: row.is_active,
+  image: row.image ?? null,
 });
+
+/**
+ * Whether a visitor could see it at all, its window aside. A banner not yet
+ * uploaded draws nothing on the storefront, so the dashboard must not claim
+ * it is on the site.
+ */
+export const isDrawable = (row: Pick<StaffPopup, 'variant' | 'image'>): boolean =>
+  row.variant !== 'image' || row.image !== null;
+
+/** The banner's preview in the dashboard, from its R2 derivative. */
+export const bannerPreviewUrl = (banner: PopupBanner | null): string | null => {
+  if (!banner) return null;
+  const host = (process.env.NEXT_PUBLIC_IMAGE_HOST ?? '').replace(/\/$/, '');
+  return `${host}/${banner.path}-1600.webp`;
+};
 
 export async function fetchPopups(supabase: SupabaseClient): Promise<StaffPopup[]> {
   const { data, error } = await supabase

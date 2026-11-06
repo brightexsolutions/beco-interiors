@@ -33,7 +33,7 @@ export const ALLOWED_PHOTO_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 /** The dashboard areas that take a photograph, keyed by the route the caller must hold. */
-export const UPLOAD_AREAS = ['products', 'users', 'studio/blog'] as const;
+export const UPLOAD_AREAS = ['products', 'users', 'studio/blog', 'popups'] as const;
 export type UploadArea = (typeof UPLOAD_AREAS)[number];
 
 export const stagedUploadRequestSchema = z.object({

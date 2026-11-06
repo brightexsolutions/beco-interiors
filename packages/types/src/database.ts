@@ -794,6 +794,7 @@ export type Database = {
           ends_at: string
           eyebrow: string | null
           id: string
+          image: Json | null
           is_active: boolean
           priority: number
           product_ids: string[]
@@ -815,6 +816,7 @@ export type Database = {
           ends_at: string
           eyebrow?: string | null
           id?: string
+          image?: Json | null
           is_active?: boolean
           priority?: number
           product_ids?: string[]
@@ -836,6 +838,7 @@ export type Database = {
           ends_at?: string
           eyebrow?: string | null
           id?: string
+          image?: Json | null
           is_active?: boolean
           priority?: number
           product_ids?: string[]
@@ -1654,7 +1657,7 @@ export type Database = {
       order_status: "pending" | "confirmed" | "fulfilled" | "cancelled"
       payment_status: "unpaid" | "paid"
       popup_trigger: "delay" | "scroll" | "exit" | "section"
-      popup_variant: "split" | "offer"
+      popup_variant: "split" | "offer" | "image"
       post_status: "draft" | "published"
       price_display_mode: "fixed" | "poa"
       product_badge: "hot" | "new" | "sale" | "clearance"
@@ -1823,7 +1826,7 @@ export const Constants = {
       order_status: ["pending", "confirmed", "fulfilled", "cancelled"],
       payment_status: ["unpaid", "paid"],
       popup_trigger: ["delay", "scroll", "exit", "section"],
-      popup_variant: ["split", "offer"],
+      popup_variant: ["split", "offer", "image"],
       post_status: ["draft", "published"],
       price_display_mode: ["fixed", "poa"],
       product_badge: ["hot", "new", "sale", "clearance"],

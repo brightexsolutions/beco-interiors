@@ -81,16 +81,35 @@ export const popupFieldsSchema = z
     }
     // The offer card is built around its strip of stones; the split look
     // around one photograph. Either way, a pop up without a stone in it is
-    // a grey box on a site whose whole point is the stone.
-    if (value.productIds.length === 0) {
+    // a grey box on a site whose whole point is the stone. The banner look
+    // brings its own picture, uploaded after the first save, D162.
+    if (value.variant !== 'image' && value.productIds.length === 0) {
       ctx.addIssue({ code: 'custom', path: ['productIds'], message: 'Pick at least one stone to show' });
     }
   });
 
-/** A section only travels with the section trigger, so a stale choice never meets the database's pairing check. */
-const keepSectionForItsTrigger = <T extends { trigger: string; triggerSection: string | null }>(value: T): T => ({
+/**
+ * A section only travels with the section trigger, so a stale choice never
+ * meets the database's pairing check. A banner shows only its picture, so
+ * the copy fields and stones a visitor could never see are dropped rather
+ * than kept as invisible leftovers from another look.
+ */
+const keepSectionForItsTrigger = <
+  T extends {
+    variant: string;
+    trigger: string;
+    triggerSection: string | null;
+    eyebrow: string | null;
+    badge: string | null;
+    body: string | null;
+    productIds: string[];
+  },
+>(
+  value: T,
+): T => ({
   ...value,
   triggerSection: value.trigger === 'section' ? value.triggerSection : null,
+  ...(value.variant === 'image' ? { eyebrow: null, badge: null, body: null, productIds: [] } : {}),
 });
 
 export const createPopupSchema = popupFieldsSchema.transform(keepSectionForItsTrigger);

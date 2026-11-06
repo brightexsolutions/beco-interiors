@@ -16,6 +16,10 @@ import { Icon } from './icon';
  *          discount.
  *   offer  a charcoal card: a live dot and a badge, the headline, the button,
  *          then a strip of the stones it is about.
+ *   image  a banner Beco has had designed, shown whole, D162. The headline is
+ *          read to screen readers only, since the picture already says it,
+ *          and the whole picture is the button, so a button painted into the
+ *          design does what it shows.
  *
  * `PromoPopupCard` is the card alone, so the dashboard's preview draws the
  * exact thing the storefront does. `PromoPopup` puts it in a modal: portalled,
@@ -25,7 +29,7 @@ import { Icon } from './icon';
  * Images are slots, the same as ProductCard: the storefront passes next/image
  * elements on its own loader, the dashboard plain derivatives.
  */
-export type PromoPopupVariant = 'split' | 'offer';
+export type PromoPopupVariant = 'split' | 'offer' | 'image';
 
 export interface PromoPopupContent {
   variant: PromoPopupVariant;
@@ -34,7 +38,10 @@ export interface PromoPopupContent {
   title: string;
   body?: string | null | undefined;
   cta?: { label: string; href: string } | null | undefined;
-  /** Stone photographs, in order. `split` shows the first; `offer` all of them as a strip. */
+  /**
+   * Photographs, in order. `split` shows the first; `offer` all of them as a
+   * strip; `image` the first as the banner, at its own size and full width.
+   */
   images: ReactNode[];
 }
 
@@ -45,7 +52,7 @@ export interface PromoPopupContent {
  * its photograph close to a square.
  */
 export const promoPopupWidth = (variant: PromoPopupVariant): string =>
-  variant === 'offer' ? 'max-w-[42rem]' : 'max-w-[56rem]';
+  variant === 'offer' ? 'max-w-[42rem]' : variant === 'image' ? 'max-w-[60rem]' : 'max-w-[56rem]';
 
 export interface PromoPopupCardProps extends PromoPopupContent {
   /** The close control. Omitted in a static preview, which has nothing to close. */
@@ -125,6 +132,37 @@ export function PromoPopupCard({
       {cta.label}
     </a>
   ) : null;
+
+  if (variant === 'image') {
+    const picture = images[0] ?? (
+      <div className="flex aspect-[2/1] w-full items-center justify-center bg-neutral-100 font-ui text-base text-neutral-500">
+        No banner yet
+      </div>
+    );
+    return (
+      <div
+        data-variant="image"
+        className={cn('relative w-full overflow-hidden rounded-card bg-high-vis-white', className)}
+      >
+        {onClose ? <CloseButton onClose={onClose} closeRef={closeRef} tone="light" /> : null}
+        <h2 id={titleId} className="sr-only">
+          {title}
+        </h2>
+        {cta ? (
+          <a
+            href={cta.href}
+            onClick={onCtaClick}
+            aria-label={cta.label}
+            className="beco-ring block focus-visible:ring-inset"
+          >
+            {picture}
+          </a>
+        ) : (
+          picture
+        )}
+      </div>
+    );
+  }
 
   if (variant === 'offer') {
     return (

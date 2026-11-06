@@ -29,6 +29,10 @@ const row = {
   body: null, cta_label: 'Explore', cta_url: '/shop', product_ids: ['a', 'gone', 'b'],
   trigger: 'delay' as const, trigger_value: 8, trigger_section: null, show_again_days: 7,
 };
+const banner = {
+  ...row, id: 'p9', variant: 'image' as const, title: 'End year sale', product_ids: [] as string[],
+  image: { path: 'popups/0f0e0d0c-0b0a-4909-8807-060504030201/ab12cd34', width: 3780, height: 1890, blur: 'data:x' },
+};
 const products = [
   { id: 'b', images: [img('b/room', 'application'), img('b/slab', 'slab')] },
   { id: 'a', images: [img('a/slab', 'slab'), img('a/room', 'application')] },
@@ -64,6 +68,17 @@ describe('toLivePopup', () => {
   it('draws no button without both halves of it', () => {
     expect(toLivePopup({ ...row, cta_url: null }, products)?.cta).toBeNull();
   });
+
+  it('shows a banner as its own picture, named by the headline, at its own size', () => {
+    const popup = toLivePopup({ ...banner, product_ids: ['a'] }, products);
+    expect(popup?.images).toEqual([
+      { path: banner.image.path, alt: 'End year sale', blur: 'data:x', width: 3780, height: 1890 },
+    ]);
+  });
+
+  it('is nothing for a banner not yet uploaded', () => {
+    expect(toLivePopup({ ...banner, image: null }, products)).toBeNull();
+  });
 });
 
 describe('getLivePopups', () => {
@@ -80,6 +95,12 @@ describe('getLivePopups', () => {
     limit.mockResolvedValue({ data: [row, { ...row, id: 'p3', product_ids: ['gone'] }], error: null });
     inMock.mockResolvedValue({ data: products, error: null });
     expect((await getLivePopups()).map((p) => p.id)).toEqual(['p1']);
+  });
+
+  it('a banner alone is shown without reading any stones', async () => {
+    limit.mockResolvedValue({ data: [banner], error: null });
+    expect((await getLivePopups()).map((p) => p.id)).toEqual(['p9']);
+    expect(inMock).not.toHaveBeenCalled();
   });
 
   it('is empty, never a throw, when nothing is live or a read fails', async () => {

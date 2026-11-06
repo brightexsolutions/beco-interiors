@@ -91,6 +91,23 @@ describe('createPopupSchema', () => {
     expect(stale.success && stale.data.triggerSection).toBeNull();
   });
 
+  it('a banner needs no stones, and drops copy and stones it would never show', () => {
+    const result = createPopupSchema.safeParse({ ...base, variant: 'image', productIds: [] });
+    expect(result.success).toBe(true);
+    const kept = createPopupSchema.safeParse({ ...base, variant: 'image' });
+    expect(kept.success).toBe(true);
+    if (kept.success) {
+      expect(kept.data.productIds).toEqual([]);
+      expect(kept.data.eyebrow).toBeNull();
+      expect(kept.data.badge).toBeNull();
+      expect(kept.data.body).toBeNull();
+      // The headline is the banner's alt text, and the button its link.
+      expect(kept.data.title).toBe(base.title);
+      expect(kept.data.ctaUrl).toBe(base.ctaUrl);
+    }
+    expect(issue({ ...base, variant: 'image', title: '' })).toBe('Write a headline');
+  });
+
   it('refuses a variant or trigger the database does not know', () => {
     expect(createPopupSchema.safeParse({ ...base, variant: 'fullscreen' }).success).toBe(false);
     expect(createPopupSchema.safeParse({ ...base, trigger: 'idle' }).success).toBe(false);
