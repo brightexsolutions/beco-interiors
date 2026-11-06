@@ -994,6 +994,7 @@ export type Database = {
       quote_items: {
         Row: {
           code: string | null
+          compare_at_price: number | null
           description: string
           id: string
           line_total: number | null
@@ -1007,6 +1008,7 @@ export type Database = {
         }
         Insert: {
           code?: string | null
+          compare_at_price?: number | null
           description: string
           id?: string
           line_total?: number | null
@@ -1020,6 +1022,7 @@ export type Database = {
         }
         Update: {
           code?: string | null
+          compare_at_price?: number | null
           description?: string
           id?: string
           line_total?: number | null

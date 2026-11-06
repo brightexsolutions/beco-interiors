@@ -54,9 +54,9 @@ These carry business rules, so they exist once and are tested once.
 
 | Component | Status | Notes |
 |---|---|---|
-| `PriceDisplay` | **B** | **The most important component on the storefront.** Renders fixed price, POA, or a sale with a struck through `compare_at_price`. `price_display_mode` is separate from `availability` precisely so this can never be ambiguous, and ambiguity here costs sales |
+| `PriceDisplay` | **B** | **The most important component on the storefront.** Renders fixed price, POA, or a sale with a struck through `compare_at_price`; `showPercentOff` adds the saving as a tag, D163. `price_display_mode` is separate from `availability` precisely so this can never be ambiguous, and ambiguity here costs sales |
 | `AvailabilityBadge` | **B** | In Stock, Pre-Order, POA. Warm Red only for genuine attention |
-| `ProductCard` | **B** | No border, no shadow. Fixed 4:5 frame, image scales on hover, red hairline draws under the name. With no photograph (D82) the frame is a charcoal specimen plate naming the stone, `aria-hidden` so the heading link stays the one accessible name |
+| `ProductCard` | **B** | No border, no shadow. Fixed 4:5 frame, image scales on hover, red hairline draws under the name. With no photograph (D82) the frame is a charcoal specimen plate naming the stone, `aria-hidden` so the heading link stays the one accessible name. On sale it carries "40% off" beside the Sale badge, worked out by `percentOff` in `@beco/types`, never on POA or a From price, D163 |
 | `ProductGallery` | **B** | Ordered by image role: slab, on_stand, bookmatch, application. **Must read correctly on three images as well as six**, since five products have no on stand shot. `slab={false}` off stone, so a hardware shot reads "Product photo", never "Full slab" |
 | `QuoteActions` | P | The three actions, ranked identically everywhere: Request a quote, WhatsApp, Call |
 | `MobileActionBar` | **B** | Storefront. | Mobile. **Never sits under the on screen keyboard.** Verified on real iOS and Android |

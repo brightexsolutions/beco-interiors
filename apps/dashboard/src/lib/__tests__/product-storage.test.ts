@@ -11,9 +11,9 @@ describe('isSafeR2Key', () => {
 });
 
 describe('storageEndpoint', () => {
-  it('addresses the account on R2 unless a local stand in is named, which is path style', () => {
+  it('addresses the account on R2 unless a local stand in is named, path style either way', () => {
     delete process.env.R2_ENDPOINT;
-    expect(storageEndpoint('abc')).toEqual({ endpoint: 'https://abc.r2.cloudflarestorage.com', forcePathStyle: false });
+    expect(storageEndpoint('abc')).toEqual({ endpoint: 'https://abc.r2.cloudflarestorage.com', forcePathStyle: true });
     process.env.R2_ENDPOINT = 'http://127.0.0.1:9000';
     expect(storageEndpoint('abc')).toEqual({ endpoint: 'http://127.0.0.1:9000', forcePathStyle: true });
     delete process.env.R2_ENDPOINT;

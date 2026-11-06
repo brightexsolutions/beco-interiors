@@ -1,3 +1,4 @@
+import { percentOffLabel } from '@beco/types';
 import { cn } from '../lib/cn';
 
 /**
@@ -9,7 +10,7 @@ import { cn } from '../lib/cn';
  *
  * Three states, and only three:
  *   fixed          KES 25,000  per slab
- *   fixed + sale   KES 22,000  ~~KES 25,000~~  per slab
+ *   fixed + sale   KES 22,000  ~~KES 25,000~~  per slab  [12% off]
  *   poa            Price on application
  *
  * Everything launches POA, since no price data exists yet. That is a valid
@@ -34,6 +35,12 @@ export interface PriceDisplayProps {
   vatInclusive?: boolean | undefined;
   /** The figure is the lowest of several, a product in sizes priced apart: "From KES 255". D152. */
   from?: boolean | undefined;
+  /**
+   * Adds the saving as a badge after the struck through price, D163. The
+   * product page asks for it; a card already carries it in its photo's
+   * corner, so the two never say it twice.
+   */
+  showPercentOff?: boolean | undefined;
   className?: string | undefined;
 }
 
@@ -50,6 +57,7 @@ export function PriceDisplay({
   size = 'default',
   vatInclusive = false,
   from = false,
+  showPercentOff = false,
   className,
 }: PriceDisplayProps) {
   const big = size === 'large';
@@ -65,6 +73,8 @@ export function PriceDisplay({
   }
 
   const onSale = compareAtPrice != null && compareAtPrice > price;
+  // Never on a From price: that is the cheapest size, not what was cut.
+  const saving = showPercentOff && onSale && !from ? percentOffLabel(price, compareAtPrice) : null;
 
   return (
     <p className={cn('font-ui text-charcoal flex flex-wrap items-baseline gap-2 tabular-nums', className)}>
@@ -75,6 +85,11 @@ export function PriceDisplay({
       {onSale ? (
         <span className="text-neutral-500 line-through text-sm">
           {formatPrice(compareAtPrice, currency)}
+        </span>
+      ) : null}
+      {saving ? (
+        <span className="self-center rounded-control bg-warm-red-deep px-2 py-0.5 font-ui text-xs font-semibold uppercase tracking-[0.09em] text-paper">
+          {saving}
         </span>
       ) : null}
       {unit ? <span className="text-neutral-500 text-sm">{unit}</span> : null}

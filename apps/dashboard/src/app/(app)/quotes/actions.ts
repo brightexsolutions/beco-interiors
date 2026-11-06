@@ -479,6 +479,8 @@ export async function sendQuoteEmail(
       quantity: line.quantity,
       unit: line.unit,
       lineTotal: line.unitPrice > 0 ? line.lineTotal : null,
+      unitPrice: line.unitPrice,
+      wasPrice: line.wasPrice,
     })),
     totals: stored.quote.totals,
     vatRate: stored.quote.vatRate,

@@ -23,6 +23,18 @@ for the dashboard lacks its keys, so there is no working staging dashboard yet.
 off it; it took 63 to 69 the same day, fictional data only. Release PR #17 is live on the
 dashboard.
 
+**6 November 2026: release PR #23 live (D162 banner pop ups), migration 74 on `beco-prod`
+only.** `beco-staging` was paused (Supabase status `INACTIVE`) again, so on Brown's call production
+went first, as for 73: a schema and data dump to `~/beco-backups/2026-11-06/prod-*-pre74.sql`, a
+dry run showing only 74 pending, then the push, all before the merge. 74 is additive: an enum value
+and an empty column. The Vercel preview check failed for the same reason, its build could not reach
+staging; `verify` and `lighthouse` passed. Main at `b90c6ef`: the storefront's Git integration
+deployed it (`beco-interiors-r43cq9sq7`), the dashboard deployed from an export of main
+(`beco-dashboard-f4hz0l36d`). Checked live: home, `/shop/12mm-sintered-stones` and the dashboard
+login answer 200, `/popups` redirects signed out to login, and the storefront bundle carries the
+banner card. **`beco-staging` still needs 74** once it is restored from the Supabase dashboard:
+`supabase db push --linked` from the repo.
+
 **21 October 2026: release PR #20 live (D154 to D158), migration 72 on both databases.**
 `beco-staging` took 72 (`users_delete`) first; `beco-prod` took it after a schema and data dump to
 `~/beco-backups/2026-10-21/prod-*-pre72.sql`, both before the merge. CI's first run failed on a

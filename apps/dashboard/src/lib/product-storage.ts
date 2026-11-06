@@ -27,13 +27,17 @@ const credentials = () => {
 /**
  * R2's S3 endpoint for the account. `R2_ENDPOINT` overrides it for local
  * development against an S3 compatible stand in (MinIO, or the test
- * harness), where keys are path style. Never set in production.
+ * harness). Never set in production.
+ *
+ * Always path style, so a signed upload URL is `<account host>/<bucket>/<key>`
+ * on the one host the dashboard CSP allows (`r2ConnectOrigin`). Virtual host
+ * style put the bucket in the hostname, `<bucket>.<account host>`, which the
+ * policy refused, so every direct upload fell back to the form post. Found
+ * uploading the end year sale banner, 6 November 2026.
  */
 export const storageEndpoint = (accountId: string): { endpoint: string; forcePathStyle: boolean } => {
   const override = process.env.R2_ENDPOINT;
-  return override
-    ? { endpoint: override, forcePathStyle: true }
-    : { endpoint: `https://${accountId}.r2.cloudflarestorage.com`, forcePathStyle: false };
+  return { endpoint: override || `https://${accountId}.r2.cloudflarestorage.com`, forcePathStyle: true };
 };
 
 const client = () => {

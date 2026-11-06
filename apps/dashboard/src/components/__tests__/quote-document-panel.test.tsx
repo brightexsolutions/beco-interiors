@@ -138,6 +138,7 @@ describe('QuoteDocumentPanel', () => {
       code: null,
       quantity: 1,
       unitPrice: 65000,
+      wasPrice: null,
       listPrice: 65000,
       lineTotal: 65000,
       productId: '22222222-2222-4222-8222-222222222222',

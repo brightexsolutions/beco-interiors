@@ -73,6 +73,29 @@ describe('ProductCard', () => {
     expect(screen.getByText('Sale')).toBeDefined();
   });
 
+  it('puts the saving beside the Sale badge, worked out from the two prices, D163', () => {
+    render(<ProductCard name="X" href="/x" priceDisplayMode="fixed" price={6000} compareAtPrice={10000} badge="sale" />);
+    const sale = screen.getByText('Sale');
+    const saving = screen.getByText('40% off');
+    expect(saving.parentElement).toBe(sale.parentElement);
+    // Charcoal, so a grid of sale cards does not spend the page's Warm Red.
+    expect(saving.className).toContain('bg-charcoal');
+  });
+
+  it('shows the saving even when Beco picked no badge, and nothing without a saving', () => {
+    const { rerender } = render(<ProductCard name="X" href="/x" priceDisplayMode="fixed" price={6000} compareAtPrice={10000} />);
+    expect(screen.getByText('40% off')).toBeDefined();
+    rerender(<ProductCard name="X" href="/x" priceDisplayMode="fixed" price={10000} compareAtPrice={10000} badge="sale" />);
+    expect(screen.queryByText(/% off/)).toBeNull();
+  });
+
+  it('states no saving on price on application or a From price', () => {
+    const { rerender } = render(<ProductCard name="X" href="/x" priceDisplayMode="poa" price={6000} compareAtPrice={10000} />);
+    expect(screen.queryByText(/% off/)).toBeNull();
+    rerender(<ProductCard name="X" href="/x" priceDisplayMode="fixed" price={6000} compareAtPrice={10000} priceFrom />);
+    expect(screen.queryByText(/% off/)).toBeNull();
+  });
+
   it('reads as out of stock when the counted quantity is zero', () => {
     render(
       <ProductCard

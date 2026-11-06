@@ -601,7 +601,7 @@ export function ProductEditor({
                   className={NUMBER_INPUT}
                 />
               </Field>
-              <Field label="Compare at" htmlFor="compareAtPrice" hint="Struck through when higher">
+              <Field label="Compare at" htmlFor="compareAtPrice" hint="Struck through when higher, with the % off badge">
                 <Input
                   id="compareAtPrice"
                   name="compareAtPrice"

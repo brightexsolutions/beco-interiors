@@ -27,6 +27,7 @@ import type { CatalogueHit } from '@/lib/catalogue';
 import type { QuoteLine } from '@/lib/quote-detail';
 import { closedBlock, lineEditBlock, removeBlock } from '@/lib/quote-line-rules';
 import type { QuoteRequest } from '@/lib/quote-request';
+import { lineSaleLabel } from '@beco/types';
 
 const INITIAL: QuoteActionState = {};
 
@@ -151,6 +152,9 @@ function LineEditor({
           {remove}
         </div>
         {line.code ? <p className="font-ui text-sm tabular-nums text-neutral-500">Code {line.code}</p> : null}
+        {lineSaleLabel(line.unitPrice, line.wasPrice, money) ? (
+          <p className="font-ui text-sm tabular-nums text-neutral-500">{lineSaleLabel(line.unitPrice, line.wasPrice, money)}</p>
+        ) : null}
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <span className="font-ui text-sm tabular-nums text-neutral-500">
             {line.quantity} ×{' '}
@@ -192,6 +196,12 @@ function LineEditor({
             <p className="mt-0.5 truncate whitespace-nowrap font-ui text-sm tabular-nums text-neutral-500" title={`Code ${line.code}`}>
               <span className="sr-only">Code </span>
               {line.code}
+            </p>
+          ) : null}
+          {/* What the sale saves the customer, D163, against the price as it is being edited. */}
+          {lineSaleLabel(priceValue, line.wasPrice, money) ? (
+            <p className="mt-0.5 font-ui text-sm tabular-nums text-neutral-500">
+              {lineSaleLabel(priceValue, line.wasPrice, money)}
             </p>
           ) : null}
           {/* Struck through only against a real price: an unpriced line (0,
